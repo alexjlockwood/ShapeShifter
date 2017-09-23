@@ -100,5 +100,5 @@ export interface SnapGuideInfo {
 
 export interface ZoomPanInfo {
   readonly zoom: number;
-  readonly translation: Point;
+  readonly translation: Readonly<{ tx: number; ty: number }>;
 }

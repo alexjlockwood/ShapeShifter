@@ -22,8 +22,6 @@ export class ZoomPanTool extends Tool {
 
   // @Override
   onActivate() {
-    console.log('size', paper.view.size);
-    console.log('viewSize', paper.view.viewSize);
     CursorUtil.set(Cursor.ZoomIn);
   }
 
@@ -35,9 +33,7 @@ export class ZoomPanTool extends Tool {
   // @Override
   onMouseEvent(event: paper.ToolEvent) {
     if (event.type === 'mousedown') {
-      console.log(paper.view.matrix.values);
       this.onMouseDown(event);
-      console.log(paper.view.matrix.values);
     } else if (event.type === 'mousedrag') {
       this.onMouseDrag(event);
     } else if (event.type === 'mouseup') {
@@ -55,13 +51,9 @@ export class ZoomPanTool extends Tool {
       return;
     }
     // Zoom out if alt is pressed, and zoom in otherwise.
-    // const zoom = Math.max(paper.view.zoom * (event.modifiers.alt ? 1 / 1.25 : 1.25), 1);
-    const oldZoom = paper.view.zoom;
-    const newZoom = oldZoom * (event.modifiers.alt ? 1 / 2 : 2);
-    this.ps.setZoomPanInfo({
-      zoom: newZoom,
-      translation: { x: 0, y: 0 },
-    });
+    const zoom = paper.view.zoom * (event.modifiers.alt ? 1 / 1.25 : 1.25);
+    const { x, y } = paper.view.projectToView(event.point).subtract(event.point.multiply(zoom));
+    this.setZoomPanInfo(zoom, x, y);
   }
 
   private onMouseDrag(event: paper.ToolEvent) {
@@ -75,36 +67,19 @@ export class ZoomPanTool extends Tool {
     // the view has been scrolled.
     const projectPoint = event.point;
     const currentViewPoint = paper.view.projectToView(projectPoint);
-    const currentMatrix = paper.view.matrix.clone();
-    currentMatrix.append(
-      new paper.Matrix().translate(
-        projectPoint.subtract(paper.view.viewToProject(this.lastViewPoint)),
-      ),
-    );
-    const zoom = paper.view.zoom;
-    // const translation = {
-    //   x: Math.max(0, currentMatrix.tx),
-    //   y: Math.max(0, currentMatrix.ty),
-    // };
-    // console.log(translation);
-    // console.log(paper.view.size);
-    // console.log(paper.view.viewSize);
-    this.ps.setZoomPanInfo({
-      zoom,
-      translation: { x: currentMatrix.tx, y: currentMatrix.ty },
-    });
+    const { tx, ty } = paper.view.matrix
+      .clone()
+      .translate(projectPoint.subtract(paper.view.viewToProject(this.lastViewPoint)));
+    this.setZoomPanInfo(paper.view.zoom, tx, ty);
     this.lastViewPoint = currentViewPoint;
   }
 
-  private clampTranslation(tx: number, ty: number) {
-    const minTranslation = new paper.Point(paper.view.size).subtract(
-      new paper.Point(paper.view.viewSize),
-    );
-    console.log(minTranslation.x, minTranslation.y, tx, ty);
-    return {
-      x: Math.max(minTranslation.x, tx),
-      y: Math.max(minTranslation.y, ty),
-    };
+  private setZoomPanInfo(zoom: number, tx: number, ty: number) {
+    const { width, height } = paper.view.viewSize;
+    zoom = _.clamp(zoom, 1, 256);
+    tx = _.clamp(tx, -width * (zoom - 1), 0);
+    ty = _.clamp(ty, -height * (zoom - 1), 0);
+    this.ps.setZoomPanInfo({ zoom, translation: { tx, ty } });
   }
 
   // @Override

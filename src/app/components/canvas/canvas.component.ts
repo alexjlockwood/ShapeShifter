@@ -18,7 +18,7 @@ import { DestroyableMixin } from 'app/scripts/mixins';
 import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
-import { getCanvasCursor } from 'app/store/paper/selectors';
+import { getCanvasCursor, getZoomPanInfo } from 'app/store/paper/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -86,6 +86,11 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
             (css.match(/\bcursor-\S+/g) || []).join(' '),
           );
         }
+      }),
+    );
+    this.registerSubscription(
+      this.store.select(getZoomPanInfo).subscribe(info => {
+        this.setZoomPan(info.zoom, info.translation);
       }),
     );
   }

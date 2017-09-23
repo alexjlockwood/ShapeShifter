@@ -22,7 +22,7 @@ export function buildInitialState(): State {
     focusedPathInfo: undefined,
     canvasCursor: undefined,
     snapGuideInfo: undefined,
-    zoomPanInfo: { zoom: 1, translation: { x: 0, y: 0 } },
+    zoomPanInfo: { zoom: 1, translation: { tx: 0, ty: 0 } },
   };
 }
 

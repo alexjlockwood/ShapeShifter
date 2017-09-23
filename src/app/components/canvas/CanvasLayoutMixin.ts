@@ -4,6 +4,8 @@ export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class {} as 
   return class extends Base {
     private bounds = { w: 24, h: 24 };
     private viewport = { w: 24, h: 24 };
+    private zoom = 1;
+    private translation = { tx: 0, ty: 0 };
 
     /**
      * The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
@@ -35,6 +37,14 @@ export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class {} as 
       return this.viewport;
     }
 
+    getZoom() {
+      return this.zoom;
+    }
+
+    getTranslation() {
+      return this.translation;
+    }
+
     setDimensions(bounds: Size, viewport: Size) {
       if (!_.isEqual(this.bounds, bounds) || !_.isEqual(this.viewport, viewport)) {
         this.bounds = bounds;
@@ -44,6 +54,16 @@ export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class {} as 
     }
 
     onDimensionsChanged(bounds: Size, viewport: Size) {}
+
+    setZoomPan(zoom: number, translation: Readonly<{ tx: number; ty: number }>) {
+      if (this.zoom !== zoom || !_.isEqual(this.translation, translation)) {
+        this.zoom = zoom;
+        this.translation = translation;
+        this.onZoomPanChanged();
+      }
+    }
+
+    onZoomPanChanged() {}
   };
 }
 

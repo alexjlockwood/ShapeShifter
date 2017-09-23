@@ -2,10 +2,10 @@
 
 ## Terminology
 
-* **project coordinates** - asdf
+### Project coordinates
 
-* **view coordinates** - asdf
+### View coordinates
 
-* **viewport coordinates** - asdf
+### Viewport coordinates
 
-* **local coordinates** - asdf
+### Local coordinates

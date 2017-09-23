@@ -104,10 +104,8 @@ function initializeListeners(ps: PaperService) {
       pl.setSelectionBox(undefined);
     }
   });
-  ps.store.select(getZoomPanInfo).subscribe(info => {
-    paper.view.zoom = info.zoom;
-    paper.view.matrix.tx = info.translation.x;
-    paper.view.matrix.ty = info.translation.y;
+  ps.store.select(getZoomPanInfo).subscribe(({ zoom, translation: { tx, ty } }) => {
+    paper.view.matrix = new paper.Matrix(zoom, 0, 0, zoom, tx, ty);
   });
 }
 
