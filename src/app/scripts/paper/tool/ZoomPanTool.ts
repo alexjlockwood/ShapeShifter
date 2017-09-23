@@ -51,7 +51,7 @@ export class ZoomPanTool extends Tool {
     }
     // Zoom out if alt is pressed, and zoom in otherwise.
     paper.view.zoom *= event.modifiers.alt ? 1 / 1.25 : 1.25;
-    paper.view.center = event.point;
+    paper.view.translate(paper.view.center.subtract(event.point));
   }
 
   private onMouseDrag(event: paper.ToolEvent) {
