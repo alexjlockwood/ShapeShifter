@@ -116,10 +116,7 @@ export function updateDimensions(
   viewHeight: number,
 ) {
   // The view size represents the actual size of the canvas in CSS pixels.
-  paper.view.viewSize = new paper.Size(viewWidth, viewHeight);
-
   // The viewport size represents the user-visible dimensions (i.e. the default 24x24).
-  // Note that sx will always be equal to sy.
-  const cssScaling = viewWidth / viewportWidth;
-  paperLayer.setCssScaling(cssScaling);
+  paper.view.viewSize = new paper.Size(viewWidth, viewHeight);
+  paperLayer.setDimensions(viewportWidth, viewportHeight, viewWidth, viewHeight);
 }

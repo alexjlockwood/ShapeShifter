@@ -66,6 +66,7 @@ export class ZoomPanTool extends Tool {
     const projectPoint = event.point;
     const currentViewPoint = paper.view.projectToView(projectPoint);
     paper.view.translate(projectPoint.subtract(paper.view.viewToProject(this.lastViewPoint)));
+    console.log(paper.view.matrix.values);
     this.lastViewPoint = currentViewPoint;
   }
 

@@ -32,6 +32,7 @@ export class PaperLayer extends paper.Layer {
   private pathOverlayItem: paper.Path;
   private focusedPathItem: paper.Item;
   private snapGuideItem: paper.Item;
+  private pixelGridItem: paper.Item;
 
   // TODO: use Item#visible to hook up 'visible layer ids' from store
   private vectorLayer: VectorLayer;
@@ -48,9 +49,16 @@ export class PaperLayer extends paper.Layer {
     this.updateChildren();
   }
 
-  setCssScaling(scaling: number) {
-    this.cssScaling = scaling;
-    this.matrix = new paper.Matrix(scaling, 0, 0, scaling, 0, 0);
+  setDimensions(
+    viewportWidth: number,
+    viewportHeight: number,
+    viewWidth: number,
+    viewHeight: number,
+  ) {
+    // Note that viewWidth / viewportWidth === viewHeight / viewportHeight.
+    this.cssScaling = viewWidth / viewportWidth;
+    this.matrix = new paper.Matrix(this.cssScaling, 0, 0, this.cssScaling, 0, 0);
+    this.updatePixelGridItem(viewportWidth, viewportHeight);
   }
 
   setVectorLayer(vl: VectorLayer) {
@@ -170,6 +178,17 @@ export class PaperLayer extends paper.Layer {
     }
   }
 
+  private updatePixelGridItem(viewportWidth: number, viewportHeight: number) {
+    if (this.pixelGridItem) {
+      this.pixelGridItem.remove();
+      this.pixelGridItem = undefined;
+    }
+    if (this.cssScaling > 4) {
+      this.pixelGridItem = newPixelGridItem(viewportWidth, viewportHeight);
+      this.updateChildren();
+    }
+  }
+
   private updateChildren() {
     this.children = _.compact([
       this.canvasColorShape,
@@ -180,6 +199,7 @@ export class PaperLayer extends paper.Layer {
       this.pathOverlayItem,
       this.snapGuideItem,
       this.selectionBoxItem,
+      this.pixelGridItem,
     ]);
   }
 
@@ -532,6 +552,26 @@ function newSelectionBoxItem(from: paper.Point, to: paper.Point) {
   path.strokeColor = '#aaaaaa';
   path.dashArray = [3 / paper.view.zoom];
   return path;
+}
+
+function newPixelGridItem(viewportWidth: number, viewportHeight: number) {
+  const group = new paper.Group();
+  const newLineFn = (from: paper.Point, to: paper.Point) => {
+    const line = new paper.Path.Rectangle(from, to);
+    line.strokeColor = '#808080';
+    line.opacity = 0.25;
+    line.strokeScaling = false;
+    line.strokeWidth = 1;
+    return line;
+  };
+  for (let x = 1; x < viewportWidth; x++) {
+    group.addChild(newLineFn(new paper.Point(x, 0), new paper.Point(x, viewportHeight)));
+  }
+  for (let y = 1; y < viewportHeight; y++) {
+    group.addChild(newLineFn(new paper.Point(0, y), new paper.Point(viewportWidth, y)));
+  }
+  console.log(group);
+  return group;
 }
 
 /** Creates a new 'split segment at location' hover item. */

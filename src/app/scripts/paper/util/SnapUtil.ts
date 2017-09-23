@@ -85,7 +85,6 @@ export function buildSnapGuides(snapInfo: SnapInfo) {
       });
     }
   });
-  console.log(guides);
   return guides;
 }
 

@@ -56,6 +56,12 @@ declare module 'paper' {
     scaling: Point;
 
     /**
+     * The view’s transformation matrix, defining the view onto the project's
+     * contents (position, zoom level, rotation, etc).
+     */
+    matrix: Matrix;
+
+    /**
      * Handler function to be called on each frame of an animation.
      * The function receives an event object which contains information about the frame event:
      */
