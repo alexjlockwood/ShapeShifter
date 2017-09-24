@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class {} as T) {
+export function CanvasLayoutMixin<T extends Constructor>(Base = class {} as T) {
   return class extends Base {
     private bounds = { w: 24, h: 24 };
     private viewport = { w: 24, h: 24 };
@@ -53,17 +53,17 @@ export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class {} as 
       }
     }
 
-    onDimensionsChanged(bounds: Size, viewport: Size) {}
+    protected onDimensionsChanged(bounds: Size, viewport: Size) {}
 
     setZoomPan(zoom: number, translation: Readonly<{ tx: number; ty: number }>) {
       if (this.zoom !== zoom || !_.isEqual(this.translation, translation)) {
         this.zoom = zoom;
         this.translation = translation;
-        this.onZoomPanChanged();
+        this.onZoomPanChanged(zoom, translation);
       }
     }
 
-    onZoomPanChanged() {}
+    protected onZoomPanChanged(zoom: number, translation: Readonly<{ tx: number; ty: number }>) {}
   };
 }
 

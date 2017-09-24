@@ -81,7 +81,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   // @Override
-  onDimensionsChanged(bounds: Size, viewport: Size) {
+  protected onDimensionsChanged(bounds: Size, viewport: Size) {
     const { w, h } = this.getViewport();
     [this.$renderingCanvas, this.$offscreenCanvas].forEach(canvas => {
       canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });

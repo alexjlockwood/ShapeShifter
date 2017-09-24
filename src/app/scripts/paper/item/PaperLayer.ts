@@ -555,13 +555,14 @@ function newSelectionBoxItem(from: paper.Point, to: paper.Point) {
 }
 
 function newPixelGridItem(viewportWidth: number, viewportHeight: number) {
-  const group = new paper.Group();
+  const group = new paper.Group({ guide: true });
   const newLineFn = (from: paper.Point, to: paper.Point) => {
     const line = new paper.Path.Rectangle(from, to);
     line.strokeColor = '#808080';
     line.opacity = 0.25;
     line.strokeScaling = false;
     line.strokeWidth = 1;
+    line.guide = true;
     return line;
   };
   for (let x = 1; x < viewportWidth; x++) {
@@ -570,7 +571,6 @@ function newPixelGridItem(viewportWidth: number, viewportHeight: number) {
   for (let y = 1; y < viewportHeight; y++) {
     group.addChild(newLineFn(new paper.Point(0, y), new paper.Point(viewportWidth, y)));
   }
-  console.log(group);
   return group;
 }
 

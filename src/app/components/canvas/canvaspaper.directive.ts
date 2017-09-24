@@ -37,8 +37,8 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
       "id": "1",
       "name": "demo",
       "type": "vector",
-      "width": "480",
-      "height": "480",
+      "width": "48",
+      "height": "48",
       "children": [
         {
           "id": "3",
@@ -53,14 +53,14 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "id": "4",
               "name": "orange",
               "type": "path",
-              "pathData": "M 0 0 h 120 v 120 h -120 v -120",
+              "pathData": "M 0 0 h 12 v 12 h -12 v -12",
               "fillColor": "#ffa500"
             },
             {
               "id": "5",
               "name": "blue",
               "type": "path",
-              "pathData": "M 60 240 h 120 v 120 h -120 v -120",
+              "pathData": "M 6 24 h 12 v 12 h -12 v -12",
               "fillColor": "#0000ff"
             }
           ]
@@ -76,7 +76,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   // @Override
-  onDimensionsChanged() {
+  protected onDimensionsChanged() {
     const { w, h } = this.getViewport();
     const scale = this.cssScale;
     this.$canvas.css({ width: w * scale, height: h * scale });

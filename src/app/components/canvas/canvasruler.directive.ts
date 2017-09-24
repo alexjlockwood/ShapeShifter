@@ -29,12 +29,13 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   }
 
   // @Override
-  onDimensionsChanged() {
+  protected onDimensionsChanged() {
     this.draw();
   }
 
   // @Override
-  onZoomPanChanged() {
+  protected onZoomPanChanged() {
+    console.log(this.getZoom(), this.getTranslation().tx, this.getTranslation().ty);
     this.draw();
   }
 
@@ -53,8 +54,6 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   }
 
   draw() {
-    console.log(this.getZoom(), this.getTranslation());
-
     const { w: vlWidth, h: vlHeight } = this.getViewport();
     const isHorizontal = this.orientation === 'horizontal';
     const width = isHorizontal ? vlWidth * this.cssScale + EXTRA_PADDING * 2 : RULER_SIZE;
@@ -86,8 +85,6 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
 
     const spacingRulerPx = spacingArtPx * rulerZoom;
 
-    const roundFn = (n: number) => _.round(n, 8);
-
     // Text labels.
     ctx.fillStyle = this.themeService.getDisabledTextColor();
     ctx.font = '10px Roboto, Helvetica Neue, sans-serif';
@@ -96,7 +93,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
       ctx.textAlign = 'center';
       for (
         let x = 0, t = 0;
-        roundFn(x) <= roundFn(width - EXTRA_PADDING * 2);
+        MathUtil.round(x) <= MathUtil.round(width - EXTRA_PADDING * 2);
         x += spacingRulerPx, t += spacingArtPx
       ) {
         ctx.fillText(t.toString(), x, height - LABEL_OFFSET);
@@ -107,7 +104,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
       ctx.textAlign = 'right';
       for (
         let y = 0, t = 0;
-        roundFn(y) <= roundFn(height - EXTRA_PADDING * 2);
+        MathUtil.round(y) <= MathUtil.round(height - EXTRA_PADDING * 2);
         y += spacingRulerPx, t += spacingArtPx
       ) {
         ctx.fillText(t.toString(), width - LABEL_OFFSET, y);

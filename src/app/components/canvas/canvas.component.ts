@@ -96,7 +96,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   // @Override
-  onDimensionsChanged(bounds: Size, viewport: Size) {
+  protected onDimensionsChanged(bounds: Size, viewport: Size) {
     const directives = [
       ...this.canvasContainer.toArray(),
       ...this.canvasLayers.toArray(),
@@ -105,6 +105,18 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
       ...this.canvasRulers.toArray(),
     ];
     directives.forEach(d => d.setDimensions(bounds, viewport));
+  }
+
+  // @Override
+  protected onZoomPanChanged(zoom: number, translation: Readonly<{ tx: number; ty: number }>) {
+    const directives = [
+      ...this.canvasContainer.toArray(),
+      ...this.canvasLayers.toArray(),
+      ...this.canvasOverlay.toArray(),
+      ...this.canvasPaper.toArray(),
+      ...this.canvasRulers.toArray(),
+    ];
+    directives.forEach(d => d.setZoomPan(zoom, translation));
   }
 
   @HostListener('mousedown', ['$event'])

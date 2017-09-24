@@ -13,4 +13,4 @@ type ReadonlyTable<T> = ReadonlyArray<ReadonlyArray<T>>;
 type Nullable<T> = { [P in keyof T]: T[P] | null };
 
 // A generic constructor type.
-type Constructor<T> = new (...args: any[]) => T;
+type Constructor<T = {}> = new (...args: any[]) => T;

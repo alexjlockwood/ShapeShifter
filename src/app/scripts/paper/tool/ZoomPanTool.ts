@@ -51,7 +51,7 @@ export class ZoomPanTool extends Tool {
       return;
     }
     // Zoom out if alt is pressed, and zoom in otherwise.
-    const zoom = paper.view.zoom * (event.modifiers.alt ? 1 / 1.25 : 1.25);
+    const zoom = paper.view.zoom * (event.modifiers.alt ? 1 / 2 : 2);
     const { x, y } = paper.view.projectToView(event.point).subtract(event.point.multiply(zoom));
     this.setZoomPanInfo(zoom, x, y);
   }
