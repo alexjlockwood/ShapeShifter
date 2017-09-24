@@ -9,10 +9,15 @@ import * as paper from 'paper';
 import { Gesture } from './Gesture';
 
 /**
- * A gesture that draws a path using the mouse.
+ * A gesture that draws a path.
+ *
+ * Preconditions:
+ * - The user is in pencil mode.
  */
 export class PencilGesture extends Gesture {
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private readonly pl = paper.project.activeLayer as PaperLayer;
+
+  // The last drag point in project coordinates.
   private lastPoint: paper.Point;
 
   constructor(private readonly ps: PaperService) {
@@ -21,27 +26,26 @@ export class PencilGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
+    const { downPoint, middlePoint, point } = event;
     if (!this.lastPoint) {
-      this.lastPoint = event.downPoint;
+      this.lastPoint = downPoint;
     }
-    const delta = this.paperLayer
-      .globalToLocal(event.point)
-      .subtract(this.paperLayer.globalToLocal(this.lastPoint));
+    const delta = this.pl.globalToLocal(point).subtract(this.pl.globalToLocal(this.lastPoint));
     delta.angle += 90;
     const pathOverlayInfo = this.ps.getPathOverlayInfo();
     const pencilPath = pathOverlayInfo
       ? new paper.Path(pathOverlayInfo.pathData)
       : new paper.Path();
-    pencilPath.add(this.paperLayer.globalToLocal(event.middlePoint).add(delta));
+    pencilPath.add(this.pl.globalToLocal(middlePoint).add(delta));
     this.ps.setPathOverlayInfo({ pathData: pencilPath.pathData, strokeColor: 'black' });
-    this.lastPoint = event.point;
+    this.lastPoint = point;
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     if (this.lastPoint) {
       const newPath = new paper.Path(this.ps.getPathOverlayInfo().pathData);
-      if (arePointsClose(this.paperLayer.localToGlobal(newPath.firstSegment.point), event.point)) {
+      if (arePointsClose(this.pl.localToGlobal(newPath.firstSegment.point), event.point)) {
         newPath.closePath(true);
       }
       newPath.smooth({ type: 'continuous' });
@@ -55,8 +59,8 @@ export class PencilGesture extends Gesture {
 
 /**
  * Checks if two points are close enough to be connected. Note that p1 and p2 should
- * belong to the global project coordinate space.
+ * belong to the project coordinate space.
  */
-function arePointsClose(p1: paper.Point, p2: paper.Point, tolerance = 10) {
-  return Math.abs(p1.x - p2.x) < tolerance && Math.abs(p1.y - p2.y) < tolerance;
+function arePointsClose(p1: paper.Point, p2: paper.Point, tolerancePixels = 10) {
+  return Math.abs(p1.x - p2.x) < tolerancePixels && Math.abs(p1.y - p2.y) < tolerancePixels;
 }

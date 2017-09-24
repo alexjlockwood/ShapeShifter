@@ -26,7 +26,7 @@ import { Gesture } from './Gesture';
  * TODO: make it possible to drag/clone multiple items at a time (doesn't seem to work)
  */
 export class SelectDragCloneItemsGesture extends Gesture {
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private readonly pl = paper.project.activeLayer as PaperLayer;
   private selectedItems: ReadonlyArray<paper.Item>;
   private initialItemPositions: ReadonlyArray<paper.Point>;
   private initialMatrices: ReadonlyArray<paper.Matrix>;
@@ -86,7 +86,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
     };
 
     const selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
-      this.paperLayer.findItemByLayerId(id),
+      this.pl.findItemByLayerId(id),
     );
     selectedItems.forEach(item => {
       const downPoint = item.globalToLocal(event.downPoint);
@@ -106,7 +106,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
   private getSnapGuideInfo(): SnapGuideInfo {
     const dragItems = Array.from(this.ps.getSelectedLayers()).map(id =>
-      this.paperLayer.findItemByLayerId(id),
+      this.pl.findItemByLayerId(id),
     );
     if (!dragItems.length) {
       return undefined;
@@ -133,8 +133,8 @@ export class SelectDragCloneItemsGesture extends Gesture {
     );
     const transformLineFn = ({ from, to }: Line) => {
       return {
-        from: this.paperLayer.globalToLocal(new paper.Point(from)),
-        to: this.paperLayer.globalToLocal(new paper.Point(to)),
+        from: this.pl.globalToLocal(new paper.Point(from)),
+        to: this.pl.globalToLocal(new paper.Point(to)),
       };
     };
     return {
