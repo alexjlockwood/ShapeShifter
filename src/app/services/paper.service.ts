@@ -16,8 +16,10 @@ import {
   SetSelectionBox,
   SetSnapGuideInfo,
   SetToolMode,
+  SetTooltipInfo,
   SetZoomPanInfo,
   SnapGuideInfo,
+  TooltipInfo,
   ZoomPanInfo,
 } from 'app/store/paper/actions';
 import {
@@ -27,6 +29,7 @@ import {
   getSelectionBox,
   getSnapGuideInfo,
   getToolMode,
+  getTooltipInfo,
   getZoomPanInfo,
 } from 'app/store/paper/selectors';
 import * as $ from 'jquery';
@@ -141,6 +144,13 @@ export class PaperService {
   setZoomPanInfo(info: ZoomPanInfo) {
     if (!_.isEqual(this.queryStore(getZoomPanInfo), info)) {
       this.store.dispatch(new SetZoomPanInfo(info));
+    }
+  }
+
+  /** Sets the current tooltip info. */
+  setTooltipInfo(info: TooltipInfo) {
+    if (!_.isEqual(this.queryStore(getTooltipInfo), info)) {
+      this.store.dispatch(new SetTooltipInfo(info));
     }
   }
 

@@ -1,7 +1,12 @@
 import { ToolMode } from 'app/model/paper';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
-import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
+import {
+  getHiddenLayerIds,
+  getHoveredLayerId,
+  getSelectedLayerIds,
+  getVectorLayer,
+} from 'app/store/layers/selectors';
 import {
   getFocusedPathInfo,
   getPathOverlayInfo,
@@ -94,12 +99,12 @@ function initializeListeners(ps: PaperService) {
   ps.store.select(getPathOverlayInfo).subscribe(info => pl.setPathOverlayInfo(info));
   ps.store.select(getFocusedPathInfo).subscribe(info => pl.setFocusedPathInfo(info));
   ps.store.select(getSnapGuideInfo).subscribe(info => pl.setSnapGuideInfo(info));
+  ps.store.select(getHiddenLayerIds).subscribe(ids => pl.setHiddenLayers(ids));
   ps.store.select(getSelectionBox).subscribe(box => {
     if (box) {
-      pl.setSelectionBox({
-        from: new paper.Point(box.from),
-        to: new paper.Point(box.to),
-      });
+      const from = new paper.Point(box.from);
+      const to = new paper.Point(box.to);
+      pl.setSelectionBox({ from, to });
     } else {
       pl.setSelectionBox(undefined);
     }

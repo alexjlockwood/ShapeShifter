@@ -34,11 +34,11 @@ export class PaperLayer extends paper.Layer {
   private snapGuideItem: paper.Item;
   private pixelGridItem: paper.Item;
 
-  // TODO: use Item#visible to hook up 'visible layer ids' from store
   private vectorLayer: VectorLayer;
   private selectedLayerIds: ReadonlySet<string> = new Set();
   private hoveredLayerId: string;
   private focusedPathInfo: FocusedPathInfo;
+  private hiddenLayerIds: ReadonlySet<string> = new Set();
 
   private cssScaling = 1;
 
@@ -73,6 +73,12 @@ export class PaperLayer extends paper.Layer {
   setSelectedLayers(layerIds: ReadonlySet<string>) {
     this.selectedLayerIds = new Set(layerIds);
     this.updateSelectionBoundsItem();
+  }
+
+  setHiddenLayers(layerIds: ReadonlySet<string>) {
+    this.hiddenLayerIds = new Set(layerIds);
+    this.updateHiddenLayers();
+    // TODO: should we hide selection bounds, overlays, etc. for invisible layers?
   }
 
   setHoveredLayer(layerId: string) {
@@ -132,6 +138,7 @@ export class PaperLayer extends paper.Layer {
       this.vectorLayerItem.remove();
     }
     this.vectorLayerItem = newVectorLayerItem(this.vectorLayer);
+    this.updateHiddenLayers();
     this.updateChildren();
   }
 
@@ -151,6 +158,16 @@ export class PaperLayer extends paper.Layer {
       );
     }
     this.updateChildren();
+  }
+
+  private updateHiddenLayers() {
+    const hiddenLayerIds = this.hiddenLayerIds;
+    (function recurseFn(item: paper.Item) {
+      item.visible = !hiddenLayerIds.has(item.data.id);
+      if (item.hasChildren()) {
+        item.children.forEach(recurseFn);
+      }
+    })(this.vectorLayerItem);
   }
 
   private updateHoverPathItem() {
