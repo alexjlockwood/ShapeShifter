@@ -1,4 +1,4 @@
-import { INIT_ACTION } from './dispatcher';
+import { INIT_ACTION } from 'app/store/ngrx/dispatcher';
 
 declare var console;
 const logger = console;
@@ -41,7 +41,7 @@ const printBuffer = options => logBuffer => {
       typeof collapsed === `function` ? collapsed(() => nextState, action) : collapsed;
 
     const formattedTime = formatTime(startedTime);
-    const titleCSS = colors.title ? `color: ${colors.title(formattedAction)};` : null;
+    const titleCSS = colors.title ? `color: ${colors.title(formattedAction)};` : undefined;
     const title = `action ${timestamp ? formattedTime : ``} ${formattedAction.type} ${duration
       ? `(in ${took.toFixed(2)} ms)`
       : ``}`;
@@ -136,7 +136,7 @@ const isAllowed = (action, filter) => {
   return filter.blacklist && filter.blacklist.indexOf(action.type) === -1;
 };
 
-export const storeLogger = (opts: LoggerOptions = {}) => (reducer: Function) => {
+export const metaReducer = (opts: LoggerOptions = {}) => (reducer: Function) => {
   let log = {};
   const ua =
     typeof window !== 'undefined' && window.navigator.userAgent ? window.navigator.userAgent : '';

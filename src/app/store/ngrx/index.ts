@@ -1,4 +1,4 @@
-export { Action, Dispatcher } from './dispatcher';
+export { Action, Dispatcher, INIT_ACTION } from './dispatcher';
 export { StoreModule } from './ng';
 export { ActionReducer, Reducer } from './reducer';
 export { SelectSignature, select } from './select';
