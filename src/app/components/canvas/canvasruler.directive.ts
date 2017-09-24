@@ -35,7 +35,6 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
 
   // @Override
   protected onZoomPanChanged() {
-    console.log(this.getZoom(), this.getTranslation().tx, this.getTranslation().ty);
     this.draw();
   }
 
@@ -46,6 +45,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
     }
   }
 
+  // TODO: need to transform mouse point to account for zoom and translation
   showMouse(mousePoint: Point) {
     if (!this.mousePoint || !MathUtil.arePointsEqual(this.mousePoint, mousePoint)) {
       this.mousePoint = mousePoint;
@@ -54,19 +54,19 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   }
 
   draw() {
+    const zoom = this.getZoom();
     const { w: vlWidth, h: vlHeight } = this.getViewport();
     const isHorizontal = this.orientation === 'horizontal';
-    const width = isHorizontal ? vlWidth * this.cssScale + EXTRA_PADDING * 2 : RULER_SIZE;
-    const height = isHorizontal ? RULER_SIZE : vlHeight * this.cssScale + EXTRA_PADDING * 2;
+    const width = isHorizontal ? vlWidth * this.cssScale * zoom + EXTRA_PADDING * 2 : RULER_SIZE;
+    const height = isHorizontal ? RULER_SIZE : vlHeight * this.cssScale * zoom + EXTRA_PADDING * 2;
     this.$canvas.css({ width, height });
-    this.$canvas.attr({
-      width: width * devicePixelRatio,
-      height: height * devicePixelRatio,
-    });
+    this.$canvas.attr({ width: width * devicePixelRatio, height: height * devicePixelRatio });
 
     const ctx = this.$canvas.get(0).getContext('2d');
     ctx.scale(devicePixelRatio, devicePixelRatio);
     ctx.translate(isHorizontal ? EXTRA_PADDING : 0, isHorizontal ? 0 : EXTRA_PADDING);
+    const { tx, ty } = this.getTranslation();
+    ctx.translate(isHorizontal ? tx : 0, isHorizontal ? 0 : ty);
 
     const rulerZoom = Math.max(
       1,
