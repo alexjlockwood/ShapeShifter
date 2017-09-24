@@ -1,10 +1,27 @@
 import * as paper from 'paper';
 
 export class SelectionBoundsRaster extends paper.Raster {
-  readonly oppositePivotType: PivotType;
-  constructor(public readonly pivotType: PivotType, center: paper.Point) {
-    super(`/assets/handle.png`, center);
-    this.oppositePivotType = getOppositePivotType(pivotType);
+  static of(pivotType: PivotType, center: paper.Point) {
+    if (!SelectionBoundsRaster.instance) {
+      SelectionBoundsRaster.instance = new SelectionBoundsRaster();
+    }
+    const raster = SelectionBoundsRaster.instance.clone(false) as SelectionBoundsRaster;
+    raster.position = center;
+    raster.pivotType_ = pivotType;
+    raster.oppositePivotType_ = getOppositePivotType(pivotType);
+    return raster;
+  }
+  private static instance: SelectionBoundsRaster;
+  private pivotType_: PivotType;
+  private oppositePivotType_: PivotType;
+  constructor() {
+    super(`/assets/handle.png`);
+  }
+  get pivotType() {
+    return this.pivotType_;
+  }
+  get oppositePivotType() {
+    return this.oppositePivotType_;
   }
 }
 

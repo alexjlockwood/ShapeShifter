@@ -393,7 +393,7 @@ function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
   PIVOT_TYPES.forEach(pivotType => {
     // TODO: avoid creating rasters in a loop like this
     const center = bounds[pivotType];
-    const handle = new SelectionBoundsRaster(pivotType, center);
+    const handle = SelectionBoundsRaster.of(pivotType, center);
     const scaleFactor = 1 / (cssScaling * devicePixelRatio);
     handle.scale(scaleFactor, scaleFactor);
     group.addChild(handle);

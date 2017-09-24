@@ -22,7 +22,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
 
   constructor(
     elementRef: ElementRef,
-    private readonly paperService: PaperService,
+    private readonly ps: PaperService,
     private readonly store: Store<State>,
   ) {
     super();
@@ -30,7 +30,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   ngAfterViewInit() {
-    Paper.initialize(this.$canvas.get(0), this.paperService);
+    Paper.initialize(this.$canvas.get(0), this.ps);
 
     // TODO: remove this debug code
     const jsonObj = JSON.parse(`{
@@ -53,7 +53,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "id": "4",
               "name": "orange",
               "type": "path",
-              "pathData": "M 0 0 h 12 v 12 h -12 v -12",
+              "pathData": "M 1 1 h 12 v 12 h -12 v -12",
               "fillColor": "#ffa500"
             },
             {

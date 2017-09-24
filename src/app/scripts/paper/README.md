@@ -1,6 +1,6 @@
 # paper.js notes
 
-## Terminology
+## Coordinate spaces
 
 ### Project coordinates
 
@@ -9,3 +9,5 @@
 ### Viewport coordinates
 
 ### Local coordinates
+
+## Tools
