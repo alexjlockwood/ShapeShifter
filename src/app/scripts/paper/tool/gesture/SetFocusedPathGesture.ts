@@ -9,18 +9,18 @@ import { Gesture } from './Gesture';
  * A gesture that exits selection mode and enters focused path mode.
  */
 export class SetFocusedPathGesture extends Gesture {
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private readonly pl = paper.project.activeLayer as PaperLayer;
 
-  constructor(private readonly ps: PaperService, private readonly focusedPathItemId: string) {
+  constructor(private readonly ps: PaperService, private readonly focusedPathId: string) {
     super();
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setSelectedLayers(new Set());
-    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId) as paper.Path;
+    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
     this.ps.setFocusedPathInfo({
-      layerId: this.focusedPathItemId,
+      layerId: this.focusedPathId,
       ...PaperUtil.selectCurves(this.ps, focusedPath, new Set([focusedPath.segments.length - 1])),
     });
   }

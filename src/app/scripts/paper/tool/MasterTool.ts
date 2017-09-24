@@ -2,7 +2,7 @@ import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
 import { MathUtil } from 'app/scripts/common';
 import { ClickDetector } from 'app/scripts/paper/detector';
-import { PaperLayer } from 'app/scripts/paper/item';
+import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import {
   AddDeleteHandlesGesture,
   BatchSelectItemsGesture,
@@ -35,7 +35,7 @@ import { Tool } from './Tool';
  * TODO: https://medium.com/sketch-app/mastering-the-bezier-curve-in-sketch-4da8fdf0dbbb
  */
 export class MasterTool extends Tool {
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private readonly pl = paper.project.activeLayer as PaperLayer;
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverItemsGesture(this.ps);
 
@@ -95,8 +95,9 @@ export class MasterTool extends Tool {
 
   private onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
-    if (this.ps.getFocusedPathInfo()) {
-      this.currentGesture = new HoverSegmentsCurvesGesture(this.ps);
+    const fpi = this.ps.getFocusedPathInfo();
+    if (fpi) {
+      this.currentGesture = new HoverSegmentsCurvesGesture(this.ps, fpi.layerId);
     } else {
       this.currentGesture = new HoverItemsGesture(this.ps);
     }
@@ -106,14 +107,14 @@ export class MasterTool extends Tool {
     const selectedLayers = this.ps.getSelectedLayers();
     if (selectedLayers.size > 0) {
       // First perform a hit test on the selection bounds.
-      const res = this.paperLayer.hitTestSelectionBoundsItem(event.point);
+      const res = HitTests.selectionModeSegments(event.point);
       if (res) {
         // If the hit item is a selection bounds segment, then perform a scale gesture.
         return new ScaleItemsGesture(this.ps, res.item);
       }
     }
 
-    const hitResult = this.paperLayer.hitTest(event.point, { fill: true, stroke: true });
+    const hitResult = HitTests.selectionMode(event.point);
     if (!hitResult) {
       // If there is no hit item, then batch select items using a selection box box.
       return new BatchSelectItemsGesture(this.ps);
@@ -162,7 +163,7 @@ export class MasterTool extends Tool {
 
   private createFocusedPathModeGesture(event: paper.ToolEvent, focusedPathInfo: FocusedPathInfo) {
     // First, do a hit test on the focused path's segments and handles.
-    const segmentHandleHitResult = this.paperLayer.hitTestFocusedPathItem(event.point);
+    const segmentHandleHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
     if (segmentHandleHitResult) {
       const { segmentIndex, type } = segmentHandleHitResult.item;
       if (type === 'handle-in' || type === 'handle-out') {
@@ -181,12 +182,8 @@ export class MasterTool extends Tool {
     }
 
     // Second, do a hit test on the underlying path's stroke/curves.
-    const focusedPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-    const focusedPathHitResult = focusedPath.hitTest(focusedPath.globalToLocal(event.point), {
-      fill: true,
-      stroke: true,
-      curves: true,
-    });
+    const focusedPath = this.pl.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
+    const focusedPathHitResult = HitTests.focusedPathMode(event.point, focusedPath);
     if (focusedPathHitResult) {
       const { type, location } = focusedPathHitResult;
       if (type === 'stroke' || type === 'curve') {

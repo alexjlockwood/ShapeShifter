@@ -19,8 +19,7 @@ import { Gesture } from './Gesture';
  * an open path by appending segments to its end points.
  *
  * Preconditions:
- * - The user is in focused path mode (i.e. there is a valid focused
- *   path that the user is operating on).
+ * - The user is in focused path mode.
  * - The user either hit a segment, a curve, or missed entirely.
  *   The last case occurs when the user is in pen mode (in which
  *   the user can create new segments by clicking on the canvas).
@@ -32,8 +31,8 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
   }
 
   /** Static factory method to use when the user's mouse down hits a curve. */
-  static hitCurve(ps: PaperService, curveIndex: number, curveTime: number) {
-    return new SelectDragDrawSegmentsGesture(ps, undefined, { curveIndex, time: curveTime });
+  static hitCurve(ps: PaperService, curveIndex: number, time: number) {
+    return new SelectDragDrawSegmentsGesture(ps, undefined, { curveIndex, time });
   }
 
   /** Static factory method to use when the user misses the focused path. */
@@ -41,139 +40,142 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     return new SelectDragDrawSegmentsGesture(ps);
   }
 
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
-  private readonly focusedPathItemId: string;
-  private readonly initialSelectedSegments: ReadonlySet<number>;
-  private lastPoint: paper.Point;
-
+  private readonly pl = paper.project.activeLayer as PaperLayer;
+  private readonly focusedPathId: string;
   // Maps segment indices to each segment's starting position.
-  private selectedSegmentMap: ReadonlyMap<number, paper.Point>;
+  private mouseDownSelectedSegmentIndexMap: ReadonlyMap<number, paper.Point>;
+  // The location of the last mouse event in the focused path's local coordinates.
+  private localLastPoint: paper.Point;
+  private exitFocusedPathModeOnMouseUp = false;
 
   private constructor(
     private readonly ps: PaperService,
-    private readonly segmentInfo?: Readonly<{ segmentIndex: number }>,
-    private readonly curveInfo?: Readonly<{ curveIndex?: number; time: number }>,
+    private readonly hitSegmentInfo?: Readonly<{ segmentIndex: number }>,
+    private readonly hitCurveInfo?: Readonly<{ curveIndex?: number; time: number }>,
   ) {
     super();
-    const focusedPathInfo = this.ps.getFocusedPathInfo();
-    this.focusedPathItemId = focusedPathInfo.layerId;
-    this.initialSelectedSegments = focusedPathInfo.selectedSegments;
+    this.focusedPathId = this.ps.getFocusedPathInfo().layerId;
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    const focusedPathInfo = this.ps.getFocusedPathInfo();
-    const initialSelected = focusedPathInfo.selectedSegments;
-    let updatedSelected = new Set(initialSelected);
+    const fpi = this.ps.getFocusedPathInfo();
+    const beforeSelectedSegmentIndices = fpi.selectedSegments;
+    const afterSelectedSegmentIndices = new Set(beforeSelectedSegmentIndices);
+    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
 
-    const focusedPath = this.paperLayer
-      .findItemByLayerId(focusedPathInfo.layerId)
-      .clone() as paper.Path;
-
-    if (this.segmentInfo) {
-      const isEndPointFn = (index: number) =>
-        index === 0 || index === focusedPath.segments.length - 1;
-      const { segmentIndex } = this.segmentInfo;
+    if (this.hitSegmentInfo) {
+      const isEndPointFn = (idx: number) => idx === 0 || idx === focusedPath.segments.length - 1;
+      const { segmentIndex } = this.hitSegmentInfo;
+      const singleSelectedSegmentIndex = beforeSelectedSegmentIndices.size
+        ? beforeSelectedSegmentIndices.values().next().value
+        : undefined;
       if (
         !focusedPath.closed &&
-        initialSelected.size === 1 &&
+        singleSelectedSegmentIndex !== undefined &&
         isEndPointFn(segmentIndex) &&
-        isEndPointFn(initialSelected.values().next().value) &&
-        segmentIndex !== initialSelected.values().next().value
+        isEndPointFn(singleSelectedSegmentIndex) &&
+        segmentIndex !== singleSelectedSegmentIndex
       ) {
         // If the path is open, one of the end points is selected, and the
-        // user clicked the other end point segment, then close the path.
+        // user clicked the other end point segment, then close the path
+        // and end the gesture on the next mouse up event.
         focusedPath.closed = true;
-        PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
+        this.exitFocusedPathModeOnMouseUp = true;
+        PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
       }
       if (event.modifiers.shift || event.modifiers.command) {
         // If shift or command is pressed, toggle the segment's selection state.
-        if (initialSelected.has(segmentIndex)) {
-          updatedSelected.delete(segmentIndex);
+        if (beforeSelectedSegmentIndices.has(segmentIndex)) {
+          afterSelectedSegmentIndices.delete(segmentIndex);
         } else {
-          updatedSelected.add(segmentIndex);
+          afterSelectedSegmentIndices.add(segmentIndex);
         }
       } else {
         // Otherwise, select the hit segment and deselect all others.
-        updatedSelected = new Set([segmentIndex]);
+        afterSelectedSegmentIndices.clear();
+        afterSelectedSegmentIndices.add(segmentIndex);
       }
-    } else if (this.curveInfo) {
+    } else if (this.hitCurveInfo) {
       // If there is no hit segment, then create one along the curve
       // at the given location and select the new segment.
-      const { curveIndex, time } = this.curveInfo;
+      const { curveIndex, time } = this.hitCurveInfo;
       const newSegment = focusedPath.curves[curveIndex].divideAtTime(time).segment1;
-      PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
-      updatedSelected = new Set([newSegment.index]);
+      PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
+      afterSelectedSegmentIndices.clear();
+      afterSelectedSegmentIndices.add(newSegment.index);
     } else {
       // Otherwise, we are either (1) extending an existing open path (beginning
       // at one of its selected end points), or (2) beginning to create a new path
       // from scratch.
+      const localPoint = focusedPath.globalToLocal(event.point);
       let addedSegment: paper.Segment;
-      const point = focusedPath.globalToLocal(event.point);
       if (focusedPath.segments.length === 0) {
-        addedSegment = focusedPath.add(point);
+        addedSegment = focusedPath.add(localPoint);
       } else {
         // Note that there will always be a single selected end point segment in this case
         // (otherwise we would have used a batch select segments gesture instead).
-        const singleSelectedSegmentIndex = initialSelected.values().next().value;
+        const singleSelectedSegmentIndex = beforeSelectedSegmentIndices.values().next().value;
         const selectedSegment = focusedPath.segments[singleSelectedSegmentIndex];
         addedSegment = selectedSegment.isLast()
-          ? focusedPath.add(point)
-          : focusedPath.insert(0, point);
-        updatedSelected.delete(singleSelectedSegmentIndex);
+          ? focusedPath.add(localPoint)
+          : focusedPath.insert(0, localPoint);
+        afterSelectedSegmentIndices.delete(singleSelectedSegmentIndex);
       }
-      updatedSelected.add(addedSegment.index);
-      PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
+      afterSelectedSegmentIndices.add(addedSegment.index);
+      PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
     }
 
-    this.selectedSegmentMap = new Map(
-      Array.from(updatedSelected).map(segmentIndex => {
+    this.mouseDownSelectedSegmentIndexMap = new Map(
+      Array.from(afterSelectedSegmentIndices).map(segmentIndex => {
         const point = focusedPath.segments[segmentIndex].point.clone();
         return [segmentIndex, point] as [number, paper.Point];
       }),
     );
 
     this.ps.setFocusedPathInfo({
-      ...focusedPathInfo,
-      ...PaperUtil.selectCurves(this.ps, focusedPath, updatedSelected),
+      ...fpi,
+      ...PaperUtil.selectCurves(this.ps, focusedPath, afterSelectedSegmentIndices),
     });
     CursorUtil.set(Cursor.PointSelect);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const focusedPath = this.paperLayer
-      .findItemByLayerId(this.focusedPathItemId)
-      .clone() as paper.Path;
-    const downPoint = focusedPath.globalToLocal(event.downPoint);
-    this.lastPoint = this.lastPoint ? this.lastPoint : downPoint;
-    const point = focusedPath.globalToLocal(event.point);
-    const delta = point.subtract(this.lastPoint);
-    const snapPoint = event.modifiers.shift
-      ? new paper.Point(MathUtil.snapVectorToAngle(point.subtract(downPoint), 90))
+    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
+
+    const localDownPoint = focusedPath.globalToLocal(event.downPoint);
+    if (!this.localLastPoint) {
+      this.localLastPoint = localDownPoint;
+    }
+    const localPoint = focusedPath.globalToLocal(event.point);
+    const delta = localPoint.subtract(this.localLastPoint);
+    const localSnapPoint = event.modifiers.shift
+      ? new paper.Point(MathUtil.snapVectorToAngle(localPoint.subtract(localDownPoint), 90))
       : undefined;
-    if (this.segmentInfo || this.curveInfo) {
-      // Then drag the one or more currently selected segments.
-      const selectedSegmentIndices = new Set(this.selectedSegmentMap.keys());
-      const nonSelectedSegmentIndices = Array.from(
-        focusedPath.segments.map((s, i) => i).filter(i => !selectedSegmentIndices.has(i)),
-      );
-      this.selectedSegmentMap.forEach((initialSegmentPoint, segmentIndex) => {
+
+    if (this.hitSegmentInfo || this.hitCurveInfo) {
+      // A segment was created on mouse down and is still being grabbed,
+      // so continue to drag the currently selected segments.
+      const selectedSegmentIndices = new Set(this.mouseDownSelectedSegmentIndexMap.keys());
+      const nonSelectedSegmentIndices = focusedPath.segments
+        .map((s, segmentIndex) => segmentIndex)
+        .filter((s, segmentIndex) => !selectedSegmentIndices.has(segmentIndex));
+      this.mouseDownSelectedSegmentIndexMap.forEach((initialSegmentPoint, segmentIndex) => {
         const segment = focusedPath.segments[segmentIndex];
         segment.point = event.modifiers.shift
-          ? initialSegmentPoint.add(snapPoint)
-          : segment.point.add(delta);
+          ? initialSegmentPoint.add(localSnapPoint)
+          : segment.point.add(localPoint.subtract(this.localLastPoint));
       });
       const dragSnapPoints = Array.from(selectedSegmentIndices).map(i =>
         focusedPath.localToGlobal(focusedPath.segments[i].point),
       );
-      const { topLeft, center, bottomRight } = Array.from(this.selectedSegmentMap.values())
-        .map(p => focusedPath.localToGlobal(p))
-        .reduce(
-          (rect: paper.Rectangle, p: paper.Point) =>
-            rect ? rect.include(p) : new paper.Rectangle(p, new paper.Size(0, 0)),
-          undefined,
-        );
+      const { topLeft, center, bottomRight } = Array.from(
+        this.mouseDownSelectedSegmentIndexMap.values(),
+      ).reduce((rect: paper.Rectangle, p: paper.Point) => {
+        p = focusedPath.localToGlobal(p);
+        return rect ? rect.include(p) : new paper.Rectangle(p, new paper.Size(0, 0));
+      }, undefined);
       const siblingSnapPointsTable = [
         [topLeft, center, bottomRight],
         ...nonSelectedSegmentIndices.map(i => {
@@ -187,10 +189,9 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
         guides: SnapUtil.buildSnapGuides(
           SnapUtil.getSnapInfo(dragSnapPoints, siblingSnapPointsTable),
         ).map(({ from, to }: Line) => {
-          return {
-            from: this.paperLayer.globalToLocal(new paper.Point(from)),
-            to: this.paperLayer.globalToLocal(new paper.Point(to)),
-          };
+          from = this.pl.globalToLocal(new paper.Point(from));
+          to = this.pl.globalToLocal(new paper.Point(to));
+          return { from, to };
         }),
         rulers: [],
       });
@@ -198,12 +199,14 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // Then we have just added a segment to the path in onMouseDown()
       // and should thus move the segment's handles onMouseDrag().
       // Note that there will only ever be one selected segment in this case.
-      const segmentIndex = this.selectedSegmentMap.keys().next().value;
-      const segmentPosition = this.selectedSegmentMap.get(segmentIndex);
-      const selectedSegment = focusedPath.segments[segmentIndex];
+      const selectedSegmentIndex = this.mouseDownSelectedSegmentIndexMap.keys().next().value;
+      const selectedSegment = focusedPath.segments[selectedSegmentIndex];
       if (event.modifiers.shift) {
-        selectedSegment.handleIn = segmentPosition.subtract(snapPoint);
-        selectedSegment.handleOut = segmentPosition.add(snapPoint);
+        const initialSelectedSegmentPosition = this.mouseDownSelectedSegmentIndexMap.get(
+          selectedSegmentIndex,
+        );
+        selectedSegment.handleIn = initialSelectedSegmentPosition.subtract(localSnapPoint);
+        selectedSegment.handleOut = initialSelectedSegmentPosition.add(localSnapPoint);
       } else {
         // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
         // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
@@ -214,14 +217,18 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
         selectedSegment.handleOut = selectedSegment.handleOut.add(delta);
       }
     }
-    this.lastPoint = point;
+    this.localLastPoint = localPoint;
 
-    PaperUtil.replacePathInStore(this.ps, this.focusedPathItemId, focusedPath.pathData);
+    PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     CursorUtil.clear();
     this.ps.setSnapGuideInfo(undefined);
+    if (this.exitFocusedPathModeOnMouseUp) {
+      this.ps.setFocusedPathInfo(undefined);
+      this.ps.setSelectedLayers(new Set([this.focusedPathId]));
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { PaperLayer } from 'app/scripts/paper/item';
+import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
@@ -8,22 +8,24 @@ import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs hover operations over segments and curves.
- * This gesture is used only during 'edit path' mode.
+ *
+ * Preconditions:
+ * - The user is in focused path mode.
  */
 export class HoverSegmentsCurvesGesture extends Gesture {
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
-  constructor(private readonly ps: PaperService) {
+  private readonly pl = paper.project.activeLayer as PaperLayer;
+
+  constructor(private readonly ps: PaperService, private readonly focusedPathId: string) {
     super();
   }
 
   // @Override
-  onMouseMove({ point }: paper.ToolEvent) {
+  onMouseMove(event: paper.ToolEvent) {
     // Cursors.clear();
     // Guides.hidePenPathPreviewPath();
     // Guides.hideAddSegmentToCurveHoverGroup();
-    // const focusedPathInfo = this.ps.getFocusedPathInfo();
-    // const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-    // const hitResult = HitTests.editPathMode(editPath, point);
+    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
+    const hitResult = HitTests.focusedPathMode(event.point, focusedPath);
     // if (!hitResult) {
     //   const singleSelectedSegment = this.findSingleSelectedEndSegment();
     //   if (singleSelectedSegment) {
@@ -70,19 +72,19 @@ export class HoverSegmentsCurvesGesture extends Gesture {
    * Returns the single selected end point segment for the selected
    * edit path, or undefined if one doesn't exist.
    */
-  private findSingleSelectedEndSegment() {
-    const focusedPathInfo = this.ps.getFocusedPathInfo();
-    const focusedPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-    if (focusedPath.closed) {
-      // Return undefined if the path is closed.
-      return undefined;
-    }
-    const { selectedSegments } = focusedPathInfo;
-    if (selectedSegments.size !== 1) {
-      // Return undefined if there is not a single selected segment.
-      return undefined;
-    }
-    const lastIndex = focusedPath.segments.length - 1;
-    return selectedSegments.has(0) ? 0 : selectedSegments.has(lastIndex) ? lastIndex : undefined;
-  }
+  //   private findSingleSelectedEndSegment() {
+  //     const focusedPathInfo = this.ps.getFocusedPathInfo();
+  //     const focusedPath = this.pl.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
+  //     if (focusedPath.closed) {
+  //       // Return undefined if the path is closed.
+  //       return undefined;
+  //     }
+  //     const { selectedSegments } = focusedPathInfo;
+  //     if (selectedSegments.size !== 1) {
+  //       // Return undefined if there is not a single selected segment.
+  //       return undefined;
+  //     }
+  //     const lastIndex = focusedPath.segments.length - 1;
+  //     return selectedSegments.has(0) ? 0 : selectedSegments.has(lastIndex) ? lastIndex : undefined;
+  //   }
 }

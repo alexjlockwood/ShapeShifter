@@ -120,7 +120,7 @@ export class ScaleItemsGesture extends Gesture {
     let newVl = this.initialVectorLayer.clone();
     this.selectedItems.forEach((item, index) => {
       // TODO: make this stuff works for groups as well
-      const path = item.clone() as paper.Path;
+      const path = item as paper.Path;
       path.applyMatrix = true;
       const localToViewportMatrix = this.localToViewportMatrices[index];
       const matrix = localToViewportMatrix.clone();

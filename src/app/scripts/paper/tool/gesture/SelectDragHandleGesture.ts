@@ -10,11 +10,15 @@ import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs selection and drag operations on a segment handle.
+ *
+ * Preconditions:
+ * - The user is in focused path mode.
+ * - The user hit a selected segment's handle.
  */
 export class SelectDragHandleGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   private readonly hitHandleType: 'handleIn' | 'handleOut';
-  private focusedPathItemId: string;
+  private focusedPathId: string;
   private initialHandle: paper.Point;
   private lastDragEventInfo: Readonly<{ downPoint: paper.Point; point: paper.Point }>;
 
@@ -25,7 +29,7 @@ export class SelectDragHandleGesture extends Gesture {
   ) {
     super();
     this.hitHandleType = hitResultType === 'handle-in' ? 'handleIn' : 'handleOut';
-    this.focusedPathItemId = this.ps.getFocusedPathInfo().layerId;
+    this.focusedPathId = this.ps.getFocusedPathInfo().layerId;
   }
 
   // @Override
@@ -39,13 +43,13 @@ export class SelectDragHandleGesture extends Gesture {
       selectedHandleIn,
       selectedHandleOut,
     });
-    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId) as paper.Path;
+    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathId) as paper.Path;
     this.initialHandle = focusedPath.segments[this.segmentIndex][this.hitHandleType].clone();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId);
+    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathId);
     const downPoint = focusedPath.globalToLocal(event.downPoint);
     const point = focusedPath.globalToLocal(event.point);
     this.lastDragEventInfo = { downPoint, point };
@@ -79,10 +83,8 @@ export class SelectDragHandleGesture extends Gesture {
       const theta = -(this.initialHandle.angle - handle.angle) * Math.PI / 180;
       handle.set(this.initialHandle.normalize().multiply(handle.length * Math.cos(theta)));
     }
-    const focusedPath = this.paperLayer
-      .findItemByLayerId(this.focusedPathItemId)
-      .clone() as paper.Path;
+    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathId) as paper.Path;
     focusedPath.segments[this.segmentIndex][this.hitHandleType] = handle;
-    PaperUtil.replacePathInStore(this.ps, this.focusedPathItemId, focusedPath.pathData);
+    PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
   }
 }

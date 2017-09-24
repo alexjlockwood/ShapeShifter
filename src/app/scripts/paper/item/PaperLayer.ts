@@ -265,18 +265,6 @@ export class PaperLayer extends paper.Layer {
       inside: includePartialOverlaps ? undefined : new paper.Rectangle(bounds),
     });
   }
-
-  hitTestSelectionBoundsItem(mousePoint: paper.Point) {
-    return this.selectionBoundsItem.hitTest(this.globalToLocal(mousePoint), {
-      class: SelectionBoundsRaster,
-    });
-  }
-
-  hitTestFocusedPathItem(mousePoint: paper.Point) {
-    return this.focusedPathItem.hitTest(this.globalToLocal(mousePoint), {
-      class: FocusedPathRaster,
-    });
-  }
 }
 
 function parseAndroidColor(androidColor: string, alpha = 1) {
