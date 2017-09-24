@@ -5,6 +5,7 @@ import { PaperLayer } from 'app/scripts/paper/item';
 import { PivotType, SelectionBoundsRaster } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
+import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
@@ -59,8 +60,19 @@ export class ScaleItemsGesture extends Gesture {
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     this.point = this.paperLayer.globalToLocal(event.point);
+    const { x, y } = this.point;
+    this.ps.setTooltipInfo({
+      point: { x, y },
+      // TODO: display the current width/height of the shape
+      label: `${_.round(x, 1)} ⨯ ${_.round(y, 1)}`,
+    });
     this.processEvent(event);
     this.lastPoint = this.point;
+  }
+
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    this.ps.setTooltipInfo(undefined);
   }
 
   // @Override

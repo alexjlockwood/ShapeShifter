@@ -12,6 +12,7 @@ import {
   getPathOverlayInfo,
   getSelectionBox,
   getSnapGuideInfo,
+  getTooltipInfo,
   getZoomPanInfo,
 } from 'app/store/paper/selectors';
 import { getToolMode } from 'app/store/paper/selectors';
@@ -19,11 +20,24 @@ import * as paper from 'paper';
 
 import { Tool, newMasterTool, newZoomPanTool } from './tool';
 
+// By default paper.js bakes matrix transformations directly into its children.
+// This is usually not the behavior we want (especially for groups).
+paper.settings.applyMatrix = false;
+
+// By default paper.js automatically inserts newly created items into the active layer.
+// This behavior makes it harder to explicitly position things in the item hierarchy.
+paper.settings.insertItems = false;
+
+// TODO: make it possible to deactivate/destroy an active paper.js project
 let paperLayer: PaperLayer;
 
+/**
+ * Note that this must be called after the DOM has been initialized
+ * (i.e. in an ngAfterViewInit callback).
+ */
 export function initialize(canvas: HTMLCanvasElement, paperService: PaperService) {
   if (paperLayer) {
-    return;
+    throw new Error('A project already exists for the provided canvas!');
   }
   initializeCanvas(canvas);
   initializeTools(paperService);
@@ -32,15 +46,6 @@ export function initialize(canvas: HTMLCanvasElement, paperService: PaperService
 
 function initializeCanvas(canvas: HTMLCanvasElement) {
   paper.setup(canvas);
-
-  // By default paper.js bakes matrix transformations directly into its children.
-  // This is usually not the behavior we want (especially for groups).
-  paper.settings.applyMatrix = false;
-
-  // By default paper.js automatically inserts newly created items into the active layer.
-  // This behavior makes it harder to explicitly position things in the item hierarchy.
-  paper.settings.insertItems = false;
-
   paperLayer = new PaperLayer();
   paper.project.addLayer(paperLayer);
 }
@@ -100,6 +105,7 @@ function initializeListeners(ps: PaperService) {
   ps.store.select(getFocusedPathInfo).subscribe(info => pl.setFocusedPathInfo(info));
   ps.store.select(getSnapGuideInfo).subscribe(info => pl.setSnapGuideInfo(info));
   ps.store.select(getHiddenLayerIds).subscribe(ids => pl.setHiddenLayers(ids));
+  ps.store.select(getTooltipInfo).subscribe(info => pl.setTooltipInfo(info));
   ps.store.select(getSelectionBox).subscribe(box => {
     if (box) {
       const from = new paper.Point(box.from);

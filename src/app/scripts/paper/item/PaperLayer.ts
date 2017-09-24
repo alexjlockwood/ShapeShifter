@@ -8,7 +8,12 @@ import {
 } from 'app/model/layers';
 import { ColorUtil } from 'app/scripts/common';
 import { PaperUtil } from 'app/scripts/paper/util';
-import { FocusedPathInfo, PathOverlayInfo, SnapGuideInfo } from 'app/store/paper/actions';
+import {
+  FocusedPathInfo,
+  PathOverlayInfo,
+  SnapGuideInfo,
+  TooltipInfo,
+} from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
@@ -33,6 +38,7 @@ export class PaperLayer extends paper.Layer {
   private focusedPathItem: paper.Item;
   private snapGuideItem: paper.Item;
   private pixelGridItem: paper.Item;
+  private tooltipItem: paper.Item;
 
   private vectorLayer: VectorLayer;
   private selectedLayerIds: ReadonlySet<string> = new Set();
@@ -100,6 +106,17 @@ export class PaperLayer extends paper.Layer {
   setFocusedPathInfo(info: FocusedPathInfo) {
     this.focusedPathInfo = info;
     this.updateFocusedPathItem();
+  }
+
+  setTooltipInfo(info: TooltipInfo) {
+    if (this.tooltipItem) {
+      this.tooltipItem.remove();
+      this.tooltipItem = undefined;
+    }
+    if (info) {
+      this.tooltipItem = newTooltipItem(info, this.cssScaling);
+      this.updateChildren();
+    }
   }
 
   setSnapGuideInfo(info: SnapGuideInfo) {
@@ -217,6 +234,7 @@ export class PaperLayer extends paper.Layer {
       this.snapGuideItem,
       this.selectionBoxItem,
       this.pixelGridItem,
+      this.tooltipItem,
     ]);
   }
 
@@ -494,8 +512,20 @@ function newPathOverlayItem(info: PathOverlayInfo) {
   return path;
 }
 
+function newTooltipItem(info: TooltipInfo, cssScaling: number) {
+  // TODO: use a better font (roboto?)
+  return new paper.PointText({
+    point: info.point,
+    content: info.label,
+    fillColor: 'red',
+    justification: 'right',
+    fontSize: 12 / paper.view.zoom / cssScaling,
+    guide: true,
+  });
+}
+
 function newSnapGuideItem(info: SnapGuideInfo, cssScaling: number) {
-  const group = new paper.Group();
+  const group = new paper.Group({ guide: true });
 
   const newLineFn = (from: paper.Point, to: paper.Point) => {
     const line = new paper.Path.Line(from, to);
@@ -523,13 +553,15 @@ function newSnapGuideItem(info: SnapGuideInfo, cssScaling: number) {
   };
 
   const newRulerLabelFn = (point: paper.Point, content: string) => {
+    // TODO: use a better font (roboto?)
     // TODO: add padding above/to the side of the label
     return new paper.PointText({
       point,
       content,
       fillColor: 'red',
-      justification: 'center',
+      // TODO: add justification so it displays to the bottom-left of the current point
       fontSize: 12 / paper.view.zoom / cssScaling,
+      guide: true,
     });
   };
 
