@@ -1,5 +1,5 @@
-import { Action } from '@ngrx/store';
 import { VectorLayer } from 'app/model/layers';
+import { Action } from 'app/store/ngrx';
 
 export const SET_VECTOR_LAYER = '__layers__SET_VECTOR_LAYER';
 export const SET_SELECTED_LAYERS = '__layers__SET_SELECTED_LAYERS';

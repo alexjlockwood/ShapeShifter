@@ -1,4 +1,4 @@
-import { Action } from '@ngrx/store';
+import { Action } from 'app/store/ngrx';
 
 import { ThemeType } from './reducer';
 

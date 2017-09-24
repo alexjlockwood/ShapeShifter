@@ -1,6 +1,6 @@
-import { Action, ActionReducer, Store } from '@ngrx/store';
 import { State, prodReducer } from 'app/store';
 import { State as LayerState } from 'app/store/layers/reducer';
+import { Action, ActionReducer, Store } from 'app/store/ngrx';
 import { State as PlaybackState } from 'app/store/playback/reducer';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';

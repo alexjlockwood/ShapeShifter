@@ -1,4 +1,4 @@
-import { Action } from '@ngrx/store';
+import { Action } from 'app/store/ngrx';
 
 export const MULTI_ACTION = '__multiaction__MULTI_ACTION';
 

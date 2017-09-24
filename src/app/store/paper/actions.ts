@@ -1,6 +1,6 @@
-import { Action } from '@ngrx/store';
 import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
+import { Action } from 'app/store/ngrx';
 
 export enum ActionType {
   SetToolMode = '__paper__SET_TOOL_MODE',

@@ -29,8 +29,6 @@
     "@angular/platform-browser-dynamic": "^4.4.3",
     "@angular/router": "^4.4.3",
     "@angular/service-worker": "^1.0.0-beta.16",
-    "@ngrx/core": "^1.2.0",
-    "@ngrx/store": "^2.2.3",
     "bezier-js": "^2.2.3",
     "core-js": "^2.5.1",
     "css-select": "^1.3.0-rc0",

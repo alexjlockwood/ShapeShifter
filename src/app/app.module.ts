@@ -1,6 +1,51 @@
 import 'hammerjs';
 
+import { NgModule } from '@angular/core';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { FormsModule } from '@angular/forms';
+import { HttpModule } from '@angular/http';
+import {
+  MatButtonModule,
+  MatButtonToggleModule,
+  MatDialogModule,
+  MatIconModule,
+  MatIconRegistry,
+  MatInputModule,
+  MatMenuModule,
+  MatOptionModule,
+  MatRadioModule,
+  MatSlideToggleModule,
+  MatSnackBarModule,
+  MatToolbarModule,
+  MatTooltipModule,
+} from '@angular/material';
+import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { StoreModule } from 'app/store/ngrx';
+
+import { PlaybackComponent } from './components/playback/playback.component';
+import { PropertyInputComponent } from './components/propertyinput/propertyinput.component';
+import { DropTargetDirective } from './components/root/droptarget.directive';
+import { RootComponent } from './components/root/root.component';
+import { ScrollGroupDirective } from './components/scrollgroup/scrollgroup.directive';
+import { SplashScreenComponent } from './components/splashscreen/splashscreen.component';
+import { SplitterComponent } from './components/splitter/splitter.component';
+import { ToolbarComponent } from './components/toolbar/toolbar.component';
+import { ToolPanelComponent } from './components/toolpanel/toolpanel.component';
+import { ActionModeService } from './services/actionmode.service';
+import { AnimatorService } from './services/animator.service';
+import { ClipboardService } from './services/clipboard.service';
+import { DemoService } from './services/demo.service';
+import { DialogService } from './services/dialog.service';
+import { FileExportService } from './services/fileexport.service';
+import { FileImportService } from './services/fileimport.service';
+import { LayerTimelineService } from './services/layertimeline.service';
+import { PaperService } from './services/paper.service';
+import { PlaybackService } from './services/playback.service';
+import { ShortcutService } from './services/shortcut.service';
+import { SnackBarService } from './services/snackbar.service';
+import { ThemeService } from './services/theme.service';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -20,51 +65,6 @@ import {
   LayerTimelineGridDirective,
   TimelineAnimationRowComponent,
 } from './components/layertimeline';
-import {
-  MatButtonModule,
-  MatButtonToggleModule,
-  MatDialogModule,
-  MatIconModule,
-  MatIconRegistry,
-  MatInputModule,
-  MatMenuModule,
-  MatOptionModule,
-  MatRadioModule,
-  MatSlideToggleModule,
-  MatSnackBarModule,
-  MatToolbarModule,
-  MatTooltipModule,
-} from '@angular/material';
-
-import { ActionModeService } from './services/actionmode.service';
-import { AnimatorService } from './services/animator.service';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ClipboardService } from './services/clipboard.service';
-import { DemoService } from './services/demo.service';
-import { DialogService } from './services/dialog.service';
-import { DropTargetDirective } from './components/root/droptarget.directive';
-import { FileExportService } from './services/fileexport.service';
-import { FileImportService } from './services/fileimport.service';
-import { FlexLayoutModule } from '@angular/flex-layout';
-import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
-import { LayerTimelineService } from './services/layertimeline.service';
-import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
-import { NgModule } from '@angular/core';
-import { PaperService } from './services/paper.service';
-import { PlaybackComponent } from './components/playback/playback.component';
-import { PlaybackService } from './services/playback.service';
-import { PropertyInputComponent } from './components/propertyinput/propertyinput.component';
-import { RootComponent } from './components/root/root.component';
-import { ScrollGroupDirective } from './components/scrollgroup/scrollgroup.directive';
-import { ShortcutService } from './services/shortcut.service';
-import { SnackBarService } from './services/snackbar.service';
-import { SplashScreenComponent } from './components/splashscreen/splashscreen.component';
-import { SplitterComponent } from './components/splitter/splitter.component';
-import { StoreModule } from '@ngrx/store';
-import { ThemeService } from './services/theme.service';
-import { ToolPanelComponent } from './components/toolpanel/toolpanel.component';
-import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { reducer } from './store';
 
 @NgModule({
