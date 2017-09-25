@@ -245,9 +245,9 @@ export class PaperLayer extends paper.Layer {
       this.vectorLayerItem,
       this.selectionBoundsItem,
       this.hoverPathItem,
-      this.focusedPathItem,
       this.createPathItem,
       this.splitCurveItem,
+      this.focusedPathItem,
       this.snapGuideItem,
       this.selectionBoxItem,
       this.pixelGridItem,
@@ -425,8 +425,6 @@ const PIVOT_TYPES: Readonly<
 function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
   const group = new paper.Group();
 
-  // TODO: sketch doesn't seem to include stroke width as part of the bounds
-
   // Draw an outline for the bounded box.
   const outlinePath = new paper.Path.Rectangle(bounds);
   outlinePath.strokeScaling = false;
@@ -541,16 +539,15 @@ function newSplitCurveItem(info: SplitCurveInfo, cssScaling: number) {
   highlightedCurve.guide = true;
   highlightedCurve.strokeColor = 'red';
   highlightedCurve.strokeScaling = false;
-  highlightedCurve.strokeWidth = 4 / paper.view.zoom / cssScaling;
+  highlightedCurve.strokeWidth = 2 / paper.view.zoom;
   group.addChild(highlightedCurve);
 
   const highlightedPoint = new paper.Path.Circle(
     new paper.Point(splitPoint),
-    7 / paper.view.zoom / cssScaling,
+    4 / paper.view.zoom / cssScaling,
   );
   highlightedPoint.guide = true;
   highlightedPoint.fillColor = 'green';
-  highlightedCurve.strokeScaling = false;
   group.addChild(highlightedPoint);
 
   return group;
