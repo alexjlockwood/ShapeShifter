@@ -25,19 +25,19 @@ export class HoverItemsGesture extends Gesture {
     CursorUtil.clear();
 
     const selectedLayers = this.ps.getSelectedLayers();
+    if (selectedLayers.size > 0) {
+      const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
+      if (selectionBoundSegmentsHitResult) {
+        CursorUtil.set(selectionBoundSegmentsHitResult.item.resizeCursor);
+        this.ps.setHoveredLayer(undefined);
+        return;
+      }
+    }
     const hitResult = HitTests.selectionMode(event.point, {
       // TODO: support hovering over groups
       class: paper.Path,
       match: ({ item }) => !selectedLayers.has(item.data.id),
     });
     this.ps.setHoveredLayer(hitResult ? hitResult.item.data.id : undefined);
-
-    // const selectionBounds = Guides.getSelectionBoundsPath();
-    // if (selectionBounds) {
-    //   const res = HitTests.selectionBoundsPivot(selectionBounds, point);
-    //   if (res) {
-    //     Cursors.set(Pivots.getResizeCursor(res.segment.index));
-    //   }
-    // }
   }
 }

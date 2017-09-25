@@ -106,11 +106,11 @@ export class MasterTool extends Tool {
   private createSelectionModeGesture(event: paper.ToolEvent) {
     const selectedLayers = this.ps.getSelectedLayers();
     if (selectedLayers.size > 0) {
-      // First perform a hit test on the selection bounds.
-      const res = HitTests.selectionModeSegments(event.point);
-      if (res) {
+      // First perform a hit test on the selection bound segments.
+      const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
+      if (selectionBoundSegmentsHitResult) {
         // If the hit item is a selection bounds segment, then perform a scale gesture.
-        return new ScaleItemsGesture(this.ps, res.item);
+        return new ScaleItemsGesture(this.ps, selectionBoundSegmentsHitResult.item);
       }
     }
 
