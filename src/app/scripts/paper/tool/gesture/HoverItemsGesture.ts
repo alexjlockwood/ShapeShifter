@@ -18,8 +18,6 @@ export class HoverItemsGesture extends Gesture {
     super();
   }
 
-  // TODO: update cursor appropriately during hover events
-
   // @Override
   onMouseMove(event: paper.ToolEvent) {
     CursorUtil.clear();
@@ -28,6 +26,7 @@ export class HoverItemsGesture extends Gesture {
     if (selectedLayers.size > 0) {
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
+        // TODO: how do we choose between scale vs. rotate cursors here?
         CursorUtil.set(selectionBoundSegmentsHitResult.item.resizeCursor);
         this.ps.setHoveredLayer(undefined);
         return;
