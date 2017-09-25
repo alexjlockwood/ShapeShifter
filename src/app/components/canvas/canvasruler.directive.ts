@@ -129,14 +129,6 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
     }
 
     if (this.vpMousePoint) {
-      // TODO: thse mouse point should be in project coordinates instead...
-      // const cssScaleMatrix = Matrix.scaling(cssScale, cssScale);
-      // const { x, y } = MathUtil.transformPoint(
-      //   this.vpMousePoint,
-      //   cssScaleMatrix,
-      //   new Matrix(zoom, 0, 0, zoom, tx, ty).invert(),
-      //   cssScaleMatrix.invert(),
-      // );
       const { x, y } = this.vpMousePoint;
       ctx.fillStyle = this.themeService.getSecondaryTextColor();
       if (isHorizontal) {

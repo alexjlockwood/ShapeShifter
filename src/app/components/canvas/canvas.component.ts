@@ -14,6 +14,7 @@ import {
   ViewChildren,
 } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
+import { MathUtil, Matrix, Point } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
@@ -145,8 +146,14 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
 
   private showRuler(event: MouseEvent) {
     const canvasOffset = this.$element.offset();
-    const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
-    const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
+    const zoom = this.getZoom();
+    const { tx, ty } = this.getTranslation();
+    const point = MathUtil.transformPoint(
+      { x: event.pageX - canvasOffset.left, y: event.pageY - canvasOffset.top },
+      new Matrix(zoom, 0, 0, zoom, tx, ty).invert(),
+    );
+    const x = point.x / Math.max(1, this.cssScale);
+    const y = point.y / Math.max(1, this.cssScale);
     this.canvasRulers.forEach(r => r.showMouse({ x: _.round(x), y: _.round(y) }));
   }
 
