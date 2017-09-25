@@ -19,7 +19,7 @@ import {
 import { getToolMode } from 'app/store/paper/selectors';
 import * as paper from 'paper';
 
-import { Tool, newMasterTool, newZoomPanTool } from './tool';
+import { MasterTool } from './tool';
 
 // By default paper.js bakes matrix transformations directly into its children.
 // This is usually not the behavior we want (especially for groups).
@@ -36,13 +36,13 @@ let paperLayer: PaperLayer;
  * Note that this must be called after the DOM has been initialized
  * (i.e. in an ngAfterViewInit callback).
  */
-export function initialize(canvas: HTMLCanvasElement, paperService: PaperService) {
+export function initialize(canvas: HTMLCanvasElement, ps: PaperService) {
   if (paperLayer) {
     throw new Error('A project already exists for the provided canvas!');
   }
   initializeCanvas(canvas);
-  initializeTools(paperService);
-  initializeListeners(paperService);
+  initializeMasterTool(ps);
+  initializeListeners(ps);
 }
 
 function initializeCanvas(canvas: HTMLCanvasElement) {
@@ -51,50 +51,9 @@ function initializeCanvas(canvas: HTMLCanvasElement) {
   paper.project.addLayer(paperLayer);
 }
 
-function initializeTools(ps: PaperService) {
-  const paperTool = new paper.Tool();
-  const masterTool = newMasterTool(ps);
-  const zoomPanTool = newZoomPanTool(ps);
-  let currentTool: Tool;
-
-  const onEventFn = (event?: paper.ToolEvent | paper.KeyEvent) => {
-    const prevTool = currentTool;
-    currentTool =
-      ps.getToolMode() === ToolMode.ZoomPan || (event && event.modifiers.space)
-        ? zoomPanTool
-        : masterTool;
-    if (prevTool !== currentTool) {
-      if (prevTool) {
-        prevTool.onDeactivate();
-      }
-      if (currentTool) {
-        currentTool.onActivate();
-      }
-    }
-    if (currentTool) {
-      if (event instanceof paper.ToolEvent) {
-        currentTool.onMouseEvent(event);
-      } else if (event instanceof paper.KeyEvent) {
-        currentTool.onKeyEvent(event);
-      }
-    }
-  };
-
-  ps.store.select(getToolMode).subscribe(toolMode => {
-    // TODO: clean this fixed distance code up?
-    // TODO: should the '4' here be in terms of physical pixels or viewport pixels?
-    paperTool.fixedDistance = toolMode === ToolMode.Pencil ? 4 : undefined;
-    onEventFn();
-  });
-
-  paperTool.on({
-    mousedown: onEventFn,
-    mousedrag: onEventFn,
-    mousemove: onEventFn,
-    mouseup: onEventFn,
-    keydown: onEventFn,
-    keyup: onEventFn,
-  });
+function initializeMasterTool(ps: PaperService) {
+  const masterTool = new MasterTool(ps);
+  ps.store.select(getToolMode).subscribe(toolMode => masterTool.setToolMode(toolMode));
 }
 
 function initializeListeners(ps: PaperService) {
