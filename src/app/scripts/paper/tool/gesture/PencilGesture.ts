@@ -32,26 +32,26 @@ export class PencilGesture extends Gesture {
     }
     const delta = this.pl.globalToLocal(point).subtract(this.pl.globalToLocal(this.lastPoint));
     delta.angle += 90;
-    const pathOverlayInfo = this.ps.getPathOverlayInfo();
+    const pathOverlayInfo = this.ps.getCreatePathInfo();
     const pencilPath = pathOverlayInfo
       ? new paper.Path(pathOverlayInfo.pathData)
       : new paper.Path();
     pencilPath.add(this.pl.globalToLocal(middlePoint).add(delta));
-    this.ps.setPathOverlayInfo({ pathData: pencilPath.pathData, strokeColor: 'black' });
+    this.ps.setCreatePathInfo({ pathData: pencilPath.pathData, strokeColor: 'black' });
     this.lastPoint = point;
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     if (this.lastPoint) {
-      const newPath = new paper.Path(this.ps.getPathOverlayInfo().pathData);
+      const newPath = new paper.Path(this.ps.getCreatePathInfo().pathData);
       if (arePointsClose(this.pl.localToGlobal(newPath.firstSegment.point), event.point)) {
         newPath.closePath(true);
       }
       newPath.smooth({ type: 'continuous' });
       const newPathLayer = PaperUtil.addPathToStore(this.ps, newPath.pathData);
       this.ps.setSelectedLayers(new Set([newPathLayer.id]));
-      this.ps.setPathOverlayInfo(undefined);
+      this.ps.setCreatePathInfo(undefined);
     }
     this.ps.setToolMode(ToolMode.Selection);
   }

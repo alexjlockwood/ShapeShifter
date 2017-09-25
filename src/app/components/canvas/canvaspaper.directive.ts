@@ -33,6 +33,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     Paper.initialize(this.$canvas.get(0), this.ps);
 
     // TODO: remove this debug code
+    // TODO: explicitly set paths with no Z to closed (i.e. M 1 1 h 12 v 12 h -12 v -12)?
     const jsonObj = JSON.parse(`{
       "id": "1",
       "name": "demo",
@@ -60,7 +61,9 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "id": "5",
               "name": "blue",
               "type": "path",
-              "pathData": "M 6 24 h 12 v 12 h -12 v -12",
+              "pathData": "M 6 24 h 12 v 12 h -12 v -12 Z",
+              "strokeColor": "#000",
+              "strokeWidth": "1",
               "fillColor": "#0000ff"
             }
           ]

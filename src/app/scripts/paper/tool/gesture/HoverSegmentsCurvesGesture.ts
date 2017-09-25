@@ -21,70 +21,96 @@ export class HoverSegmentsCurvesGesture extends Gesture {
 
   // @Override
   onMouseMove(event: paper.ToolEvent) {
-    // Cursors.clear();
-    // Guides.hidePenPathPreviewPath();
-    // Guides.hideAddSegmentToCurveHoverGroup();
+    CursorUtil.clear();
+    this.ps.setSplitCurveInfo(undefined);
+    this.ps.setCreatePathInfo(undefined);
+
+    // TODO: are we performing too many hit tests in this method?
+
     const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
-    const hitResult = HitTests.focusedPathMode(event.point, focusedPath);
-    // if (!hitResult) {
-    //   const singleSelectedSegment = this.findSingleSelectedEndSegment();
-    //   if (singleSelectedSegment) {
-    //     Cursors.set(Cursor.PenAdd);
-    //     Guides.showPenPathPreviewPath(singleSelectedSegment, point);
-    //   }
-    //   return;
-    // }
-    // this.handleMouseMoveHit(hitResult);
+    const segmentsAndHandlesHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
+    if (segmentsAndHandlesHitResult) {
+      // If we are hovering over a segment or a handle, then show a point select
+      // cursor and return.
+      CursorUtil.set(Cursor.PointSelect);
+      return;
+    }
+
+    const focusedPathHitResult = HitTests.focusedPathModeCurves(event.point, focusedPath);
+    if (focusedPathHitResult) {
+      // Show a pen add cursor and highlight the curve the user is about to split.
+      CursorUtil.set(Cursor.PenAdd);
+      const { location } = focusedPathHitResult;
+      const splitPoint = this.localToViewportPoint(focusedPath, location.point);
+      const { point: p1, handleIn: in1, handleOut: out1 } = this.localToViewportSegment(
+        focusedPath,
+        location.curve.segment1,
+      );
+      const { point: p2, handleIn: in2, handleOut: out2 } = this.localToViewportSegment(
+        focusedPath,
+        location.curve.segment2,
+      );
+      this.ps.setSplitCurveInfo({
+        splitPoint,
+        segment1: { point: p1, handleIn: in1, handleOut: out1 },
+        segment2: { point: p2, handleIn: in2, handleOut: out2 },
+      });
+      return;
+    }
+
+    // TODO: can we merge this hit test with the one above once we get hitOptions.curves working?
+    if (HitTests.focusedPathMode(event.point, focusedPath)) {
+      // If we hit the focused path (and missed its segments/handles/curves), then do nothing.
+      return;
+    }
+
+    // Draw an 'extend path' preview curve if one of its end points
+    // is selected and the path is still open.
+    const singleSelectedSegmentIndex = this.findSingleSelectedEndSegmentIndex(focusedPath);
+    if (singleSelectedSegmentIndex !== undefined) {
+      CursorUtil.set(Cursor.PenAdd);
+      const vpStartSegment = this.localToViewportSegment(
+        focusedPath,
+        focusedPath.segments[singleSelectedSegmentIndex],
+      );
+      const vpEndSegment = new paper.Segment(this.pl.globalToLocal(event.point));
+      const { pathData } = new paper.Path([vpStartSegment, vpEndSegment]);
+      this.ps.setCreatePathInfo({
+        pathData,
+        strokeColor: 'black',
+      });
+    }
   }
 
-  // private handleMouseMoveHit(hitResult: paper.HitResult) {
-  // if (hitResult.type === 'segment') {
-  //   const singleSelectedSegment = this.findSingleSelectedEndSegment();
-  //   if (
-  //     singleSelectedSegment &&
-  //     ((singleSelectedSegment.isFirst() && hitResult.segment.isLast()) ||
-  //       (singleSelectedSegment.isLast() && hitResult.segment.isFirst()))
-  //   ) {
-  //     Cursors.set(Cursor.PenAdd);
-  //     Guides.showPenPathPreviewPath(singleSelectedSegment, hitResult.segment.point);
-  //     return;
-  //   }
-  // }
-  // switch (hitResult.type) {
-  //   case 'segment':
-  //   case 'handle-in':
-  //   case 'handle-out':
-  //     // Show a point select cursor if the user is hovering over
-  //     // a segment or handle.
-  //     Cursors.set(Cursor.PointSelect);
-  //     break;
-  //   case 'stroke':
-  //   case 'curve':
-  //     // Show a pen add cursor if the user is hovering over a curve
-  //     // on the selected edit path.
-  //     Cursors.set(Cursor.PenAdd);
-  //     Guides.showAddSegmentToCurveHoverGroup(hitResult.location);
-  //     break;
-  // }
-  // }
+  /** Converts local coordinates to viewport coordinates for a point. */
+  private localToViewportPoint(localItem: paper.Item, localPoint: paper.Point) {
+    return localPoint ? this.pl.globalToLocal(localItem.localToGlobal(localPoint)) : undefined;
+  }
+
+  /** Converts local coordinates to viewport coordinates for a segment. */
+  private localToViewportSegment(localItem: paper.Item, localSegment: paper.Segment) {
+    return new paper.Segment(
+      this.localToViewportPoint(localItem, localSegment.point),
+      this.localToViewportPoint(localItem, localSegment.handleIn),
+      this.localToViewportPoint(localItem, localSegment.handleOut),
+    );
+  }
 
   /**
-   * Returns the single selected end point segment for the selected
-   * edit path, or undefined if one doesn't exist.
+   * Returns the single selected end point segment index for the given path,
+   * or undefined if one doesn't exist.
    */
-  //   private findSingleSelectedEndSegment() {
-  //     const focusedPathInfo = this.ps.getFocusedPathInfo();
-  //     const focusedPath = this.pl.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-  //     if (focusedPath.closed) {
-  //       // Return undefined if the path is closed.
-  //       return undefined;
-  //     }
-  //     const { selectedSegments } = focusedPathInfo;
-  //     if (selectedSegments.size !== 1) {
-  //       // Return undefined if there is not a single selected segment.
-  //       return undefined;
-  //     }
-  //     const lastIndex = focusedPath.segments.length - 1;
-  //     return selectedSegments.has(0) ? 0 : selectedSegments.has(lastIndex) ? lastIndex : undefined;
-  //   }
+  private findSingleSelectedEndSegmentIndex(path: paper.Path) {
+    if (path.closed) {
+      // Return undefined if the path is closed.
+      return undefined;
+    }
+    const { selectedSegments } = this.ps.getFocusedPathInfo();
+    if (selectedSegments.size !== 1) {
+      // Return undefined if there is not a single selected segment.
+      return undefined;
+    }
+    const lastIndex = path.segments.length - 1;
+    return selectedSegments.has(0) ? 0 : selectedSegments.has(lastIndex) ? lastIndex : undefined;
+  }
 }

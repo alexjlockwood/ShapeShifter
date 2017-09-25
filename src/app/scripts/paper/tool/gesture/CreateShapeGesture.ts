@@ -30,7 +30,7 @@ abstract class CreateShapeGesture extends Gesture {
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     if (this.lastDragEventInfo) {
-      const { pathData } = this.ps.getPathOverlayInfo();
+      const { pathData } = this.ps.getCreatePathInfo();
       const newPathLayer = PaperUtil.addPathToStore(this.ps, pathData);
       this.ps.setSelectedLayers(new Set([newPathLayer.id]));
     }
@@ -69,11 +69,11 @@ abstract class CreateShapeGesture extends Gesture {
       : downPoint;
 
     const { pathData } = this.newPath(new paper.Rectangle(topLeft, size));
-    this.ps.setPathOverlayInfo({ pathData, strokeColor: 'black' });
+    this.ps.setCreatePathInfo({ pathData, strokeColor: 'black' });
   }
 
   private finishGesture() {
-    this.ps.setPathOverlayInfo(undefined);
+    this.ps.setCreatePathInfo(undefined);
     this.ps.setToolMode(ToolMode.Selection);
   }
 

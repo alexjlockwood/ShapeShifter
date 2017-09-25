@@ -161,11 +161,11 @@ export class MasterTool extends Tool {
     return new SelectDragCloneItemsGesture(this.ps, hitItemId);
   }
 
-  private createFocusedPathModeGesture(event: paper.ToolEvent, focusedPathInfo: FocusedPathInfo) {
+  private createFocusedPathModeGesture(event: paper.ToolEvent, fpi: FocusedPathInfo) {
     // First, do a hit test on the focused path's segments and handles.
-    const segmentHandleHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
-    if (segmentHandleHitResult) {
-      const { segmentIndex, type } = segmentHandleHitResult.item;
+    const segmentsAndHandlesHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
+    if (segmentsAndHandlesHitResult) {
+      const { segmentIndex, type } = segmentsAndHandlesHitResult.item;
       if (type === 'handle-in' || type === 'handle-out') {
         // If a mouse down event occurred on top of a handle,
         // then select/drag or begin to drag the handle.
@@ -174,29 +174,28 @@ export class MasterTool extends Tool {
       if (this.clickDetector.isDoubleClick()) {
         // If a double click occurred on top of a segment,
         // then add/delete the segment's handles.
-        return new AddDeleteHandlesGesture(this.ps, focusedPathInfo.layerId, segmentIndex);
+        return new AddDeleteHandlesGesture(this.ps, fpi.layerId, segmentIndex);
       }
       // If a mouse down event occurred on top of a segment,
       // then select/drag the segment.
       return SelectDragDrawSegmentsGesture.hitSegment(this.ps, segmentIndex);
     }
 
-    // Second, do a hit test on the underlying path's stroke/curves.
-    const focusedPath = this.pl.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-    const focusedPathHitResult = HitTests.focusedPathMode(event.point, focusedPath);
-    if (focusedPathHitResult) {
-      const { type, location } = focusedPathHitResult;
-      if (type === 'stroke' || type === 'curve') {
-        return SelectDragDrawSegmentsGesture.hitCurve(this.ps, location.index, location.time);
-      } else {
-        // Don't exit focused path mode if the gesture began with a successful filled hit test.
-        const clearFocusedPathOnDraglessClick = false;
-        return new BatchSelectSegmentsGesture(
-          this.ps,
-          focusedPathInfo.layerId,
-          clearFocusedPathOnDraglessClick,
-        );
-      }
+    // Second, do a hit test on the underlying path's curves.
+    const focusedPath = this.pl.findItemByLayerId(fpi.layerId) as paper.Path;
+    const curvesHitResult = HitTests.focusedPathModeCurves(event.point, focusedPath);
+    if (curvesHitResult) {
+      const { location } = curvesHitResult;
+      return SelectDragDrawSegmentsGesture.hitCurve(this.ps, location.index, location.time);
+    }
+
+    // Third, check to see if we hit the focused path.
+    // TODO: can we merge this hit test with the one above once we get hitOptions.curves working?
+    if (HitTests.focusedPathMode(event.point, focusedPath)) {
+      // Don't exit focused path mode on the next mouse up event
+      // (since the gesture began with a successful filled hit test).
+      const clearFocusedPathOnDraglessClick = false;
+      return new BatchSelectSegmentsGesture(this.ps, fpi.layerId, clearFocusedPathOnDraglessClick);
     }
 
     if (focusedPath.segments.length === 0) {
@@ -204,7 +203,7 @@ export class MasterTool extends Tool {
       return SelectDragDrawSegmentsGesture.miss(this.ps);
     }
 
-    const { selectedSegments } = focusedPathInfo;
+    const { selectedSegments } = fpi;
     if (!focusedPath.closed && selectedSegments.size === 1) {
       const selectedSegmentIndex = selectedSegments.values().next().value;
       if (selectedSegmentIndex === 0 || selectedSegmentIndex === focusedPath.segments.length - 1) {
@@ -216,7 +215,7 @@ export class MasterTool extends Tool {
     // If there is no hit item and we are in focused path mode, then
     // enter selection box mode for the selected item so we can
     // batch select its individual segments.
-    return new BatchSelectSegmentsGesture(this.ps, focusedPathInfo.layerId);
+    return new BatchSelectSegmentsGesture(this.ps, fpi.layerId);
   }
 
   // @Override

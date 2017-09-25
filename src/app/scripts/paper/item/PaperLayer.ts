@@ -9,9 +9,10 @@ import {
 import { ColorUtil } from 'app/scripts/common';
 import { PaperUtil } from 'app/scripts/paper/util';
 import {
+  CreatePathInfo,
   FocusedPathInfo,
-  PathOverlayInfo,
   SnapGuideInfo,
+  SplitCurveInfo,
   TooltipInfo,
 } from 'app/store/paper/actions';
 import * as _ from 'lodash';
@@ -26,7 +27,10 @@ import {
 /**
  * The root layer used of our paper.js project. Note that this layer is
  * assigned a scale matrix that converts global project coordinates to
- * local viewport coordinates.
+ * viewport coordinates.
+ *
+ * TODO: scaling rasters down causes their hit tolerances remain the same
+ * TODO: scaling rasters seems to have no effect when the user zooms in
  */
 export class PaperLayer extends paper.Layer {
   private readonly canvasColorShape: paper.Shape;
@@ -34,7 +38,8 @@ export class PaperLayer extends paper.Layer {
   private selectionBoundsItem: paper.Item;
   private hoverPathItem: paper.Path;
   private selectionBoxItem: paper.Path;
-  private pathOverlayItem: paper.Path;
+  private createPathItem: paper.Path;
+  private splitCurveItem: paper.Item;
   private focusedPathItem: paper.Item;
   private snapGuideItem: paper.Item;
   private pixelGridItem: paper.Item;
@@ -92,13 +97,24 @@ export class PaperLayer extends paper.Layer {
     this.updateHoverPathItem();
   }
 
-  setPathOverlayInfo(info: PathOverlayInfo) {
-    if (this.pathOverlayItem) {
-      this.pathOverlayItem.remove();
-      this.pathOverlayItem = undefined;
+  setCreatePathInfo(info: CreatePathInfo) {
+    if (this.createPathItem) {
+      this.createPathItem.remove();
+      this.createPathItem = undefined;
     }
     if (info) {
-      this.pathOverlayItem = newPathOverlayItem(info);
+      this.createPathItem = newCreatePathItem(info);
+      this.updateChildren();
+    }
+  }
+
+  setSplitCurveInfo(info: SplitCurveInfo) {
+    if (this.splitCurveItem) {
+      this.splitCurveItem.remove();
+      this.splitCurveItem = undefined;
+    }
+    if (info) {
+      this.splitCurveItem = newSplitCurveItem(info, this.cssScaling);
       this.updateChildren();
     }
   }
@@ -230,7 +246,8 @@ export class PaperLayer extends paper.Layer {
       this.selectionBoundsItem,
       this.hoverPathItem,
       this.focusedPathItem,
-      this.pathOverlayItem,
+      this.createPathItem,
+      this.splitCurveItem,
       this.snapGuideItem,
       this.selectionBoxItem,
       this.pixelGridItem,
@@ -294,6 +311,7 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
     const f = ColorUtil.parseAndroidColor(fillColor);
     const s = ColorUtil.parseAndroidColor(strokeColor);
     // TODO: import a compound path instead
+    // TODO: set closed to true if end points are the same?
     return new paper.Path({
       data: { id: layer.id },
       pathData: layer.pathData ? layer.pathData.getPathString() : '',
@@ -310,6 +328,7 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
   };
 
   const fromClipPathLayerFn = (layer: ClipPathLayer) => {
+    // TODO: set closed to true if end points are the same?
     return new paper.Path({
       data: { id: layer.id },
       pathData: layer.pathData ? layer.pathData.getPathString() : '',
@@ -377,16 +396,19 @@ function newHoverPathItem(item: paper.Item) {
   return hoverPath;
 }
 
-const PIVOT_TYPES: [
-  'topLeft',
-  'topCenter',
-  'topRight',
-  'rightCenter',
-  'bottomRight',
-  'bottomCenter',
-  'bottomLeft',
-  'leftCenter'
-] = [
+// TODO: reuse this code with SelectionBoundsRaster, CursorUtil, etc.
+const PIVOT_TYPES: Readonly<
+  [
+    'topLeft',
+    'topCenter',
+    'topRight',
+    'rightCenter',
+    'bottomRight',
+    'bottomCenter',
+    'bottomLeft',
+    'leftCenter'
+  ]
+> = [
   'topLeft',
   'topCenter',
   'topRight',
@@ -403,6 +425,8 @@ const PIVOT_TYPES: [
 function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
   const group = new paper.Group();
 
+  // TODO: sketch doesn't seem to include stroke width as part of the bounds
+
   // Draw an outline for the bounded box.
   const outlinePath = new paper.Path.Rectangle(bounds);
   outlinePath.strokeScaling = false;
@@ -412,7 +436,6 @@ function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
   group.addChild(outlinePath);
 
   // Create segments for the bounded box.
-  const segmentSize = 6 / paper.view.zoom / cssScaling;
   PIVOT_TYPES.forEach(pivotType => {
     // TODO: avoid creating rasters in a loop like this
     const center = bounds[pivotType];
@@ -491,13 +514,46 @@ function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling:
   return group;
 }
 
-function newPathOverlayItem(info: PathOverlayInfo) {
+function newCreatePathItem(info: CreatePathInfo) {
   const path = new paper.Path(info.pathData);
   path.guide = true;
   path.strokeScaling = false;
   path.strokeWidth = 1 / paper.view.zoom;
   path.strokeColor = info.strokeColor;
   return path;
+}
+
+function newSplitCurveItem(info: SplitCurveInfo, cssScaling: number) {
+  const group = new paper.Group();
+  group.guide = true;
+
+  const { splitPoint, segment1, segment2 } = info;
+  const point1 = new paper.Point(segment1.point);
+  const handleIn1 = new paper.Point(segment1.handleIn);
+  const handleOut1 = new paper.Point(segment1.handleOut);
+  const point2 = new paper.Point(segment2.point);
+  const handleIn2 = new paper.Point(segment2.handleIn);
+  const handleOut2 = new paper.Point(segment2.handleOut);
+  const highlightedCurve = new paper.Path([
+    new paper.Segment(point1, handleIn1, handleOut1),
+    new paper.Segment(point2, handleIn2, handleOut2),
+  ]);
+  highlightedCurve.guide = true;
+  highlightedCurve.strokeColor = 'red';
+  highlightedCurve.strokeScaling = false;
+  highlightedCurve.strokeWidth = 4 / paper.view.zoom / cssScaling;
+  group.addChild(highlightedCurve);
+
+  const highlightedPoint = new paper.Path.Circle(
+    new paper.Point(splitPoint),
+    7 / paper.view.zoom / cssScaling,
+  );
+  highlightedPoint.guide = true;
+  highlightedPoint.fillColor = 'green';
+  highlightedCurve.strokeScaling = false;
+  group.addChild(highlightedPoint);
+
+  return group;
 }
 
 function newTooltipItem(info: TooltipInfo, cssScaling: number) {
@@ -610,44 +666,3 @@ function newPixelGridItem(viewportWidth: number, viewportHeight: number) {
   }
   return group;
 }
-
-/** Creates a new 'split segment at location' hover item. */
-// function newSplitSegmentAtLocationHover({ curve, point, path }: paper.CurveLocation) {
-//   const group = new paper.Group();
-//   group.guide = true;
-
-//   const highlightedCurve = new paper.Path([curve.segment1, curve.segment2]);
-//   highlightedCurve.guide = true;
-//   highlightedCurve.matrix = path.matrix.clone();
-//   highlightedCurve.strokeColor = 'red';
-//   highlightedCurve.strokeWidth = 4 / paper.view.zoom;
-//   group.addChild(highlightedCurve);
-
-//   const highlightedPoint = new paper.Path.Circle(point, 7 / paper.view.zoom);
-//   highlightedPoint.guide = true;
-//   highlightedPoint.fillColor = 'green';
-//   group.addChild(highlightedPoint);
-
-//   return group;
-// }
-
-/** Creates a new pen segment preview path. */
-// function newPenSegmentPreview(from: paper.Segment, to: paper.Point) {
-//   const path = new paper.Path({
-//     guide: true,
-//     strokeWidth: 4 / paper.view.zoom,
-//     strokeColor: 'red',
-//   });
-//   const fromPoint = from.point.clone();
-//   const fromHandleIn = from.handleIn ? from.handleIn.clone() : undefined;
-//   const fromHandleOut = from.handleOut ? from.handleOut.clone() : undefined;
-//   path.add(
-//     new paper.Segment({
-//       point: fromPoint,
-//       handleIn: fromHandleIn,
-//       handleOut: fromHandleOut,
-//     }),
-//   );
-//   path.add(to.clone());
-//   return path;
-// }

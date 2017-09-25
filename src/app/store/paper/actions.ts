@@ -5,7 +5,8 @@ import { Action } from 'app/store/ngrx';
 export enum ActionType {
   SetToolMode = '__paper__SET_TOOL_MODE',
   SetSelectionBox = '__paper__SET_SELECTION_BOX',
-  SetPathOverlayInfo = '__paper__SET_PATH_OVERLAY',
+  SetCreatePathInfo = '__paper__SET_CREATE_PATH_INFO',
+  SetSplitCurveInfo = '__paper__SET_SPLIT_CURVE_INFO',
   SetFocusedPathInfo = '__paper__SET_FOCUSED_PATH_INFO',
   SetCanvasCursor = '__paper__SET_CANVAS_CURSOR',
   SetSnapGuideInfo = '__paper__SET_SNAP_GUIDE_INFO',
@@ -15,72 +16,54 @@ export enum ActionType {
 
 export class SetToolMode implements Action {
   readonly type = ActionType.SetToolMode;
-  readonly payload: { toolMode: ToolMode };
-  constructor(toolMode: ToolMode) {
-    this.payload = { toolMode };
-  }
+  constructor(readonly toolMode: ToolMode) {}
 }
 
 export class SetSelectionBox implements Action {
   readonly type = ActionType.SetSelectionBox;
-  readonly payload: { selectionBox: { from: Point; to: Point } };
-  constructor(selectionBox: { from: Point; to: Point } | undefined) {
-    this.payload = { selectionBox };
-  }
+  constructor(readonly selectionBox: SelectionBox | undefined) {}
 }
 
-export class SetPathOverlayInfo implements Action {
-  readonly type = ActionType.SetPathOverlayInfo;
-  readonly payload: { pathOverlayInfo: PathOverlayInfo };
-  constructor(pathOverlayInfo: PathOverlayInfo) {
-    this.payload = { pathOverlayInfo };
-  }
+export class SetCreatePathInfo implements Action {
+  readonly type = ActionType.SetCreatePathInfo;
+  constructor(readonly createPathInfo: CreatePathInfo | undefined) {}
+}
+
+export class SetSplitCurveInfo implements Action {
+  readonly type = ActionType.SetSplitCurveInfo;
+  constructor(readonly splitCurveInfo: SplitCurveInfo | undefined) {}
 }
 
 export class SetFocusedPathInfo implements Action {
   readonly type = ActionType.SetFocusedPathInfo;
-  readonly payload: { focusedPathInfo: FocusedPathInfo };
-  constructor(focusedPathInfo: FocusedPathInfo) {
-    this.payload = { focusedPathInfo };
-  }
+  constructor(readonly focusedPathInfo: FocusedPathInfo | undefined) {}
 }
 
 export class SetCanvasCursor implements Action {
   readonly type = ActionType.SetCanvasCursor;
-  readonly payload: { canvasCursor: CanvasCursor };
-  constructor(canvasCursor: CanvasCursor) {
-    this.payload = { canvasCursor };
-  }
+  constructor(readonly canvasCursor: CanvasCursor | undefined) {}
 }
 
 export class SetSnapGuideInfo implements Action {
   readonly type = ActionType.SetSnapGuideInfo;
-  readonly payload: { snapGuideInfo: SnapGuideInfo };
-  constructor(snapGuideInfo: SnapGuideInfo) {
-    this.payload = { snapGuideInfo };
-  }
+  constructor(readonly snapGuideInfo: SnapGuideInfo | undefined) {}
 }
 
 export class SetZoomPanInfo implements Action {
   readonly type = ActionType.SetZoomPanInfo;
-  readonly payload: { zoomPanInfo: ZoomPanInfo };
-  constructor(zoomPanInfo: ZoomPanInfo) {
-    this.payload = { zoomPanInfo };
-  }
+  constructor(readonly zoomPanInfo: ZoomPanInfo) {}
 }
 
 export class SetTooltipInfo implements Action {
   readonly type = ActionType.SetTooltipInfo;
-  readonly payload: { tooltipInfo: TooltipInfo };
-  constructor(tooltipInfo: TooltipInfo) {
-    this.payload = { tooltipInfo };
-  }
+  constructor(readonly tooltipInfo: TooltipInfo | undefined) {}
 }
 
 export type Actions =
   | SetToolMode
   | SetSelectionBox
-  | SetPathOverlayInfo
+  | SetCreatePathInfo
+  | SetSplitCurveInfo
   | SetFocusedPathInfo
   | SetCanvasCursor
   | SetSnapGuideInfo
@@ -92,13 +75,23 @@ export interface SelectionBox {
   readonly to: Point;
 }
 
-export interface PathOverlayInfo {
+export interface CreatePathInfo {
   readonly pathData: string;
   readonly strokeColor: string;
 }
 
+export type Segment = Readonly<{ point: Point; handleIn: Point; handleOut: Point }>;
+
+export interface SplitCurveInfo {
+  readonly splitPoint: Point;
+  readonly segment1: Segment;
+  readonly segment2: Segment;
+}
+
 export interface FocusedPathInfo {
+  // TODO: layerId? itemId? id?
   readonly layerId: string;
+  // TODO: suffix these variables with 'index'
   readonly selectedSegments: ReadonlySet<number>;
   readonly visibleHandleIns: ReadonlySet<number>;
   readonly visibleHandleOuts: ReadonlySet<number>;
@@ -107,7 +100,6 @@ export interface FocusedPathInfo {
 }
 
 export type Line = Readonly<{ from: Point; to: Point }>;
-export type Guide = ReadonlyArray<Line>;
 export type Ruler = Readonly<{ line: Line; delta: number }>;
 
 export interface SnapGuideInfo {

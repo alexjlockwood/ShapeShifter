@@ -1,6 +1,5 @@
 import { MathUtil } from 'app/scripts/common';
 import { Point } from 'app/scripts/common';
-import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { Line, Ruler, SnapGuideInfo } from 'app/store/paper/actions';
 import * as _ from 'lodash';

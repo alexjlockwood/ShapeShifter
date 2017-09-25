@@ -8,10 +8,11 @@ import {
   getVectorLayer,
 } from 'app/store/layers/selectors';
 import {
+  getCreatePathInfo,
   getFocusedPathInfo,
-  getPathOverlayInfo,
   getSelectionBox,
   getSnapGuideInfo,
+  getSplitCurveInfo,
   getTooltipInfo,
   getZoomPanInfo,
 } from 'app/store/paper/selectors';
@@ -101,7 +102,8 @@ function initializeListeners(ps: PaperService) {
   ps.store.select(getVectorLayer).subscribe(vl => pl.setVectorLayer(vl));
   ps.store.select(getSelectedLayerIds).subscribe(ids => pl.setSelectedLayers(ids));
   ps.store.select(getHoveredLayerId).subscribe(id => pl.setHoveredLayer(id));
-  ps.store.select(getPathOverlayInfo).subscribe(info => pl.setPathOverlayInfo(info));
+  ps.store.select(getCreatePathInfo).subscribe(info => pl.setCreatePathInfo(info));
+  ps.store.select(getSplitCurveInfo).subscribe(info => pl.setSplitCurveInfo(info));
   ps.store.select(getFocusedPathInfo).subscribe(info => pl.setFocusedPathInfo(info));
   ps.store.select(getSnapGuideInfo).subscribe(info => pl.setSnapGuideInfo(info));
   ps.store.select(getHiddenLayerIds).subscribe(ids => pl.setHiddenLayers(ids));

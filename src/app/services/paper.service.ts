@@ -8,26 +8,29 @@ import { State, Store } from 'app/store';
 import { SetHoveredLayer } from 'app/store/layers/actions';
 import { getHoveredLayerId, getSelectedLayerIds } from 'app/store/layers/selectors';
 import {
+  CreatePathInfo,
   FocusedPathInfo,
-  PathOverlayInfo,
   SetCanvasCursor,
+  SetCreatePathInfo,
   SetFocusedPathInfo,
-  SetPathOverlayInfo,
   SetSelectionBox,
   SetSnapGuideInfo,
+  SetSplitCurveInfo,
   SetToolMode,
   SetTooltipInfo,
   SetZoomPanInfo,
   SnapGuideInfo,
+  SplitCurveInfo,
   TooltipInfo,
   ZoomPanInfo,
 } from 'app/store/paper/actions';
 import {
   getCanvasCursor,
+  getCreatePathInfo,
   getFocusedPathInfo,
-  getPathOverlayInfo,
   getSelectionBox,
   getSnapGuideInfo,
+  getSplitCurveInfo,
   getToolMode,
   getTooltipInfo,
   getZoomPanInfo,
@@ -90,16 +93,23 @@ export class PaperService {
     return this.queryStore(getSelectionBox);
   }
 
-  /** Sets the current path overlay info. */
-  setPathOverlayInfo(info: PathOverlayInfo | undefined) {
-    if (!_.isEqual(this.getPathOverlayInfo(), info)) {
-      this.store.dispatch(new SetPathOverlayInfo(info));
+  /** Sets the current create path info. */
+  setCreatePathInfo(info: CreatePathInfo | undefined) {
+    if (!_.isEqual(this.getCreatePathInfo(), info)) {
+      this.store.dispatch(new SetCreatePathInfo(info));
     }
   }
 
-  /** Gets the current path overlay. */
-  getPathOverlayInfo() {
-    return this.queryStore(getPathOverlayInfo);
+  /** Gets the current create path info. */
+  getCreatePathInfo() {
+    return this.queryStore(getCreatePathInfo);
+  }
+
+  /** Sets the current split curve info. */
+  setSplitCurveInfo(info: SplitCurveInfo | undefined) {
+    if (!_.isEqual(this.queryStore(getSplitCurveInfo), info)) {
+      this.store.dispatch(new SetSplitCurveInfo(info));
+    }
   }
 
   /** Sets the current tool mode. */
