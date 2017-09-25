@@ -1,5 +1,6 @@
+import { ToolMode } from 'app/model/paper';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, CursorUtil } from 'app/scripts/paper/util';
+import { Cursor, CursorUtil, PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -26,8 +27,9 @@ export class HoverItemsGesture extends Gesture {
     if (selectedLayers.size > 0) {
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
-        // TODO: how do we choose between scale vs. rotate cursors here?
-        CursorUtil.set(selectionBoundSegmentsHitResult.item.resizeCursor);
+        const toolMode = this.ps.getToolMode();
+        const cursorMap = toolMode === ToolMode.Rotate ? ROTATE_CURSOR_MAP : RESIZE_CURSOR_MAP;
+        CursorUtil.set(cursorMap.get(selectionBoundSegmentsHitResult.item.pivotType));
         this.ps.setHoveredLayer(undefined);
         return;
       }
@@ -40,3 +42,25 @@ export class HoverItemsGesture extends Gesture {
     this.ps.setHoveredLayer(hitResult ? hitResult.item.data.id : undefined);
   }
 }
+
+const RESIZE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([
+  ['bottomLeft', Cursor.Resize45],
+  ['leftCenter', Cursor.Resize90],
+  ['topLeft', Cursor.Resize135],
+  ['topCenter', Cursor.Resize0],
+  ['topRight', Cursor.Resize45],
+  ['rightCenter', Cursor.Resize90],
+  ['bottomRight', Cursor.Resize135],
+  ['bottomCenter', Cursor.Resize0],
+] as [PivotType, Cursor][]);
+
+const ROTATE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([
+  ['bottomLeft', Cursor.Rotate225],
+  ['leftCenter', Cursor.Rotate270],
+  ['topLeft', Cursor.Rotate315],
+  ['topCenter', Cursor.Rotate0],
+  ['topRight', Cursor.Rotate45],
+  ['rightCenter', Cursor.Rotate90],
+  ['bottomRight', Cursor.Rotate135],
+  ['bottomCenter', Cursor.Rotate180],
+] as [PivotType, Cursor][]);

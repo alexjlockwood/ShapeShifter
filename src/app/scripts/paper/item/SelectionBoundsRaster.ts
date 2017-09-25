@@ -1,15 +1,5 @@
-import { Cursor } from 'app/scripts/paper/util';
+import { Cursor, PivotType } from 'app/scripts/paper/util';
 import * as paper from 'paper';
-
-export type PivotType =
-  | 'bottomLeft'
-  | 'leftCenter'
-  | 'topLeft'
-  | 'topCenter'
-  | 'topRight'
-  | 'rightCenter'
-  | 'bottomRight'
-  | 'bottomCenter';
 
 const PIVOT_TYPES: ReadonlyArray<PivotType> = [
   'bottomLeft',
@@ -21,17 +11,6 @@ const PIVOT_TYPES: ReadonlyArray<PivotType> = [
   'bottomRight',
   'bottomCenter',
 ];
-
-const RESIZE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map<PivotType, Cursor>([
-  ['bottomLeft', Cursor.Resize45],
-  ['leftCenter', Cursor.Resize90],
-  ['topLeft', Cursor.Resize135],
-  ['topCenter', Cursor.Resize0],
-  ['topRight', Cursor.Resize45],
-  ['rightCenter', Cursor.Resize90],
-  ['bottomRight', Cursor.Resize135],
-  ['bottomCenter', Cursor.Resize0],
-]);
 
 export class SelectionBoundsRaster extends paper.Raster {
   private static instance: SelectionBoundsRaster;
@@ -60,10 +39,6 @@ export class SelectionBoundsRaster extends paper.Raster {
 
   get oppositePivotType() {
     return this.oppositePivotType_;
-  }
-
-  get resizeCursor() {
-    return RESIZE_CURSOR_MAP.get(this.pivotType);
   }
 }
 

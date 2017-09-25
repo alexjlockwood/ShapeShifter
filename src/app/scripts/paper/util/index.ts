@@ -6,3 +6,4 @@ export { PaperUtil };
 export { SnapUtil };
 
 export { Cursor } from './CursorUtil';
+export { PivotType } from './PivotType';

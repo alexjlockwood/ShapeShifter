@@ -2,9 +2,10 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 export const INIT_ACTION = '@ngrx/store/init';
 
-export interface Action {
+export interface Action<T = any> {
   type: string;
-  payload?: any;
+  // TODO: remove this field?
+  payload?: T;
 }
 
 export class Dispatcher extends BehaviorSubject<Action> {

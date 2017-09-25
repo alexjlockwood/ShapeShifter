@@ -19,10 +19,7 @@ import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { FocusedPathRaster } from './FocusedPathRaster';
-import {
-  PivotType as SelectionBoundsPivotType,
-  SelectionBoundsRaster,
-} from './SelectionBoundsRaster';
+import { SelectionBoundsRaster } from './SelectionBoundsRaster';
 
 /**
  * The root layer used of our paper.js project. Note that this layer is
