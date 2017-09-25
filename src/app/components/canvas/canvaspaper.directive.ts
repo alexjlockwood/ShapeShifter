@@ -33,13 +33,13 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     Paper.initialize(this.$canvas.get(0), this.ps);
 
     // TODO: remove this debug code
-    // TODO: explicitly set paths with no Z to closed (i.e. M 1 1 h 12 v 12 h -12 v -12)?
+    // TODO: explicitly set paths with no Z to closed? (i.e. M 1 1 h 6 v 6 h -6 v -6)
     const jsonObj = JSON.parse(`{
       "id": "1",
       "name": "demo",
       "type": "vector",
-      "width": "48",
-      "height": "48",
+      "width": "24",
+      "height": "24",
       "children": [
         {
           "id": "3",
@@ -54,23 +54,22 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "id": "4",
               "name": "orange",
               "type": "path",
-              "pathData": "M 1 1 h 12 v 12 h -12 v -12",
+              "pathData": "M 1 1 h 6 v 6 h -6 v -6",
               "fillColor": "#ffa500"
             },
             {
               "id": "5",
               "name": "blue",
               "type": "path",
-              "pathData": "M 6 24 h 12 v 12 h -12 v -12 Z",
+              "pathData": "M 6 12 h 6 v 6 h -6 v -6 Z",
               "strokeColor": "#000",
-              "strokeWidth": "1",
+              "strokeWidth": "0.5",
               "fillColor": "#0000ff"
             }
           ]
         }
       ]
     }`);
-    // TODO: remove this debug code
     this.store.dispatch(new SetVectorLayer(new VectorLayer(jsonObj)));
   }
 

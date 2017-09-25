@@ -208,11 +208,8 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
         selectedSegment.handleIn = initialSelectedSegmentPosition.subtract(localSnapPoint);
         selectedSegment.handleOut = initialSelectedSegmentPosition.add(localSnapPoint);
       } else {
-        // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
-        // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
-        // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
-        // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
-        // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
+        // TODO: need to find a way to retain handle information reliably!
+        // TODO: i.e. converting a 1 segment path to an SVG string will erase the handle info!
         selectedSegment.handleIn = selectedSegment.handleIn.subtract(delta);
         selectedSegment.handleOut = selectedSegment.handleOut.add(delta);
       }
