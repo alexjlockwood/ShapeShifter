@@ -1,4 +1,4 @@
-import { INIT_ACTION } from 'app/store/ngrx/dispatcher';
+import { INIT_ACTION } from 'app/store/ngrx';
 
 declare var console;
 const logger = console;
