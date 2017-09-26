@@ -161,6 +161,8 @@ export class GestureTool extends Tool {
   }
 
   private createFocusedPathModeGesture(event: paper.ToolEvent, fpi: FocusedPathInfo) {
+    const focusedPathId = fpi.layerId;
+
     // First, do a hit test on the focused path's segments and handles.
     const segmentsAndHandlesHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
     if (segmentsAndHandlesHitResult) {
@@ -168,16 +170,16 @@ export class GestureTool extends Tool {
       if (type === 'handle-in' || type === 'handle-out') {
         // If a mouse down event occurred on top of a handle,
         // then select/drag or begin to drag the handle.
-        return new SelectDragHandleGesture(this.ps, segmentIndex, type);
+        return new SelectDragHandleGesture(this.ps, focusedPathId, segmentIndex, type);
       }
       if (this.clickDetector.isDoubleClick()) {
         // If a double click occurred on top of a segment,
         // then add/delete the segment's handles.
-        return new AddDeleteHandlesGesture(this.ps, fpi.layerId, segmentIndex);
+        return new AddDeleteHandlesGesture(this.ps, focusedPathId, segmentIndex);
       }
       // If a mouse down event occurred on top of a segment,
       // then select/drag the segment.
-      return SelectDragDrawSegmentsGesture.hitSegment(this.ps, segmentIndex);
+      return SelectDragDrawSegmentsGesture.hitSegment(this.ps, focusedPathId, segmentIndex);
     }
 
     // Second, do a hit test on the underlying path's curves.
@@ -185,7 +187,12 @@ export class GestureTool extends Tool {
     const curvesHitResult = HitTests.focusedPathModeCurves(event.point, focusedPath);
     if (curvesHitResult) {
       const { location } = curvesHitResult;
-      return SelectDragDrawSegmentsGesture.hitCurve(this.ps, location.index, location.time);
+      return SelectDragDrawSegmentsGesture.hitCurve(
+        this.ps,
+        focusedPathId,
+        location.index,
+        location.time,
+      );
     }
 
     // Third, check to see if we hit the focused path.
@@ -199,7 +206,7 @@ export class GestureTool extends Tool {
 
     if (focusedPath.segments.length === 0) {
       // Then we are beginning to build a new path from scratch.
-      return SelectDragDrawSegmentsGesture.miss(this.ps);
+      return SelectDragDrawSegmentsGesture.miss(this.ps, focusedPathId);
     }
 
     const { selectedSegments } = fpi;
@@ -207,14 +214,14 @@ export class GestureTool extends Tool {
       const selectedSegmentIndex = selectedSegments.values().next().value;
       if (selectedSegmentIndex === 0 || selectedSegmentIndex === focusedPath.segments.length - 1) {
         // Then we are extending an existing open path with a single selected end point segment.
-        return SelectDragDrawSegmentsGesture.miss(this.ps);
+        return SelectDragDrawSegmentsGesture.miss(this.ps, focusedPathId);
       }
     }
 
     // If there is no hit item and we are in focused path mode, then
     // enter selection box mode for the selected item so we can
     // batch select its individual segments.
-    return new BatchSelectSegmentsGesture(this.ps, fpi.layerId);
+    return new BatchSelectSegmentsGesture(this.ps, focusedPathId);
   }
 
   // @Override
