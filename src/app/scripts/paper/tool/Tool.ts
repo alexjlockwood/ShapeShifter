@@ -1,3 +1,4 @@
+import { ToolMode } from 'app/model/paper';
 import * as paper from 'paper';
 
 /**
@@ -6,6 +7,9 @@ import * as paper from 'paper';
 export abstract class Tool {
   /** Called immediately after this tool has been activated. */
   onActivate() {}
+
+  /** Called when the tool mode has changed. */
+  onToolModeChanged(toolMode: ToolMode) {}
 
   /** Called when this tool has received a mouse event. */
   onMouseEvent(event: paper.ToolEvent) {}
