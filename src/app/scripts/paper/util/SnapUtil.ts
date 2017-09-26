@@ -34,10 +34,12 @@ export function getSnapInfo(
   });
   const horizontal = filterByMinDelta(siblingSnapResults.map(result => result.horizontal));
   const vertical = filterByMinDelta(siblingSnapResults.map(result => result.vertical));
-  const horizontalDelta = horizontal.delta <= snapTolerancePixels ? horizontal.delta : Infinity;
-  const horizontalValues = horizontal.delta <= snapTolerancePixels ? horizontal.values : [];
-  const verticalDelta = vertical.delta <= snapTolerancePixels ? vertical.delta : Infinity;
-  const verticalValues = vertical.delta <= snapTolerancePixels ? vertical.values : [];
+  const isHorizontalHit = Math.abs(horizontal.delta) <= snapTolerancePixels;
+  const horizontalDelta = isHorizontalHit ? horizontal.delta : Infinity;
+  const horizontalValues = isHorizontalHit ? horizontal.values : [];
+  const isVerticalHit = Math.abs(vertical.delta) <= snapTolerancePixels;
+  const verticalDelta = isVerticalHit ? vertical.delta : Infinity;
+  const verticalValues = isVerticalHit ? vertical.values : [];
   return {
     horizontal: { values: horizontalValues, delta: horizontalDelta },
     vertical: { values: verticalValues, delta: verticalDelta },
@@ -191,7 +193,7 @@ function runSnapTest(
 }
 
 /**
- * Filters the array of items, keeping the absolute mininum delta values and
+ * Filters the array of items, keeping the smallest delta values and
  * discarding the rest.
  */
 function filterByMinDelta<T>(values: (T & Delta)[]): Values<T> & Delta {
@@ -216,8 +218,9 @@ function filterByMinDelta<T>(values: (T & Delta)[]): Values<T> & Delta {
     },
     { min: Infinity, pos: [] as (T & Delta)[], neg: [] as (T & Delta)[] },
   );
+  const isDeltaPositive = pos.length >= neg.length;
   return {
-    delta: min,
-    values: pos.length >= neg.length ? pos : neg,
+    delta: min * (isDeltaPositive ? 1 : -1),
+    values: isDeltaPositive ? pos : neg,
   };
 }

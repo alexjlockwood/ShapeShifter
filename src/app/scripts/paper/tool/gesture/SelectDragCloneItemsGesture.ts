@@ -21,7 +21,7 @@ import { Gesture } from './Gesture';
  *
  * Preconditions:
  * - The user is in selection mode.
- * - The user just hit an item in a mousedown event.
+ * - The user hit an item in the previous mousedown event.
  */
 export class SelectDragCloneItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -31,6 +31,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
   private initialVectorLayer: VectorLayer;
   private isDragging = false;
 
+  // TODO: dragging items that are contained in transformed groups currently doesn't work...
   constructor(private readonly ps: PaperService, private readonly hitLayerId: string) {
     super();
   }
@@ -42,7 +43,8 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
     const selectedLayers = new Set(this.ps.getSelectedLayers());
     if (!event.modifiers.shift && !selectedLayers.has(this.hitLayerId)) {
-      // If shift isn't pressed, then clear any existing selections.
+      // If shift isn't pressed and the hit layer isn't already selected,
+      // then clear any existing selections.
       selectedLayers.clear();
     }
 
@@ -66,42 +68,42 @@ export class SelectDragCloneItemsGesture extends Gesture {
     }
 
     let newVl = this.initialVectorLayer.clone();
-    const translateLayerFn = (layerId: string, dist: paper.Point) => {
-      const initialLayer = this.initialVectorLayer.findLayerById(layerId);
-      if (initialLayer instanceof PathLayer || initialLayer instanceof ClipPathLayer) {
-        const replacementLayer = initialLayer.clone();
-        replacementLayer.pathData = initialLayer.pathData.transform(
-          Matrix.translation(dist.x, dist.y),
-        );
-        newVl = LayerUtil.replaceLayer(newVl, layerId, replacementLayer);
-      } else if (initialLayer instanceof GroupLayer) {
-        const replacementLayer = initialLayer.clone();
-        replacementLayer.translateX += dist.x;
-        replacementLayer.translateY += dist.y;
-        newVl = LayerUtil.replaceLayer(newVl, layerId, replacementLayer);
-      }
-    };
-
-    Array.from(this.ps.getSelectedLayers()).forEach(layerId => {
-      const item = this.pl.findItemByLayerId(layerId);
-      const localDownPoint = item.globalToLocal(event.downPoint);
-      const localPoint = item.globalToLocal(event.point);
-      const localDelta = localPoint.subtract(localDownPoint);
-      translateLayerFn(
-        item.data.id,
-        event.modifiers.shift
-          ? new paper.Point(MathUtil.snapVectorToAngle(localDelta, 90))
-          : localDelta,
-      );
-    });
-
+    newVl = this.dragItems(newVl, event.point.subtract(event.downPoint), event.modifiers.shift);
     this.ps.setVectorLayer(newVl);
 
-    // TODO: should we compute the snap before or after modifying the items?
-    this.ps.setSnapGuideInfo(this.getSnapGuideInfo());
+    // TODO: this could be WAY more efficient (no need to drag/snap things twice)
+    const snapInfo = this.buildSnapInfo();
+    if (snapInfo) {
+      const {
+        horizontal: { delta: horizontalDelta },
+        vertical: { delta: verticalDelta },
+      } = snapInfo;
+      const projectDelta = new paper.Point(
+        isFinite(horizontalDelta) ? -horizontalDelta : 0,
+        isFinite(verticalDelta) ? -verticalDelta : 0,
+      );
+      if (!projectDelta.isZero()) {
+        newVl = this.dragItems(newVl, projectDelta);
+        this.ps.setVectorLayer(newVl);
+      }
+    }
+
+    this.ps.setSnapGuideInfo(this.buildSnapGuideInfo());
   }
 
-  private getSnapGuideInfo(): SnapGuideInfo {
+  private dragItems(newVl: VectorLayer, projectDelta: paper.Point, shouldSnapDelta = false) {
+    Array.from(this.ps.getSelectedLayers()).forEach(layerId => {
+      const item = this.pl.findItemByLayerId(layerId);
+      const localDelta = item.globalToLocal(projectDelta);
+      const localFinalDelta = shouldSnapDelta
+        ? new paper.Point(MathUtil.snapVectorToAngle(localDelta, 90))
+        : localDelta;
+      newVl = dragItem(newVl, layerId, localFinalDelta);
+    });
+    return newVl;
+  }
+
+  private buildSnapInfo() {
     const selectedLayerIds = this.ps.getSelectedLayers();
     if (!selectedLayerIds.size) {
       return undefined;
@@ -119,26 +121,29 @@ export class SelectDragCloneItemsGesture extends Gesture {
     }
 
     // Perform the snap test.
-    const toSnapPointsFn = (items: paper.Item[]) => {
+    const toSnapPointsFn = (items: ReadonlyArray<paper.Item>) => {
       const { topLeft, center, bottomRight } = PaperUtil.computeGlobalBounds(items);
       return [topLeft, center, bottomRight];
     };
-    const snapInfo = SnapUtil.getSnapInfo(
+    return SnapUtil.getSnapInfo(
       toSnapPointsFn(dragItems),
       siblingItems.map(siblingItem => toSnapPointsFn([siblingItem])),
     );
+  }
+
+  private buildSnapGuideInfo(): SnapGuideInfo {
     const projectToViewportFn = ({ from, to }: Line) => {
       return {
         from: this.pl.globalToLocal(new paper.Point(from)),
         to: this.pl.globalToLocal(new paper.Point(to)),
       };
     };
+    const snapInfo = this.buildSnapInfo();
     return {
       guides: SnapUtil.buildSnapGuides(snapInfo).map(projectToViewportFn),
-      rulers: SnapUtil.buildSnapRulers(snapInfo).map(ruler => ({
-        ...ruler,
-        line: projectToViewportFn(ruler.line),
-      })),
+      rulers: SnapUtil.buildSnapRulers(snapInfo).map(ruler => {
+        return { ...ruler, line: projectToViewportFn(ruler.line) };
+      }),
     };
   }
 
@@ -147,4 +152,20 @@ export class SelectDragCloneItemsGesture extends Gesture {
     this.ps.setSnapGuideInfo(undefined);
     CursorUtil.clear();
   }
+}
+
+function dragItem(newVl: VectorLayer, layerId: string, localDelta: paper.Point) {
+  const initialLayer = newVl.findLayerById(layerId);
+  const { x, y } = localDelta;
+  if (initialLayer instanceof PathLayer || initialLayer instanceof ClipPathLayer) {
+    const replacementLayer = initialLayer.clone();
+    replacementLayer.pathData = initialLayer.pathData.transform(Matrix.translation(x, y));
+    newVl = LayerUtil.replaceLayer(newVl, layerId, replacementLayer);
+  } else if (initialLayer instanceof GroupLayer) {
+    const replacementLayer = initialLayer.clone();
+    replacementLayer.translateX += x;
+    replacementLayer.translateY += y;
+    newVl = LayerUtil.replaceLayer(newVl, layerId, replacementLayer);
+  }
+  return newVl;
 }
