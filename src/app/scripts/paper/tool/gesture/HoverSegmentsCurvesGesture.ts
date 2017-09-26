@@ -25,8 +25,6 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     this.ps.setSplitCurveInfo(undefined);
     this.ps.setCreatePathInfo(undefined);
 
-    // TODO: are we performing too many hit tests in this method?
-
     const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
     const segmentsAndHandlesHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
     if (segmentsAndHandlesHitResult) {
@@ -40,8 +38,11 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     if (focusedPathHitResult) {
       // Show a pen add cursor and highlight the curve the user is about to split.
       CursorUtil.set(Cursor.PenAdd);
-      const { location } = focusedPathHitResult;
-      const splitPoint = this.localToViewportPoint(focusedPath, location.point);
+      const hitCurve = focusedPathHitResult.location.curve;
+      const location = event.modifiers.command
+        ? hitCurve.getLocationAt(hitCurve.length * 0.5)
+        : focusedPathHitResult.location;
+      const vpSplitPoint = this.localToViewportPoint(focusedPath, location.point);
       const { point: p1, handleIn: in1, handleOut: out1 } = this.localToViewportSegment(
         focusedPath,
         location.curve.segment1,
@@ -51,13 +52,14 @@ export class HoverSegmentsCurvesGesture extends Gesture {
         location.curve.segment2,
       );
       this.ps.setSplitCurveInfo({
-        splitPoint,
+        splitPoint: vpSplitPoint,
         segment1: { point: p1, handleIn: in1, handleOut: out1 },
         segment2: { point: p2, handleIn: in2, handleOut: out2 },
       });
       return;
     }
 
+    // TODO: are we performing too many hit tests in this method?
     // TODO: can we merge this hit test with the one above once we get hitOptions.curves working?
     if (HitTests.focusedPathMode(event.point, focusedPath)) {
       // If we hit the focused path (and missed its segments/handles/curves), then do nothing.

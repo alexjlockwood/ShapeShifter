@@ -18,25 +18,27 @@ import { Gesture } from './Gesture';
 export class SelectDragHandleGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   private readonly hitHandleType: 'handleIn' | 'handleOut';
-  private focusedPathId: string;
   private initialHandle: paper.Point;
-  private lastDragEventInfo: Readonly<{ downPoint: paper.Point; point: paper.Point }>;
+  private lastDragEventInfo: {
+    readonly localDownPoint: paper.Point;
+    readonly localPoint: paper.Point;
+  };
 
   constructor(
     private readonly ps: PaperService,
-    private readonly segmentIndex: number,
+    private readonly focusedPathId: string,
+    private readonly hitSegmentIndex: number,
     hitResultType: 'handle-in' | 'handle-out',
   ) {
     super();
     this.hitHandleType = hitResultType === 'handle-in' ? 'handleIn' : 'handleOut';
-    this.focusedPathId = this.ps.getFocusedPathInfo().layerId;
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     const selectedSegments = new Set<number>();
-    const selectedHandleIn = this.hitHandleType === 'handleIn' ? this.segmentIndex : undefined;
-    const selectedHandleOut = this.hitHandleType === 'handleOut' ? this.segmentIndex : undefined;
+    const selectedHandleIn = this.hitHandleType === 'handleIn' ? this.hitSegmentIndex : undefined;
+    const selectedHandleOut = this.hitHandleType === 'handleOut' ? this.hitSegmentIndex : undefined;
     this.ps.setFocusedPathInfo({
       ...this.ps.getFocusedPathInfo(),
       selectedSegments,
@@ -44,15 +46,16 @@ export class SelectDragHandleGesture extends Gesture {
       selectedHandleOut,
     });
     const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathId) as paper.Path;
-    this.initialHandle = focusedPath.segments[this.segmentIndex][this.hitHandleType].clone();
+    this.initialHandle = focusedPath.segments[this.hitSegmentIndex][this.hitHandleType].clone();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathId);
-    const downPoint = focusedPath.globalToLocal(event.downPoint);
-    const point = focusedPath.globalToLocal(event.point);
-    this.lastDragEventInfo = { downPoint, point };
+    this.lastDragEventInfo = {
+      localDownPoint: focusedPath.globalToLocal(event.downPoint),
+      localPoint: focusedPath.globalToLocal(event.point),
+    };
     this.processEvent(event);
   }
 
@@ -72,19 +75,19 @@ export class SelectDragHandleGesture extends Gesture {
     }
   }
 
-  private processEvent({ modifiers: { shift } }: paper.Event) {
+  private processEvent(event: paper.Event) {
     if (!this.lastDragEventInfo) {
       return;
     }
-    const { downPoint, point } = this.lastDragEventInfo;
-    const handle = this.initialHandle.add(point.subtract(downPoint));
-    if (shift) {
-      // Project the new handle vector onto the original handle vector.
+    const { localDownPoint, localPoint } = this.lastDragEventInfo;
+    const handle = this.initialHandle.add(localPoint.subtract(localDownPoint));
+    if (event.modifiers.shift) {
+      // Project the handle onto the handle's original vector.
       const theta = -(this.initialHandle.angle - handle.angle) * Math.PI / 180;
       handle.set(this.initialHandle.normalize().multiply(handle.length * Math.cos(theta)));
     }
     const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathId) as paper.Path;
-    focusedPath.segments[this.segmentIndex][this.hitHandleType] = handle;
+    focusedPath.segments[this.hitSegmentIndex][this.hitHandleType] = handle;
     PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
   }
 }

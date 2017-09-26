@@ -26,35 +26,39 @@ import { Gesture } from './Gesture';
  */
 export class SelectDragDrawSegmentsGesture extends Gesture {
   /** Static factory method to use when the user's mouse down hits a segment. */
-  static hitSegment(ps: PaperService, segmentIndex: number) {
-    return new SelectDragDrawSegmentsGesture(ps, { segmentIndex });
+  static hitSegment(ps: PaperService, focusedPathId: string, segmentIndex: number) {
+    return new SelectDragDrawSegmentsGesture(ps, focusedPathId, { segmentIndex });
   }
 
   /** Static factory method to use when the user's mouse down hits a curve. */
-  static hitCurve(ps: PaperService, curveIndex: number, time: number) {
-    return new SelectDragDrawSegmentsGesture(ps, undefined, { curveIndex, time });
+  static hitCurve(ps: PaperService, focusedPathId: string, curveIndex: number, time: number) {
+    return new SelectDragDrawSegmentsGesture(ps, focusedPathId, undefined, { curveIndex, time });
   }
 
   /** Static factory method to use when the user misses the focused path. */
-  static miss(ps: PaperService) {
-    return new SelectDragDrawSegmentsGesture(ps);
+  static miss(ps: PaperService, focusedPathId: string) {
+    return new SelectDragDrawSegmentsGesture(ps, focusedPathId);
   }
 
   private readonly pl = paper.project.activeLayer as PaperLayer;
-  private readonly focusedPathId: string;
+
   // Maps segment indices to each segment's starting position.
   private mouseDownSelectedSegmentIndexMap: ReadonlyMap<number, paper.Point>;
   // The location of the last mouse event in the focused path's local coordinates.
   private localLastPoint: paper.Point;
+  // True if we should exit focused path mode on the next mouse up event.
   private exitFocusedPathModeOnMouseUp = false;
+  // If this gesture was used to split a curve, this tells us the index of the
+  // new segment that was created in onMouseDown().
+  private newSplitCurveSegmentIndex: number;
 
   private constructor(
     private readonly ps: PaperService,
+    private readonly focusedPathId: string,
     private readonly hitSegmentInfo?: Readonly<{ segmentIndex: number }>,
     private readonly hitCurveInfo?: Readonly<{ curveIndex?: number; time: number }>,
   ) {
     super();
-    this.focusedPathId = this.ps.getFocusedPathInfo().layerId;
   }
 
   // @Override
@@ -65,7 +69,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
 
     if (this.hitSegmentInfo) {
-      const isEndPointFn = (idx: number) => idx === 0 || idx === focusedPath.segments.length - 1;
+      const isEndPointFn = (i: number) => i === 0 || i === focusedPath.segments.length - 1;
       const { segmentIndex } = this.hitSegmentInfo;
       const singleSelectedSegmentIndex = beforeSelectedSegmentIndices.size
         ? beforeSelectedSegmentIndices.values().next().value
@@ -100,10 +104,14 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // If there is no hit segment, then create one along the curve
       // at the given location and select the new segment.
       const { curveIndex, time } = this.hitCurveInfo;
-      const newSegment = focusedPath.curves[curveIndex].divideAtTime(time).segment1;
+      const curve = focusedPath.curves[curveIndex];
+      const newSegment = event.modifiers.command
+        ? curve.divideAt(curve.getLocationAt(curve.length / 2))
+        : curve.divideAtTime(time).segment1;
       PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
       afterSelectedSegmentIndices.clear();
       afterSelectedSegmentIndices.add(newSegment.index);
+      this.newSplitCurveSegmentIndex = newSegment.index;
     } else {
       // Otherwise, we are either (1) extending an existing open path (beginning
       // at one of its selected end points), or (2) beginning to create a new path
@@ -149,26 +157,30 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       this.localLastPoint = localDownPoint;
     }
     const localPoint = focusedPath.globalToLocal(event.point);
-    const delta = localPoint.subtract(this.localLastPoint);
-    const localSnapPoint = event.modifiers.shift
-      ? new paper.Point(MathUtil.snapVectorToAngle(localPoint.subtract(localDownPoint), 90))
-      : undefined;
+    const localDownPointDelta = localPoint.subtract(localDownPoint);
+    const localLastPointDelta = localPoint.subtract(this.localLastPoint);
+    const localSnappedDownPointDelta = new paper.Point(
+      MathUtil.snapVectorToAngle(localDownPointDelta, 90),
+    );
 
     if (this.hitSegmentInfo || this.hitCurveInfo) {
       // A segment was created on mouse down and is still being grabbed,
       // so continue to drag the currently selected segments.
       const selectedSegmentIndices = new Set(this.mouseDownSelectedSegmentIndexMap.keys());
       const nonSelectedSegmentIndices = focusedPath.segments
-        .map((s, segmentIndex) => segmentIndex)
-        .filter((s, segmentIndex) => !selectedSegmentIndices.has(segmentIndex));
-      this.mouseDownSelectedSegmentIndexMap.forEach((initialSegmentPoint, segmentIndex) => {
-        const segment = focusedPath.segments[segmentIndex];
+        .map((s, i) => i)
+        .filter((s, i) => !selectedSegmentIndices.has(i));
+      this.mouseDownSelectedSegmentIndexMap.forEach((initialSegmentPoint, i) => {
+        const segment = focusedPath.segments[i];
         segment.point = event.modifiers.shift
-          ? initialSegmentPoint.add(localSnapPoint)
-          : segment.point.add(localPoint.subtract(this.localLastPoint));
+          ? initialSegmentPoint.add(localSnappedDownPointDelta)
+          : segment.point.add(localLastPointDelta);
       });
-      const dragSnapPoints = Array.from(selectedSegmentIndices).map(i =>
-        focusedPath.localToGlobal(focusedPath.segments[i].point),
+      const draggedSegmentIndex = this.hitSegmentInfo
+        ? this.hitSegmentInfo.segmentIndex
+        : this.newSplitCurveSegmentIndex;
+      const dragSnapPoint = focusedPath.localToGlobal(
+        focusedPath.segments[draggedSegmentIndex].point,
       );
       const { topLeft, center, bottomRight } = Array.from(
         this.mouseDownSelectedSegmentIndexMap.values(),
@@ -182,12 +194,10 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
           return [focusedPath.localToGlobal(focusedPath.segments[i].point)];
         }),
       ];
-      // TODO: also snap segment handles below
-      // TODO: should we compute the snap before or after modifying the segments?
-      // TODO: only snap the primary dragged segment (even when there are multiple drag segments)?
+
       this.ps.setSnapGuideInfo({
         guides: SnapUtil.buildSnapGuides(
-          SnapUtil.getSnapInfo(dragSnapPoints, siblingSnapPointsTable),
+          SnapUtil.getSnapInfo([dragSnapPoint], siblingSnapPointsTable),
         ).map(({ from, to }: Line) => {
           from = this.pl.globalToLocal(new paper.Point(from));
           to = this.pl.globalToLocal(new paper.Point(to));
@@ -201,17 +211,17 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // Note that there will only ever be one selected segment in this case.
       const selectedSegmentIndex = this.mouseDownSelectedSegmentIndexMap.keys().next().value;
       const selectedSegment = focusedPath.segments[selectedSegmentIndex];
+      // TODO: dragging a handle belonging to an endpoint doesn't work! handle info is lost!
+      // TODO: snap the dragged segment handle with the newly created segment
       if (event.modifiers.shift) {
-        const initialSelectedSegmentPosition = this.mouseDownSelectedSegmentIndexMap.get(
-          selectedSegmentIndex,
-        );
-        selectedSegment.handleIn = initialSelectedSegmentPosition.subtract(localSnapPoint);
-        selectedSegment.handleOut = initialSelectedSegmentPosition.add(localSnapPoint);
+        const index = selectedSegmentIndex;
+        const initialSelectedSegmentPosition = this.mouseDownSelectedSegmentIndexMap.get(index);
+        const delta = localSnappedDownPointDelta;
+        selectedSegment.handleIn = initialSelectedSegmentPosition.subtract(delta);
+        selectedSegment.handleOut = initialSelectedSegmentPosition.add(delta);
       } else {
-        // TODO: need to find a way to retain handle information reliably!
-        // TODO: i.e. converting a 1 segment path to an SVG string will erase the handle info!
-        selectedSegment.handleIn = selectedSegment.handleIn.subtract(delta);
-        selectedSegment.handleOut = selectedSegment.handleOut.add(delta);
+        selectedSegment.handleIn = selectedSegment.handleIn.subtract(localLastPointDelta);
+        selectedSegment.handleOut = selectedSegment.handleOut.add(localLastPointDelta);
       }
     }
     this.localLastPoint = localPoint;
