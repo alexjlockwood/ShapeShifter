@@ -13,13 +13,12 @@ export class ToolPanelComponent implements OnInit {
   readonly TOOL_MODE_SELECT = ToolMode.Selection;
   readonly TOOL_MODE_PENCIL = ToolMode.Pencil;
   readonly TOOL_MODE_PEN = ToolMode.Pen;
-  readonly TOOL_MODE_CIRCLE = ToolMode.Circle;
+  readonly TOOL_MODE_ELLIPSE = ToolMode.Ellipse;
   readonly TOOL_MODE_RECTANGLE = ToolMode.Rectangle;
   readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
 
   toolMode$: Observable<ToolMode>;
 
-  // TODO: deal with invalid fill/stroke colors
   constructor(public readonly paperService: PaperService) {}
 
   ngOnInit() {
@@ -38,8 +37,8 @@ export class ToolPanelComponent implements OnInit {
     this.paperService.setToolMode(ToolMode.Pen);
   }
 
-  onCircleClick() {
-    this.paperService.setToolMode(ToolMode.Circle);
+  onEllipseClick() {
+    this.paperService.setToolMode(ToolMode.Ellipse);
   }
 
   onRectangleClick() {

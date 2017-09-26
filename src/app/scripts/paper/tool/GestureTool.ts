@@ -30,9 +30,8 @@ import * as paper from 'paper';
 import { Tool } from './Tool';
 
 /**
- * TODO: hook up rotate and transform tools somehow
- * TODO: describe how 'enter' and 'escape' should both behave
- * TODO: https://medium.com/sketch-app/mastering-the-bezier-curve-in-sketch-4da8fdf0dbbb
+ * A tool that delegates responsibilities to different gestures given the current
+ * state of the current mouse event.
  */
 export class GestureTool extends Tool {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -59,7 +58,7 @@ export class GestureTool extends Tool {
 
   private onMouseDown(event: paper.ToolEvent) {
     const toolMode = this.ps.getToolMode();
-    if (toolMode === ToolMode.Circle) {
+    if (toolMode === ToolMode.Ellipse) {
       this.currentGesture = new CreateEllipseGesture(this.ps);
     } else if (toolMode === ToolMode.Rectangle) {
       this.currentGesture = new CreateRectangleGesture(this.ps);
@@ -220,7 +219,6 @@ export class GestureTool extends Tool {
 
   // @Override
   onKeyEvent(event: paper.KeyEvent) {
-    // TODO: add support for other gestures (i.e. move shape 10px using keyboard, etc.)
     if (event.type === 'keydown') {
       this.currentGesture.onKeyDown(event);
     } else if (event.type === 'keyup') {

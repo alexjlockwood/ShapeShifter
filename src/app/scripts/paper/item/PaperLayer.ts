@@ -603,7 +603,7 @@ function newSnapGuideItem(info: SnapGuideInfo, cssScaling: number) {
     });
   };
 
-  const handleLengthPixels = 8;
+  const handleLengthPixels = 4;
   const matrix = new paper.Matrix(cssScaling, 0, 0, cssScaling, 0, 0);
   info.rulers.forEach(({ line, delta }) => {
     const from = new paper.Point(line.from);
@@ -611,9 +611,8 @@ function newSnapGuideItem(info: SnapGuideInfo, cssScaling: number) {
     const mid = from.add(to.subtract(from).multiply(0.5));
     const globalFrom = from.transform(matrix);
     const globalTo = to.transform(matrix);
-    const rulerHandle = to
-      .transform(matrix)
-      .subtract(from.transform(matrix))
+    const rulerHandle = globalTo
+      .subtract(globalFrom)
       .normalize()
       .multiply(handleLengthPixels)
       .transform(matrix.inverted());

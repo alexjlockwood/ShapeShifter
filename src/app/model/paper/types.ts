@@ -2,7 +2,7 @@ export enum ToolMode {
   Selection = 1,
   Pencil,
   Pen,
-  Circle,
+  Ellipse,
   Rectangle,
   ZoomPan,
   Rotate,

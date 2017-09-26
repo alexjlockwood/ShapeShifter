@@ -8,7 +8,7 @@ import {
 } from 'app/model/layers';
 import { MathUtil, Matrix } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
-import { PaperUtil, SnapUtil } from 'app/scripts/paper/util';
+import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import { Line, Ruler, SnapGuideInfo } from 'app/store/paper/actions';
 import * as paper from 'paper';
@@ -17,13 +17,11 @@ import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs selection, move, and clone operations
- * on one or more items. This gesture is only used during selection mode.
+ * on one or more items.
  *
- * TODO: don't allow modifications to be made to groups and paths/masks simultaneously
- * TODO: make it possible to drag/clone groups
- * TODO: show a 'grabbing' cursor while dragging items
- * TODO: confirm that it is impossible for vector layers to be translated/transformed
- * TODO: make it possible to drag/clone multiple items at a time (doesn't seem to work)
+ * Preconditions:
+ * - The user is in selection mode.
+ * - The user just hit an item in a mousedown event.
  */
 export class SelectDragCloneItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -33,7 +31,6 @@ export class SelectDragCloneItemsGesture extends Gesture {
   private initialVectorLayer: VectorLayer;
   private isDragging = false;
 
-  // TODO: pressing alt should select the item directly beneath the hit item
   constructor(private readonly ps: PaperService, private readonly hitLayerId: string) {
     super();
   }
@@ -48,6 +45,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
       // If shift isn't pressed, then clear any existing selections.
       selectedLayers.clear();
     }
+
     // Select the hit item.
     selectedLayers.add(this.hitLayerId);
     this.ps.setSelectedLayers(selectedLayers);
@@ -60,14 +58,13 @@ export class SelectDragCloneItemsGesture extends Gesture {
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     if (!this.isDragging) {
+      this.isDragging = true;
       if (event.modifiers.alt) {
         // TODO: clone the selected items
       }
-      this.isDragging = true;
+      CursorUtil.set(Cursor.Grabbing);
     }
 
-    // TODO: snap the dragged shapes as they are dragged
-    // TODO: make sure groups and paths/masks aren't modified simultaneously
     let newVl = this.initialVectorLayer.clone();
     const translateLayerFn = (layerId: string, dist: paper.Point) => {
       const initialLayer = this.initialVectorLayer.findLayerById(layerId);
@@ -85,17 +82,17 @@ export class SelectDragCloneItemsGesture extends Gesture {
       }
     };
 
-    const selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
-      this.pl.findItemByLayerId(id),
-    );
-    selectedItems.forEach(item => {
-      const downPoint = item.globalToLocal(event.downPoint);
-      const point = item.globalToLocal(event.point);
-      const localDelta = point.subtract(downPoint);
-      const finalDelta = event.modifiers.shift
-        ? new paper.Point(MathUtil.snapVectorToAngle(localDelta, 90))
-        : localDelta;
-      translateLayerFn(item.data.id, finalDelta);
+    Array.from(this.ps.getSelectedLayers()).forEach(layerId => {
+      const item = this.pl.findItemByLayerId(layerId);
+      const localDownPoint = item.globalToLocal(event.downPoint);
+      const localPoint = item.globalToLocal(event.point);
+      const localDelta = localPoint.subtract(localDownPoint);
+      translateLayerFn(
+        item.data.id,
+        event.modifiers.shift
+          ? new paper.Point(MathUtil.snapVectorToAngle(localDelta, 90))
+          : localDelta,
+      );
     });
 
     this.ps.setVectorLayer(newVl);
@@ -105,16 +102,15 @@ export class SelectDragCloneItemsGesture extends Gesture {
   }
 
   private getSnapGuideInfo(): SnapGuideInfo {
-    const dragItems = Array.from(this.ps.getSelectedLayers()).map(id =>
-      this.pl.findItemByLayerId(id),
-    );
-    if (!dragItems.length) {
+    const selectedLayerIds = this.ps.getSelectedLayers();
+    if (!selectedLayerIds.size) {
       return undefined;
     }
+    const dragItems = Array.from(selectedLayerIds).map(id => this.pl.findItemByLayerId(id));
     const { parent } = dragItems[0];
     if (!dragItems.every(item => item.parent === parent)) {
       // TODO: determine if there is an alternative to exiting early here?
-      console.warn('all snapped items must share the same parent item');
+      console.warn('All snapped items must share the same parent item.');
       return undefined;
     }
     const siblingItems = parent.children.filter(i => !dragItems.includes(i));
@@ -131,17 +127,17 @@ export class SelectDragCloneItemsGesture extends Gesture {
       toSnapPointsFn(dragItems),
       siblingItems.map(siblingItem => toSnapPointsFn([siblingItem])),
     );
-    const transformLineFn = ({ from, to }: Line) => {
+    const projectToViewportFn = ({ from, to }: Line) => {
       return {
         from: this.pl.globalToLocal(new paper.Point(from)),
         to: this.pl.globalToLocal(new paper.Point(to)),
       };
     };
     return {
-      guides: SnapUtil.buildSnapGuides(snapInfo).map(transformLineFn),
+      guides: SnapUtil.buildSnapGuides(snapInfo).map(projectToViewportFn),
       rulers: SnapUtil.buildSnapRulers(snapInfo).map(ruler => ({
         ...ruler,
-        line: transformLineFn(ruler.line),
+        line: projectToViewportFn(ruler.line),
       })),
     };
   }
@@ -149,5 +145,6 @@ export class SelectDragCloneItemsGesture extends Gesture {
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     this.ps.setSnapGuideInfo(undefined);
+    CursorUtil.clear();
   }
 }

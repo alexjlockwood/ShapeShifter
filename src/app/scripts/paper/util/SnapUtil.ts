@@ -48,41 +48,32 @@ export function getSnapInfo(
  * Builds the snap guides to draw given a snap info object.
  * This function assumes the global project coordinate space.
  */
-export function buildSnapGuides(snapInfo: SnapInfo) {
+export function buildSnapGuides(snapInfo: SnapInfo): ReadonlyArray<Line> {
   const guides: Line[] = [];
-  snapInfo.horizontal.values.forEach(value => {
-    const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
-    if (values.length) {
-      const { siblingIndex } = values[0];
-      const guideTop = Math.min(dsb.top, ssb.top);
-      const guideBottom = Math.max(dsb.bottom, ssb.bottom);
-      const guideX = ssb.snapPoints[siblingIndex].x;
-      guides.push({
-        from: new paper.Point(guideX, guideTop),
-        to: new paper.Point(guideX, guideBottom),
-      });
-    }
-  });
-  snapInfo.vertical.values.forEach(value => {
-    const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
-    const leftMostBounds = dsb.left < ssb.left ? dsb : ssb;
-    const rightMostBounds = dsb.right < ssb.right ? ssb : dsb;
-    const topMostBounds = dsb.top < ssb.top ? dsb : ssb;
-    const nonTopMostBounds = dsb.top < ssb.top ? ssb : dsb;
-    const bottomMostBounds = dsb.bottom < ssb.bottom ? ssb : dsb;
-    const nonBottomMostBounds = dsb.bottom < ssb.bottom ? dsb : ssb;
-    const shortestBounds = dsb.height < ssb.height ? dsb : ssb;
-    const tallestBounds = dsb.height < ssb.height ? ssb : dsb;
-    if (values.length) {
-      const { siblingIndex } = values[0];
-      const guideLeft = leftMostBounds.left;
-      const guideRight = rightMostBounds.right;
-      const guideY = ssb.snapPoints[siblingIndex].y;
-      guides.push({
-        from: new paper.Point(guideLeft, guideY),
-        to: new paper.Point(guideRight, guideY),
-      });
-    }
+  ['horizontal', 'vertical'].forEach(direction => {
+    const isHorizontal = direction === 'horizontal';
+    const start = isHorizontal ? 'top' : 'left';
+    const end = isHorizontal ? 'bottom' : 'right';
+    const xOrY = isHorizontal ? 'x' : 'y';
+    (isHorizontal ? snapInfo.horizontal : snapInfo.vertical).values.forEach(value => {
+      const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
+      if (values.length) {
+        const startMostBounds = dsb[start] < ssb[start] ? dsb : ssb;
+        const endMostBounds = dsb[end] < ssb[end] ? ssb : dsb;
+        const guideStart = startMostBounds[start];
+        const guideEnd = endMostBounds[end];
+        const guideXY = ssb.snapPoints[values[0].siblingIndex][xOrY];
+        const from = new paper.Point(
+          isHorizontal ? guideXY : guideStart,
+          isHorizontal ? guideStart : guideXY,
+        );
+        const to = new paper.Point(
+          isHorizontal ? guideXY : guideEnd,
+          isHorizontal ? guideEnd : guideXY,
+        );
+        guides.push({ from, to });
+      }
+    });
   });
   return guides;
 }
@@ -91,30 +82,45 @@ export function buildSnapGuides(snapInfo: SnapInfo) {
  * Builds the snap rulers to draw given a snap info object.
  * This function assumes the global project coordinate space.
  */
-export function buildSnapRulers(snapInfo: SnapInfo) {
+export function buildSnapRulers(
+  snapInfo: SnapInfo,
+  snapTolerancePixels = SNAP_TOLERANCE_PIXELS,
+): ReadonlyArray<Ruler> {
   const rulers: Ruler[] = [];
-  snapInfo.vertical.values.forEach(value => {
-    const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
-    const leftMostBounds = dsb.left < ssb.left ? dsb : ssb;
-    const rightMostBounds = dsb.right < ssb.right ? ssb : dsb;
-    const topMostBounds = dsb.top < ssb.top ? dsb : ssb;
-    const nonTopMostBounds = dsb.top < ssb.top ? ssb : dsb;
-    const bottomMostBounds = dsb.bottom < ssb.bottom ? ssb : dsb;
-    const nonBottomMostBounds = dsb.bottom < ssb.bottom ? dsb : ssb;
-    const shortestBounds = dsb.height < ssb.height ? dsb : ssb;
-    const tallestBounds = dsb.height < ssb.height ? ssb : dsb;
-    values.forEach(() => {
-      const rulerLeft = leftMostBounds.right;
-      const rulerRight = rightMostBounds.left;
-      const rulerTop = nonTopMostBounds.top;
-      const rulerBottom = nonBottomMostBounds.bottom;
-      // TODO: handle the 'rulerTop === rulerBottom' case like sketch does
-      const rulerY = rulerTop + (rulerBottom - rulerTop) * 0.5;
-      const rulerFrom = new paper.Point(rulerLeft, rulerY);
-      const rulerTo = new paper.Point(rulerRight, rulerY);
-      rulers.push({
-        line: { from: rulerFrom, to: rulerTo },
-        delta: rulerTo.x - rulerFrom.x,
+  ['horizontal', 'vertical'].forEach(direction => {
+    const isHorizontal = direction === 'horizontal';
+    const start = isHorizontal ? 'top' : 'left';
+    const oppStart = isHorizontal ? 'left' : 'top';
+    const end = isHorizontal ? 'bottom' : 'right';
+    const oppEnd = isHorizontal ? 'right' : 'bottom';
+    const xOrY = isHorizontal ? 'x' : 'y';
+    (isHorizontal ? snapInfo.horizontal : snapInfo.vertical).values.forEach(value => {
+      const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
+      const startMostBounds = dsb[start] < ssb[start] ? dsb : ssb;
+      const endMostBounds = dsb[end] < ssb[end] ? ssb : dsb;
+      const nonOppStartMostBounds = dsb[oppStart] < ssb[oppStart] ? ssb : dsb;
+      const nonOppEndMostBounds = dsb[oppEnd] < ssb[oppEnd] ? dsb : ssb;
+      values.forEach(() => {
+        const rulerStart = startMostBounds[end];
+        const rulerEnd = endMostBounds[start];
+        const rulerOppStart = nonOppStartMostBounds[oppStart];
+        const rulerOppEnd = nonOppEndMostBounds[oppEnd];
+        // TODO: handle the horizontal 'rulerLeft === rulerRight' case like sketch does
+        // TODO: handle the vertical 'rulerTop === rulerBottom' case like sketch does
+        const rulerXY = rulerOppStart + (rulerOppEnd - rulerOppStart) * 0.5;
+        const from = new paper.Point(
+          isHorizontal ? rulerXY : rulerStart,
+          isHorizontal ? rulerStart : rulerXY,
+        );
+        const to = new paper.Point(
+          isHorizontal ? rulerXY : rulerEnd,
+          isHorizontal ? rulerEnd : rulerXY,
+        );
+        const delta = to[xOrY === 'x' ? 'y' : 'x'] - from[xOrY === 'x' ? 'y' : 'x'];
+        if (delta > SNAP_TOLERANCE_PIXELS) {
+          // Don't show a ruler if the items have been snapped.
+          rulers.push({ line: { from, to }, delta });
+        }
       });
     });
   });
