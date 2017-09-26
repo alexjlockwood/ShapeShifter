@@ -10,40 +10,37 @@ import { State } from './state';
 
 export class Store<T> extends Observable<T> implements Observer<Action> {
   constructor(
-    private _dispatcher: Observer<Action>,
-    private _reducer: Observer<ActionReducer<any>>,
+    private readonly dispatcher: Observer<Action>,
+    private readonly reducer: Observer<ActionReducer<any>>,
     state$: Observable<any>,
   ) {
     super();
-
     this.source = state$;
   }
 
   select: SelectSignature<T> = select.bind(this);
 
   lift<R>(operator: Operator<T, R>): Store<R> {
-    const store = new Store<R>(this._dispatcher, this._reducer, this);
+    const store = new Store<R>(this.dispatcher, this.reducer, this);
     store.operator = operator;
     return store;
   }
 
   replaceReducer(reducer: ActionReducer<any>) {
-    this._reducer.next(reducer);
+    this.reducer.next(reducer);
   }
 
   dispatch(action: Action) {
-    this._dispatcher.next(action);
+    this.dispatcher.next(action);
   }
 
   next(action: Action) {
-    this._dispatcher.next(action);
+    this.dispatcher.next(action);
   }
 
   error(err: any) {
-    this._dispatcher.error(err);
+    this.dispatcher.error(err);
   }
 
-  complete() {
-    // noop
-  }
+  complete() {}
 }

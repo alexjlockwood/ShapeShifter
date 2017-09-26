@@ -1,7 +1,5 @@
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
-export const INIT_ACTION = '@ngrx/store/init';
-
 export interface Action<T = any> {
   type: string;
   // TODO: remove this field?
@@ -9,7 +7,7 @@ export interface Action<T = any> {
 }
 
 export class Dispatcher extends BehaviorSubject<Action> {
-  static INIT = INIT_ACTION;
+  static INIT = '@ngrx/store/init';
 
   constructor() {
     super({ type: Dispatcher.INIT });

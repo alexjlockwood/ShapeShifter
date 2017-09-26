@@ -1,7 +1,9 @@
-export { Action, Dispatcher, INIT_ACTION } from './dispatcher';
+import { Dispatcher } from './dispatcher';
+export const INIT_ACTION = Dispatcher.INIT;
+
+export { Action } from './dispatcher';
 export { StoreModule } from './ng';
-export { ActionReducer, Reducer } from './reducer';
+export { ActionReducer } from './reducer';
 export { SelectSignature, select } from './select';
-export { State } from './state';
 export { Store } from './store';
 export { combineReducers, ComposeSignature, compose } from './utils';
