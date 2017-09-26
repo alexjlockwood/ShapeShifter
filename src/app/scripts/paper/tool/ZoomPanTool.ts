@@ -8,13 +8,10 @@ import { Tool } from './Tool';
 
 /**
  * Tool that enables zooming and panning the canvas.
- *
- * TODO: prevent panning outside of project coordinate bounds
- * TODO: prevent zooming out less than 100%?
  */
 export class ZoomPanTool extends Tool {
   // Keep track of the last known mouse point in view space coordinates.
-  private lastViewPoint = new paper.Point(0, 0);
+  private viewLastPoint = new paper.Point(0, 0);
 
   constructor(private readonly ps: PaperService) {
     super();
@@ -47,7 +44,7 @@ export class ZoomPanTool extends Tool {
       // mouse point in view space coordinates (which means the top left corner
       // of the canvas will always be (0, 0), no matter how much we've panned/zoomed
       // so far).
-      this.lastViewPoint = paper.view.projectToView(event.point);
+      this.viewLastPoint = paper.view.projectToView(event.point);
       return;
     }
     // Zoom out if alt is pressed, and zoom in otherwise.
@@ -69,9 +66,9 @@ export class ZoomPanTool extends Tool {
     const currentViewPoint = paper.view.projectToView(projectPoint);
     const { tx, ty } = paper.view.matrix
       .clone()
-      .translate(projectPoint.subtract(paper.view.viewToProject(this.lastViewPoint)));
+      .translate(projectPoint.subtract(paper.view.viewToProject(this.viewLastPoint)));
     this.setZoomPanInfo(paper.view.zoom, tx, ty);
-    this.lastViewPoint = currentViewPoint;
+    this.viewLastPoint = currentViewPoint;
   }
 
   private setZoomPanInfo(zoom: number, tx: number, ty: number) {
