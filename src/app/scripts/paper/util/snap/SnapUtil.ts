@@ -141,30 +141,28 @@ function buildRulersInDirection<T extends Direction>(
   snapToDimensions = false,
   dir: T,
 ): ReadonlyArray<Line> {
+  const createRulerFn = (sb: SnapBounds) => {
+    const from = new paper.Point(sb.left, sb.top);
+    const to = new paper.Point(
+      dir === 'horizontal' ? sb.right : sb.left,
+      dir === 'horizontal' ? sb.top : sb.bottom,
+    );
+    return { from, to };
+  };
   const rulers: Line[] = [];
   snapInfo[dir].values.forEach(value => {
     const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
     const dimensionSnaps = values.filter(({ isDimensionSnap }) => isDimensionSnap);
     if (dimensionSnaps.length) {
-      const createRulerFn = (sb: SnapBounds) => {
-        const from = new paper.Point(sb.left, sb.top);
-        const to = new paper.Point(
-          dir === 'horizontal' ? sb.right : sb.left,
-          dir === 'horizontal' ? sb.top : sb.bottom,
-        );
-        return { from, to };
-      };
       rulers.push(createRulerFn(dsb));
       rulers.push(createRulerFn(ssb));
     }
-
     const { start, end, opp } = CONSTANTS[dir];
-    const isHorizontal = dir === 'horizontal';
-    const guideSnaps = values.filter(({ isDimensionSnap }) => !isDimensionSnap);
     const oppStartMostBounds = dsb[opp.start] < ssb[opp.start] ? dsb : ssb;
     const oppEndMostBounds = dsb[opp.end] < ssb[opp.end] ? ssb : dsb;
     const nonStartMostBounds = dsb[start] < ssb[start] ? ssb : dsb;
     const nonEndMostBounds = dsb[end] < ssb[end] ? dsb : ssb;
+    const guideSnaps = values.filter(({ isDimensionSnap }) => !isDimensionSnap);
     guideSnaps.forEach(() => {
       const oppStartRuler = oppStartMostBounds[opp.end];
       const oppEndRuler = oppEndMostBounds[opp.start];
@@ -174,12 +172,12 @@ function buildRulersInDirection<T extends Direction>(
       // TODO: handle the vertical 'rulerTop === rulerBottom' case like sketch does
       const coordRuler = startRuler + (endRuler - startRuler) * 0.5;
       const from = new paper.Point(
-        isHorizontal ? coordRuler : oppStartRuler,
-        isHorizontal ? oppStartRuler : coordRuler,
+        dir === 'horizontal' ? coordRuler : oppStartRuler,
+        dir === 'horizontal' ? oppStartRuler : coordRuler,
       );
       const to = new paper.Point(
-        isHorizontal ? coordRuler : oppEndRuler,
-        isHorizontal ? oppEndRuler : coordRuler,
+        dir === 'horizontal' ? coordRuler : oppEndRuler,
+        dir === 'horizontal' ? oppEndRuler : coordRuler,
       );
       const guideDelta = to[opp.coord] - from[opp.coord];
       if (guideDelta > SNAP_TOLERANCE_PIXELS) {
