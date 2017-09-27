@@ -20,14 +20,14 @@ export class ScaleItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
   private selectedItems: ReadonlyArray<paper.Item>;
   private localToVpItemMatrices: ReadonlyArray<paper.Matrix>;
-  private initialPivot: paper.Point;
-  private initialSize: paper.Point;
-  private centeredInitialSize: paper.Point;
-  private initialCenter: paper.Point;
-  private initialDraggedSegment: paper.Point;
+  private vpInitialPivot: paper.Point;
+  private vpInitialSize: paper.Point;
+  private vpInitialCenteredSize: paper.Point;
+  private vpInitialCenter: paper.Point;
+  private vpInitialDraggedSegment: paper.Point;
+  private vpDownPoint: paper.Point;
+  private vpPoint: paper.Point;
   private initialVectorLayer: VectorLayer;
-  private downPoint: paper.Point;
-  private point: paper.Point;
 
   constructor(
     private readonly ps: PaperService,
@@ -50,19 +50,20 @@ export class ScaleItemsGesture extends Gesture {
       PaperUtil.computeGlobalBounds(this.selectedItems),
       this.pl.matrix.inverted(),
     );
-    this.initialPivot = bounds[this.selectionBoundsRaster.oppositePivotType];
-    this.initialDraggedSegment = bounds[this.selectionBoundsRaster.pivotType];
-    this.downPoint = bounds[this.selectionBoundsRaster.pivotType];
-    this.initialSize = this.downPoint.subtract(this.initialPivot);
-    this.centeredInitialSize = this.initialSize.multiply(0.5);
-    this.initialCenter = bounds.center.clone();
+    this.vpInitialPivot = bounds[this.selectionBoundsRaster.oppositePivotType];
+    this.vpInitialDraggedSegment = bounds[this.selectionBoundsRaster.pivotType];
+    this.vpDownPoint = bounds[this.selectionBoundsRaster.pivotType];
+    this.vpPoint = this.vpDownPoint;
+    this.vpInitialSize = this.vpDownPoint.subtract(this.vpInitialPivot);
+    this.vpInitialCenteredSize = this.vpInitialSize.multiply(0.5);
+    this.vpInitialCenter = bounds.center.clone();
     this.initialVectorLayer = this.ps.getVectorLayer();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    this.point = this.pl.globalToLocal(event.point);
-    const { x, y } = this.point;
+    this.vpPoint = this.pl.globalToLocal(event.point);
+    const { x, y } = this.vpPoint;
     this.ps.setTooltipInfo({
       point: { x, y },
       // TODO: display the current width/height of the shape
@@ -96,8 +97,8 @@ export class ScaleItemsGesture extends Gesture {
 
   // TODO: make sure it is possible to scale/shrink the item when holding shift?
   private processEvent(event: paper.Event) {
-    const projectDownPoint = this.pl.localToGlobal(this.downPoint);
-    const projectPoint = this.pl.localToGlobal(this.point);
+    const projectDownPoint = this.pl.localToGlobal(this.vpDownPoint);
+    const projectPoint = this.pl.localToGlobal(this.vpPoint);
     const projectDelta = projectPoint.subtract(projectDownPoint);
 
     let newVl = this.initialVectorLayer.clone();
@@ -105,7 +106,8 @@ export class ScaleItemsGesture extends Gesture {
     this.ps.setVectorLayer(newVl);
 
     // TODO: this could be WAY more efficient (no need to scale/snap things twice)
-    // TODO: snap if shift is held and aspect ratio doesn't change
+    // TODO: snap if shift is held and aspect ratio doesn't change?
+    // TODO: first snap the widths and heights, then snap the guides
     const shouldSnap = !event.modifiers.shift;
     if (shouldSnap) {
       const snapInfo = this.buildSnapInfo();
@@ -141,11 +143,11 @@ export class ScaleItemsGesture extends Gesture {
     console.log(newVl, projectDelta, shouldScaleAboutCenter, shouldSnapDelta);
     // Transform about the center if alt is pressed. Otherwise trasform about
     // the pivot opposite of the currently active pivot.
-    const fixedPivot = shouldScaleAboutCenter ? this.initialCenter : this.initialPivot;
-    const currentSize = this.initialDraggedSegment
+    const fixedPivot = shouldScaleAboutCenter ? this.vpInitialCenter : this.vpInitialPivot;
+    const currentSize = this.vpInitialDraggedSegment
       .add(this.pl.globalToLocal(projectDelta))
       .subtract(fixedPivot);
-    const initialSize = shouldScaleAboutCenter ? this.centeredInitialSize : this.initialSize;
+    const initialSize = shouldScaleAboutCenter ? this.vpInitialCenteredSize : this.vpInitialSize;
     let sx = 1;
     let sy = 1;
     if (!MathUtil.isNearZero(initialSize.x)) {
@@ -182,6 +184,7 @@ export class ScaleItemsGesture extends Gesture {
     return newVl;
   }
 
+  // TODO: reuse this code with SelectDragCloneItemsGesture
   private buildSnapInfo() {
     const selectedLayerIds = this.ps.getSelectedLayers();
     if (!selectedLayerIds.size) {
@@ -210,6 +213,7 @@ export class ScaleItemsGesture extends Gesture {
     );
   }
 
+  // TODO: reuse this code with SelectDragCloneItemsGesture
   private buildSnapGuideInfo(): SnapGuideInfo {
     const projectToViewportFn = ({ from, to }: Line) => {
       return {
