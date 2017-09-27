@@ -10,7 +10,7 @@ import { MathUtil, Matrix } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
-import { Line, Ruler, SnapGuideInfo } from 'app/store/paper/actions';
+import { Line, SnapGuideInfo } from 'app/store/paper/actions';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
@@ -82,6 +82,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
         isFinite(horizontalDelta) ? -horizontalDelta : 0,
         isFinite(verticalDelta) ? -verticalDelta : 0,
       );
+      console.log(projectSnapDelta);
       if (!projectSnapDelta.isZero()) {
         newVl = this.dragItems(newVl, projectSnapDelta);
         this.ps.setVectorLayer(newVl);
@@ -126,7 +127,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
       const { topLeft, center, bottomRight } = PaperUtil.computeGlobalBounds(items);
       return [topLeft, center, bottomRight];
     };
-    return SnapUtil.getSnapInfo(
+    return SnapUtil.computeSnapInfo(
       toSnapPointsFn(draggedItems),
       siblingItems.map(siblingItem => toSnapPointsFn([siblingItem])),
     );
@@ -143,9 +144,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
     const snapInfo = this.buildSnapInfo();
     return {
       guides: SnapUtil.buildSnapGuides(snapInfo).map(projectToViewportFn),
-      rulers: SnapUtil.buildSnapRulers(snapInfo).map(ruler => {
-        return { ...ruler, line: projectToViewportFn(ruler.line) };
-      }),
+      rulers: SnapUtil.buildSnapRulers(snapInfo).map(projectToViewportFn),
     };
   }
 

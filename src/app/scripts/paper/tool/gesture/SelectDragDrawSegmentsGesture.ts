@@ -197,7 +197,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
 
       this.ps.setSnapGuideInfo({
         guides: SnapUtil.buildSnapGuides(
-          SnapUtil.getSnapInfo([dragSnapPoint], siblingSnapPointsTable),
+          SnapUtil.computeSnapInfo([dragSnapPoint], siblingSnapPointsTable),
         ).map(({ from, to }: Line) => {
           from = this.pl.globalToLocal(new paper.Point(from));
           to = this.pl.globalToLocal(new paper.Point(to));

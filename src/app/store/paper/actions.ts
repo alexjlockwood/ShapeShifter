@@ -100,11 +100,10 @@ export interface FocusedPathInfo {
 }
 
 export type Line = Readonly<{ from: Point; to: Point }>;
-export type Ruler = Readonly<{ line: Line; delta: number }>;
 
 export interface SnapGuideInfo {
   readonly guides: ReadonlyArray<Line>;
-  readonly rulers: ReadonlyArray<Ruler>;
+  readonly rulers: ReadonlyArray<Line>;
 }
 
 export interface ZoomPanInfo {

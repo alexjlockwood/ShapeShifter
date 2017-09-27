@@ -606,7 +606,7 @@ function newSnapGuideItem(info: SnapGuideInfo, cssScaling: number) {
 
   const handleLengthPixels = 4;
   const matrix = new paper.Matrix(cssScaling, 0, 0, cssScaling, 0, 0);
-  info.rulers.forEach(({ line, delta }) => {
+  info.rulers.forEach(line => {
     const from = new paper.Point(line.from);
     const to = new paper.Point(line.to);
     const mid = from.add(to.subtract(from).multiply(0.5));
