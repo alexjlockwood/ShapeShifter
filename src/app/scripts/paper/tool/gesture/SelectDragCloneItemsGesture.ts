@@ -103,6 +103,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
     return newVl;
   }
 
+  // TODO: reuse this code with ScaleItemsGesture
   private buildSnapInfo() {
     const selectedLayerIds = this.ps.getSelectedLayers();
     if (!selectedLayerIds.size) {
@@ -131,6 +132,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
     );
   }
 
+  // TODO: reuse this code with ScaleItemsGesture
   private buildSnapGuideInfo(): SnapGuideInfo {
     const projectToViewportFn = ({ from, to }: Line) => {
       return {

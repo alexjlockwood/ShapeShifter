@@ -105,27 +105,31 @@ export class ScaleItemsGesture extends Gesture {
     this.ps.setVectorLayer(newVl);
 
     // TODO: this could be WAY more efficient (no need to scale/snap things twice)
-    const snapInfo = this.buildSnapInfo();
-    if (snapInfo) {
-      const {
-        horizontal: { delta: horizontalDelta },
-        vertical: { delta: verticalDelta },
-      } = snapInfo;
-      const projectSnapDelta = new paper.Point(
-        isFinite(horizontalDelta) ? -horizontalDelta : 0,
-        isFinite(verticalDelta) ? -verticalDelta : 0,
-      );
-      if (!projectSnapDelta.isZero()) {
-        newVl = this.scaleItems(
-          newVl,
-          projectPoint.add(projectSnapDelta).subtract(projectDownPoint),
-          event.modifiers.alt,
+    // TODO: snap if shift is held and aspect ratio doesn't change
+    const shouldSnap = !event.modifiers.shift;
+    if (shouldSnap) {
+      const snapInfo = this.buildSnapInfo();
+      if (snapInfo) {
+        const {
+          horizontal: { delta: horizontalDelta },
+          vertical: { delta: verticalDelta },
+        } = snapInfo;
+        const projectSnapDelta = new paper.Point(
+          isFinite(horizontalDelta) ? -horizontalDelta : 0,
+          isFinite(verticalDelta) ? -verticalDelta : 0,
         );
-        this.ps.setVectorLayer(newVl);
+        if (!projectSnapDelta.isZero()) {
+          newVl = this.scaleItems(
+            newVl,
+            projectPoint.add(projectSnapDelta).subtract(projectDownPoint),
+            event.modifiers.alt,
+          );
+          this.ps.setVectorLayer(newVl);
+        }
       }
     }
 
-    this.ps.setSnapGuideInfo(this.buildSnapGuideInfo());
+    this.ps.setSnapGuideInfo(shouldSnap ? this.buildSnapGuideInfo() : undefined);
   }
 
   private scaleItems(
