@@ -112,20 +112,25 @@ export class ScaleItemsGesture extends Gesture {
     if (shouldSnap) {
       const snapInfo = this.buildSnapInfo();
       if (snapInfo) {
-        const {
-          horizontal: { delta: horizontalDelta },
-          vertical: { delta: verticalDelta },
-        } = snapInfo;
+        const { horizontal: { delta: horizDelta }, vertical: { delta: vertDelta } } = snapInfo;
         const projectSnapDelta = new paper.Point(
-          isFinite(horizontalDelta) ? -horizontalDelta : 0,
-          isFinite(verticalDelta) ? -verticalDelta : 0,
+          isFinite(horizDelta) ? -horizDelta : 0,
+          isFinite(vertDelta) ? -vertDelta : 0,
         );
-        console.log(projectSnapDelta);
         if (!projectSnapDelta.isZero()) {
+          const shouldScaleAboutCenter = event.modifiers.alt;
+          const vpFixedPivot = shouldScaleAboutCenter ? this.vpInitialCenter : this.vpInitialPivot;
+          // TODO: confirm this is the correct way to fix the project snap delta?
+          if (this.vpPoint.x < vpFixedPivot.x) {
+            projectSnapDelta.x *= -1;
+          }
+          if (this.vpPoint.y < vpFixedPivot.y) {
+            projectSnapDelta.y *= -1;
+          }
           newVl = this.scaleItems(
             newVl,
             projectPoint.add(projectSnapDelta).subtract(projectDownPoint),
-            event.modifiers.alt,
+            shouldScaleAboutCenter,
           );
           this.ps.setVectorLayer(newVl);
         }
@@ -143,10 +148,10 @@ export class ScaleItemsGesture extends Gesture {
   ) {
     // Transform about the center if alt is pressed. Otherwise trasform about
     // the pivot opposite of the currently active pivot.
-    const fixedPivot = shouldScaleAboutCenter ? this.vpInitialCenter : this.vpInitialPivot;
+    const vpFixedPivot = shouldScaleAboutCenter ? this.vpInitialCenter : this.vpInitialPivot;
     const currentSize = this.vpInitialDraggedSegment
       .add(this.pl.globalToLocal(projectDelta))
-      .subtract(fixedPivot);
+      .subtract(vpFixedPivot);
     const initialSize = shouldScaleAboutCenter ? this.vpInitialCenteredSize : this.vpInitialSize;
     let sx = 1;
     let sy = 1;
@@ -173,7 +178,7 @@ export class ScaleItemsGesture extends Gesture {
       path.applyMatrix = true;
       const localToViewportMatrix = this.localToVpItemMatrices[index];
       const matrix = localToViewportMatrix.clone();
-      matrix.scale(sx, sy, fixedPivot);
+      matrix.scale(sx, sy, vpFixedPivot);
       matrix.append(localToViewportMatrix.inverted());
       path.matrix = matrix;
       const newPl = newVl.findLayerById(item.data.id).clone() as PathLayer;
@@ -224,8 +229,8 @@ export class ScaleItemsGesture extends Gesture {
     };
     const snapInfo = this.buildSnapInfo();
     return {
-      guides: SnapUtil.buildSnapGuides(snapInfo).map(projectToViewportFn),
-      rulers: SnapUtil.buildSnapRulers(snapInfo).map(projectToViewportFn),
+      guides: SnapUtil.buildGuides(snapInfo).map(projectToViewportFn),
+      rulers: SnapUtil.buildRulers(snapInfo).map(projectToViewportFn),
     };
   }
 }

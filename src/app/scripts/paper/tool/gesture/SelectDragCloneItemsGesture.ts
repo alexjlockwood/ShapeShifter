@@ -143,8 +143,8 @@ export class SelectDragCloneItemsGesture extends Gesture {
     };
     const snapInfo = this.buildSnapInfo();
     return {
-      guides: SnapUtil.buildSnapGuides(snapInfo).map(projectToViewportFn),
-      rulers: SnapUtil.buildSnapRulers(snapInfo).map(projectToViewportFn),
+      guides: SnapUtil.buildGuides(snapInfo).map(projectToViewportFn),
+      rulers: SnapUtil.buildRulers(snapInfo).map(projectToViewportFn),
     };
   }
 
