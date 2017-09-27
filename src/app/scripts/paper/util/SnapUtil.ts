@@ -23,12 +23,12 @@ export function getSnapInfo(
       horizontal: {
         dragSnapBounds,
         siblingSnapBounds,
-        ...runSnapTest(dragSnapBounds, siblingSnapBounds, (p, q) => p.x - q.x),
+        ...runSnapTest(dragSnapBounds, siblingSnapBounds, (p, q) => MathUtil.round(p.x - q.x)),
       },
       vertical: {
         dragSnapBounds,
         siblingSnapBounds,
-        ...runSnapTest(dragSnapBounds, siblingSnapBounds, (p, q) => p.y - q.y),
+        ...runSnapTest(dragSnapBounds, siblingSnapBounds, (p, q) => MathUtil.round(p.y - q.y)),
       },
     };
   });
@@ -44,6 +44,39 @@ export function getSnapInfo(
     horizontal: { values: horizontalValues, delta: horizontalDelta },
     vertical: { values: verticalValues, delta: verticalDelta },
   };
+}
+
+/**
+ * Represents a valid snapping of two SnapBounds objects.
+ * The properties are indices into the SnapBounds' list of snap points.
+ */
+interface SnapPair {
+  readonly dragIndex: number;
+  readonly siblingIndex: number;
+}
+
+interface SnapInfoInDirection {
+  // The minimum delta value found.
+  readonly delta: number;
+  // The list of snaps with the above delta value.
+  readonly values: ReadonlyArray<{
+    // The currently dragged item.
+    readonly dragSnapBounds: SnapBounds;
+    // The sibling item to snap to.
+    readonly siblingSnapBounds: SnapBounds;
+    // The list of snap pairs with the above delta value.
+    readonly values: ReadonlyArray<SnapPair>;
+  }>;
+}
+
+// Note that 'horizontal' snaps calculate vertical guides/rulers
+// and 'vertical' snaps calculate horizontal guides/rulers. This is
+// because 'horizontal' snaps depend on differences in horizontal
+// 'x' values and 'vertical' snaps depend on differences in vertical
+// 'y' values.
+export interface SnapInfo {
+  readonly horizontal: SnapInfoInDirection;
+  readonly vertical: SnapInfoInDirection;
 }
 
 /**
@@ -129,31 +162,6 @@ export function buildSnapRulers(
   return rulers;
 }
 
-/**
- * Represents a valid snapping of two SnapBounds objects.
- * The properties are indices into the SnapBounds' list of snap points.
- */
-interface SnapPair {
-  readonly dragIndex: number;
-  readonly siblingIndex: number;
-}
-
-type Delta = Readonly<Record<'delta', number>>;
-type Values<T> = Readonly<Record<'values', ReadonlyArray<T>>>;
-
-export type SnapInfo = Readonly<
-  Record<
-    'horizontal' | 'vertical',
-    Delta &
-      Values<
-        Values<SnapPair> & {
-          dragSnapBounds: SnapBounds;
-          siblingSnapBounds: SnapBounds;
-        }
-      >
-  >
->;
-
 class SnapBounds {
   readonly snapPoints: ReadonlyArray<Point>;
   readonly left: number;
@@ -174,19 +182,29 @@ class SnapBounds {
   }
 }
 
+interface Delta {
+  readonly delta: number;
+}
+
+interface Values<T> {
+  readonly values: ReadonlyArray<T>;
+}
+
+/**
+ * Runs a snap test for two snap bounds. The return result consists of (1) the
+ * minimum delta value found, and (2) a list of the values that had the specified
+ * delta value.
+ */
 function runSnapTest(
   dsb: SnapBounds,
   ssb: SnapBounds,
   getDeltaFn: (p1: Point, p2: Point) => number,
-) {
+): Values<SnapPair> & Delta {
   const snapPairResults: (SnapPair & Delta)[] = [];
   dsb.snapPoints.forEach((dragPoint, dragIndex) => {
     ssb.snapPoints.forEach((siblingPoint, siblingIndex) => {
-      snapPairResults.push({
-        dragIndex,
-        siblingIndex,
-        delta: MathUtil.round(getDeltaFn(dragPoint, siblingPoint)),
-      });
+      const delta = getDeltaFn(dragPoint, siblingPoint);
+      snapPairResults.push({ dragIndex, siblingIndex, delta });
     });
   });
   return filterByMinDelta(snapPairResults);

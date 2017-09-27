@@ -556,8 +556,9 @@ function newTooltipItem(info: TooltipInfo, cssScaling: number) {
     point: info.point,
     content: info.label,
     fillColor: 'red',
-    justification: 'right',
-    fontSize: 12 / paper.view.zoom / cssScaling,
+    justification: 'left',
+    // TODO: text doesn't display when using font size of only 12?
+    fontSize: 20 / paper.view.zoom / cssScaling,
     guide: true,
   });
 }

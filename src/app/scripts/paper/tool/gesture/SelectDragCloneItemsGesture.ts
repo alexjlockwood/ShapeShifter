@@ -78,12 +78,12 @@ export class SelectDragCloneItemsGesture extends Gesture {
         horizontal: { delta: horizontalDelta },
         vertical: { delta: verticalDelta },
       } = snapInfo;
-      const projectDelta = new paper.Point(
+      const projectSnapDelta = new paper.Point(
         isFinite(horizontalDelta) ? -horizontalDelta : 0,
         isFinite(verticalDelta) ? -verticalDelta : 0,
       );
-      if (!projectDelta.isZero()) {
-        newVl = this.dragItems(newVl, projectDelta);
+      if (!projectSnapDelta.isZero()) {
+        newVl = this.dragItems(newVl, projectSnapDelta);
         this.ps.setVectorLayer(newVl);
       }
     }
@@ -108,14 +108,14 @@ export class SelectDragCloneItemsGesture extends Gesture {
     if (!selectedLayerIds.size) {
       return undefined;
     }
-    const dragItems = Array.from(selectedLayerIds).map(id => this.pl.findItemByLayerId(id));
-    const { parent } = dragItems[0];
-    if (!dragItems.every(item => item.parent === parent)) {
+    const draggedItems = Array.from(selectedLayerIds).map(id => this.pl.findItemByLayerId(id));
+    const { parent } = draggedItems[0];
+    if (!draggedItems.every(item => item.parent === parent)) {
       // TODO: determine if there is an alternative to exiting early here?
       console.warn('All snapped items must share the same parent item.');
       return undefined;
     }
-    const siblingItems = parent.children.filter(i => !dragItems.includes(i));
+    const siblingItems = parent.children.filter(i => !draggedItems.includes(i));
     if (!siblingItems.length) {
       return undefined;
     }
@@ -126,7 +126,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
       return [topLeft, center, bottomRight];
     };
     return SnapUtil.getSnapInfo(
-      toSnapPointsFn(dragItems),
+      toSnapPointsFn(draggedItems),
       siblingItems.map(siblingItem => toSnapPointsFn([siblingItem])),
     );
   }

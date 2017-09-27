@@ -64,30 +64,12 @@ export class GestureTool extends Tool {
       this.currentGesture = new CreateRectangleGesture(this.ps);
     } else if (toolMode === ToolMode.Pencil) {
       this.currentGesture = new PencilGesture(this.ps);
+    } else if (toolMode === ToolMode.Pen || this.ps.getFocusedPathInfo()) {
+      // The user is editing a focused path.
+      this.currentGesture = this.createFocusedPathModeGesture(event);
     } else {
-      let focusedPathInfo = this.ps.getFocusedPathInfo();
-      if (toolMode === ToolMode.Pen && !focusedPathInfo) {
-        // Then the user has created the first segment of a new path, in which
-        // case we must create a new dummy path and bring it into focus.
-        this.ps.setSelectedLayers(new Set());
-        const newPathLayer = PaperUtil.addPathToStore(this.ps, '');
-        focusedPathInfo = {
-          layerId: newPathLayer.id,
-          selectedSegments: new Set<number>(),
-          visibleHandleIns: new Set<number>(),
-          visibleHandleOuts: new Set<number>(),
-          selectedHandleIn: undefined,
-          selectedHandleOut: undefined,
-        };
-        this.ps.setFocusedPathInfo(focusedPathInfo);
-      }
-      if (focusedPathInfo) {
-        // The user is editing a focused path.
-        this.currentGesture = this.createFocusedPathModeGesture(event, focusedPathInfo);
-      } else {
-        // Otherwise the user is in selection mode.
-        this.currentGesture = this.createSelectionModeGesture(event);
-      }
+      // Otherwise the user is in selection mode.
+      this.currentGesture = this.createSelectionModeGesture(event);
     }
     this.currentGesture.onMouseDown(event);
   }
@@ -160,7 +142,24 @@ export class GestureTool extends Tool {
     return new SelectDragCloneItemsGesture(this.ps, hitItemId);
   }
 
-  private createFocusedPathModeGesture(event: paper.ToolEvent, fpi: FocusedPathInfo) {
+  private createFocusedPathModeGesture(event: paper.ToolEvent) {
+    let fpi = this.ps.getFocusedPathInfo();
+    if (!fpi) {
+      // Then the user has created the first segment of a new path, in which
+      // case we must create a new dummy path and bring it into focus.
+      this.ps.setSelectedLayers(new Set());
+      const newPathLayer = PaperUtil.addPathToStore(this.ps, '');
+      fpi = {
+        layerId: newPathLayer.id,
+        selectedSegments: new Set<number>(),
+        visibleHandleIns: new Set<number>(),
+        visibleHandleOuts: new Set<number>(),
+        selectedHandleIn: undefined,
+        selectedHandleOut: undefined,
+      };
+      this.ps.setFocusedPathInfo(fpi);
+    }
+
     const focusedPathId = fpi.layerId;
 
     // First, do a hit test on the focused path's segments and handles.
