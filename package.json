@@ -9,13 +9,10 @@
     "test": "node --max-old-space-size=8192 ./node_modules/.bin/ng test",
     "lint": "node --max-old-space-size=8192 ./node_modules/.bin/ng lint --type-check",
     "e2e": "node --max-old-space-size=8192 ./node_modules/.bin/ng e2e",
-    "test-once":
-      "node --max-old-space-size=8192 ./node_modules/.bin/ng test --single-run --code-coverage",
-    "deploy":
-      "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ngh",
+    "test-once": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --single-run --code-coverage",
+    "deploy": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ngh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "bundle-report":
-      "node --max-old-space-size=8192 ./node_modules/.bin/ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json"
+    "bundle-report": "node --max-old-space-size=8192 ./node_modules/.bin/ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json"
   },
   "private": true,
   "dependencies": {
