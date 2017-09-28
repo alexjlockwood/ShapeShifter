@@ -1,4 +1,3 @@
-import { ToolMode } from 'app/model/paper';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
 import {

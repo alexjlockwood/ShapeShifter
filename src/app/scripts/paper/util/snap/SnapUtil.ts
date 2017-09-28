@@ -1,11 +1,10 @@
 import { MathUtil } from 'app/scripts/common';
 import { Point } from 'app/scripts/common';
-import { PaperUtil } from 'app/scripts/paper/util';
-import { Line, SnapGuideInfo } from 'app/store/paper/actions';
+import { Line } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
-import { CONSTANTS, DIRECTIONS, Direction, Horiz, Vert } from './Constants';
+import { CONSTANTS, DIRECTIONS, Direction } from './Constants';
 
 // TODO: make sure to test things with different stroke width values!
 const SNAP_TOLERANCE_PIXELS = 10;

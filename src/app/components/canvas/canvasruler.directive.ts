@@ -1,8 +1,7 @@
 import { Directive, ElementRef, Input } from '@angular/core';
-import { MathUtil, Matrix, Point } from 'app/scripts/common';
-import { PaperService, ThemeService } from 'app/services';
+import { MathUtil, Point } from 'app/scripts/common';
+import { ThemeService } from 'app/services';
 import * as $ from 'jquery';
-import * as _ from 'lodash';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 

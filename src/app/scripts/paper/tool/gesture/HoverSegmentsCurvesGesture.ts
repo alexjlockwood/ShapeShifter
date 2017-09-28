@@ -1,7 +1,6 @@
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
-import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';

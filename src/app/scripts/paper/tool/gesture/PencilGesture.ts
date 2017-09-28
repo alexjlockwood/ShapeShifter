@@ -1,6 +1,4 @@
-import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
-import { Path } from 'app/model/paths';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -18,7 +16,7 @@ export class PencilGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
 
   // The last drag point in project coordinates.
-  private lastPoint: paper.Point;
+  private projLastPoint: paper.Point;
 
   constructor(private readonly ps: PaperService) {
     super();
@@ -27,10 +25,10 @@ export class PencilGesture extends Gesture {
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     const { downPoint, middlePoint, point } = event;
-    if (!this.lastPoint) {
-      this.lastPoint = downPoint;
+    if (!this.projLastPoint) {
+      this.projLastPoint = downPoint;
     }
-    const delta = this.pl.globalToLocal(point).subtract(this.pl.globalToLocal(this.lastPoint));
+    const delta = this.pl.globalToLocal(point).subtract(this.pl.globalToLocal(this.projLastPoint));
     delta.angle += 90;
     const pathOverlayInfo = this.ps.getCreatePathInfo();
     const pencilPath = pathOverlayInfo
@@ -38,12 +36,12 @@ export class PencilGesture extends Gesture {
       : new paper.Path();
     pencilPath.add(this.pl.globalToLocal(middlePoint).add(delta));
     this.ps.setCreatePathInfo({ pathData: pencilPath.pathData, strokeColor: 'black' });
-    this.lastPoint = point;
+    this.projLastPoint = point;
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    if (this.lastPoint) {
+    if (this.projLastPoint) {
       const newPath = new paper.Path(this.ps.getCreatePathInfo().pathData);
       if (arePointsClose(this.pl.localToGlobal(newPath.firstSegment.point), event.point)) {
         newPath.closePath(true);

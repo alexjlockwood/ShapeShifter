@@ -1,6 +1,4 @@
-import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
-import { MathUtil } from 'app/scripts/common';
 import { ClickDetector } from 'app/scripts/paper/detector';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import {
@@ -14,17 +12,14 @@ import {
   HoverItemsGesture,
   HoverSegmentsCurvesGesture,
   PencilGesture,
-  RotateItemsGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
   SetFocusedPathGesture,
-  TransformPathsGesture,
 } from 'app/scripts/paper/tool/gesture';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
-import { FocusedPathInfo } from 'app/store/paper/actions';
 import * as paper from 'paper';
 
 import { Tool } from './Tool';

@@ -1,14 +1,11 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
 import { VectorLayer } from 'app/model/layers';
-import { Path } from 'app/model/paths';
-import { SvgLoader } from 'app/scripts/import';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { Paper } from 'app/scripts/paper';
 import { PaperService } from 'app/services';
 import { State, Store } from 'app/store';
 import { SetVectorLayer } from 'app/store/layers/actions';
-import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';

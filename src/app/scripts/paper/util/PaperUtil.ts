@@ -39,7 +39,6 @@ export function selectCurves(
   path: paper.Path,
   selectedSegments: ReadonlySet<number>,
 ) {
-  const numSegments = path.segments.length;
   const visibleHandleIns = new Set(selectedSegments);
   const visibleHandleOuts = new Set(selectedSegments);
   selectedSegments.forEach(segmentIndex => {

@@ -13,8 +13,6 @@ import { Gesture } from './Gesture';
  * - The user is in selection mode.
  */
 export class HoverItemsGesture extends Gesture {
-  private readonly pl = paper.project.activeLayer as PaperLayer;
-
   constructor(private readonly ps: PaperService) {
     super();
   }

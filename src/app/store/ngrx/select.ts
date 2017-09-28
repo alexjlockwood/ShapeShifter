@@ -8,7 +8,10 @@ export interface SelectSignature<T> {
   <R>(mapFn: (state: T) => R): Observable<R>;
 }
 
-export function select<T, R>(pathOrMapFn: any, ...paths: string[]): Observable<R> {
+export function select<T, R>(
+  pathOrMapFn: string | ((state: T) => R),
+  ...paths: string[]
+): Observable<R> {
   let mapped$: Observable<R>;
   if (typeof pathOrMapFn === 'string') {
     mapped$ = pluck.call(this, pathOrMapFn, ...paths);

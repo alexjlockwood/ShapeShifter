@@ -1,4 +1,3 @@
-import { ToolMode } from 'app/model/paper';
 import { Cursor, CursorUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';

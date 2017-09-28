@@ -35,7 +35,6 @@ import {
   getTooltipInfo,
   getZoomPanInfo,
 } from 'app/store/paper/selectors';
-import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 

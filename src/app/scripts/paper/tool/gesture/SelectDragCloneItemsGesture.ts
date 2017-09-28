@@ -1,11 +1,4 @@
-import {
-  ClipPathLayer,
-  GroupLayer,
-  Layer,
-  LayerUtil,
-  PathLayer,
-  VectorLayer,
-} from 'app/model/layers';
+import { ClipPathLayer, GroupLayer, LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { MathUtil, Matrix } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
@@ -25,9 +18,6 @@ import { Gesture } from './Gesture';
  */
 export class SelectDragCloneItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
-  private selectedItems: ReadonlyArray<paper.Item>;
-  private initialItemPositions: ReadonlyArray<paper.Point>;
-  private initialMatrices: ReadonlyArray<paper.Matrix>;
   private initialVectorLayer: VectorLayer;
   private isDragging = false;
 

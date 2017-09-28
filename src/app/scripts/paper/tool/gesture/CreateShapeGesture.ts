@@ -1,6 +1,4 @@
-import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
-import { Path } from 'app/model/paths';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -12,8 +10,8 @@ import { Gesture } from './Gesture';
  * Base class for all shape-building gestures.
  */
 abstract class CreateShapeGesture extends Gesture {
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
-  private lastDragEventInfo: Readonly<{ downPoint: paper.Point; point: paper.Point }>;
+  private readonly pl = paper.project.activeLayer as PaperLayer;
+  private lastDragEventInfo: Readonly<{ vpDownPoint: paper.Point; vpPoint: paper.Point }>;
 
   constructor(private readonly ps: PaperService) {
     super();
@@ -21,9 +19,9 @@ abstract class CreateShapeGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const downPoint = this.paperLayer.globalToLocal(event.downPoint);
-    const point = this.paperLayer.globalToLocal(event.point);
-    this.lastDragEventInfo = { downPoint, point };
+    const vpDownPoint = this.pl.globalToLocal(event.downPoint);
+    const vpPoint = this.pl.globalToLocal(event.point);
+    this.lastDragEventInfo = { vpDownPoint, vpPoint };
     this.processEvent(event);
   }
 
@@ -55,18 +53,18 @@ abstract class CreateShapeGesture extends Gesture {
   }
 
   private processEvent({ modifiers: { alt, shift } }: paper.Event) {
-    const { downPoint, point } = this.lastDragEventInfo;
+    const { vpDownPoint, vpPoint } = this.lastDragEventInfo;
 
     // If shift is pressed, then create a circle by setting the height equal to the width.
     const size = new paper.Size(
-      point.x - downPoint.x,
-      shift ? point.x - downPoint.x : point.y - downPoint.y,
+      vpPoint.x - vpDownPoint.x,
+      shift ? vpPoint.x - vpDownPoint.x : vpPoint.y - vpDownPoint.y,
     ).multiply(alt ? 2 : 1);
 
     // If alt is pressed, then the initial downpoint represents the ellipse's center point.
     const topLeft = alt
-      ? downPoint.subtract(new paper.Point(size.width / 2, size.height / 2))
-      : downPoint;
+      ? vpDownPoint.subtract(new paper.Point(size.width / 2, size.height / 2))
+      : vpDownPoint;
 
     const { pathData } = this.newPath(new paper.Rectangle(topLeft, size));
     this.ps.setCreatePathInfo({ pathData, strokeColor: 'black' });

@@ -1,7 +1,4 @@
-import { LayerUtil, PathLayer } from 'app/model/layers';
-import { Path } from 'app/model/paths';
-import { PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, CursorUtil, PaperUtil } from 'app/scripts/paper/util';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 

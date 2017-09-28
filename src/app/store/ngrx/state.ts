@@ -1,5 +1,4 @@
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
 import { observeOn } from 'rxjs/operator/observeOn';
 import { scan } from 'rxjs/operator/scan';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';

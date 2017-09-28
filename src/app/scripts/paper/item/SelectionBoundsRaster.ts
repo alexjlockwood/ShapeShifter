@@ -1,4 +1,4 @@
-import { Cursor, PivotType } from 'app/scripts/paper/util';
+import { PivotType } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
 const PIVOT_TYPES: ReadonlyArray<PivotType> = [
@@ -48,7 +48,3 @@ const OPPOSITE_PIVOT_TYPES: ReadonlyArray<PivotType> = ((arr: ReadonlyArray<Pivo
 function getOppositePivotType(pivotType: PivotType) {
   return OPPOSITE_PIVOT_TYPES[PIVOT_TYPES.indexOf(pivotType)];
 }
-
-// export function getResizeCursor(index: number) {
-//   return RESIZE_CURSOR_MAP.get(getPivotType(index));
-// }

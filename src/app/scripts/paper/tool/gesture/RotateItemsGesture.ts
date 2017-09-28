@@ -1,9 +1,7 @@
 import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
-import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
-import { SelectionBoundsRaster } from 'app/scripts/paper/item';
-import { PaperUtil, PivotType } from 'app/scripts/paper/util';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -16,19 +14,15 @@ import { Gesture } from './Gesture';
  * TODO: avoid jank at beginning of rotation (when angle is near 0)
  */
 export class RotateItemsGesture extends Gesture {
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private readonly pl = paper.project.activeLayer as PaperLayer;
   private selectedItems: ReadonlyArray<paper.Item>;
-  private localToViewportMatrices: ReadonlyArray<paper.Matrix>;
+  private localToVpItemMatrices: ReadonlyArray<paper.Matrix>;
   private initialVectorLayer: VectorLayer;
   private pivot: paper.Point;
+  private vpDownPoint: paper.Point;
+  private vpPoint: paper.Point;
 
-  private downPoint: paper.Point;
-  private point: paper.Point;
-
-  constructor(
-    private readonly ps: PaperService,
-    private readonly selectionBoundsRaster: SelectionBoundsRaster,
-  ) {
+  constructor(private readonly ps: PaperService) {
     super();
   }
 
@@ -36,24 +30,24 @@ export class RotateItemsGesture extends Gesture {
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setHoveredLayer(undefined);
     this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
-      this.paperLayer.findItemByLayerId(id),
+      this.pl.findItemByLayerId(id),
     );
-    const invertedPaperLayerMatrix = this.paperLayer.matrix.inverted();
-    this.localToViewportMatrices = this.selectedItems.map(item => {
+    const invertedPaperLayerMatrix = this.pl.matrix.inverted();
+    this.localToVpItemMatrices = this.selectedItems.map(item => {
       // Compute the matrices to directly transform while performing rotations.
       return item.globalMatrix.prepended(invertedPaperLayerMatrix).inverted();
     });
     this.pivot = PaperUtil.transformRectangle(
       PaperUtil.computeGlobalBounds(this.selectedItems),
-      this.paperLayer.matrix.inverted(),
+      this.pl.matrix.inverted(),
     ).center;
     this.initialVectorLayer = this.ps.getVectorLayer();
-    this.downPoint = this.paperLayer.globalToLocal(event.downPoint);
+    this.vpDownPoint = this.pl.globalToLocal(event.downPoint);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    this.point = this.paperLayer.globalToLocal(event.point);
+    this.vpPoint = this.pl.globalToLocal(event.point);
     this.processEvent(event);
   }
 
@@ -74,7 +68,7 @@ export class RotateItemsGesture extends Gesture {
   }
 
   private processEvent(event: paper.Event) {
-    if (!this.point) {
+    if (!this.vpPoint) {
       return;
     }
 
@@ -88,7 +82,7 @@ export class RotateItemsGesture extends Gesture {
       // TODO: should we pass 'false' to clone below?
       const path = item.clone() as paper.Path;
       path.applyMatrix = true;
-      const localToViewportMatrix = this.localToViewportMatrices[index];
+      const localToViewportMatrix = this.localToVpItemMatrices[index];
       const matrix = localToViewportMatrix.clone();
       matrix.rotate(rotationAngle, this.pivot);
       matrix.append(localToViewportMatrix.inverted());
@@ -101,9 +95,9 @@ export class RotateItemsGesture extends Gesture {
   }
 
   private getRotationAngle(event: paper.Event) {
-    const initialDelta = this.downPoint.subtract(this.pivot);
+    const initialDelta = this.vpDownPoint.subtract(this.pivot);
     const initialAngle = Math.atan2(initialDelta.y, initialDelta.x) * 180 / Math.PI;
-    const delta = this.point.subtract(this.pivot);
+    const delta = this.vpPoint.subtract(this.pivot);
     const angle = Math.atan2(delta.y, delta.x) * 180 / Math.PI - initialAngle;
     // TODO: this doesn't round properly if the angle was previously changed
     return event.modifiers.shift ? Math.round(angle / 15) * 15 : angle;

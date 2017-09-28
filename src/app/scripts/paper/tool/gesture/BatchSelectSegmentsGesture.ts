@@ -1,7 +1,6 @@
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
-import { FocusedPathInfo } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 

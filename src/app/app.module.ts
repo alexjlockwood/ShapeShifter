@@ -6,7 +6,6 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import {
   MatButtonModule,
-  MatButtonToggleModule,
   MatDialogModule,
   MatIconModule,
   MatIconRegistry,

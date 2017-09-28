@@ -10,11 +10,10 @@ import {
   HostListener,
   Input,
   QueryList,
-  ViewChild,
   ViewChildren,
 } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
-import { MathUtil, Matrix, Point } from 'app/scripts/common';
+import { MathUtil, Matrix } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';

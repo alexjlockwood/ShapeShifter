@@ -3,7 +3,7 @@ import { Path } from 'app/model/paths';
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { SelectionBoundsRaster } from 'app/scripts/paper/item';
-import { Cursor, PaperUtil, PivotType, SnapUtil } from 'app/scripts/paper/util';
+import { PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import { Line, SnapGuideInfo } from 'app/store/paper/actions';
 import * as _ from 'lodash';

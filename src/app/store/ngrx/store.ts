@@ -1,12 +1,10 @@
 import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
 import { Operator } from 'rxjs/Operator';
-import { Subscriber } from 'rxjs/Subscriber';
 
 import { Action } from './dispatcher';
 import { ActionReducer } from './reducer';
 import { SelectSignature, select } from './select';
-import { State } from './state';
 
 export class Store<T> extends Observable<T> implements Observer<Action> {
   constructor(

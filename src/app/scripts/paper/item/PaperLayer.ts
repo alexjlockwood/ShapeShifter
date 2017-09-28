@@ -305,8 +305,6 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
     const dashOffset = pathLength
       ? LayerUtil.toStrokeDashOffset(trimPathStart, trimPathEnd, trimPathOffset, pathLength)
       : undefined;
-    const f = ColorUtil.parseAndroidColor(fillColor);
-    const s = ColorUtil.parseAndroidColor(strokeColor);
     // TODO: import a compound path instead
     // TODO: set closed to true if end points are the same?
     return new paper.Path({

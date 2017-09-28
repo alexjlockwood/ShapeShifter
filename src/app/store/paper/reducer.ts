@@ -1,5 +1,4 @@
 import { CanvasCursor, ToolMode } from 'app/model/paper';
-import { Point } from 'app/scripts/common';
 
 import { ActionType, Actions } from './actions';
 import {

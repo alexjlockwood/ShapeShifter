@@ -13,7 +13,7 @@ import { ZoomPanTool } from './ZoomPanTool';
 export class MasterTool {
   private readonly paperTool = new paper.Tool();
 
-  constructor(private readonly ps: PaperService) {
+  constructor(ps: PaperService) {
     const gestureTool = new GestureTool(ps);
     const zoomPanTool = new ZoomPanTool(ps);
     let currentTool: Tool;
