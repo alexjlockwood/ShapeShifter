@@ -38,40 +38,36 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
       "id": "1",
       "name": "demo",
       "type": "vector",
-      "width": "24",
-      "height": "24",
+      "width": "640",
+      "height": "640",
       "children": [
         {
-          "id": "3",
-          "name": "group",
-          "type": "group",
-          "pivotX": "12",
-          "pivotY": "12",
-          "scaleX": "1",
-          "scaleY": "1",
-          "children": [
-            {
-              "id": "4",
-              "name": "orange",
-              "type": "path",
-              "pathData": "M 2 2 h 2 v 8 h -2 v -8",
-              "fillColor": "#ffa500"
-            },
-            {
-              "id": "5",
-              "name": "orange",
-              "type": "path",
-              "pathData": "M 6 2 h 2 v 8 h -2 v -8",
-              "fillColor": "#ffa500"
-            },
-            {
-              "id": "6",
-              "name": "orange",
-              "type": "path",
-              "pathData": "M 10 2 h 2 v 8 h -2 v -8",
-              "fillColor": "#ffa500"
-            }
-          ]
+          "id": "4",
+          "name": "orange",
+          "type": "path",
+          "pathData": "M 25 100 h 50 v 400 h -50 v -400",
+          "fillColor": "#ffa500"
+        },
+        {
+          "id": "5",
+          "name": "orange",
+          "type": "path",
+          "pathData": "M 150 100 h 50 v 400 h -50 v -400",
+          "fillColor": "#ffa500"
+        },
+        {
+          "id": "6",
+          "name": "orange",
+          "type": "path",
+          "pathData": "M 250 100 h 50 v 400 h -50 v -400",
+          "fillColor": "#ffa500"
+        },
+        {
+          "id": "7",
+          "name": "orange",
+          "type": "path",
+          "pathData": "M 470 100 h 50 v 400 h -50 v -400",
+          "fillColor": "#ffa500"
         }
       ]
     }`);

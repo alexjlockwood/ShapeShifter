@@ -141,19 +141,19 @@ function buildRulersInDirection<T extends Direction>(
   snapToDimensions = false,
   dir: T,
 ): ReadonlyArray<Line> {
-  const createRulerFn = (sb: SnapBounds) => {
-    const from = new paper.Point(sb.left, sb.top);
-    const to = new paper.Point(
-      dir === 'horizontal' ? sb.right : sb.left,
-      dir === 'horizontal' ? sb.top : sb.bottom,
-    );
-    return { from, to };
-  };
   const rulers: Line[] = [];
   snapInfo[dir].values.forEach(value => {
     const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
     const dimensionSnaps = values.filter(({ isDimensionSnap }) => isDimensionSnap);
     if (dimensionSnaps.length) {
+      const createRulerFn = (sb: SnapBounds) => {
+        const from = new paper.Point(sb.left, sb.top);
+        const to = new paper.Point(
+          dir === 'horizontal' ? sb.right : sb.left,
+          dir === 'horizontal' ? sb.top : sb.bottom,
+        );
+        return { from, to };
+      };
       rulers.push(createRulerFn(dsb));
       rulers.push(createRulerFn(ssb));
     }
@@ -208,6 +208,38 @@ class SnapBounds {
     this.bottom = _.maxBy(snapPoints, p => p.y).y;
     this.width = this.right - this.left;
     this.height = this.bottom - this.top;
+  }
+
+  /** Computes the minimum distance between two snap bounds. */
+  distance(sb: SnapBounds) {
+    const { left: l1, top: t1, right: r1, bottom: b1 } = this;
+    const { left: l2, top: t2, right: r2, bottom: b2 } = sb;
+    const left = r2 < l1;
+    const top = b1 < t2;
+    const right = r1 < l2;
+    const bottom = b2 < t1;
+    const distFn = (x1: number, y1: number, x2: number, y2: number) => {
+      return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+    };
+    if (top && left) {
+      return distFn(l1, b1, r2, t2);
+    } else if (left && bottom) {
+      return distFn(l1, t1, r2, b2);
+    } else if (bottom && right) {
+      return distFn(r1, t1, l2, b2);
+    } else if (right && top) {
+      return distFn(r1, b1, l2, t2);
+    } else if (left) {
+      return l1 - r2;
+    } else if (right) {
+      return l2 - r1;
+    } else if (bottom) {
+      return t1 - b2;
+    } else if (top) {
+      return t2 - b1;
+    } else {
+      return 0;
+    }
   }
 }
 

@@ -82,7 +82,6 @@ export class SelectDragCloneItemsGesture extends Gesture {
         isFinite(horizontalDelta) ? -horizontalDelta : 0,
         isFinite(verticalDelta) ? -verticalDelta : 0,
       );
-      console.log(projectSnapDelta);
       if (!projectSnapDelta.isZero()) {
         newVl = this.dragItems(newVl, projectSnapDelta);
         this.ps.setVectorLayer(newVl);
@@ -141,7 +140,19 @@ export class SelectDragCloneItemsGesture extends Gesture {
         to: this.pl.globalToLocal(new paper.Point(to)),
       };
     };
+    // TODO: use snap info to snap distances between bounds!
+    // TODO: use snap info to snap distances between bounds!
+    // TODO: use snap info to snap distances between bounds!
+    // TODO: use snap info to snap distances between bounds!
+    // TODO: use snap info to snap distances between bounds!
+    // TODO: use snap info to snap distances between bounds!
+    // TODO: use snap info to snap distances between bounds!
+    // TODO: use snap info to snap distances between bounds!
+    // TODO: use snap info to snap distances between bounds!
+    // TODO: use snap info to snap distances between bounds!
     const snapInfo = this.buildSnapInfo();
+    console.log(snapInfo);
+    const dsb = snapInfo.vertical.values[0].dragSnapBounds;
     return {
       guides: SnapUtil.buildGuides(snapInfo).map(projectToViewportFn),
       rulers: SnapUtil.buildRulers(snapInfo).map(projectToViewportFn),
