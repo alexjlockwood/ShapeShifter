@@ -51,7 +51,7 @@
     "stable": "^0.1.6",
     "tinycolor2": "^1.4.1",
     "whet.extend": "~0.9.9",
-    "zone.js": "^0.8.17"
+    "zone.js": "^0.8.18"
   },
   "devDependencies": {
     "@angular/cli": "^1.4.3",
@@ -69,7 +69,7 @@
     "@types/tinycolor2": "^1.4.0",
     "angular-cli-ghpages": "^0.5.1",
     "codelyzer": "^3.2.0",
-    "coveralls": "^2.13.1",
+    "coveralls": "^2.13.2",
     "deep-freeze-strict": "^1.1.1",
     "jasmine-core": "^2.8.0",
     "jasmine-jquery": "^2.1.1",
