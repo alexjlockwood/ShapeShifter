@@ -2,9 +2,9 @@ import { MathUtil } from 'app/scripts/common';
 import { Point } from 'app/scripts/common';
 import { Line } from 'app/store/paper/actions';
 import * as _ from 'lodash';
-import * as paper from 'paper';
 
 import { CONSTANTS, DIRECTIONS, Direction } from './Constants';
+import { SnapBounds } from './SnapBounds';
 
 // TODO: make sure to test things with different stroke width values!
 const SNAP_TOLERANCE_PIXELS = 10;
@@ -17,22 +17,19 @@ export function computeSnapInfo(
   siblingSnapPointsTable: ReadonlyTable<Point>,
   snapToDimensions = false,
 ): SnapInfo {
-  const dragSnapBounds = new SnapBounds(...dragSnapPoints);
+  const dsb = new SnapBounds(...dragSnapPoints);
   const siblingSnapResults = siblingSnapPointsTable.map(siblingSnapPoints => {
     // Snap the dragged item to each of its siblings.
-    const siblingSnapBounds = new SnapBounds(...siblingSnapPoints);
+    const ssb = new SnapBounds(...siblingSnapPoints);
     const runSnapTestInDirectionFn = (dir: Direction) => {
-      return {
-        dragSnapBounds,
-        siblingSnapBounds,
-        ...runSnapTest(dragSnapBounds, siblingSnapBounds, snapToDimensions, dir),
-      };
+      return { dsb, ssb, ...runSnapTest(dsb, ssb, snapToDimensions, dir) };
     };
     return {
       horizontal: runSnapTestInDirectionFn('horizontal'),
       vertical: runSnapTestInDirectionFn('vertical'),
     };
   });
+  // TODO: return the correct delta values when the min delta belongs to a distance ruler
   const horizontal = filterByMinDelta(siblingSnapResults.map(result => result.horizontal));
   const vertical = filterByMinDelta(siblingSnapResults.map(result => result.vertical));
   const isHorizontalHit = Math.abs(horizontal.delta) <= SNAP_TOLERANCE_PIXELS;
@@ -42,8 +39,8 @@ export function computeSnapInfo(
   const verticalDelta = isVerticalHit ? vertical.delta : Infinity;
   const verticalValues = isVerticalHit ? vertical.values : [];
   return {
-    horizontal: { values: horizontalValues, delta: horizontalDelta },
-    vertical: { values: verticalValues, delta: verticalDelta },
+    horizontal: { delta: horizontalDelta, values: horizontalValues },
+    vertical: { delta: verticalDelta, values: verticalValues },
   };
 }
 
@@ -57,15 +54,16 @@ interface SnapPair {
   readonly isDimensionSnap?: boolean;
 }
 
+// TODO: hide the dsb and ssb from the public API?
 interface SnapInfoInDirection {
   // The minimum delta value found.
   readonly delta: number;
   // The list of snaps with the above delta value.
   readonly values: ReadonlyArray<{
     // The currently dragged item.
-    readonly dragSnapBounds: SnapBounds;
+    readonly dsb: SnapBounds;
     // The sibling item to snap to.
-    readonly siblingSnapBounds: SnapBounds;
+    readonly ssb: SnapBounds;
     // The list of snap pairs with the above delta value.
     readonly values: ReadonlyArray<SnapPair>;
   }>;
@@ -77,169 +75,6 @@ interface SnapInfoInDirection {
 export interface SnapInfo {
   readonly horizontal: SnapInfoInDirection;
   readonly vertical: SnapInfoInDirection;
-}
-
-/**
- * Builds the snap guides to draw given a snap info object.
- * This function assumes the global project coordinate space.
- */
-export function buildGuides(snapInfo: SnapInfo): ReadonlyArray<Line> {
-  const guides: Line[] = [];
-  DIRECTIONS.forEach(d => guides.push(...buildGuidesInDirection(snapInfo, d)));
-  return guides;
-}
-
-function buildGuidesInDirection<T extends Direction>(
-  snapInfo: SnapInfo,
-  dir: T,
-): ReadonlyArray<Line> {
-  const guides: Line[] = [];
-  const { coord, opp } = CONSTANTS[dir];
-  snapInfo[dir].values.forEach(value => {
-    const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
-    const firstGuideSnap = _.find(values, ({ dragIndex, siblingIndex }) => {
-      return dragIndex >= 0 && siblingIndex >= 0;
-    });
-    if (firstGuideSnap) {
-      const startMostBounds = dsb[opp.start] < ssb[opp.start] ? dsb : ssb;
-      const endMostBounds = dsb[opp.end] < ssb[opp.end] ? ssb : dsb;
-      const guideStart = startMostBounds[opp.start];
-      const guideEnd = endMostBounds[opp.end];
-      const guideCoord = ssb.snapPoints[values[0].siblingIndex][coord];
-      if (dir === 'horizontal') {
-        const from = new paper.Point(guideCoord, guideStart);
-        const to = new paper.Point(guideCoord, guideEnd);
-        guides.push({ from, to });
-      } else {
-        const from = new paper.Point(guideStart, guideCoord);
-        const to = new paper.Point(guideEnd, guideCoord);
-        guides.push({ from, to });
-      }
-    }
-  });
-  return guides;
-}
-
-/**
- * Builds the snap rulers to draw given a snap info object.
- * This function assumes the global project coordinate space.
- */
-export function buildRulers(snapInfo: SnapInfo, snapToDimensions = false): ReadonlyArray<Line> {
-  const rulers: Line[] = [];
-  DIRECTIONS.forEach(d => rulers.push(...buildRulersInDirection(snapInfo, snapToDimensions, d)));
-  return rulers;
-}
-
-// TODO: make sure that only one ruler total is made for the drag bounds!
-// TODO: make sure that only one ruler total is made for the drag bounds!
-// TODO: make sure that only one ruler total is made for the drag bounds!
-// TODO: make sure that only one ruler total is made for the drag bounds!
-// TODO: make sure that only one ruler total is made for the drag bounds!
-function buildRulersInDirection<T extends Direction>(
-  snapInfo: SnapInfo,
-  snapToDimensions = false,
-  dir: T,
-): ReadonlyArray<Line> {
-  const rulers: Line[] = [];
-  snapInfo[dir].values.forEach(value => {
-    const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
-    const dimensionSnaps = values.filter(({ isDimensionSnap }) => isDimensionSnap);
-    if (dimensionSnaps.length) {
-      const createRulerFn = (sb: SnapBounds) => {
-        const from = new paper.Point(sb.left, sb.top);
-        const to = new paper.Point(
-          dir === 'horizontal' ? sb.right : sb.left,
-          dir === 'horizontal' ? sb.top : sb.bottom,
-        );
-        return { from, to };
-      };
-      rulers.push(createRulerFn(dsb));
-      rulers.push(createRulerFn(ssb));
-    }
-    const { start, end, opp } = CONSTANTS[dir];
-    const oppStartMostBounds = dsb[opp.start] < ssb[opp.start] ? dsb : ssb;
-    const oppEndMostBounds = dsb[opp.end] < ssb[opp.end] ? ssb : dsb;
-    const nonStartMostBounds = dsb[start] < ssb[start] ? ssb : dsb;
-    const nonEndMostBounds = dsb[end] < ssb[end] ? dsb : ssb;
-    const guideSnaps = values.filter(({ isDimensionSnap }) => !isDimensionSnap);
-    guideSnaps.forEach(() => {
-      const oppStartRuler = oppStartMostBounds[opp.end];
-      const oppEndRuler = oppEndMostBounds[opp.start];
-      const startRuler = nonStartMostBounds[start];
-      const endRuler = nonEndMostBounds[end];
-      // TODO: handle the horizontal 'rulerLeft === rulerRight' case like sketch does
-      // TODO: handle the vertical 'rulerTop === rulerBottom' case like sketch does
-      const coordRuler = startRuler + (endRuler - startRuler) * 0.5;
-      const from = new paper.Point(
-        dir === 'horizontal' ? coordRuler : oppStartRuler,
-        dir === 'horizontal' ? oppStartRuler : coordRuler,
-      );
-      const to = new paper.Point(
-        dir === 'horizontal' ? coordRuler : oppEndRuler,
-        dir === 'horizontal' ? oppEndRuler : coordRuler,
-      );
-      const guideDelta = to[opp.coord] - from[opp.coord];
-      if (guideDelta > SNAP_TOLERANCE_PIXELS) {
-        // Don't show a ruler if the items have been snapped (we assume that if
-        // the delta values is less than the snap tolerance, then it would have
-        // previously been snapped in the canvas such that the delta is now 0).
-        rulers.push({ from, to });
-      }
-    });
-  });
-  return rulers;
-}
-
-class SnapBounds {
-  readonly snapPoints: ReadonlyArray<Point>;
-  readonly left: number;
-  readonly top: number;
-  readonly right: number;
-  readonly bottom: number;
-  readonly width: number;
-  readonly height: number;
-
-  constructor(...snapPoints: Point[]) {
-    this.snapPoints = snapPoints;
-    this.left = _.minBy(snapPoints, p => p.x).x;
-    this.top = _.minBy(snapPoints, p => p.y).y;
-    this.right = _.maxBy(snapPoints, p => p.x).x;
-    this.bottom = _.maxBy(snapPoints, p => p.y).y;
-    this.width = this.right - this.left;
-    this.height = this.bottom - this.top;
-  }
-
-  /** Computes the minimum distance between two snap bounds. */
-  distance(sb: SnapBounds) {
-    const { left: l1, top: t1, right: r1, bottom: b1 } = this;
-    const { left: l2, top: t2, right: r2, bottom: b2 } = sb;
-    const left = r2 < l1;
-    const top = b1 < t2;
-    const right = r1 < l2;
-    const bottom = b2 < t1;
-    const distFn = (x1: number, y1: number, x2: number, y2: number) => {
-      return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-    };
-    if (top && left) {
-      return distFn(l1, b1, r2, t2);
-    } else if (left && bottom) {
-      return distFn(l1, t1, r2, b2);
-    } else if (bottom && right) {
-      return distFn(r1, t1, l2, b2);
-    } else if (right && top) {
-      return distFn(r1, b1, l2, t2);
-    } else if (left) {
-      return l1 - r2;
-    } else if (right) {
-      return l2 - r1;
-    } else if (bottom) {
-      return t1 - b2;
-    } else if (top) {
-      return t2 - b1;
-    } else {
-      return 0;
-    }
-  }
 }
 
 interface Delta {
@@ -318,4 +153,153 @@ function filterByMinDelta<T>(list: (T & Delta)[]): Values<T> & Delta {
     delta: min * (isDeltaPositive ? 1 : -1),
     values: isDeltaPositive ? pos : neg,
   };
+}
+
+/**
+ * Builds the snap guides to draw given a snap info object.
+ * This function assumes the global project coordinate space.
+ */
+export function buildGuides(snapInfo: SnapInfo): ReadonlyArray<Line> {
+  const guides: Line[] = [];
+  DIRECTIONS.forEach(d => guides.push(...buildGuidesInDirection(snapInfo, d)));
+  return guides;
+}
+
+function buildGuidesInDirection<T extends Direction>(
+  snapInfo: SnapInfo,
+  dir: T,
+): ReadonlyArray<Line> {
+  const guides: Line[] = [];
+  const { coord, opp } = CONSTANTS[dir];
+  snapInfo[dir].values.forEach(({ dsb, ssb, values }) => {
+    const firstGuideSnap = _.find(values, ({ dragIndex, siblingIndex }) => {
+      return dragIndex >= 0 && siblingIndex >= 0;
+    });
+    if (firstGuideSnap) {
+      const startMostBounds = dsb[opp.start] < ssb[opp.start] ? dsb : ssb;
+      const endMostBounds = dsb[opp.end] < ssb[opp.end] ? ssb : dsb;
+      const startGuide = startMostBounds[opp.start];
+      const endGuide = endMostBounds[opp.end];
+      const coordGuide = ssb.snapPoints[values[0].siblingIndex][coord];
+      if (dir === 'horizontal') {
+        const from = { x: coordGuide, y: startGuide };
+        const to = { x: coordGuide, y: endGuide };
+        guides.push({ from, to });
+      } else {
+        const from = { x: startGuide, y: coordGuide };
+        const to = { x: endGuide, y: coordGuide };
+        guides.push({ from, to });
+      }
+    }
+  });
+  return guides;
+}
+
+/**
+ * Builds the snap rulers to draw given a snap info object.
+ * This function assumes the global project coordinate space.
+ */
+export function buildRulers(snapInfo: SnapInfo, snapToDimensions = false): ReadonlyArray<Line> {
+  const rulers: Line[] = [];
+  DIRECTIONS.forEach(d => rulers.push(...buildRulersInDirection(snapInfo, snapToDimensions, d)));
+  return rulers;
+}
+
+// TODO: make sure that only one ruler total is made for the drag bounds!
+// TODO: make sure that only one ruler total is made for the drag bounds!
+// TODO: make sure that only one ruler total is made for the drag bounds!
+// TODO: make sure that only one ruler total is made for the drag bounds!
+// TODO: make sure that only one ruler total is made for the drag bounds!
+function buildRulersInDirection<T extends Direction>(
+  snapInfo: SnapInfo,
+  snapToDimensions = false,
+  dir: T,
+): ReadonlyArray<Line> {
+  const rulers: Line[] = [];
+  snapInfo[dir].values.forEach(({ dsb, ssb, values }) => {
+    const dimensionSnaps = values.filter(({ isDimensionSnap }) => isDimensionSnap);
+    if (dimensionSnaps.length) {
+      const createRulerFn = (sb: SnapBounds) => {
+        const from = { x: sb.left, y: sb.top };
+        const to = {
+          x: dir === 'horizontal' ? sb.right : sb.left,
+          y: dir === 'horizontal' ? sb.top : sb.bottom,
+        };
+        return { from, to };
+      };
+      rulers.push(createRulerFn(dsb));
+      rulers.push(createRulerFn(ssb));
+    }
+  });
+  for (const { dsb, ssb, values } of snapInfo[dir].values) {
+    const { start, end, opp } = CONSTANTS[dir];
+    const oppStartMostBounds = dsb[opp.start] < ssb[opp.start] ? dsb : ssb;
+    const oppEndMostBounds = dsb[opp.end] < ssb[opp.end] ? ssb : dsb;
+    const nonStartMostBounds = dsb[start] < ssb[start] ? ssb : dsb;
+    const nonEndMostBounds = dsb[end] < ssb[end] ? dsb : ssb;
+    const guideSnaps = values.filter(({ isDimensionSnap }) => !isDimensionSnap);
+    if (guideSnaps.length) {
+      const oppStartRuler = oppStartMostBounds[opp.end];
+      const oppEndRuler = oppEndMostBounds[opp.start];
+      const startRuler = nonStartMostBounds[start];
+      const endRuler = nonEndMostBounds[end];
+      // TODO: handle the horizontal 'rulerLeft === rulerRight' case like sketch does
+      // TODO: handle the vertical 'rulerTop === rulerBottom' case like sketch does
+      const coordRuler = startRuler + (endRuler - startRuler) * 0.5;
+      const from = {
+        x: dir === 'horizontal' ? coordRuler : oppStartRuler,
+        y: dir === 'horizontal' ? oppStartRuler : coordRuler,
+      };
+      const to = {
+        x: dir === 'horizontal' ? coordRuler : oppEndRuler,
+        y: dir === 'horizontal' ? oppEndRuler : coordRuler,
+      };
+      const guideDelta = to[opp.coord] - from[opp.coord];
+      if (guideDelta > SNAP_TOLERANCE_PIXELS) {
+        // Don't show a ruler if the items have been snapped (we assume that if
+        // the delta values is less than the snap tolerance, then it would have
+        // previously been snapped in the canvas such that the delta is now 0).
+        rulers.push({ from, to });
+      }
+      break;
+    }
+  }
+  type Distance = Readonly<{ sb1: SnapBounds; sb2: SnapBounds; line: Line; dist: number }>;
+  const minDistsDragToSibling: Distance[] = [];
+  const minDistsSiblingToSibling: Distance[] = [];
+  // TODO: make it clear that there should only be one dsb in the snap info object?
+  const dsbs = snapInfo[dir].values.map(({ dsb }) => dsb);
+  const ssbs = snapInfo[dir].values.map(({ ssb }) => ssb);
+  const numValues = snapInfo[dir].values.length;
+  for (let i = 0; i < numValues; i++) {
+    minDistsDragToSibling.push({ sb1: dsbs[i], sb2: ssbs[i], ...dsbs[i].distance(ssbs[i]) });
+  }
+  for (let i = 0; i < numValues - 1; i++) {
+    let minSsb: SnapBounds;
+    let minLine: Line;
+    let minDist = Infinity;
+    for (let j = i + 1; j < numValues; j++) {
+      const { line, dist } = ssbs[i].distance(ssbs[j]);
+      const absDist = Math.abs(dist);
+      if (absDist < minDist) {
+        minSsb = ssbs[j];
+        minLine = line;
+        minDist = absDist;
+      }
+    }
+    minDistsSiblingToSibling.push({ sb1: ssbs[i], sb2: minSsb, line: minLine, dist: minDist });
+  }
+  const minDistDragToSibling = _.minBy(minDistsDragToSibling, d => d.dist);
+  const matchingMinDistsSiblingToSibling = minDistsSiblingToSibling.filter(d => {
+    return Math.abs(minDistDragToSibling.dist - d.dist) <= SNAP_TOLERANCE_PIXELS;
+  });
+  console.log(minDistsDragToSibling);
+  console.log(minDistsSiblingToSibling);
+  console.log(minDistDragToSibling);
+  console.log(matchingMinDistsSiblingToSibling);
+  if (matchingMinDistsSiblingToSibling.length) {
+    rulers.push(minDistDragToSibling.line);
+    rulers.push(...matchingMinDistsSiblingToSibling.map(d => d.line));
+  }
+  return rulers;
 }
