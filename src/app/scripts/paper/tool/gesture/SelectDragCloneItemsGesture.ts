@@ -151,8 +151,6 @@ export class SelectDragCloneItemsGesture extends Gesture {
     // TODO: use snap info to snap distances between bounds!
     // TODO: use snap info to snap distances between bounds!
     const snapInfo = this.buildSnapInfo();
-    console.log(snapInfo);
-    const dsb = snapInfo.vertical.values[0].dragSnapBounds;
     return {
       guides: SnapUtil.buildGuides(snapInfo).map(projectToViewportFn),
       rulers: SnapUtil.buildRulers(snapInfo).map(projectToViewportFn),

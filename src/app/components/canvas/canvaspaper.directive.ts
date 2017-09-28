@@ -38,36 +38,36 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
       "id": "1",
       "name": "demo",
       "type": "vector",
-      "width": "640",
-      "height": "640",
+      "width": "64",
+      "height": "64",
       "children": [
         {
           "id": "4",
           "name": "orange",
           "type": "path",
-          "pathData": "M 25 100 h 50 v 400 h -50 v -400",
+          "pathData": "M 2.5 10 h 5 v 40 h -5 v -40",
           "fillColor": "#ffa500"
         },
         {
           "id": "5",
-          "name": "orange",
+          "name": "red",
           "type": "path",
-          "pathData": "M 150 100 h 50 v 400 h -50 v -400",
-          "fillColor": "#ffa500"
+          "pathData": "M 15 10 h 5 v 40 h -5 v -40",
+          "fillColor": "#f00"
         },
         {
           "id": "6",
-          "name": "orange",
+          "name": "blue",
           "type": "path",
-          "pathData": "M 250 100 h 50 v 400 h -50 v -400",
-          "fillColor": "#ffa500"
+          "pathData": "M 25 10 h 5 v 40 h -5 v -40",
+          "fillColor": "#0ff"
         },
         {
           "id": "7",
-          "name": "orange",
+          "name": "green",
           "type": "path",
-          "pathData": "M 470 100 h 50 v 400 h -50 v -400",
-          "fillColor": "#ffa500"
+          "pathData": "M 47 10 h 5 v 40 h -5 v -40",
+          "fillColor": "#0f0"
         }
       ]
     }`);

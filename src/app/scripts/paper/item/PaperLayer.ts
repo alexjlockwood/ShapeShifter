@@ -127,7 +127,7 @@ export class PaperLayer extends paper.Layer {
       this.tooltipItem = undefined;
     }
     if (info) {
-      this.tooltipItem = newTooltipItem(info, this.cssScaling);
+      // this.tooltipItem = newTooltipItem(info, this.cssScaling);
       this.updateChildren();
     }
   }
