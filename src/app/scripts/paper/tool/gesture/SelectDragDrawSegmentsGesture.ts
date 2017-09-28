@@ -7,8 +7,6 @@ import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
-// import { Snapper } from './snap';
-
 /**
  * A gesture that performs selection and drag operations
  * on one or more path segments. It also supports adding
