@@ -53,7 +53,7 @@ export class MasterTool {
   }
 
   setToolMode(toolMode: ToolMode) {
-    // TODO: clean this fixed distance code up?
+    // TODO: move this value into the ngrx store?
     this.paperTool.fixedDistance = toolMode === ToolMode.Pencil ? 4 : undefined;
   }
 }

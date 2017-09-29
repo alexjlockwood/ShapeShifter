@@ -33,20 +33,25 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       return;
     }
 
-    const focusedPathHitResult = HitTests.focusedPathModeCurves(event.point, focusedPath);
+    const focusedPathHitResult = HitTests.focusedPathMode(event.point, focusedPath);
     if (focusedPathHitResult) {
+      if (focusedPathHitResult.type !== 'curve') {
+        // If we hit the focused path but missed its segments/handles/curves,
+        // then do nothing.
+        return;
+      }
       // Show a pen add cursor and highlight the curve the user is about to split.
       CursorUtil.set(Cursor.PenAdd);
       const hitCurve = focusedPathHitResult.location.curve;
       const location = event.modifiers.command
         ? hitCurve.getLocationAt(hitCurve.length * 0.5)
         : focusedPathHitResult.location;
-      const vpSplitPoint = this.localToViewportPoint(focusedPath, location.point);
-      const { point: p1, handleIn: in1, handleOut: out1 } = this.localToViewportSegment(
+      const vpSplitPoint = this.localToVpPoint(focusedPath, location.point);
+      const { point: p1, handleIn: in1, handleOut: out1 } = this.localToVpSegment(
         focusedPath,
         location.curve.segment1,
       );
-      const { point: p2, handleIn: in2, handleOut: out2 } = this.localToViewportSegment(
+      const { point: p2, handleIn: in2, handleOut: out2 } = this.localToVpSegment(
         focusedPath,
         location.curve.segment2,
       );
@@ -58,19 +63,12 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       return;
     }
 
-    // TODO: are we performing too many hit tests in this method?
-    // TODO: can we merge this hit test with the one above once we get hitOptions.curves working?
-    if (HitTests.focusedPathMode(event.point, focusedPath)) {
-      // If we hit the focused path (and missed its segments/handles/curves), then do nothing.
-      return;
-    }
-
     // Draw an 'extend path' preview curve if one of its end points
     // is selected and the path is still open.
     const singleSelectedSegmentIndex = this.findSingleSelectedEndSegmentIndex(focusedPath);
     if (singleSelectedSegmentIndex !== undefined) {
       CursorUtil.set(Cursor.PenAdd);
-      const vpStartSegment = this.localToViewportSegment(
+      const vpStartSegment = this.localToVpSegment(
         focusedPath,
         focusedPath.segments[singleSelectedSegmentIndex],
       );
@@ -84,17 +82,28 @@ export class HoverSegmentsCurvesGesture extends Gesture {
   }
 
   /** Converts local coordinates to viewport coordinates for a point. */
-  private localToViewportPoint(localItem: paper.Item, localPoint: paper.Point) {
+  private localToVpPoint(localItem: paper.Item, localPoint: paper.Point) {
     return localPoint ? this.pl.globalToLocal(localItem.localToGlobal(localPoint)) : undefined;
   }
 
   /** Converts local coordinates to viewport coordinates for a segment. */
-  private localToViewportSegment(localItem: paper.Item, localSegment: paper.Segment) {
+  private localToVpSegment(localItem: paper.Item, localSegment: paper.Segment) {
     return new paper.Segment(
-      this.localToViewportPoint(localItem, localSegment.point),
-      this.localToViewportPoint(localItem, localSegment.handleIn),
-      this.localToViewportPoint(localItem, localSegment.handleOut),
+      this.localToVpPoint(localItem, localSegment.point),
+      this.localToVpHandle(localItem, localSegment.point, localSegment.handleIn),
+      this.localToVpHandle(localItem, localSegment.point, localSegment.handleOut),
     );
+  }
+
+  /** Converts local coordinates to viewport coordinates for a segment handle. */
+  private localToVpHandle(
+    localItem: paper.Item,
+    localPoint: paper.Point,
+    localHandle: paper.Point,
+  ) {
+    const vpPoint = this.localToVpPoint(localItem, localPoint);
+    const vpHandle = this.localToVpPoint(localItem, localPoint.add(localHandle));
+    return vpHandle.subtract(vpPoint);
   }
 
   /**

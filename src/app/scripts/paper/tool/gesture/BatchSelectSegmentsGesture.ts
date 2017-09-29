@@ -13,15 +13,15 @@ import { Gesture } from './Gesture';
  * - The user is in focused path mode.
  */
 export class BatchSelectSegmentsGesture extends Gesture {
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private readonly pl = paper.project.activeLayer as PaperLayer;
   private initialSelectedSegments: ReadonlySet<number>;
   private updatedSelectedSegments: ReadonlySet<number>;
   private isDragging = false;
 
   constructor(
     private readonly ps: PaperService,
-    private readonly focusedPathItemId: string,
-    private readonly clearFocusedPathAfterDraglessClick = true,
+    private readonly focusedPathId: string,
+    private readonly clearFocusedPathAfterDraglessClick: boolean,
   ) {
     super();
   }
@@ -37,8 +37,8 @@ export class BatchSelectSegmentsGesture extends Gesture {
   onMouseDrag(event: paper.ToolEvent) {
     this.isDragging = true;
     this.ps.setSelectionBox({
-      from: this.paperLayer.globalToLocal(event.downPoint),
-      to: this.paperLayer.globalToLocal(event.point),
+      from: this.pl.globalToLocal(event.downPoint),
+      to: this.pl.globalToLocal(event.point),
     });
     this.processToolEvent(event);
   }
@@ -49,7 +49,7 @@ export class BatchSelectSegmentsGesture extends Gesture {
       this.processToolEvent(event);
     } else if (this.clearFocusedPathAfterDraglessClick) {
       this.ps.setFocusedPathInfo(undefined);
-      this.ps.setSelectedLayers(new Set([this.focusedPathItemId]));
+      this.ps.setSelectedLayers(new Set([this.focusedPathId]));
     }
     this.ps.setSelectionBox(undefined);
   }
@@ -57,7 +57,7 @@ export class BatchSelectSegmentsGesture extends Gesture {
   private processToolEvent(event: paper.ToolEvent) {
     // Calculate the bounding rectangle to use to select segments in
     // the focused path's local coordinate space.
-    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId) as paper.Path;
+    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
     const rectangle = new paper.Rectangle(
       focusedPath.globalToLocal(event.downPoint),
       focusedPath.globalToLocal(event.point),
@@ -97,9 +97,9 @@ export class BatchSelectSegmentsGesture extends Gesture {
         }
       });
     }
-    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId) as paper.Path;
+    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
     this.ps.setFocusedPathInfo({
-      layerId: this.focusedPathItemId,
+      layerId: this.focusedPathId,
       ...PaperUtil.selectCurves(this.ps, focusedPath, selectedSegments),
     });
   }

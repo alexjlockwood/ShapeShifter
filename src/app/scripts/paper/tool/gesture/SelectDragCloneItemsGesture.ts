@@ -124,7 +124,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
   // TODO: reuse this code with ScaleItemsGesture
   private buildSnapGuideInfo(): SnapGuideInfo {
-    const projectToViewportFn = ({ from, to }: Line) => {
+    const projToVpFn = ({ from, to }: Line) => {
       return {
         from: this.pl.globalToLocal(new paper.Point(from)),
         to: this.pl.globalToLocal(new paper.Point(to)),
@@ -143,8 +143,8 @@ export class SelectDragCloneItemsGesture extends Gesture {
     const snapInfo = this.buildSnapInfo();
     console.log(snapInfo);
     return {
-      guides: SnapUtil.buildGuides(snapInfo).map(projectToViewportFn),
-      rulers: SnapUtil.buildRulers(snapInfo).map(projectToViewportFn),
+      guides: SnapUtil.buildGuides(snapInfo).map(projToVpFn),
+      rulers: SnapUtil.buildRulers(snapInfo).map(projToVpFn),
     };
   }
 

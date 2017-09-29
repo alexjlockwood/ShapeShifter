@@ -97,12 +97,12 @@ export class ScaleItemsGesture extends Gesture {
 
   // TODO: make sure it is possible to scale/shrink the item when holding shift?
   private processEvent(event: paper.Event) {
-    const projectDownPoint = this.pl.localToGlobal(this.vpDownPoint);
-    const projectPoint = this.pl.localToGlobal(this.vpPoint);
-    const projectDelta = projectPoint.subtract(projectDownPoint);
+    const projDownPoint = this.pl.localToGlobal(this.vpDownPoint);
+    const projPoint = this.pl.localToGlobal(this.vpPoint);
+    const projDelta = projPoint.subtract(projDownPoint);
 
     let newVl = this.initialVectorLayer.clone();
-    newVl = this.scaleItems(newVl, projectDelta, event.modifiers.alt, event.modifiers.shift);
+    newVl = this.scaleItems(newVl, projDelta, event.modifiers.alt, event.modifiers.shift);
     this.ps.setVectorLayer(newVl);
 
     // TODO: this could be WAY more efficient (no need to scale/snap things twice)
@@ -113,23 +113,23 @@ export class ScaleItemsGesture extends Gesture {
       const snapInfo = this.buildSnapInfo();
       if (snapInfo) {
         const { horizontal: { delta: horizDelta }, vertical: { delta: vertDelta } } = snapInfo;
-        const projectSnapDelta = new paper.Point(
+        const projSnapDelta = new paper.Point(
           isFinite(horizDelta) ? -horizDelta : 0,
           isFinite(vertDelta) ? -vertDelta : 0,
         );
-        if (!projectSnapDelta.isZero()) {
+        if (!projSnapDelta.isZero()) {
           const shouldScaleAboutCenter = event.modifiers.alt;
           const vpFixedPivot = shouldScaleAboutCenter ? this.vpInitialCenter : this.vpInitialPivot;
           // TODO: confirm this is the correct way to fix the project snap delta?
           if (this.vpPoint.x < vpFixedPivot.x) {
-            projectSnapDelta.x *= -1;
+            projSnapDelta.x *= -1;
           }
           if (this.vpPoint.y < vpFixedPivot.y) {
-            projectSnapDelta.y *= -1;
+            projSnapDelta.y *= -1;
           }
           newVl = this.scaleItems(
             newVl,
-            projectPoint.add(projectSnapDelta).subtract(projectDownPoint),
+            projPoint.add(projSnapDelta).subtract(projDownPoint),
             shouldScaleAboutCenter,
           );
           this.ps.setVectorLayer(newVl);
@@ -142,7 +142,7 @@ export class ScaleItemsGesture extends Gesture {
 
   private scaleItems(
     newVl: VectorLayer,
-    projectDelta: paper.Point,
+    projDelta: paper.Point,
     shouldScaleAboutCenter: boolean,
     shouldSnapDelta = false,
   ) {
@@ -150,7 +150,7 @@ export class ScaleItemsGesture extends Gesture {
     // the pivot opposite of the currently active pivot.
     const vpFixedPivot = shouldScaleAboutCenter ? this.vpInitialCenter : this.vpInitialPivot;
     const currentSize = this.vpInitialDraggedSegment
-      .add(this.pl.globalToLocal(projectDelta))
+      .add(this.pl.globalToLocal(projDelta))
       .subtract(vpFixedPivot);
     const initialSize = shouldScaleAboutCenter ? this.vpInitialCenteredSize : this.vpInitialSize;
     let sx = 1;
@@ -221,7 +221,7 @@ export class ScaleItemsGesture extends Gesture {
 
   // TODO: reuse this code with SelectDragCloneItemsGesture
   private buildSnapGuideInfo(): SnapGuideInfo {
-    const projectToViewportFn = ({ from, to }: Line) => {
+    const projToVpFn = ({ from, to }: Line) => {
       return {
         from: this.pl.globalToLocal(new paper.Point(from)),
         to: this.pl.globalToLocal(new paper.Point(to)),
@@ -229,8 +229,8 @@ export class ScaleItemsGesture extends Gesture {
     };
     const snapInfo = this.buildSnapInfo();
     return {
-      guides: SnapUtil.buildGuides(snapInfo).map(projectToViewportFn),
-      rulers: SnapUtil.buildRulers(snapInfo).map(projectToViewportFn),
+      guides: SnapUtil.buildGuides(snapInfo).map(projToVpFn),
+      rulers: SnapUtil.buildRulers(snapInfo).map(projToVpFn),
     };
   }
 }

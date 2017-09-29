@@ -12,11 +12,13 @@ import {
   HoverItemsGesture,
   HoverSegmentsCurvesGesture,
   PencilGesture,
+  RotateItemsGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
   SetFocusedPathGesture,
+  TransformPathsGesture,
 } from 'app/scripts/paper/tool/gesture';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -25,7 +27,7 @@ import * as paper from 'paper';
 import { Tool } from './Tool';
 
 /**
- * A tool that delegates responsibilities to different gestures given the current
+ * A tool that delegates responsibilities to different gestures given the
  * state of the current mouse event.
  */
 export class GestureTool extends Tool {
@@ -81,18 +83,20 @@ export class GestureTool extends Tool {
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
     const selectedLayers = this.ps.getSelectedLayers();
-    if (selectedLayers.size > 0) {
-      // First perform a hit test on the selection bound segments.
+    if (selectedLayers.size) {
+      // First perform a hit test on the selection bound's segments.
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
-        // If the hit item is a selection bounds segment, then perform a scale gesture.
+        // If the hit item is a selection bound segment, then perform
+        // a scale/rotate/transform gesture.
+        // TODO: also add support for rotate/transform
         return new ScaleItemsGesture(this.ps, selectionBoundSegmentsHitResult.item);
       }
     }
 
     const hitResult = HitTests.selectionMode(event.point);
     if (!hitResult) {
-      // If there is no hit item, then batch select items using a selection box box.
+      // If there is no hit item, then batch select items using a selection box.
       return new BatchSelectItemsGesture(this.ps);
     }
 
@@ -108,11 +112,7 @@ export class GestureTool extends Tool {
       return new SetFocusedPathGesture(this.ps, hitItemId);
     }
 
-    if (
-      event.modifiers.shift &&
-      selectedLayers.has(hitResult.item.data.id) &&
-      selectedLayers.size > 1
-    ) {
+    if (selectedLayers.has(hitItemId) && event.modifiers.shift && selectedLayers.size > 1) {
       // If the hit item is selected, shift is pressed, and there is at least
       // one other selected item, then deselect the hit item.
 
@@ -156,6 +156,7 @@ export class GestureTool extends Tool {
     }
 
     const focusedPathId = fpi.layerId;
+    const focusedPath = this.pl.findItemByLayerId(focusedPathId) as paper.Path;
 
     // First, do a hit test on the focused path's segments and handles.
     const segmentsAndHandlesHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
@@ -176,36 +177,34 @@ export class GestureTool extends Tool {
       return SelectDragDrawSegmentsGesture.hitSegment(this.ps, focusedPathId, segmentIndex);
     }
 
-    // Second, do a hit test on the underlying path's curves.
-    const focusedPath = this.pl.findItemByLayerId(fpi.layerId) as paper.Path;
-    const curvesHitResult = HitTests.focusedPathModeCurves(event.point, focusedPath);
-    if (curvesHitResult) {
-      const { location } = curvesHitResult;
-      return SelectDragDrawSegmentsGesture.hitCurve(
-        this.ps,
-        focusedPathId,
-        location.index,
-        location.time,
-      );
+    // Second, do a hit test on the focused path itself.
+    const hitResult = HitTests.focusedPathMode(event.point, focusedPath);
+    if (hitResult) {
+      if (hitResult.type === 'curve') {
+        return SelectDragDrawSegmentsGesture.hitCurve(
+          this.ps,
+          focusedPathId,
+          hitResult.location.index,
+          hitResult.location.time,
+        );
+      } else {
+        // Note that we won't exit focused path mode on the next mouse up event
+        // (since the gesture began with a successful filled hit test).
+        return new BatchSelectSegmentsGesture(
+          this.ps,
+          focusedPathId,
+          false /* clearFocusedPathOnDraglessClick */,
+        );
+      }
     }
 
-    // Third, check to see if we hit the focused path.
-    // TODO: can we merge this hit test with the one above once we get hitOptions.curves working?
-    if (HitTests.focusedPathMode(event.point, focusedPath)) {
-      // Don't exit focused path mode on the next mouse up event
-      // (since the gesture began with a successful filled hit test).
-      const clearFocusedPathOnDraglessClick = false;
-      return new BatchSelectSegmentsGesture(this.ps, fpi.layerId, clearFocusedPathOnDraglessClick);
-    }
-
-    if (focusedPath.segments.length === 0) {
+    if (!focusedPath.segments.length) {
       // Then we are beginning to build a new path from scratch.
       return SelectDragDrawSegmentsGesture.miss(this.ps, focusedPathId);
     }
 
-    const { selectedSegments } = fpi;
-    if (!focusedPath.closed && selectedSegments.size === 1) {
-      const selectedSegmentIndex = selectedSegments.values().next().value;
+    if (!focusedPath.closed && fpi.selectedSegments.size === 1) {
+      const selectedSegmentIndex = fpi.selectedSegments.values().next().value;
       if (selectedSegmentIndex === 0 || selectedSegmentIndex === focusedPath.segments.length - 1) {
         // Then we are extending an existing open path with a single selected end point segment.
         return SelectDragDrawSegmentsGesture.miss(this.ps, focusedPathId);
@@ -213,9 +212,13 @@ export class GestureTool extends Tool {
     }
 
     // If there is no hit item and we are in focused path mode, then
-    // enter selection box mode for the selected item so we can
-    // batch select its individual segments.
-    return new BatchSelectSegmentsGesture(this.ps, focusedPathId);
+    // enter selection box mode for the focused path so we can
+    // batch select its segments.
+    return new BatchSelectSegmentsGesture(
+      this.ps,
+      focusedPathId,
+      true /* clearFocusedPathOnDraglessClick */,
+    );
   }
 
   // @Override

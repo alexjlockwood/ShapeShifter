@@ -6,7 +6,7 @@ import * as paper from 'paper';
 import { Tool } from './Tool';
 
 /**
- * Tool that enables zooming and panning the canvas.
+ * A tool that enables zooming and panning in the canvas.
  */
 export class ZoomPanTool extends Tool {
   // Keep track of the last known mouse point in view space coordinates.
@@ -61,13 +61,13 @@ export class ZoomPanTool extends Tool {
     // In order to have coordinate changes not mess up the dragging, we need to
     // convert coordinates to view space, and then back to project space after
     // the view has been scrolled.
-    const projectPoint = event.point;
-    const currentViewPoint = paper.view.projectToView(projectPoint);
+    const projPoint = event.point;
+    const viewPoint = paper.view.projectToView(projPoint);
     const { tx, ty } = paper.view.matrix
       .clone()
-      .translate(projectPoint.subtract(paper.view.viewToProject(this.viewLastPoint)));
+      .translate(projPoint.subtract(paper.view.viewToProject(this.viewLastPoint)));
     this.setZoomPanInfo(paper.view.zoom, tx, ty);
-    this.viewLastPoint = currentViewPoint;
+    this.viewLastPoint = viewPoint;
   }
 
   private setZoomPanInfo(zoom: number, tx: number, ty: number) {
