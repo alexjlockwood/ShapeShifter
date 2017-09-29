@@ -61,7 +61,7 @@ export class GestureTool extends Tool {
       this.currentGesture = new CreateRectangleGesture(this.ps);
     } else if (toolMode === ToolMode.Pencil) {
       this.currentGesture = new PencilGesture(this.ps);
-    } else if (toolMode === ToolMode.Pen || this.ps.getFocusedPathInfo()) {
+    } else if (toolMode === ToolMode.Vector || this.ps.getFocusedPathInfo()) {
       // The user is editing a focused path.
       this.currentGesture = this.createFocusedPathModeGesture(event);
     } else {

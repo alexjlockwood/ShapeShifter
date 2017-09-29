@@ -12,7 +12,7 @@ import { Observable } from 'rxjs/Observable';
 export class ToolPanelComponent implements OnInit {
   readonly TOOL_MODE_SELECT = ToolMode.Selection;
   readonly TOOL_MODE_PENCIL = ToolMode.Pencil;
-  readonly TOOL_MODE_PEN = ToolMode.Pen;
+  readonly TOOL_MODE_VECTOR = ToolMode.Vector;
   readonly TOOL_MODE_ELLIPSE = ToolMode.Ellipse;
   readonly TOOL_MODE_RECTANGLE = ToolMode.Rectangle;
   readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
@@ -33,8 +33,8 @@ export class ToolPanelComponent implements OnInit {
     this.paperService.setToolMode(ToolMode.Pencil);
   }
 
-  onPenClick() {
-    this.paperService.setToolMode(ToolMode.Pen);
+  onVectorClick() {
+    this.paperService.setToolMode(ToolMode.Vector);
   }
 
   onEllipseClick() {

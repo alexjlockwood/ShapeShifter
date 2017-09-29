@@ -1,1 +1,2 @@
-export { ToolMode, CanvasCursor } from './types';
+export { ToolMode } from './ToolMode';
+export { CanvasCursor } from './CanvasCursor';
