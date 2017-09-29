@@ -1,10 +1,10 @@
 export enum ToolMode {
-  Selection = 1,
-  Pencil,
-  Vector,
-  Ellipse,
-  Rectangle,
-  ZoomPan,
-  Rotate,
-  Transform,
+  Selection = 'Selection',
+  Pencil = 'Pencil',
+  Vector = 'Vector',
+  Ellipse = 'Ellipse',
+  Rectangle = 'Rectangle',
+  ZoomPan = 'ZoomPan',
+  Rotate = 'Rotate',
+  Transform = 'Transform',
 }
