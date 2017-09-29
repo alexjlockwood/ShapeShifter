@@ -32,6 +32,7 @@ export function focusedPathMode(projPoint: paper.Point, focusedPath: paper.Path)
     fill: true,
     stroke: true,
     curves: true,
+    // TODO: properly calculate scale using similar method as in Matrix.ts
     // TODO: also test that this works when zoomed in/out?
     // TODO: are we correctly handling negative scales?
     tolerance: 8 / Math.max(Math.abs(sx), Math.abs(sy)),
