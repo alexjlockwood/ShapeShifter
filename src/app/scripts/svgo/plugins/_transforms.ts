@@ -12,14 +12,13 @@ var regTransformTypes = /matrix|translate|scale|rotate|skewX|skewY/,
  * @return {Array} output array
  */
 export function transform2js(transformString) {
-
   // JS representation of the transform data
   var transforms = [],
     // current transform context
     current;
 
   // split value into ['', 'translate', '10 50', '', 'scale', '2', '', 'rotate', '-45', '']
-  transformString.split(regTransformSplit).forEach(function (item) {
+  transformString.split(regTransformSplit).forEach(function(item) {
     /*jshint -W084 */
     var num;
 
@@ -27,24 +26,21 @@ export function transform2js(transformString) {
       // if item is a translate function
       if (regTransformTypes.test(item)) {
         // then collect it and change current context
-        transforms.push(current = { name: item });
+        transforms.push((current = { name: item }));
         // else if item is data
       } else {
         // then split it into [10, 50] and collect as context.data
-        while (num = regNumericValues.exec(item)) {
+        while ((num = regNumericValues.exec(item))) {
           num = Number(num);
-          if (current.data)
-            current.data.push(num);
-          else
-            current.data = [num];
+          if (current.data) current.data.push(num);
+          else current.data = [num];
         }
       }
     }
   });
 
   return transforms;
-
-};
+}
 
 /**
  * Multiply transforms into one.
@@ -53,9 +49,8 @@ export function transform2js(transformString) {
  * @return {Array} output matrix array
  */
 export function transformsMultiply(transforms) {
-
   // convert transforms objects to the matrices
-  transforms = transforms.map(function (transform) {
+  transforms = transforms.map(function(transform) {
     if (transform.name === 'matrix') {
       return transform.data;
     }
@@ -65,14 +60,13 @@ export function transformsMultiply(transforms) {
   // multiply all matrices into one
   transforms = {
     name: 'matrix',
-    data: transforms.reduce(function (a, b) {
+    data: transforms.reduce(function(a, b) {
       return multiplyTransformMatrices(a, b);
-    })
+    }),
   };
 
   return transforms;
-
-};
+}
 
 /**
  * Do math like a schoolboy.
@@ -80,39 +74,37 @@ export function transformsMultiply(transforms) {
  * @type {Object}
  */
 export var mth = {
-
-  rad: function (deg) {
+  rad: function(deg) {
     return deg * Math.PI / 180;
   },
 
-  deg: function (rad) {
+  deg: function(rad) {
     return rad * 180 / Math.PI;
   },
 
-  cos: function (deg) {
+  cos: function(deg) {
     return Math.cos(this.rad(deg));
   },
 
-  acos: function (val, floatPrecision) {
-    return +(this.deg(Math.acos(val)).toFixed(floatPrecision));
+  acos: function(val, floatPrecision) {
+    return +this.deg(Math.acos(val)).toFixed(floatPrecision);
   },
 
-  sin: function (deg) {
+  sin: function(deg) {
     return Math.sin(this.rad(deg));
   },
 
-  asin: function (val, floatPrecision) {
-    return +(this.deg(Math.asin(val)).toFixed(floatPrecision));
+  asin: function(val, floatPrecision) {
+    return +this.deg(Math.asin(val)).toFixed(floatPrecision);
   },
 
-  tan: function (deg) {
+  tan: function(deg) {
     return Math.tan(this.rad(deg));
   },
 
-  atan: function (val, floatPrecision) {
-    return +(this.deg(Math.atan(val)).toFixed(floatPrecision));
-  }
-
+  atan: function(val, floatPrecision) {
+    return +this.deg(Math.atan(val)).toFixed(floatPrecision);
+  },
 };
 
 /**
@@ -159,10 +151,11 @@ export function matrixToTransform(transform, params) {
 
     if (rotate[0]) transforms.push({ name: 'rotate', data: rotate });
 
-    if (rowsSum && colsSum) transforms.push({
-      name: 'skewX',
-      data: [mth.atan(colsSum / (sx * sx), floatPrecision)]
-    });
+    if (rowsSum && colsSum)
+      transforms.push({
+        name: 'skewX',
+        data: [mth.atan(colsSum / (sx * sx), floatPrecision)],
+      });
 
     // rotate(a, cx, cy) can consume translate() within optional arguments cx, cy (rotation point)
     if (rotate[0] && (data[4] || data[5])) {
@@ -181,13 +174,14 @@ export function matrixToTransform(transform, params) {
     return transform;
   }
 
-  if (scaleBefore && (sx != 1 || sy != 1) || !transforms.length) transforms.push({
-    name: 'scale',
-    data: sx == sy ? [sx] : [sx, sy]
-  });
+  if ((scaleBefore && (sx != 1 || sy != 1)) || !transforms.length)
+    transforms.push({
+      name: 'scale',
+      data: sx == sy ? [sx] : [sx, sy],
+    });
 
   return transforms;
-};
+}
 
 /**
  * Convert transform to the matrix data.
@@ -196,7 +190,6 @@ export function matrixToTransform(transform, params) {
  * @return {Array} matrix data
  */
 function transformToMatrix(transform) {
-
   if (transform.name === 'matrix') return transform.data;
 
   var matrix;
@@ -230,7 +223,6 @@ function transformToMatrix(transform) {
   }
 
   return matrix;
-
 }
 
 /**
@@ -244,13 +236,13 @@ function transformToMatrix(transform) {
  * @return {Array} arc transformed input arc
  */
 export function transformArc(arc, transform) {
-
   var a = arc[0],
     b = arc[1],
     rot = arc[2] * Math.PI / 180,
     cos = Math.cos(rot),
     sin = Math.sin(rot),
-    h = Math.pow(arc[5] * cos + arc[6] * sin, 2) / (4 * a * a) +
+    h =
+      Math.pow(arc[5] * cos + arc[6] * sin, 2) / (4 * a * a) +
       Math.pow(arc[6] * cos - arc[5] * sin, 2) / (4 * b * b);
   if (h > 1) {
     h = Math.sqrt(h);
@@ -264,10 +256,11 @@ export function transformArc(arc, transform) {
     squareSum = m[0] * m[0] + m[1] * m[1] + lastCol,
     root = Math.sqrt(
       (Math.pow(m[0] - m[3], 2) + Math.pow(m[1] + m[2], 2)) *
-      (Math.pow(m[0] + m[3], 2) + Math.pow(m[1] - m[2], 2))
+        (Math.pow(m[0] + m[3], 2) + Math.pow(m[1] - m[2], 2)),
     );
 
-  if (!root) { // circle
+  if (!root) {
+    // circle
     arc[0] = arc[1] = Math.sqrt(squareSum / 2);
     arc[2] = 0;
   } else {
@@ -280,12 +273,18 @@ export function transformArc(arc, transform) {
       term2 = m[1] * sub + m[3] * rowsSum;
     arc[0] = Math.sqrt(majorAxisSqr);
     arc[1] = Math.sqrt(minorAxisSqr);
-    arc[2] = ((major ? term2 < 0 : term1 > 0) ? -1 : 1) *
-      Math.acos((major ? term1 : term2) / Math.sqrt(term1 * term1 + term2 * term2)) * 180 / Math.PI;
+    arc[2] =
+      ((major ? term2 < 0 : term1 > 0) ? -1 : 1) *
+      Math.acos((major ? term1 : term2) / Math.sqrt(term1 * term1 + term2 * term2)) *
+      180 /
+      Math.PI;
+  }
+  if (transform[0] < 0 !== transform[3] < 0) {
+    // Flip the sweep flag if coordinates are being flipped horizontally XOR vertically
+    arc[4] = 1 - arc[4];
   }
   return arc;
-
-};
+}
 
 /**
  * Multiply transformation matrices.
@@ -301,6 +300,6 @@ function multiplyTransformMatrices(a, b) {
     a[0] * b[2] + a[2] * b[3],
     a[1] * b[2] + a[3] * b[3],
     a[0] * b[4] + a[2] * b[5] + a[4],
-    a[1] * b[4] + a[3] * b[5] + a[5]
+    a[1] * b[4] + a[3] * b[5] + a[5],
   ];
 }
