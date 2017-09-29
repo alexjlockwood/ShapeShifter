@@ -6,9 +6,12 @@ import { Gesture } from './Gesture';
 
 /**
  * A gesture that selects one or more items using a selection box.
+ *
+ * Preconditions:
+ * - The user is in selection mode.
  */
 export class BatchSelectItemsGesture extends Gesture {
-  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private readonly pl = paper.project.activeLayer as PaperLayer;
   private initialSelectedLayers: ReadonlySet<string>;
 
   constructor(private readonly ps: PaperService) {
@@ -30,8 +33,8 @@ export class BatchSelectItemsGesture extends Gesture {
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     this.ps.setSelectionBox({
-      from: this.paperLayer.globalToLocal(event.downPoint),
-      to: this.paperLayer.globalToLocal(event.point),
+      from: this.pl.globalToLocal(event.downPoint),
+      to: this.pl.globalToLocal(event.point),
     });
     this.selectItemsInSelectionBox(event.modifiers.alt);
   }
@@ -58,15 +61,11 @@ export class BatchSelectItemsGesture extends Gesture {
 
   private selectItemsInSelectionBox(isAltPressed: boolean) {
     const box = this.ps.getSelectionBox();
-    if (!box) {
-      return;
+    if (box) {
+      const from = new paper.Point(box.from);
+      const to = new paper.Point(box.to);
+      const selectedItems = this.pl.findItemsInBounds(new paper.Rectangle(from, to), !isAltPressed);
+      this.ps.setSelectedLayers(new Set(selectedItems.map(i => i.data.id)));
     }
-    const from = new paper.Point(box.from);
-    const to = new paper.Point(box.to);
-    const selectedItems = this.paperLayer.findItemsInBounds(
-      new paper.Rectangle(from, to),
-      !isAltPressed,
-    );
-    this.ps.setSelectedLayers(new Set(selectedItems.map(i => i.data.id)));
   }
 }
