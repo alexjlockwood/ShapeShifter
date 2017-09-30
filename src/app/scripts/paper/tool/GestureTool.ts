@@ -34,7 +34,7 @@ export class GestureTool extends Tool {
   private readonly pl = paper.project.activeLayer as PaperLayer;
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverItemsGesture(this.ps);
-  private toolMode = this.ps.getToolMode();
+  private toolMode: ToolMode;
 
   constructor(private readonly ps: PaperService) {
     super();
