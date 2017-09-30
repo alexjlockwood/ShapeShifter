@@ -19,33 +19,33 @@ export class ToolPanelComponent implements OnInit {
 
   toolMode$: Observable<ToolMode>;
 
-  constructor(public readonly paperService: PaperService) {}
+  constructor(public readonly ps: PaperService) {}
 
   ngOnInit() {
-    this.toolMode$ = this.paperService.store.select(getToolMode);
+    this.toolMode$ = this.ps.store.select(getToolMode);
   }
 
   onSelectClick() {
-    this.paperService.setToolMode(ToolMode.Selection);
+    this.ps.setToolMode(ToolMode.Selection);
   }
 
   onPencilClick() {
-    this.paperService.setToolMode(ToolMode.Pencil);
+    this.ps.setToolMode(ToolMode.Pencil);
   }
 
   onVectorClick() {
-    this.paperService.setToolMode(ToolMode.Vector);
+    this.ps.setToolMode(ToolMode.Vector);
   }
 
   onEllipseClick() {
-    this.paperService.setToolMode(ToolMode.Ellipse);
+    this.ps.setToolMode(ToolMode.Ellipse);
   }
 
   onRectangleClick() {
-    this.paperService.setToolMode(ToolMode.Rectangle);
+    this.ps.setToolMode(ToolMode.Rectangle);
   }
 
   onZoomPanClick() {
-    this.paperService.setToolMode(ToolMode.ZoomPan);
+    this.ps.setToolMode(ToolMode.ZoomPan);
   }
 }
