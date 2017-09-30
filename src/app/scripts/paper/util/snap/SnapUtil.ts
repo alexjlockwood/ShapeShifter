@@ -20,20 +20,8 @@ export function computeSnapInfo(
   snapToDimensions = false,
 ): SnapInfo {
   const dsb = new SnapBounds(...dragSnapPoints);
-  const siblingSnapResults = siblingSnapPointsTable.map(siblingSnapPoints => {
-    // Snap the dragged item to each of its siblings.
-    const ssb = new SnapBounds(...siblingSnapPoints);
-    const runSnapTestInDirectionFn = (dir: Direction) => {
-      return { dsb, ssb, ...runSnapTest(dsb, ssb, snapToDimensions, dir) };
-    };
-    return {
-      horizontal: runSnapTestInDirectionFn('horizontal'),
-      vertical: runSnapTestInDirectionFn('vertical'),
-    };
-  });
-  // TODO: return the correct delta values when the min delta belongs to a distance ruler
-  const horizontal = filterByMinDelta(siblingSnapResults.map(result => result.horizontal));
-  const vertical = filterByMinDelta(siblingSnapResults.map(result => result.vertical));
+  const ssbs = siblingSnapPointsTable.map(pts => new SnapBounds(...pts));
+  const { horizontal, vertical } = snapToSiblings(dsb, ssbs, snapToDimensions);
   const isHorizontalHit = Math.abs(horizontal.delta) <= SNAP_TOLERANCE_PIXELS;
   const horizontalDelta = isHorizontalHit ? horizontal.delta : Infinity;
   const horizontalValues = isHorizontalHit ? horizontal.values : [];
@@ -53,6 +41,38 @@ export function computeSnapInfo(
     guides: buildGuides(snapInfo),
     rulers: buildRulers(snapInfo),
   };
+}
+
+/** Snaps the dragged item to each of its sibling snap items. */
+function snapToSiblings(
+  dsb: SnapBounds,
+  ssbs: ReadonlyArray<SnapBounds>,
+  snapToDimensions: boolean,
+) {
+  // Compute a list of sibling snap results, where each entry represents a snapping
+  // between two snap bounds in both directions.
+  const ssrs = ssbs.map(ssb => {
+    // For each direction, return an entry consisting of:
+    // - dsb: the drag snap bounds
+    // - ssb: the sibling snap bounds
+    // - delta: the minimum delta value that would snap the two bounds
+    // - values: a list of snap pairs that computed the above delta value
+    return {
+      horizontal: { dsb, ssb, ...runSnapTest(dsb, ssb, snapToDimensions, 'horizontal') },
+      vertical: { dsb, ssb, ...runSnapTest(dsb, ssb, snapToDimensions, 'vertical') },
+    };
+  });
+  interface SnapResultInDirection {
+    readonly dsb: SnapBounds;
+    readonly ssb: SnapBounds;
+    readonly values: ReadonlyArray<SnapPair>;
+  }
+  const result = {
+    horizontal: filterByMinDelta<SnapResultInDirection>(ssrs.map(r => r.horizontal)),
+    vertical: filterByMinDelta<SnapResultInDirection>(ssrs.map(r => r.vertical)),
+  };
+  console.log(ssrs, result);
+  return result;
 }
 
 /**
