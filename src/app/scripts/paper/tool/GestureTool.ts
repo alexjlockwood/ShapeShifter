@@ -44,6 +44,16 @@ export class GestureTool extends Tool {
   onToolModeChanged(toolMode: ToolMode) {
     console.log(`tool mode changed: ${this.toolMode} --> ${toolMode}`);
     this.toolMode = toolMode;
+    this.resetDefaultGesture();
+  }
+
+  private resetDefaultGesture() {
+    const fpi = this.ps.getFocusedPathInfo();
+    if (fpi) {
+      this.currentGesture = new HoverSegmentsCurvesGesture(this.ps, fpi.layerId);
+    } else {
+      this.currentGesture = new HoverItemsGesture(this.ps);
+    }
   }
 
   // @Override
@@ -68,11 +78,9 @@ export class GestureTool extends Tool {
       this.currentGesture = new CreateRectangleGesture(this.ps);
     } else if (toolMode === ToolMode.Pencil) {
       this.currentGesture = new PencilGesture(this.ps);
-    } else if (toolMode === ToolMode.Vector || this.ps.getFocusedPathInfo()) {
-      // The user is editing a focused path.
+    } else if (toolMode === ToolMode.Vector) {
       this.currentGesture = this.createFocusedPathModeGesture(event);
     } else {
-      // Otherwise the user is in selection mode.
       this.currentGesture = this.createSelectionModeGesture(event);
     }
     this.currentGesture.onMouseDown(event);
@@ -80,12 +88,7 @@ export class GestureTool extends Tool {
 
   private onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
-    const fpi = this.ps.getFocusedPathInfo();
-    if (fpi) {
-      this.currentGesture = new HoverSegmentsCurvesGesture(this.ps, fpi.layerId);
-    } else {
-      this.currentGesture = new HoverItemsGesture(this.ps);
-    }
+    this.resetDefaultGesture();
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {

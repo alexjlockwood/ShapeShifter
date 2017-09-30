@@ -1,3 +1,4 @@
+import { ToolMode } from 'app/model/paper';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -19,6 +20,7 @@ export class SetFocusedPathGesture extends Gesture {
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setSelectedLayers(new Set());
     const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
+    this.ps.setToolMode(ToolMode.Vector);
     this.ps.setFocusedPathInfo({
       layerId: this.focusedPathId,
       ...PaperUtil.selectCurves(this.ps, focusedPath, new Set([focusedPath.segments.length - 1])),

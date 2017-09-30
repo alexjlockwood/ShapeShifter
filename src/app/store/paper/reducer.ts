@@ -12,51 +12,52 @@ import {
 } from './actions';
 
 export interface State {
-  readonly toolMode: ToolMode;
-  readonly selectionBox: SelectionBox | undefined;
-  readonly createPathInfo: CreatePathInfo | undefined;
-  readonly splitCurveInfo: SplitCurveInfo | undefined;
-  readonly focusedPathInfo: FocusedPathInfo | undefined;
-  readonly canvasCursor: CanvasCursor | undefined;
-  readonly snapGuideInfo: SnapGuideInfo | undefined;
   readonly zoomPanInfo: ZoomPanInfo;
-  readonly tooltipInfo: TooltipInfo | undefined;
+  readonly toolModeInfo: ToolModeInfo;
+}
+
+interface ToolModeInfo {
+  readonly toolMode: ToolMode;
+  readonly selectionBox?: SelectionBox;
+  readonly createPathInfo?: CreatePathInfo;
+  readonly splitCurveInfo?: SplitCurveInfo;
+  readonly focusedPathInfo?: FocusedPathInfo;
+  readonly snapGuideInfo?: SnapGuideInfo;
+  readonly tooltipInfo?: TooltipInfo;
+  readonly canvasCursor?: CanvasCursor;
 }
 
 export function buildInitialState(): State {
   return {
-    toolMode: ToolMode.Selection,
-    selectionBox: undefined,
-    createPathInfo: undefined,
-    splitCurveInfo: undefined,
-    focusedPathInfo: undefined,
-    canvasCursor: undefined,
-    snapGuideInfo: undefined,
     zoomPanInfo: { zoom: 1, translation: { tx: 0, ty: 0 } },
-    tooltipInfo: undefined,
+    toolModeInfo: { toolMode: ToolMode.Selection },
   };
 }
 
 export function reducer(state = buildInitialState(), action: Actions): State {
+  const { toolModeInfo } = state;
   switch (action.type) {
-    case ActionType.SetToolMode:
-      return { ...state, toolMode: action.toolMode };
-    case ActionType.SetSelectionBox:
-      return { ...state, selectionBox: action.selectionBox };
-    case ActionType.SetCreatePathInfo:
-      return { ...state, createPathInfo: action.createPathInfo };
-    case ActionType.SetSplitCurveInfo:
-      return { ...state, splitCurveInfo: action.splitCurveInfo };
-    case ActionType.SetFocusedPathInfo:
-      return { ...state, focusedPathInfo: action.focusedPathInfo };
-    case ActionType.SetCanvasCursor:
-      return { ...state, canvasCursor: action.canvasCursor };
-    case ActionType.SetSnapGuideInfo:
-      return { ...state, snapGuideInfo: action.snapGuideInfo };
     case ActionType.SetZoomPanInfo:
       return { ...state, zoomPanInfo: action.zoomPanInfo };
+    case ActionType.SetToolMode:
+      return { ...state, toolModeInfo: { toolMode: action.toolMode } };
+    case ActionType.SetSelectionBox:
+      return { ...state, toolModeInfo: { ...toolModeInfo, selectionBox: action.selectionBox } };
+    case ActionType.SetCreatePathInfo:
+      return { ...state, toolModeInfo: { ...toolModeInfo, createPathInfo: action.createPathInfo } };
+    case ActionType.SetSplitCurveInfo:
+      return { ...state, toolModeInfo: { ...toolModeInfo, splitCurveInfo: action.splitCurveInfo } };
+    case ActionType.SetFocusedPathInfo:
+      return {
+        ...state,
+        toolModeInfo: { ...toolModeInfo, focusedPathInfo: action.focusedPathInfo },
+      };
+    case ActionType.SetSnapGuideInfo:
+      return { ...state, toolModeInfo: { ...toolModeInfo, snapGuideInfo: action.snapGuideInfo } };
     case ActionType.SetTooltipInfo:
-      return { ...state, tooltipInfo: action.tooltipInfo };
+      return { ...state, toolModeInfo: { ...toolModeInfo, tooltipInfo: action.tooltipInfo } };
+    case ActionType.SetCanvasCursor:
+      return { ...state, toolModeInfo: { ...toolModeInfo, canvasCursor: action.canvasCursor } };
   }
   return state;
 }

@@ -1,3 +1,4 @@
+import { ToolMode } from 'app/model/paper';
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
@@ -229,7 +230,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     CursorUtil.clear();
     this.ps.setSnapGuideInfo(undefined);
     if (this.exitFocusedPathModeOnMouseUp) {
-      this.ps.setFocusedPathInfo(undefined);
+      this.ps.setToolMode(ToolMode.Selection);
       this.ps.setSelectedLayers(new Set([this.focusedPathId]));
     }
   }
