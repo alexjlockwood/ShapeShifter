@@ -112,11 +112,7 @@ export class ScaleItemsGesture extends Gesture {
     if (shouldSnap) {
       const snapInfo = this.buildSnapInfo();
       if (snapInfo) {
-        const { horizontal: { delta: horizDelta }, vertical: { delta: vertDelta } } = snapInfo;
-        const projSnapDelta = new paper.Point(
-          isFinite(horizDelta) ? -horizDelta : 0,
-          isFinite(vertDelta) ? -vertDelta : 0,
-        );
+        const projSnapDelta = new paper.Point(snapInfo.projSnapDelta);
         if (!projSnapDelta.isZero()) {
           const shouldScaleAboutCenter = event.modifiers.alt;
           const vpFixedPivot = shouldScaleAboutCenter ? this.vpInitialCenter : this.vpInitialPivot;
@@ -137,7 +133,19 @@ export class ScaleItemsGesture extends Gesture {
       }
     }
 
-    this.ps.setSnapGuideInfo(shouldSnap ? this.buildSnapGuideInfo() : undefined);
+    if (shouldSnap) {
+      const snapInfo = this.buildSnapInfo();
+      if (snapInfo) {
+        this.ps.setSnapGuideInfo({
+          guides: snapInfo.guides.map(g => this.projToVpLine(g)),
+          rulers: snapInfo.rulers.map(r => this.projToVpLine(r)),
+        });
+      } else {
+        this.ps.setSnapGuideInfo(undefined);
+      }
+    } else {
+      this.ps.setSnapGuideInfo(undefined);
+    }
   }
 
   private scaleItems(
@@ -219,21 +227,10 @@ export class ScaleItemsGesture extends Gesture {
     );
   }
 
-  // TODO: reuse this code with SelectDragCloneItemsGesture
-  private buildSnapGuideInfo(): SnapGuideInfo {
-    const projToVpFn = ({ from, to }: Line) => {
-      return {
-        from: this.pl.globalToLocal(new paper.Point(from)),
-        to: this.pl.globalToLocal(new paper.Point(to)),
-      };
-    };
-    const snapInfo = this.buildSnapInfo();
-    if (!snapInfo) {
-      return undefined;
-    }
+  private projToVpLine({ from, to }: Line) {
     return {
-      guides: SnapUtil.buildGuides(snapInfo).map(projToVpFn),
-      rulers: SnapUtil.buildRulers(snapInfo).map(projToVpFn),
+      from: this.pl.globalToLocal(new paper.Point(from)),
+      to: this.pl.globalToLocal(new paper.Point(to)),
     };
   }
 }

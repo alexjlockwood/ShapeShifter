@@ -191,16 +191,18 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
         }),
       ];
 
-      this.ps.setSnapGuideInfo({
-        guides: SnapUtil.buildGuides(
-          SnapUtil.computeSnapInfo([dragSnapPoint], siblingSnapPointsTable),
-        ).map(({ from, to }: Line) => {
-          from = this.pl.globalToLocal(new paper.Point(from));
-          to = this.pl.globalToLocal(new paper.Point(to));
-          return { from, to };
-        }),
-        rulers: [],
-      });
+      // TODO: snap this stuff like we do in the other gestures!
+      const snapInfo = SnapUtil.computeSnapInfo([dragSnapPoint], siblingSnapPointsTable);
+      if (snapInfo) {
+        this.ps.setSnapGuideInfo({
+          guides: snapInfo.guides.map(({ from, to }: Line) => {
+            from = this.pl.globalToLocal(new paper.Point(from));
+            to = this.pl.globalToLocal(new paper.Point(to));
+            return { from, to };
+          }),
+          rulers: [],
+        });
+      }
     } else {
       // Then we have just added a segment to the path in onMouseDown()
       // and should thus move the segment's handles onMouseDrag().

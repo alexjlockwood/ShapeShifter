@@ -64,21 +64,19 @@ export class SelectDragCloneItemsGesture extends Gesture {
     // TODO: this could be WAY more efficient (no need to drag/snap things twice)
     const snapInfo = this.buildSnapInfo();
     if (snapInfo) {
-      const {
-        horizontal: { delta: horizontalDelta },
-        vertical: { delta: verticalDelta },
-      } = snapInfo;
-      const projSnapDelta = new paper.Point(
-        isFinite(horizontalDelta) ? -horizontalDelta : 0,
-        isFinite(verticalDelta) ? -verticalDelta : 0,
-      );
+      const projSnapDelta = new paper.Point(snapInfo.projSnapDelta);
       if (!projSnapDelta.isZero()) {
         newVl = this.dragItems(newVl, event.downPoint, event.downPoint.add(projSnapDelta));
         this.ps.setVectorLayer(newVl);
       }
+      const updatedSnapInfo = this.buildSnapInfo();
+      this.ps.setSnapGuideInfo({
+        guides: updatedSnapInfo.guides.map(g => this.projToVpLine(g)),
+        rulers: updatedSnapInfo.rulers.map(r => this.projToVpLine(r)),
+      });
+    } else {
+      this.ps.setSnapGuideInfo(undefined);
     }
-
-    this.ps.setSnapGuideInfo(this.buildSnapGuideInfo());
   }
 
   private dragItems(
@@ -127,38 +125,17 @@ export class SelectDragCloneItemsGesture extends Gesture {
     );
   }
 
-  // TODO: reuse this code with ScaleItemsGesture
-  private buildSnapGuideInfo(): SnapGuideInfo {
-    const projToVpFn = ({ from, to }: Line) => {
-      return {
-        from: this.pl.globalToLocal(new paper.Point(from)),
-        to: this.pl.globalToLocal(new paper.Point(to)),
-      };
-    };
-    // TODO: use snap info to snap distances between bounds!
-    // TODO: use snap info to snap distances between bounds!
-    // TODO: use snap info to snap distances between bounds!
-    // TODO: use snap info to snap distances between bounds!
-    // TODO: use snap info to snap distances between bounds!
-    // TODO: use snap info to snap distances between bounds!
-    // TODO: use snap info to snap distances between bounds!
-    // TODO: use snap info to snap distances between bounds!
-    // TODO: use snap info to snap distances between bounds!
-    // TODO: use snap info to snap distances between bounds!
-    const snapInfo = this.buildSnapInfo();
-    if (!snapInfo) {
-      return undefined;
-    }
-    return {
-      guides: SnapUtil.buildGuides(snapInfo).map(projToVpFn),
-      rulers: SnapUtil.buildRulers(snapInfo).map(projToVpFn),
-    };
-  }
-
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     this.ps.setSnapGuideInfo(undefined);
     CursorUtil.clear();
+  }
+
+  private projToVpLine({ from, to }: Line) {
+    return {
+      from: this.pl.globalToLocal(new paper.Point(from)),
+      to: this.pl.globalToLocal(new paper.Point(to)),
+    };
   }
 }
 
