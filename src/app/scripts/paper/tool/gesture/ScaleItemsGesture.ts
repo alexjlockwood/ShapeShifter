@@ -228,6 +228,9 @@ export class ScaleItemsGesture extends Gesture {
       };
     };
     const snapInfo = this.buildSnapInfo();
+    if (!snapInfo) {
+      return undefined;
+    }
     return {
       guides: SnapUtil.buildGuides(snapInfo).map(projToVpFn),
       rulers: SnapUtil.buildRulers(snapInfo).map(projToVpFn),
