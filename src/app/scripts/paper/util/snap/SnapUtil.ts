@@ -114,27 +114,28 @@ function runSnapTest<T extends Direction>(
 ): Values<SnapPair> & Delta {
   const { coord } = CONSTANTS[dir];
   const snapPairResults: (SnapPair & Delta)[] = [];
-  dsb.snapPoints.forEach((dragPoint, dragIndex) => {
-    if (snapToDimensions) {
-      const getSnapBoundsSize = (sb: SnapBounds) => {
-        const min = _.minBy(sb.snapPoints, p => p[coord])[coord];
-        const max = _.maxBy(sb.snapPoints, p => p[coord])[coord];
-        return max - min;
-      };
-      const dsbSize = getSnapBoundsSize(dsb);
-      const ssbSize = getSnapBoundsSize(ssb);
-      // TODO: improve this snap pair API stuff?
-      snapPairResults.push({
-        isDimensionSnap: true,
-        delta: MathUtil.round(dsbSize - ssbSize),
-      });
-    } else {
+  if (snapToDimensions) {
+    const getSnapBoundsSize = (sb: SnapBounds) => {
+      const min = _.minBy(sb.snapPoints, p => p[coord])[coord];
+      const max = _.maxBy(sb.snapPoints, p => p[coord])[coord];
+      return max - min;
+    };
+    const dsbSize = getSnapBoundsSize(dsb);
+    const ssbSize = getSnapBoundsSize(ssb);
+    // TODO: improve this snap pair API stuff?
+    snapPairResults.push({
+      isDimensionSnap: true,
+      delta: MathUtil.round(dsbSize - ssbSize),
+    });
+  } else {
+    dsb.snapPoints.forEach((dragPoint, dragIndex) => {
       ssb.snapPoints.forEach((siblingPoint, siblingIndex) => {
         const delta = MathUtil.round(dragPoint[coord] - siblingPoint[coord]);
         snapPairResults.push({ dragIndex, siblingIndex, delta });
       });
-    }
-  });
+    });
+  }
+
   return filterByMinDelta(snapPairResults);
 }
 
