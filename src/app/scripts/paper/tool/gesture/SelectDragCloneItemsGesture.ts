@@ -58,7 +58,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
     }
 
     let newVl = this.initialVectorLayer.clone();
-    newVl = this.dragItems(newVl, event.point.subtract(event.downPoint), event.modifiers.shift);
+    newVl = this.dragItems(newVl, event.downPoint, event.point, event.modifiers.shift);
     this.ps.setVectorLayer(newVl);
 
     // TODO: this could be WAY more efficient (no need to drag/snap things twice)
@@ -68,12 +68,12 @@ export class SelectDragCloneItemsGesture extends Gesture {
         horizontal: { delta: horizontalDelta },
         vertical: { delta: verticalDelta },
       } = snapInfo;
-      const projectSnapDelta = new paper.Point(
+      const projSnapDelta = new paper.Point(
         isFinite(horizontalDelta) ? -horizontalDelta : 0,
         isFinite(verticalDelta) ? -verticalDelta : 0,
       );
-      if (!projectSnapDelta.isZero()) {
-        newVl = this.dragItems(newVl, projectSnapDelta);
+      if (!projSnapDelta.isZero()) {
+        newVl = this.dragItems(newVl, event.downPoint, event.downPoint.add(projSnapDelta));
         this.ps.setVectorLayer(newVl);
       }
     }
@@ -81,10 +81,15 @@ export class SelectDragCloneItemsGesture extends Gesture {
     this.ps.setSnapGuideInfo(this.buildSnapGuideInfo());
   }
 
-  private dragItems(newVl: VectorLayer, projectDelta: paper.Point, shouldSnapDelta = false) {
+  private dragItems(
+    newVl: VectorLayer,
+    projDownPoint: paper.Point,
+    projPoint: paper.Point,
+    shouldSnapDelta = false,
+  ) {
     Array.from(this.ps.getSelectedLayers()).forEach(layerId => {
       const item = this.pl.findItemByLayerId(layerId);
-      const localDelta = item.globalToLocal(projectDelta);
+      const localDelta = item.globalToLocal(projPoint).subtract(item.globalToLocal(projDownPoint));
       const localFinalDelta = shouldSnapDelta
         ? new paper.Point(MathUtil.snapVectorToAngle(localDelta, 90))
         : localDelta;
