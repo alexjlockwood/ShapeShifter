@@ -67,12 +67,10 @@ function snapToSiblings(
     readonly ssb: SnapBounds;
     readonly values: ReadonlyArray<SnapPair>;
   }
-  const result = {
+  return {
     horizontal: filterByMinDelta<SnapResultInDirection>(ssrs.map(r => r.horizontal)),
     vertical: filterByMinDelta<SnapResultInDirection>(ssrs.map(r => r.vertical)),
   };
-  console.log(ssrs, result);
-  return result;
 }
 
 /**
