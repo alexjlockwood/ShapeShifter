@@ -1,7 +1,7 @@
 /* tslint:disable */
 
 import * as csstree from 'css-tree';
-import * as  specificity from 'csso/lib/restructure/prepare/specificity';
+import * as specificity from 'csso/lib/restructure/prepare/specificity';
 import * as stable from 'stable';
 
 const List = csstree.List;
@@ -15,7 +15,7 @@ const List = csstree.List;
 export function flattenToSelectors(cssAst) {
   var selectors = [];
 
-  csstree.walkRules(cssAst, function (node) {
+  csstree.walkRules(cssAst, function(node) {
     if (node.type !== 'Rule') {
       return;
     }
@@ -23,20 +23,22 @@ export function flattenToSelectors(cssAst) {
     var atrule = this.atrule;
     var rule = node;
 
-    node.selector.children.each(function (selectorNode, selectorItem) {
+    node.selector.children.each(function(selectorNode, selectorItem) {
       var selector = {
         item: selectorItem,
         atrule: atrule,
         rule: rule,
-        pseudos: []
+        pseudos: [],
       };
 
-      selectorNode.children.each(function (selectorChildNode, selectorChildItem, selectorChildList) {
-        if (selectorChildNode.type === 'PseudoClassSelector' ||
-          selectorChildNode.type === 'PseudoElementSelector') {
+      selectorNode.children.each(function(selectorChildNode, selectorChildItem, selectorChildList) {
+        if (
+          selectorChildNode.type === 'PseudoClassSelector' ||
+          selectorChildNode.type === 'PseudoElementSelector'
+        ) {
           selector.pseudos.push({
             item: selectorChildItem,
-            list: selectorChildList
+            list: selectorChildList,
           });
         }
       });
@@ -56,7 +58,7 @@ export function flattenToSelectors(cssAst) {
  * @return {Array} Filtered selectors that match the passed media queries
  */
 export function filterByMqs(selectors, useMqs) {
-  return selectors.filter(function (selector) {
+  return selectors.filter(function(selector) {
     if (selector.atrule === null) {
       return ~useMqs.indexOf('');
     }
@@ -80,12 +82,14 @@ export function filterByMqs(selectors, useMqs) {
  * @return {Array} Filtered selectors that match the passed pseudo-elements and/or -classes
  */
 export function filterByPseudos(selectors, usePseudos) {
-  return selectors.filter(function (selector) {
+  return selectors.filter(function(selector) {
     var pseudoSelectorsStr = csstree.translate({
       type: 'Selector',
-      children: new List().fromArray(selector.pseudos.map(function (pseudo) {
-        return pseudo.item.data;
-      }))
+      children: new List().fromArray(
+        selector.pseudos.map(function(pseudo) {
+          return pseudo.item.data;
+        }),
+      ),
     });
     return ~usePseudos.indexOf(pseudoSelectorsStr);
   });
@@ -98,13 +102,12 @@ export function filterByPseudos(selectors, usePseudos) {
  * @return {Array} Selectors without pseudo-elements and/or -classes
  */
 export function cleanPseudos(selectors) {
-  selectors.forEach(function (selector) {
-    selector.pseudos.forEach(function (pseudo) {
+  selectors.forEach(function(selector) {
+    selector.pseudos.forEach(function(pseudo) {
       pseudo.list.remove(pseudo.item);
     });
   });
 }
-
 
 /**
  * Compares two selector specificities.
@@ -126,7 +129,6 @@ export function compareSpecificity(aSpecificity, bSpecificity) {
   return 0;
 }
 
-
 /**
  * Compare two simple selectors.
  *
@@ -144,7 +146,6 @@ function _bySelectorSpecificity(selectorA, selectorB) {
   return compareSimpleSelectorNode(selectorA.item.data, selectorB.item.data);
 }
 
-
 /**
  * Sort selectors stably by their specificity.
  *
@@ -155,7 +156,6 @@ export function sortSelectors(selectors) {
   return stable(selectors, _bySelectorSpecificity);
 }
 
-
 /**
  * Convert a css-tree AST style declaration to CSSStyleDeclaration property.
  *
@@ -165,14 +165,13 @@ export function sortSelectors(selectors) {
 export function csstreeToStyleDeclaration(declaration) {
   var propertyName = declaration.property,
     propertyValue = csstree.translate(declaration.value),
-    propertyPriority = (declaration.important ? 'important' : '');
+    propertyPriority = declaration.important ? 'important' : '';
   return {
     name: propertyName,
     value: propertyValue,
-    priority: propertyPriority
+    priority: propertyPriority,
   };
 }
-
 
 /**
  * Gets the CSS string of a style element

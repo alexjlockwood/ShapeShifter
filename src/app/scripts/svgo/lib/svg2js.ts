@@ -13,7 +13,7 @@ var config = {
   normalize: true,
   lowercase: true,
   xmlns: true,
-  position: true
+  position: true,
 };
 
 /**
@@ -23,7 +23,6 @@ var config = {
  * @param {Function} callback
  */
 export function svg2js(data, callback) {
-
   var sax = SAX.parser(config.strict, config),
     root = new JSAPI({ elem: '#document' }, undefined),
     current = root,
@@ -32,19 +31,16 @@ export function svg2js(data, callback) {
     parsingError = false;
 
   function pushToContent(content) {
-
     content = new JSAPI(content, current);
 
     (current.content = current.content || []).push(content);
 
     return content;
-
   }
 
-  sax.ondoctype = function (doctype) {
-
+  sax.ondoctype = function(doctype) {
     pushToContent({
-      doctype: doctype
+      doctype: doctype,
     });
 
     var subsetStart = doctype.indexOf('['),
@@ -59,46 +55,38 @@ export function svg2js(data, callback) {
     }
   };
 
-  sax.onprocessinginstruction = function (data) {
-
+  sax.onprocessinginstruction = function(data) {
     pushToContent({
-      processinginstruction: data
+      processinginstruction: data,
     });
-
   };
 
-  sax.oncomment = function (comment) {
-
+  sax.oncomment = function(comment) {
     pushToContent({
-      comment: comment.trim()
+      comment: comment.trim(),
     });
-
   };
 
-  sax.oncdata = function (cdata) {
-
+  sax.oncdata = function(cdata) {
     pushToContent({
-      cdata: cdata
+      cdata: cdata,
     });
-
   };
 
-  sax.onopentag = function (data) {
-
+  sax.onopentag = function(data) {
     var elem: any = {
       elem: data.name,
       prefix: data.prefix,
-      local: data.local
+      local: data.local,
     };
     elem.style = new CSSStyleDeclaration(elem);
 
     if (Object.keys(data.attributes).length) {
       elem.attrs = {};
 
-
       for (var name in data.attributes) {
-
-        if (name === 'style') { // has style attribute
+        if (name === 'style') {
+          // has style attribute
           elem.style.hasStyle();
         }
 
@@ -106,7 +94,7 @@ export function svg2js(data, callback) {
           name: name,
           value: data.attributes[name].value,
           prefix: data.attributes[name].prefix,
-          local: data.attributes[name].local
+          local: data.attributes[name].local,
         };
       }
     }
@@ -120,26 +108,19 @@ export function svg2js(data, callback) {
     }
 
     stack.push(elem);
-
   };
 
-  sax.ontext = function (text) {
-
+  sax.ontext = function(text) {
     if (/\S/.test(text) || textContext) {
-
-      if (!textContext)
-        text = text.trim();
+      if (!textContext) text = text.trim();
 
       pushToContent({
-        text: text
+        text: text,
       });
-
     }
-
   };
 
-  sax.onclosetag = function () {
-
+  sax.onclosetag = function() {
     var last = stack.pop();
 
     // Trim text inside <text> tag.
@@ -148,26 +129,21 @@ export function svg2js(data, callback) {
       textContext = null;
     }
     current = stack[stack.length - 1];
-
   };
 
-  sax.onerror = function (e) {
-
+  sax.onerror = function(e) {
     e.message = 'Error in parsing SVG: ' + e.message;
     if (e.message.indexOf('Unexpected end') < 0) {
       throw e;
     }
-
   };
 
-  sax.onend = function () {
-
+  sax.onend = function() {
     if (!this.error) {
       callback(root);
     } else {
       callback({ error: this.error.message });
     }
-
   };
 
   try {
@@ -191,7 +167,5 @@ export function svg2js(data, callback) {
     if (end && end.text) end.text = end.text.replace(/\s+$/, '');
 
     return elem;
-
   }
-
-};
+}
