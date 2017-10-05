@@ -95,9 +95,11 @@ export function optimize(svgText: string, callback: (optimizedSvgText: string) =
       callback(undefined);
       return;
     }
-    callback(js2svg(executePlugins(svgJs, batchedSvgoPlugins), {
-      indent: '  ',
-      pretty: true,
-    }).data);
+    callback(
+      js2svg(executePlugins(svgJs, batchedSvgoPlugins), {
+        indent: '  ',
+        pretty: true,
+      }).data,
+    );
   });
 }

@@ -10,7 +10,7 @@
  * @return {Object} output data
  */
 export function executePlugins(data, plugins) {
-  plugins.forEach(function (group) {
+  plugins.forEach(function(group) {
     switch (group[0].type) {
       case 'perItem':
         data = perItem(data, group);
@@ -36,7 +36,7 @@ export function executePlugins(data, plugins) {
  */
 function perItem(data, plugins, reverse = false) {
   function monkeys(items) {
-    items.content = items.content.filter(function (item) {
+    items.content = items.content.filter(function(item) {
       // Reverse pass.
       if (reverse && item.content) {
         monkeys(item);
@@ -56,7 +56,6 @@ function perItem(data, plugins, reverse = false) {
       return filter;
     });
     return items;
-
   }
   return monkeys(data);
 }
@@ -69,7 +68,7 @@ function perItem(data, plugins, reverse = false) {
  * @return {Object} output data
  */
 function full(data, plugins) {
-  plugins.forEach(function (plugin) {
+  plugins.forEach(function(plugin) {
     if (plugin.active) {
       data = plugin.fn(data, plugin.params);
     }
