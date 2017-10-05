@@ -8,6 +8,7 @@ import {
   MatMenuModule,
   MatTooltipModule,
 } from '@angular/material';
+import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { By } from '@angular/platform-browser';
 import { ActionModeService, LayerTimelineService } from 'app/services';
@@ -39,6 +40,7 @@ describe('LayerListTreeComponent', () => {
           { provide: Store, useValue: new MockStore() },
           ActionModeService,
           LayerTimelineService,
+          { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
         ],
       }).compileComponents();
       loadSvgIcons([
