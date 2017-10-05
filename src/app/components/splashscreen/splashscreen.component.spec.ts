@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 import { HttpModule } from '@angular/http';
 import { MatIconModule, MatIconRegistry } from '@angular/material';
+import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { DomSanitizer } from '@angular/platform-browser';
 
 import { SplashScreenComponent } from './splashscreen.component';
@@ -14,6 +15,7 @@ describe('SplashScreenComponent', () => {
       TestBed.configureTestingModule({
         declarations: [SplashScreenComponent],
         imports: [HttpModule, MatIconModule],
+        providers: [{ provide: MATERIAL_COMPATIBILITY_MODE, useValue: true }],
       }).compileComponents();
       loadSvgIcons([{ name: 'shapeshifter', path: 'assets/shapeshifter.svg' }]);
     }),

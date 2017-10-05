@@ -10,6 +10,7 @@ import {
   MatSnackBarModule,
   MatTooltipModule,
 } from '@angular/material';
+import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.directive';
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
@@ -72,6 +73,7 @@ describe('LayerTimelineComponent', () => {
           ShortcutService,
           SnackBarService,
           ThemeService,
+          { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
         ],
       }).compileComponents();
       loadSvgIcons([

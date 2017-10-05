@@ -10,6 +10,7 @@ import {
   MatSlideToggleModule,
   MatTooltipModule,
 } from '@angular/material';
+import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActionModeService, LayerTimelineService, ThemeService } from 'app/services';
@@ -42,6 +43,7 @@ describe('ToolbarComponent', () => {
           ActionModeService,
           LayerTimelineService,
           ThemeService,
+          { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
         ],
       }).compileComponents();
       loadSvgIcons([

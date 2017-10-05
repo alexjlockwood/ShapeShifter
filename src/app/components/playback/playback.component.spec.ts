@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed, async, fakeAsync, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatButtonModule, MatIconModule, MatTooltipModule } from '@angular/material';
+import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { By } from '@angular/platform-browser';
 import { AnimatorService } from 'app/services/animator.service';
 import { PlaybackService } from 'app/services/playback.service';
@@ -24,6 +25,7 @@ describe('PlaybackComponent', () => {
           { provide: Store, useValue: new MockStore() },
           AnimatorService,
           PlaybackService,
+          { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
         ],
       }).compileComponents();
     }),
