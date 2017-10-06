@@ -1,5 +1,5 @@
 import { ToolMode } from 'app/model/paper';
-import { HitTests, PaperLayer } from 'app/scripts/paper/item';
+import { HitTests } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
