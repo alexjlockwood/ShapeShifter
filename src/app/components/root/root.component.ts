@@ -2,6 +2,7 @@ import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
 import 'rxjs/add/operator/map';
 
+import { OverlayContainer } from '@angular/cdk/overlay';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -12,7 +13,6 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { OverlayContainer } from '@angular/material';
 import { DropFilesAction } from 'app/components/dialogs';
 import { ActionMode, ActionSource } from 'app/model/actionmode';
 import { DestroyableMixin } from 'app/scripts/mixins';
