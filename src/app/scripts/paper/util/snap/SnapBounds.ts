@@ -29,9 +29,6 @@ export class SnapBounds {
     const top = b1 < t2;
     const right = r1 < l2;
     const bottom = b2 < t1;
-    const distFn = (x1: number, y1: number, x2: number, y2: number) => {
-      return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-    };
     let line: Line;
     if (top && left) {
       line = { from: { x: l1, y: b1 }, to: { x: r2, y: t2 } };

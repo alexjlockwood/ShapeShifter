@@ -21,6 +21,18 @@ import { Gesture } from './Gesture';
  *   the user can create new segments by clicking on the canvas).
  */
 export class SelectDragDrawSegmentsGesture extends Gesture {
+  private readonly pl = paper.project.activeLayer as PaperLayer;
+
+  // Maps segment indices to each segment's starting position.
+  private mouseDownSelectedSegmentIndexMap: ReadonlyMap<number, paper.Point>;
+  // The location of the last mouse event in the focused path's local coordinates.
+  private localLastPoint: paper.Point;
+  // True if we should exit focused path mode on the next mouse up event.
+  private exitFocusedPathModeOnMouseUp = false;
+  // If this gesture was used to split a curve, this tells us the index of the
+  // new segment that was created in onMouseDown().
+  private newSplitCurveSegmentIndex: number;
+
   /** Static factory method to use when the user's mouse down hits a segment. */
   static hitSegment(ps: PaperService, focusedPathId: string, segmentIndex: number) {
     return new SelectDragDrawSegmentsGesture(ps, focusedPathId, { segmentIndex });
@@ -35,18 +47,6 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
   static miss(ps: PaperService, focusedPathId: string) {
     return new SelectDragDrawSegmentsGesture(ps, focusedPathId);
   }
-
-  private readonly pl = paper.project.activeLayer as PaperLayer;
-
-  // Maps segment indices to each segment's starting position.
-  private mouseDownSelectedSegmentIndexMap: ReadonlyMap<number, paper.Point>;
-  // The location of the last mouse event in the focused path's local coordinates.
-  private localLastPoint: paper.Point;
-  // True if we should exit focused path mode on the next mouse up event.
-  private exitFocusedPathModeOnMouseUp = false;
-  // If this gesture was used to split a curve, this tells us the index of the
-  // new segment that was created in onMouseDown().
-  private newSplitCurveSegmentIndex: number;
 
   private constructor(
     private readonly ps: PaperService,

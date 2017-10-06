@@ -12,10 +12,10 @@ import {
   getSelectionBox,
   getSnapGuideInfo,
   getSplitCurveInfo,
+  getToolMode,
   getTooltipInfo,
   getZoomPanInfo,
 } from 'app/store/paper/selectors';
-import { getToolMode } from 'app/store/paper/selectors';
 import * as paper from 'paper';
 
 import { MasterTool } from './tool';

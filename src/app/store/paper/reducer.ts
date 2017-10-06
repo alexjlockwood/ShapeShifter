@@ -1,7 +1,8 @@
 import { CanvasCursor, ToolMode } from 'app/model/paper';
 
-import { ActionType, Actions } from './actions';
 import {
+  ActionType,
+  Actions,
   CreatePathInfo,
   FocusedPathInfo,
   SelectionBox,

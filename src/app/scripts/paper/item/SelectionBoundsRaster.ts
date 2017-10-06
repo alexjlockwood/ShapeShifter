@@ -14,6 +14,8 @@ const PIVOT_TYPES: ReadonlyArray<PivotType> = [
 
 export class SelectionBoundsRaster extends paper.Raster {
   private static instance: SelectionBoundsRaster;
+  private pivotType_: PivotType;
+  private oppositePivotType_: PivotType;
 
   static of(pivotType: PivotType, center: paper.Point) {
     if (!SelectionBoundsRaster.instance) {
@@ -25,9 +27,6 @@ export class SelectionBoundsRaster extends paper.Raster {
     raster.oppositePivotType_ = getOppositePivotType(pivotType);
     return raster;
   }
-
-  private pivotType_: PivotType;
-  private oppositePivotType_: PivotType;
 
   constructor() {
     super(`/assets/handle.png`);

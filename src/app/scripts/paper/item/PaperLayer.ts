@@ -548,18 +548,18 @@ function newSplitCurveItem(info: SplitCurveInfo, cssScaling: number) {
   return group;
 }
 
-function newTooltipItem(info: TooltipInfo, cssScaling: number) {
-  // TODO: use a better font (roboto?)
-  return new paper.PointText({
-    point: info.point,
-    content: info.label,
-    fillColor: 'red',
-    justification: 'left',
-    // TODO: text doesn't display when using font size of only 12?
-    fontSize: 20 / paper.view.zoom / cssScaling,
-    guide: true,
-  });
-}
+// function newTooltipItem(info: TooltipInfo, cssScaling: number) {
+//   // TODO: use a better font (roboto?)
+//   return new paper.PointText({
+//     point: info.point,
+//     content: info.label,
+//     fillColor: 'red',
+//     justification: 'left',
+//     // TODO: text doesn't display when using font size of only 12?
+//     fontSize: 20 / paper.view.zoom / cssScaling,
+//     guide: true,
+//   });
+// }
 
 function newSnapGuideItem(info: SnapGuideInfo, cssScaling: number) {
   const group = new paper.Group({ guide: true });

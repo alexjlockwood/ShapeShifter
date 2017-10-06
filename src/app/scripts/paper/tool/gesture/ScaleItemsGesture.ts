@@ -2,10 +2,9 @@ import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
-import { SelectionBoundsRaster } from 'app/scripts/paper/item';
 import { PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
-import { Line, SnapGuideInfo } from 'app/store/paper/actions';
+import { Line } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 

@@ -1,5 +1,4 @@
-import { MathUtil } from 'app/scripts/common';
-import { Point } from 'app/scripts/common';
+import { MathUtil, Point } from 'app/scripts/common';
 import { Line } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 

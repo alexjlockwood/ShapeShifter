@@ -12,13 +12,11 @@ import {
   HoverItemsGesture,
   HoverSegmentsCurvesGesture,
   PencilGesture,
-  RotateItemsGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
   SetFocusedPathGesture,
-  TransformPathsGesture,
 } from 'app/scripts/paper/tool/gesture';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';

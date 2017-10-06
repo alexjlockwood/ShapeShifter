@@ -1,5 +1,4 @@
-import { getAppState } from 'app/store/selectors';
-import { createDeepEqualSelector } from 'app/store/selectors';
+import { createDeepEqualSelector, getAppState } from 'app/store/selectors';
 import { createSelector } from 'reselect';
 
 const getPaperState = createSelector(getAppState, s => s.paper);

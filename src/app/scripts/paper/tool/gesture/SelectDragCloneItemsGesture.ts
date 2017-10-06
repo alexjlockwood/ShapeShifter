@@ -3,7 +3,7 @@ import { MathUtil, Matrix } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
-import { Line, SnapGuideInfo } from 'app/store/paper/actions';
+import { Line } from 'app/store/paper/actions';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
