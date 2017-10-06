@@ -160,12 +160,7 @@ function downloadFile(content: string | Blob, fileName: string) {
   const anchor = $('<a>')
     .hide()
     .appendTo(document.body);
-  let blob: Blob;
-  if (content instanceof Blob) {
-    blob = content;
-  } else {
-    blob = new Blob([content], { type: 'octet/stream' });
-  }
+  const blob = content instanceof Blob ? content : new Blob([content], { type: 'octet/stream' });
   const url = window.URL.createObjectURL(blob);
   anchor.attr({ href: url, download: fileName });
   anchor.get(0).click();

@@ -20,8 +20,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/model/layers';
-import { Command } from 'app/model/paths';
-import { HitResult, Path, SubPath } from 'app/model/paths';
+import { Command, HitResult, Path, SubPath } from 'app/model/paths';
 import { MathUtil, Matrix, Point } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
@@ -204,11 +203,8 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
           } else {
             this.segmentSplitter = undefined;
           }
-          if (this.actionMode === ActionMode.Selection) {
-            this.selectionHelper = new SelectionHelper(this);
-          } else {
-            this.selectionHelper = undefined;
-          }
+          this.selectionHelper =
+            this.actionMode === ActionMode.Selection ? new SelectionHelper(this) : undefined;
           if (this.actionMode === ActionMode.PairSubPaths) {
             this.pairSubPathHelper = new PairSubPathHelper(this);
             const selections = this.actionSelections.filter(s => s.type === SelectionType.SubPath);
@@ -220,11 +216,10 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
           } else {
             this.pairSubPathHelper = undefined;
           }
-          if (this.actionMode === ActionMode.SplitSubPaths && layer && layer.isFilled()) {
-            this.shapeSplitter = new ShapeSplitter(this);
-          } else {
-            this.shapeSplitter = undefined;
-          }
+          this.shapeSplitter =
+            this.actionMode === ActionMode.SplitSubPaths && layer && layer.isFilled()
+              ? new ShapeSplitter(this)
+              : undefined;
           this.currentHoverPreviewPath = undefined;
           this.draw();
         }),

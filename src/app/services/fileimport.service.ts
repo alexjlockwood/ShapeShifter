@@ -134,6 +134,7 @@ export class FileImportService {
             break;
           default:
             alert('An error occurred reading this file');
+            break;
         }
         numErrors++;
         maybeAddVectorLayersFn();

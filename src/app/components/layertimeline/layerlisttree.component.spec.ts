@@ -9,8 +9,7 @@ import {
   MatTooltipModule,
 } from '@angular/material';
 import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
-import { DomSanitizer } from '@angular/platform-browser';
-import { By } from '@angular/platform-browser';
+import { By, DomSanitizer } from '@angular/platform-browser';
 import { ActionModeService, LayerTimelineService } from 'app/services';
 import { Store } from 'app/store';
 import { State as LayerState } from 'app/store/layers/reducer';

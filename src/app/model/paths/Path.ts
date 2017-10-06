@@ -19,11 +19,7 @@ export class Path {
   private pathString: string;
 
   constructor(obj: string | Command[] | PathState) {
-    if (typeof obj === 'string' || Array.isArray(obj)) {
-      this.ps = new PathState(obj);
-    } else {
-      this.ps = obj;
-    }
+    this.ps = typeof obj === 'string' || Array.isArray(obj) ? new PathState(obj) : obj;
     if (!environment.production) {
       // Don't initialize variables lazily for dev builds (to avoid
       // ngrx-store-freeze crashes).
