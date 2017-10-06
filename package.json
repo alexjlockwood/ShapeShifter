@@ -50,6 +50,7 @@
     "sax": "^1.2.4",
     "stable": "^0.1.6",
     "tinycolor2": "^1.4.1",
+    "tslib": "^1.7.1",
     "web-animations-js": "^2.3.1",
     "whet.extend": "~0.9.9",
     "zone.js": "^0.8.17"
@@ -58,7 +59,6 @@
     "@angular/cli": "^1.4.5",
     "@angular/compiler-cli": "^4.4.4",
     "@angular/language-service": "^4.4.4",
-    "@types/es6-promise": "0.0.33",
     "@types/google.analytics": "0.0.35",
     "@types/hammerjs": "^2.0.35",
     "@types/jasmine": "^2.5.54",
