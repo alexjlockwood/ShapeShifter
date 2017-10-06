@@ -5,7 +5,7 @@ import { Property } from 'app/model/properties';
  * V is the property value type (number, string, or path).
  */
 export class InspectedProperty<V> {
-  public readonly typeName: string;
+  readonly typeName: string;
 
   constructor(
     // The model object being inspected (a layer, animation, or animation block).

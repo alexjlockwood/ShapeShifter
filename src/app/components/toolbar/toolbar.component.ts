@@ -240,15 +240,11 @@ class ToolbarData {
         this.unpairedSubPathSource = unpair.source;
       }
     }
-    if (
+    this.showPairSubPaths =
       startMorphableLayer.pathData.getSubPaths().length === 1 &&
       endMorphableLayer.pathData.getSubPaths().length === 1
-    ) {
-      this.showPairSubPaths = false;
-    } else {
-      this.showPairSubPaths =
-        this.getNumSubPaths() === 1 || this.getNumSegments() > 0 || !this.isSelectionMode();
-    }
+        ? false
+        : this.getNumSubPaths() === 1 || this.getNumSegments() > 0 || !this.isSelectionMode();
   }
 
   getNumSelections() {

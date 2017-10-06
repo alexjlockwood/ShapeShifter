@@ -32,13 +32,7 @@ export class PathProperty extends Property<Path> {
       model[`${propertyName}_`] = undefined;
       return;
     }
-    let pathData: Path;
-    if (typeof value === 'string') {
-      pathData = new Path(value);
-    } else {
-      pathData = value;
-    }
-    model[`${propertyName}_`] = pathData;
+    model[`${propertyName}_`] = typeof value === 'string' ? new Path(value) : value;
   }
 
   // @Override
