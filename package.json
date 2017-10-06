@@ -50,6 +50,7 @@
     "sax": "^1.2.4",
     "stable": "^0.1.6",
     "tinycolor2": "^1.4.1",
+    "web-animations-js": "^2.3.1",
     "whet.extend": "~0.9.9",
     "zone.js": "^0.8.17"
   },
