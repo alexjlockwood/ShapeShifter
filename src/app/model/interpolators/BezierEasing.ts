@@ -1,35 +1,37 @@
 const NEWTON_ITERATIONS = 4;
-const NEWTON_MIN_SLOPE = 0.001;
-const SUBDIVISION_PRECISION = 0.0000001;
+const NEWTON_MIN_SLOPE = 1e-3;
+const SUBDIVISION_PRECISION = 1e-7;
 const SUBDIVISION_MAX_ITERATIONS = 10;
 const kSplineTableSize = 11;
 const kSampleStepSize = 1 / (kSplineTableSize - 1);
-const float32ArraySupported = typeof Float32Array === 'function';
+const isFloat32ArraySupported = typeof Float32Array === 'function';
 
 function A(aA1: number, aA2: number) {
   return 1 - 3 * aA2 + 3 * aA1;
 }
+
 function B(aA1: number, aA2: number) {
   return 3 * aA2 - 6 * aA1;
 }
+
 function C(aA1: number) {
   return 3 * aA1;
 }
 
-// Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
+/** Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2. */
 function calcBezier(aT: number, aA1: number, aA2: number) {
   return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
 }
 
-// Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
+/** Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2. */
 function getSlope(aT: number, aA1: number, aA2: number) {
   return 3 * A(aA1, aA2) * aT * aT + 2 * B(aA1, aA2) * aT + C(aA1);
 }
 
 function binarySubdivide(aX: number, aA: number, aB: number, mX1: number, mX2: number) {
-  let currentX,
-    currentT,
-    i = 0;
+  let currentX;
+  let currentT;
+  let i = 0;
   do {
     currentT = aA + (aB - aA) / 2;
     currentX = calcBezier(currentT, mX1, mX2) - aX;
@@ -60,7 +62,7 @@ export function create(mX1: number, mY1: number, mX2: number, mY2: number) {
   }
 
   // Precompute samples table
-  const sampleValues = float32ArraySupported
+  const sampleValues = isFloat32ArraySupported
     ? new Float32Array(kSplineTableSize)
     : new Array(kSplineTableSize);
   if (mX1 !== mY1 || mX2 !== mY2) {

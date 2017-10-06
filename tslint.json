@@ -23,7 +23,6 @@
       }
     ],
     "switch-final-break": [true, "always"],
-    "binary-expression-operand-order": true,
     "prefer-conditional-expression": true,
     "no-this-assignment": [true, { "allow-destructuring": true }],
     "no-arg": true,

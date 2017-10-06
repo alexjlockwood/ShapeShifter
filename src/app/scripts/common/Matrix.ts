@@ -71,19 +71,19 @@ export class Matrix {
    * matrix is not invertible.
    */
   invert(): Matrix | undefined {
-    const m = this;
-    let det = MathUtil.round(m.a * m.d - m.b * m.c);
+    const { a, b, c, d, e, f } = this;
+    let det = MathUtil.round(a * d - b * c);
     if (!det) {
       return undefined;
     }
     det = 1 / det;
     return new Matrix(
-      MathUtil.round(m.d * det),
-      MathUtil.round(-m.b * det),
-      MathUtil.round(-m.c * det),
-      MathUtil.round(m.a * det),
-      MathUtil.round((m.c * m.f - m.d * m.e) * det),
-      MathUtil.round((m.b * m.e - m.a * m.f) * det),
+      MathUtil.round(d * det),
+      MathUtil.round(-b * det),
+      MathUtil.round(-c * det),
+      MathUtil.round(a * det),
+      MathUtil.round((c * f - d * e) * det),
+      MathUtil.round((b * e - a * f) * det),
     );
   }
 
