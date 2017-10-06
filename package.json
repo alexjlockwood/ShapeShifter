@@ -54,7 +54,7 @@
     "zone.js": "^0.8.17"
   },
   "devDependencies": {
-    "@angular/cli": "^1.4.4",
+    "@angular/cli": "^1.4.5",
     "@angular/compiler-cli": "^4.4.4",
     "@angular/language-service": "^4.4.4",
     "@types/es6-promise": "0.0.33",
@@ -68,7 +68,7 @@
     "@types/polylabel": "^1.0.3",
     "@types/tinycolor2": "^1.4.0",
     "angular-cli-ghpages": "^0.5.1",
-    "codelyzer": "^3.2.0",
+    "codelyzer": "^3.2.1",
     "coveralls": "^3.0.0",
     "deep-freeze-strict": "^1.1.1",
     "jasmine-core": "^2.8.0",
