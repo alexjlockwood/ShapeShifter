@@ -100,7 +100,7 @@ export class CommandState {
    */
   slice(splitIdx: number) {
     const left = this.mutate().sliceLeft(splitIdx).build();
-    let right: CommandState = undefined;
+    let right: CommandState;
     if (this.isSplitAtIndex(splitIdx)) {
       right = this.mutate().sliceRight(splitIdx).build();
     }

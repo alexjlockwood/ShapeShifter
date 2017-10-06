@@ -230,7 +230,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
         }),
       );
       const updateCurrentHoverFn = (hover: Hover | undefined) => {
-        let previewPath: Path = undefined;
+        let previewPath: Path;
         if (this.vectorLayer && this.activePath && hover) {
           // If the user is hovering over the inspector split button, then build
           // a snapshot of what the path would look like after the action
@@ -630,7 +630,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
         continue;
       }
       let radius = this.smallPointRadius;
-      let text: string = undefined;
+      let text: string;
       const isHovering = isPointInfoHoveringFn({ cmd, subIdx, cmdIdx });
       const isAtLeastMedium = isPointInfoAtLeastMediumFn({ cmd, subIdx, cmdIdx });
       if ((isAtLeastMedium || isHovering) && this.actionMode === ActionMode.Selection) {

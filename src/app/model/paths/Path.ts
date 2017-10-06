@@ -1238,9 +1238,9 @@ function shiftCommandStates(css: CommandState[], isReversed: boolean, shiftOffse
   const newCss: CommandState[] = [];
 
   let counter = 0;
-  let targetCsIdx: number = undefined;
-  let targetSplitIdx: number = undefined;
-  let targetCs: CommandState = undefined;
+  let targetCsIdx: number;
+  let targetSplitIdx: number;
+  let targetCs: CommandState;
   for (let i = 0; i < css.length; i++) {
     const cs = css[i];
     const size = cs.getCommands().length;
