@@ -65,7 +65,7 @@
     "@types/jquery": "^3.2.13",
     "@types/jszip": "^3.1.0",
     "@types/lodash": "^4.14.77",
-    "@types/node": "^8.0.32",
+    "@types/node": "^8.0.33",
     "@types/polylabel": "^1.0.3",
     "@types/tinycolor2": "^1.4.0",
     "angular-cli-ghpages": "^0.5.1",
