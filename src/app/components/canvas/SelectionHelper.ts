@@ -1,7 +1,7 @@
 import { ActionSource, HoverType } from 'app/model/actionmode';
 import { LayerUtil } from 'app/model/layers';
 import { ProjectionOntoPath } from 'app/model/paths';
-import { MathUtil, Point } from 'app/scripts/common';
+import { MathUtil, Matrix, Point } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import * as _ from 'lodash';
@@ -284,11 +284,12 @@ export class SelectionHelper {
   * closest to the specified off-curve mouse point.
   */
   private calculateProjectionOntoPath(mousePoint: Point, restrictToSubIdx?: number) {
-    const transform = LayerUtil.getCanvasTransformForLayer(
+    const canvasTransforms = LayerUtil.getCanvasTransformsForLayer(
       this.component.vectorLayer,
       this.component.activePathLayer.id,
-    ).invert();
-    const transformedMousePoint = MathUtil.transformPoint(mousePoint, transform);
+    ).reverse();
+    const flattenedTransform = Matrix.flatten(canvasTransforms);
+    const transformedMousePoint = MathUtil.transformPoint(mousePoint, flattenedTransform);
     const projInfo = this.component.activePath.project(transformedMousePoint, restrictToSubIdx);
     if (!projInfo) {
       return undefined;

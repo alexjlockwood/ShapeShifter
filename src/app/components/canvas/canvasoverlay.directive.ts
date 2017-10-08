@@ -931,10 +931,10 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       }
       // TODO: use a user-defined type check to confirm this layer is an instance of MorphableLayer
       if ((layer instanceof PathLayer || layer instanceof ClipPathLayer) && layer.pathData) {
-        const transformedPoint = MathUtil.transformPoint(
-          point,
-          LayerUtil.getCanvasTransformForLayer(root, layer.id).invert(),
+        const flattenedTransform = Matrix.flatten(
+          LayerUtil.getCanvasTransformsForLayer(root, layer.id).reverse(),
         );
+        const transformedPoint = MathUtil.transformPoint(point, flattenedTransform);
         let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
         isSegmentInRangeFn = distance => {
           let maxDistance = 0;
@@ -958,11 +958,12 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
 
   // NOTE: this should only be used in action mode
   performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
-    const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
+    const canvasTransforms = LayerUtil.getCanvasTransformsForLayer(
       this.vectorLayer,
       this.blockLayerId,
-    );
-    const transformedMousePoint = MathUtil.transformPoint(mousePoint, flattenedTransform.invert());
+    ).reverse();
+    const flattenedTransform = Matrix.flatten(canvasTransforms);
+    const transformedMousePoint = MathUtil.transformPoint(mousePoint, flattenedTransform);
     let isPointInRangeFn: (distance: number, cmd: Command) => boolean;
     if (!opts.noPoints) {
       isPointInRangeFn = (distance, cmd) => {
