@@ -47,6 +47,9 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
       [from, to] = [to, from];
     }
   }
+  for (let subIdx = 0; subIdx < min; subIdx++) {
+    [from, to] = permuteSubPath(from, to, subIdx);
+  }
   return [from, to];
 }
 
@@ -333,4 +336,46 @@ function autoConvertSubPath(from: Path, to: Path, subIdx: number): [Path, Path] 
     }
   }
   return [fromPm.build(), toPm.build()];
+}
+
+function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
+  if (from.isClockwise(subIdx) !== to.isClockwise(subIdx)) {
+    // Make sure the paths share the same direction.
+    to = to
+      .mutate()
+      .reverseSubPath(subIdx)
+      .build();
+  }
+
+  // Create and return a list of reversed and shifted from paths to test.
+  // Each generated 'from path' will be aligned with the target 'to path'.
+  const fromPaths: Path[] = [from];
+  if (from.getSubPath(subIdx).isClosed()) {
+    for (let i = 1; i < from.getSubPath(subIdx).getCommands().length - 1; i++) {
+      // TODO: we need to find a way to reduce the number of paths to try.
+      fromPaths.push(
+        from
+          .mutate()
+          .shiftSubPathBack(subIdx, i)
+          .build(),
+      );
+    }
+  }
+
+  let bestFromPath = from;
+  let min = Infinity;
+  for (const fromPath of fromPaths) {
+    const fromCmds = fromPath.getSubPath(subIdx).getCommands();
+    let sumOfSquares = 0;
+    const toCmds = to.getSubPath(subIdx).getCommands();
+    fromCmds.forEach(
+      (c, cmdIdx) => (sumOfSquares += MathUtil.distance(c.getEnd(), toCmds[cmdIdx].getEnd()) ** 2),
+    );
+    if (sumOfSquares < min) {
+      min = sumOfSquares;
+      bestFromPath = fromPath;
+    }
+  }
+
+  return [bestFromPath, to];
 }
