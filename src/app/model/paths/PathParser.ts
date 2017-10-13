@@ -148,7 +148,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
         }
 
         while (advanceToNextTokenFn() === Token.Value) {
-          let cp1;
+          let cp1: Point;
           const cp2 = consumePointFn(isRelative);
           const end = consumePointFn(isRelative);
           if (currentControlPoint) {
@@ -188,7 +188,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
         }
 
         while (advanceToNextTokenFn() === Token.Value) {
-          let cp;
+          let cp: Point;
           const end = consumePointFn(isRelative);
           if (currentControlPoint) {
             const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
@@ -343,9 +343,9 @@ export function commandsToString(commands: ReadonlyArray<Command>) {
     tokens.push(cmd.getSvgChar());
     const isClosePathCommand = cmd.getSvgChar() === 'Z';
     const pointsToNumberListFunc = (...points: Point[]) =>
-      points.reduce((list, p) => [...list, p.x, p.y], []);
+      points.reduce((list, p) => [...list, p.x, p.y], [] as number[]);
     const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.getPoints().slice(1)));
-    tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString() as SvgChar));
+    tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
   return tokens.join(' ');
 }
