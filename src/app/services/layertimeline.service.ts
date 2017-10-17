@@ -291,6 +291,7 @@ export class LayerTimelineService {
         .build();
       return clonedLayer;
     });
+    const layerChildrenIds = new Set(layerChildren.map(l => l.id));
     const parent = LayerUtil.findParent(vl, layerId).clone();
     const children = [...parent.children];
     children.splice(_.findIndex(parent.children, l => l.id === layerId), 1, ...layerChildren);
@@ -304,7 +305,7 @@ export class LayerTimelineService {
     newAnimation.blocks = newAnimation.blocks.filter(b => b.layerId !== layerId);
     // TODO: also attempt to merge children group animation blocks?
     newAnimation.blocks = newAnimation.blocks.map(b => {
-      if (!(b instanceof PathAnimationBlock)) {
+      if (!(b instanceof PathAnimationBlock) || !layerChildrenIds.has(b.layerId)) {
         return b;
       }
       const block = b.clone();
