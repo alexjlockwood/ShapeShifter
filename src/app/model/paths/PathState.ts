@@ -280,13 +280,7 @@ export class PathState {
 
   isClockwise(subIdx: number) {
     const cmds = this.subPaths[subIdx].getCommands();
-    let sum = 0;
-    for (let i = 0; i < cmds.length; i++) {
-      const { x: x0, y: y0 } = cmds[i].getEnd();
-      const { x: x1, y: y1 } = cmds[(i + 1) % cmds.length].getEnd();
-      sum += (x1 - x0) * (y1 - y0);
-    }
-    return sum >= 0;
+    return _.sumBy(cmds, cmd => getArea(cmd)) >= 0;
   }
 
   private findSubPathState(subIdx: number) {
@@ -369,4 +363,48 @@ function isSubPathSplit(map: ReadonlyArray<SubPathState>, spsIdx: number) {
 
 function containsPoint(rect: Rect, p: Point) {
   return rect.l <= p.x && p.x < rect.r && rect.t <= p.y && p.y < rect.b;
+}
+
+function getArea(cmd: Command) {
+  if (cmd.getSvgChar() === 'M') {
+    return 0;
+  }
+  const { x: x0, y: y0 } = cmd.getStart();
+  const { x: x3, y: y3 } = cmd.getEnd();
+  let area = 0;
+  switch (cmd.getSvgChar()) {
+    case 'L':
+    case 'Z':
+      area = (x3 - x0) * (y3 - y0);
+      break;
+    case 'Q':
+    case 'C':
+      let x1: number;
+      let y1: number;
+      let x2: number;
+      let y2: number;
+      if (cmd.getSvgChar() === 'Q') {
+        const cp = cmd.getPoints()[1];
+        x1 = x0 + 2 / 3 * (cp.x - x0);
+        y1 = y0 + 2 / 3 * (cp.y - y0);
+        x2 = x3 + 2 / 3 * (cp.x - x3);
+        y2 = y3 + 2 / 3 * (cp.y - y3);
+      } else {
+        x1 = cmd.getPoints()[1].x;
+        y1 = cmd.getPoints()[1].y;
+        x2 = cmd.getPoints()[2].x;
+        y2 = cmd.getPoints()[2].y;
+      }
+      area =
+        3 *
+        ((y3 - y0) * (x1 + x2) -
+          (x3 - x0) * (y1 + y2) +
+          y1 * (x0 - x2) -
+          x1 * (y0 - y2) +
+          y3 * (x2 + x0 / 3) -
+          x3 * (y2 + y0 / 3)) /
+        20;
+      break;
+  }
+  return area;
 }
