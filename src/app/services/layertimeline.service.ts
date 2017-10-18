@@ -158,6 +158,7 @@ export class LayerTimelineService {
     if (!vls.length) {
       return;
     }
+    this.clearSelections();
     const importedVls = [...vls];
     const vectorLayer = this.getVectorLayer();
     let vectorLayers = [vectorLayer];
