@@ -10,15 +10,12 @@
     "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve",
     "build": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod",
     "test": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --browser ChromeHeadless",
-    "test-once":
-      "node --max-old-space-size=8192 ./node_modules/.bin/ng test --browser ChromeHeadless --single-run --code-coverage",
+    "test-once": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --browser ChromeHeadless --single-run --code-coverage",
     "lint": "node --max-old-space-size=8192 ./node_modules/.bin/ng lint --type-check",
     "e2e": "node --max-old-space-size=8192 ./node_modules/.bin/ng e2e",
-    "deploy":
-      "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ngh",
+    "deploy": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ngh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "bundle-report":
-      "node --max-old-space-size=8192 ./node_modules/.bin/ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json"
+    "bundle-report": "node --max-old-space-size=8192 ./node_modules/.bin/ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json"
   },
   "dependencies": {
     "@angular/animations": "^4.4.5",
@@ -51,7 +48,7 @@
     "polylabel": "^1.0.2",
     "redux-undo": "^1.0.0-beta9-9-6",
     "reselect": "^3.0.1",
-    "rxjs": "^5.4.3",
+    "rxjs": "^5.5.0",
     "sax": "^1.2.4",
     "stable": "^0.1.6",
     "tinycolor2": "^1.4.1",
@@ -88,7 +85,7 @@
     "karma-jasmine-html-reporter": "^0.2.2",
     "karma-verbose-reporter": "0.0.6",
     "ngrx-store-logger": "^0.2.0",
-    "protractor": "~5.1.2",
+    "protractor": "^5.2.0",
     "redux": "^3.7.2",
     "ts-node": "^3.3.0",
     "tslint": "^5.7.0",
