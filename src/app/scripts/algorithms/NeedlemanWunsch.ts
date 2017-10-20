@@ -32,7 +32,7 @@ export function align<T>(
   // Initialize the scoring matrix.
   const matrix: number[][] = [];
   for (i = 0; i < listA.length; i++) {
-    const row = [];
+    const row: number[] = [];
     for (j = 0; j < listB.length; j++) {
       row.push(i === 0 ? j * INDEL : j === 0 ? i * INDEL : 0);
     }

@@ -11,9 +11,9 @@ export class InspectedProperty<V> {
     // The model object being inspected (a layer, animation, or animation block).
     model: any,
     // The model object's inspected property.
-    public readonly property: Property<V>,
+    readonly property: Property<V>,
     // The model object's inspected property name.
-    public readonly propertyName: string,
+    readonly propertyName: string,
     // The in-memory entered value map.
     private readonly enteredValueMap: Map<string, any>,
     // Stores the model's entered value for the given property name in the application store.
@@ -23,7 +23,7 @@ export class InspectedProperty<V> {
     // Provides an opportunity to edit the value before it is set.
     private readonly transformEditedValueFn = (enteredValue: V) => enteredValue,
     // Returns whether or not this property name is editable.
-    public readonly isEditable = () => true,
+    readonly isEditable = () => true,
   ) {
     this.typeName = this.property.getTypeName();
   }

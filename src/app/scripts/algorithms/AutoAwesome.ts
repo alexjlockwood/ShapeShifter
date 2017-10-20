@@ -35,8 +35,6 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
 
   const min = Math.min(from.getSubPaths().length, to.getSubPaths().length);
   for (let subIdx = 0; subIdx < min; subIdx++) {
-    // [from, to] = permuteSubPath(from, to, subIdx);
-
     // Pass the command with the larger subpath as the 'from' command.
     const numFromCmds = from.getSubPath(subIdx).getCommands().length;
     const numToCmds = to.getSubPath(subIdx).getCommands().length;
@@ -49,11 +47,9 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
       [from, to] = [to, from];
     }
   }
-
   for (let subIdx = 0; subIdx < min; subIdx++) {
     [from, to] = permuteSubPath(from, to, subIdx);
   }
-
   return [from, to];
 }
 
@@ -68,7 +64,10 @@ function autoUnconvertSubPaths(from: Path, to: Path) {
 export function autoAddCollapsingSubPaths(from: Path, to: Path): [Path, Path] {
   const deleteCollapsingSubPathsFn = (p: Path) => {
     return p.getSubPaths().some(s => s.isCollapsing())
-      ? p.mutate().deleteCollapsingSubPaths().build()
+      ? p
+          .mutate()
+          .deleteCollapsingSubPaths()
+          .build()
       : p;
   };
   from = deleteCollapsingSubPathsFn(from);
@@ -168,12 +167,30 @@ function orderSubPaths(from: Path, to: Path): [Path, Path] {
 function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
   // Create and return a list of reversed and shifted from paths to test.
   // Each generated 'from path' will be aligned with the target 'to path'.
-  const fromPaths: Path[] = [from];
-  if (from.getSubPath(subIdx).isClosed()) {
-    for (let i = 1; i < from.getSubPath(subIdx).getCommands().length - 1; i++) {
-      fromPaths.push(from.mutate().shiftSubPathBack(subIdx, i).build());
-    }
-  }
+  const fromPaths: ReadonlyArray<Path> = _.flatMap(
+    [
+      from,
+      from
+        .mutate()
+        .reverseSubPath(subIdx)
+        .build(),
+    ],
+    p => {
+      const paths = [p];
+      if (p.getSubPath(subIdx).isClosed()) {
+        for (let i = 1; i < p.getSubPath(subIdx).getCommands().length - 1; i++) {
+          // TODO: we need to find a way to reduce the number of paths to try.
+          paths.push(
+            p
+              .mutate()
+              .shiftSubPathBack(subIdx, i)
+              .build(),
+          );
+        }
+      }
+      return paths;
+    },
+  );
 
   // The scoring function to use to calculate the alignment. Convert-able
   // commands are considered matches. However, the farther away the points
@@ -324,7 +341,10 @@ function autoConvertSubPath(from: Path, to: Path, subIdx: number): [Path, Path] 
 function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
   if (from.isClockwise(subIdx) !== to.isClockwise(subIdx)) {
     // Make sure the paths share the same direction.
-    to = to.mutate().reverseSubPath(subIdx).build();
+    to = to
+      .mutate()
+      .reverseSubPath(subIdx)
+      .build();
   }
 
   // Create and return a list of reversed and shifted from paths to test.
@@ -333,7 +353,12 @@ function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
   if (from.getSubPath(subIdx).isClosed()) {
     for (let i = 1; i < from.getSubPath(subIdx).getCommands().length - 1; i++) {
       // TODO: we need to find a way to reduce the number of paths to try.
-      fromPaths.push(from.mutate().shiftSubPathBack(subIdx, i).build());
+      fromPaths.push(
+        from
+          .mutate()
+          .shiftSubPathBack(subIdx, i)
+          .build(),
+      );
     }
   }
 

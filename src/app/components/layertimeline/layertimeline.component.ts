@@ -128,9 +128,9 @@ export class LayerTimelineComponent extends DestroyableMixin()
     private readonly dialogService: DialogService,
     private readonly demoService: DemoService,
     private readonly actionModeService: ActionModeService,
-    public readonly shortcutService: ShortcutService,
+    readonly shortcutService: ShortcutService,
     private readonly layerTimelineService: LayerTimelineService,
-    public readonly themeService: ThemeService,
+    readonly themeService: ThemeService,
   ) {
     super();
   }

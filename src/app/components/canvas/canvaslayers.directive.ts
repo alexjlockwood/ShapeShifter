@@ -2,20 +2,22 @@ import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/first';
 
+import * as $ from 'jquery';
+import * as CanvasUtil from './CanvasUtil';
+
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
-import { ActionSource } from 'app/model/actionmode';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
-import { ColorUtil } from 'app/scripts/common';
-import { DestroyableMixin } from 'app/scripts/mixins';
-import { AnimatorService } from 'app/services';
+import { ColorUtil, Matrix } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import { getActionModeEndState, getActionModeStartState } from 'app/store/actionmode/selectors';
 import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
-import * as $ from 'jquery';
-import { Observable } from 'rxjs/Observable';
 
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
-import * as CanvasUtil from './CanvasUtil';
+import { ActionSource } from 'app/model/actionmode';
+import { AnimatorService } from 'app/services';
+import { DestroyableMixin } from 'app/scripts/mixins';
+import { Observable } from 'rxjs/Observable';
+import { PathUtil } from 'app/model/paths';
 
 type Context = CanvasRenderingContext2D;
 
@@ -163,8 +165,9 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     }
     ctx.save();
 
-    const canvasTransform = LayerUtil.getCanvasTransformForLayer(vl, layer.id);
-    const flattenedTransform = canvasTransform.invert();
+    const canvasTransforms = LayerUtil.getCanvasTransformsForLayer(vl, layer.id);
+    const canvasTransform = Matrix.flatten(canvasTransforms);
+    const flattenedTransform = Matrix.flatten(canvasTransforms.slice().reverse());
     CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), canvasTransform);
 
     const strokeWidthMultiplier = flattenedTransform.getScaleFactor();

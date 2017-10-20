@@ -32,7 +32,7 @@ export class ToolbarComponent implements OnInit {
 
   constructor(
     private readonly actionModeService: ActionModeService,
-    public readonly themeService: ThemeService,
+    readonly themeService: ThemeService,
     private readonly store: Store<State>,
   ) {}
 
@@ -181,10 +181,10 @@ class ToolbarData {
   private readonly morphableLayerName: string;
 
   constructor(
-    public readonly mode: ActionMode,
+    readonly mode: ActionMode,
     startMorphableLayer: MorphableLayer,
     endMorphableLayer: MorphableLayer,
-    public readonly selections: ReadonlyArray<Selection>,
+    readonly selections: ReadonlyArray<Selection>,
     unpair: { source: ActionSource; subIdx: number },
     private readonly block: PathAnimationBlock | undefined,
   ) {

@@ -82,7 +82,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     private readonly dialogService: DialogService,
     private readonly clipboardService: ClipboardService,
     private readonly layerTimelineService: LayerTimelineService,
-    public readonly themeService: ThemeService,
+    readonly themeService: ThemeService,
     private readonly overlayContainer: OverlayContainer,
   ) {
     super();
@@ -96,9 +96,12 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       this.themeService.asObservable().subscribe(t => {
         const isDark = t.themeType === 'dark';
         this.isDarkThemeHostBinding = isDark;
-        this.overlayContainer
-          .getContainerElement()
-          .classList.add(isDark ? 'ss-dark-theme' : undefined);
+        const { classList } = this.overlayContainer.getContainerElement();
+        if (isDark) {
+          classList.add('ss-dark-theme');
+        } else {
+          classList.remove('ss-dark-theme');
+        }
       }),
     );
 

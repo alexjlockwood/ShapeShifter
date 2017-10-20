@@ -55,7 +55,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   constructor(
     elementRef: ElementRef,
     private readonly store: Store<State>,
-    public readonly themeService: ThemeService,
+    readonly themeService: ThemeService,
   ) {
     super();
     this.$element = $(elementRef.nativeElement);
