@@ -19,11 +19,11 @@ export class PathState {
     obj: string | ReadonlyArray<Command>,
     // Maps internal spsIdx indices to SubPathState objects. The last 'numCollapsingSubPaths'
     // indices hold references to the collapsing sub paths.
-    public readonly subPathStateMap?: ReadonlyArray<SubPathState>,
+    readonly subPathStateMap?: ReadonlyArray<SubPathState>,
     // Maps client-visible subIdx values to their positions in the subPathStateMap.
-    public readonly subPathOrdering?: ReadonlyArray<number>,
+    readonly subPathOrdering?: ReadonlyArray<number>,
     // The number of collapsing subpaths appended to the end of the subPathStateMap.
-    public readonly numCollapsingSubPaths = 0,
+    readonly numCollapsingSubPaths = 0,
   ) {
     const commands = typeof obj === 'string' ? PathParser.parseCommands(obj) : obj;
     const subPaths = createSubPaths(commands);

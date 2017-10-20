@@ -115,8 +115,8 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
 
   constructor(
     elementRef: ElementRef,
-    public readonly store: Store<State>,
-    public readonly actionModeService: ActionModeService,
+    readonly store: Store<State>,
+    readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,
     private readonly layerTimelineService: LayerTimelineService,
   ) {

@@ -82,7 +82,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     private readonly dialogService: DialogService,
     private readonly clipboardService: ClipboardService,
     private readonly layerTimelineService: LayerTimelineService,
-    public readonly themeService: ThemeService,
+    readonly themeService: ThemeService,
     private readonly overlayContainer: OverlayContainer,
   ) {
     super();

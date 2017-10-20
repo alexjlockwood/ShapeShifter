@@ -54,7 +54,7 @@ export class PropertyInputComponent implements OnInit {
     private readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,
     private readonly layerTimelineService: LayerTimelineService,
-    public readonly themeService: ThemeService,
+    readonly themeService: ThemeService,
   ) {}
 
   ngOnInit() {

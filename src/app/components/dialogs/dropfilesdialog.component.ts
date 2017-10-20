@@ -26,5 +26,5 @@ export class DropFilesDialogComponent {
   readonly ADD_TO_WORKSPACE = DropFilesAction.AddToWorkspace;
   readonly RESET_WORKSPACE = DropFilesAction.ResetWorkspace;
 
-  constructor(public readonly dialogRef: MatDialogRef<DropFilesDialogComponent>) {}
+  constructor(readonly dialogRef: MatDialogRef<DropFilesDialogComponent>) {}
 }
