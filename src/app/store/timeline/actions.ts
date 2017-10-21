@@ -1,5 +1,5 @@
-import { Action } from '@ngrx/store';
 import { Animation } from 'app/model/timeline';
+import { Action } from 'app/store/ngrx';
 
 export const SET_ANIMATION = '__timeline__SET_ANIMATION';
 export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';

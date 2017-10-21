@@ -1,7 +1,6 @@
 import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
-import { Action } from '@ngrx/store';
 import {
   ActionMode,
   ActionSource,
@@ -30,6 +29,7 @@ import {
   getUnpairedSubPath,
 } from 'app/store/actionmode/selectors';
 import { MultiAction } from 'app/store/multiaction/actions';
+import { Action } from 'app/store/ngrx';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
@@ -325,13 +325,19 @@ export class ActionModeService {
       actions.push(
         this.buildUpdatedActivePathBlockAnimationAction(
           fromSource,
-          this.getActivePathBlockValue(fromSource).mutate().moveSubPath(fromSubIdx, 0).build(),
+          this.getActivePathBlockValue(fromSource)
+            .mutate()
+            .moveSubPath(fromSubIdx, 0)
+            .build(),
         ),
       );
       actions.push(
         this.buildUpdatedActivePathBlockAnimationAction(
           toSource,
-          this.getActivePathBlockValue(toSource).mutate().moveSubPath(toSubIdx, 0).build(),
+          this.getActivePathBlockValue(toSource)
+            .mutate()
+            .moveSubPath(toSubIdx, 0)
+            .build(),
         ),
       );
     } else {
@@ -399,7 +405,10 @@ export class ActionModeService {
       if (path.getCommand(subIdx, cmdIdx).isSplitSegment()) {
         updatePathAction = this.buildUpdatedActivePathBlockAnimationAction(
           source,
-          path.mutate().deleteFilledSubPathSegment(subIdx, cmdIdx).build(),
+          path
+            .mutate()
+            .deleteFilledSubPathSegment(subIdx, cmdIdx)
+            .build(),
         );
       }
     } else if (pointSelections.length) {
@@ -500,7 +509,10 @@ export class ActionModeService {
 
   private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
     let obj: T;
-    this.store.select(selector).first().subscribe(o => (obj = o));
+    this.store
+      .select(selector)
+      .first()
+      .subscribe(o => (obj = o));
     return obj;
   }
 }

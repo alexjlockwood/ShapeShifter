@@ -1,4 +1,4 @@
-import { Action, ActionReducer } from '@ngrx/store';
+import { Action, ActionReducer } from 'app/store/ngrx';
 import * as deepFreeze from 'deep-freeze-strict';
 
 /**

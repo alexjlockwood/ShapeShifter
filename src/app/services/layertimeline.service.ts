@@ -2,7 +2,6 @@ import 'rxjs/add/operator/first';
 import 'rxjs/add/observable/combineLatest';
 
 import { Injectable } from '@angular/core';
-import { Action } from '@ngrx/store';
 import { INTERPOLATORS } from 'app/model/interpolators';
 import {
   ClipPathLayer,
@@ -28,6 +27,7 @@ import {
   getVectorLayer,
 } from 'app/store/layers/selectors';
 import { MultiAction } from 'app/store/multiaction/actions';
+import { Action } from 'app/store/ngrx';
 import { SelectAnimation, SetAnimation, SetSelectedBlocks } from 'app/store/timeline/actions';
 import {
   getAnimation,

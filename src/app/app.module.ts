@@ -21,7 +21,7 @@ import {
 import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { StoreModule } from '@ngrx/store';
+import { StoreModule } from 'app/store/ngrx';
 
 import { PlaybackComponent } from './components/playback/playback.component';
 import { PropertyInputComponent } from './components/propertyinput/propertyinput.component';

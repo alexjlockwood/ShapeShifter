@@ -1,4 +1,4 @@
-import { Action } from '@ngrx/store';
+import { Action } from 'app/store/ngrx';
 
 export const SET_IS_SLOW_MOTION = '__playback__SET_IS_SLOW_MOTION';
 export const SET_IS_PLAYING = '__playback__SET_IS_PLAYING';
