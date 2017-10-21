@@ -315,7 +315,7 @@ export class PathMutator {
       subIdx,
       cmdIdx,
     );
-    const shiftOffset = this.getUpdatedShiftOffsetsAfterSplit(subIdx, csIdx, ts.length);
+    const shiftOffset = this.getUpdatedShiftOffsetsAfterSplit(subIdx, csIdx, splitIdx, ts.length);
     const sps = this.findSubPathStateLeaf(subIdx);
     if (sps.isReversed()) {
       ts = ts.map(t => 1 - t);
@@ -346,7 +346,7 @@ export class PathMutator {
       subIdx,
       cmdIdx,
     );
-    const shiftOffset = this.getUpdatedShiftOffsetsAfterSplit(subIdx, csIdx, 1);
+    const shiftOffset = this.getUpdatedShiftOffsetsAfterSplit(subIdx, csIdx, splitIdx, 1);
     this.setSubPathStateLeaf(
       subIdx,
       this.findSubPathStateLeaf(subIdx)
@@ -371,12 +371,22 @@ export class PathMutator {
   // 'numShifts' or '0', since it will be impossible for splits to be added on
   // both sides of the shift pivot. We could fix that, but it's a lot of
   // complicated indexing and I don't think the user will ever need to do this anyway.
-  private getUpdatedShiftOffsetsAfterSplit(subIdx: number, csIdx: number, numSplits: number) {
+  private getUpdatedShiftOffsetsAfterSplit(
+    subIdx: number,
+    csIdx: number,
+    splitIdx: number,
+    numSplits: number,
+  ) {
     const sps = this.findSubPathStateLeaf(subIdx);
-    if (sps.getShiftOffset() && csIdx <= sps.getShiftOffset()) {
-      return sps.getShiftOffset() + numSplits;
+    const shiftOffset = sps.getShiftOffset();
+    let sum = splitIdx;
+    for (let i = 0; i < csIdx; i++) {
+      sum += sps.getCommandStates()[i].getCommands().length;
     }
-    return sps.getShiftOffset();
+    if (shiftOffset && sum <= shiftOffset) {
+      return shiftOffset + numSplits;
+    }
+    return shiftOffset;
   }
 
   /**
@@ -402,8 +412,13 @@ export class PathMutator {
         )
         .build(),
     );
-    const shiftOffset = this.findSubPathStateLeaf(subIdx).getShiftOffset();
-    if (shiftOffset && csIdx <= shiftOffset) {
+    const sps = this.findSubPathStateLeaf(subIdx);
+    const shiftOffset = sps.getShiftOffset();
+    let sum = splitIdx;
+    for (let i = 0; i < csIdx; i++) {
+      sum += sps.getCommandStates()[i].getCommands().length;
+    }
+    if (shiftOffset && sum <= shiftOffset) {
       // Subtract the shift offset by 1 to ensure that the unsplit operation
       // doesn't alter the positions of the path points.
       this.setSubPathStateLeaf(

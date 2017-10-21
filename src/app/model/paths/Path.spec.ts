@@ -191,6 +191,16 @@ describe('Path', () => {
         'S 0 2 0.5',
         'M 20 22 L 4 22 L 4 12 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
       ),
+      makeTest(
+        'M 5 11 L 5 13 L 19 13 L 19 11 L 5 11',
+        'SIH 0 4 S 0 4 1 SB 0 SB 0 SB 0 SB 0 SIH 0 6 US 0 2 S 0 5 1 US 0 2',
+        'M 19 13 L 19 11 L 5 11 L 5 13 L 12 13 L 12 13 L 19 13',
+      ),
+      makeTest(
+        'M 5 11 L 5 13 L 19 13 L 19 11 L 5 11',
+        'SIH 0 2 SIH 0 2 SF 0 SF 0 SF 0 US 0 6 SIH 0 3 US 0 6 SIH 0 4',
+        'M 5 13 L 19 13 L 19 11 L 12 11 L 8.5 11 L 5 11 L 5 13',
+      ),
       // Split at t=0.
       makeTest('M 0 0 L 0 10 L 10 10', 'S 0 2 0', 'M 0 0 L 0 10 L 0 10 L 10 10'),
       // Split at t=1.
