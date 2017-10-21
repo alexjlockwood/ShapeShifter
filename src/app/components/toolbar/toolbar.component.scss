@@ -32,9 +32,11 @@
 
 a {
     button.mat-menu-item {
-            mat-icon {
-                margin-right: 20px;
-
+        mat-icon {
+            margin-right: 20px;
         }
     }
+}
+mat-slide-toggle {
+    margin-right: 8px;
 }
