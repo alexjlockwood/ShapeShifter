@@ -2,9 +2,9 @@ import * as paper from 'paper';
 
 export class FocusedPathRaster extends paper.Raster {
   constructor(
-    public readonly type: 'segment' | 'handle-in' | 'handle-out',
-    public readonly segmentIndex: number,
-    public readonly isSelected: boolean,
+    readonly type: 'segment' | 'handle-in' | 'handle-out',
+    readonly segmentIndex: number,
+    readonly isSelected: boolean,
     center: paper.Point,
   ) {
     super(

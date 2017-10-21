@@ -1,3 +1,4 @@
+// TODO: uninstall perspective-transform dependency if this never ends up getting used!
 import { MathUtil } from 'app/scripts/common';
 import * as paper from 'paper';
 

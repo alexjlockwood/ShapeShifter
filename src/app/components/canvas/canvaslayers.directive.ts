@@ -2,22 +2,20 @@ import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/first';
 
-import * as $ from 'jquery';
-import * as CanvasUtil from './CanvasUtil';
-
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
+import { ActionSource } from 'app/model/actionmode';
 import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { ColorUtil, Matrix } from 'app/scripts/common';
+import { DestroyableMixin } from 'app/scripts/mixins';
+import { AnimatorService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getActionModeEndState, getActionModeStartState } from 'app/store/actionmode/selectors';
 import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
-
-import { ActionSource } from 'app/model/actionmode';
-import { AnimatorService } from 'app/services';
-import { DestroyableMixin } from 'app/scripts/mixins';
+import * as $ from 'jquery';
 import { Observable } from 'rxjs/Observable';
-import { PathUtil } from 'app/model/paths';
+
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
+import * as CanvasUtil from './CanvasUtil';
 
 type Context = CanvasRenderingContext2D;
 

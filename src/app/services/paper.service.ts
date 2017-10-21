@@ -48,7 +48,7 @@ import { LayerTimelineService } from './layertimeline.service';
 export class PaperService {
   constructor(
     private readonly layerTimelineService: LayerTimelineService,
-    public readonly store: Store<State>,
+    readonly store: Store<State>,
   ) {}
 
   /** Sets the current vector layer. */
