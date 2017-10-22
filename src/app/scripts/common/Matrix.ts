@@ -40,7 +40,14 @@ export class Matrix {
     return new Matrix(1, 0, 0, 1, tx, ty);
   }
 
-  constructor(readonly a, readonly b, readonly c, readonly d, readonly e, readonly f) {}
+  constructor(
+    readonly a: number,
+    readonly b: number,
+    readonly c: number,
+    readonly d: number,
+    readonly e: number,
+    readonly f: number,
+  ) {}
 
   /**
    * Returns the dot product of this 2D transformation matrices with m.
