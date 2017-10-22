@@ -9,13 +9,13 @@ import { SvgChar } from '.';
  */
 export class Command {
   constructor(
-    private readonly svgChar: SvgChar,
-    private readonly points: ReadonlyArray<Point>,
-    private readonly isSplitPoint_ = false,
-    private readonly id = _.uniqueId(),
-    private readonly isSplitSegment_ = false,
+    private readonly _type: SvgChar,
+    private readonly _points: ReadonlyArray<Point>,
+    private readonly _isSplitPoint = false,
+    private readonly _id = _.uniqueId(),
+    private readonly _isSplitSegment = false,
   ) {
-    if (svgChar === undefined) {
+    if (_type === undefined) {
       throw new Error('Attempt to set an undefined svgChar');
     }
   }
@@ -23,22 +23,22 @@ export class Command {
   /**
    * Returns the unique ID for this command.
    */
-  getId() {
-    return this.id;
+  get id() {
+    return this._id;
   }
 
   /**
    * Returns the SVG character for this command.
    */
-  getSvgChar() {
-    return this.svgChar;
+  get type() {
+    return this._type;
   }
 
   /**
    * Returns the points for this command.
    */
-  getPoints() {
-    return this.points;
+  get points() {
+    return this._points;
   }
 
   /**
@@ -46,28 +46,28 @@ export class Command {
    * Only split commands are able to be editted and deleted via the inspector/canvas.
    */
   isSplitPoint() {
-    return this.isSplitPoint_;
+    return this._isSplitPoint;
   }
 
   /**
    * Returns true iff the command was created as a result of a subpath split.
    */
   isSplitSegment() {
-    return this.isSplitSegment_;
+    return this._isSplitSegment;
   }
 
   /**
    * Returns the command's starting point.
    */
-  getStart() {
-    return _.first(this.points);
+  get start() {
+    return _.first(this._points);
   }
 
   /**
    * Returns the command's ending point.
    */
-  getEnd() {
-    return _.last(this.points);
+  get end() {
+    return _.last(this._points);
   }
 
   /**
@@ -76,20 +76,20 @@ export class Command {
    */
   canConvertTo(targetChar: SvgChar) {
     const ch = targetChar;
-    if (this.svgChar === 'M' || ch === 'M' || this.svgChar === ch) {
+    if (this._type === 'M' || ch === 'M' || this._type === ch) {
       return false;
     }
-    switch (this.svgChar) {
+    switch (this._type) {
       case 'L':
         return ch === 'Q' || ch === 'C';
       case 'Z':
         return ch === 'L' || ch === 'Q' || ch === 'C';
       case 'Q': {
-        const uniquePoints = _.uniqWith(this.points, MathUtil.arePointsEqual);
+        const uniquePoints = _.uniqWith(this._points, MathUtil.arePointsEqual);
         return ch === 'C' || (ch === 'L' && uniquePoints.length <= 2);
       }
       case 'C': {
-        const uniquePoints = _.uniqWith(this.points, MathUtil.arePointsEqual);
+        const uniquePoints = _.uniqWith(this._points, MathUtil.arePointsEqual);
         return ch === 'L' && uniquePoints.length <= 2;
       }
     }
@@ -101,22 +101,22 @@ export class Command {
    */
   mutate() {
     return new CommandBuilder(
-      this.svgChar,
-      [...this.points],
+      this._type,
+      [...this._points],
       this.isSplitPoint(),
-      this.id,
-      this.isSplitSegment_,
+      this._id,
+      this._isSplitSegment,
     );
   }
 
   toString() {
-    if (this.svgChar === 'Z') {
-      return `${this.svgChar}`;
+    if (this._type === 'Z') {
+      return `${this._type}`;
     } else {
-      const p = _.last(this.points);
+      const p = _.last(this._points);
       const x = _.round(p.x, 3);
       const y = _.round(p.y, 3);
-      return `${this.svgChar} ${x}, ${y}`;
+      return `${this._type} ${x}, ${y}`;
     }
   }
 }

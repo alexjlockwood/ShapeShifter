@@ -328,7 +328,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
   return commands.map(cmd => {
     return cmd
       .mutate()
-      .setId(cmd.getId())
+      .setId(cmd.id)
       .transform(flattenedMatrices)
       .build();
   });
@@ -340,11 +340,11 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
 export function commandsToString(commands: ReadonlyArray<Command>) {
   const tokens: SvgChar[] = [];
   commands.forEach(cmd => {
-    tokens.push(cmd.getSvgChar());
-    const isClosePathCommand = cmd.getSvgChar() === 'Z';
+    tokens.push(cmd.type);
+    const isClosePathCommand = cmd.type === 'Z';
     const pointsToNumberListFunc = (...points: Point[]) =>
       points.reduce((list, p) => [...list, p.x, p.y], [] as number[]);
-    const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.getPoints().slice(1)));
+    const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.points.slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
   return tokens.join(' ');

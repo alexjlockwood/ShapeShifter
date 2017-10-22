@@ -29,7 +29,7 @@ export class BezierCalculator implements Calculator {
     }
   }
 
-  get bezierJs() {
+  private get bezierJs() {
     if (this.bezierJs_ === undefined) {
       this.bezierJs_ = new BezierJs(this.points);
     }

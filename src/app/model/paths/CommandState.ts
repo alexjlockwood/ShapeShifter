@@ -22,9 +22,9 @@ export class CommandState {
     // can be reversed simply by removing mutations from the list.
     private readonly mutations: ReadonlyArray<Mutation> = [
       {
-        id: backingCommand.getId(),
+        id: backingCommand.id,
         t: 1,
-        svgChar: backingCommand.getSvgChar(),
+        svgChar: backingCommand.type,
       },
     ],
     // The transformation matricies used to transform this command state object.
@@ -44,7 +44,7 @@ export class CommandState {
   ) {}
 
   getBackingId() {
-    return this.backingCommand.getId();
+    return this.backingCommand.id;
   }
 
   getCommands() {
@@ -262,7 +262,7 @@ class CommandStateMutator {
   }
 
   private split(ts: ReadonlyArray<number>) {
-    if (!ts.length || this.backingCommand.getSvgChar() === 'M') {
+    if (!ts.length || this.backingCommand.type === 'M') {
       return this;
     }
     const currSplits = this.mutations.map(m => m.t);
@@ -318,7 +318,7 @@ class CommandStateMutator {
    * command state object.
    */
   unconvertSubpath() {
-    const backingSvgChar = this.backingCommand.getSvgChar();
+    const backingSvgChar = this.backingCommand.type;
     this.mutations = this.mutations.map((mutation, i) => {
       let svgChar = backingSvgChar;
       if (backingSvgChar === 'Z' && i !== this.mutations.length - 1) {
@@ -336,7 +336,7 @@ class CommandStateMutator {
    * a new backing command to use.
    */
   forceConvertClosepathsToLines() {
-    if (this.backingCommand.getSvgChar() === 'Z') {
+    if (this.backingCommand.type === 'Z') {
       this.backingCommand = this.calculator.convert('L').toCommand();
       this.calculator = newCalculator(this.backingCommand);
       this.mutations = this.mutations.map(m => {
@@ -371,7 +371,7 @@ class CommandStateMutator {
       {
         id: _.last(this.mutations).id,
         t: _.last(this.mutations).t,
-        svgChar: this.backingCommand.getSvgChar(),
+        svgChar: this.backingCommand.type,
       },
     ];
     this.matrix = Matrix.identity();

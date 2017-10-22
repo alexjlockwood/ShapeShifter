@@ -71,8 +71,8 @@ export class SubPath {
    * Returns true iff the sub path's start point is equal to its end point.
    */
   isClosed() {
-    const start = _.first(this.getCommands()).getEnd();
-    const end = _.last(this.getCommands()).getEnd();
+    const start = _.first(this.getCommands()).end;
+    const end = _.last(this.getCommands()).end;
     return MathUtil.arePointsEqual(start, end);
   }
 
@@ -93,7 +93,7 @@ export class SubPath {
 }
 
 export function createSubPaths(commands: ReadonlyArray<Command>) {
-  if (!commands.length || commands[0].getSvgChar() !== 'M') {
+  if (!commands.length || commands[0].type !== 'M') {
     // TODO: is this case actually possible? should we insert 'M 0 0' instead?
     return [];
   }
@@ -102,7 +102,7 @@ export function createSubPaths(commands: ReadonlyArray<Command>) {
   let lastSeenMove: Command;
   const subPathCmds: SubPath[] = [];
   for (const cmd of commands) {
-    if (cmd.getSvgChar() === 'M') {
+    if (cmd.type === 'M') {
       lastSeenMove = cmd;
       if (currentCmdList.length) {
         subPathCmds.push(new SubPath(currentCmdList));
@@ -113,10 +113,15 @@ export function createSubPaths(commands: ReadonlyArray<Command>) {
       continue;
     }
     if (!currentCmdList.length) {
-      currentCmdList.push(lastSeenMove.mutate().setId(_.uniqueId()).build());
+      currentCmdList.push(
+        lastSeenMove
+          .mutate()
+          .setId(_.uniqueId())
+          .build(),
+      );
     }
     currentCmdList.push(cmd);
-    if (cmd.getSvgChar() === 'Z') {
+    if (cmd.type === 'Z') {
       subPathCmds.push(new SubPath(currentCmdList));
       currentCmdList = [];
     }

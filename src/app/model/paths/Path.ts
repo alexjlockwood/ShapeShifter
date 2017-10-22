@@ -25,7 +25,7 @@ export class Path {
       // ngrx-store-freeze crashes).
       this.getPathString();
 
-      const allIds = this.getCommands().map(c => c.getId());
+      const allIds = this.getCommands().map(c => c.id);
       const uniqueIds = new Set(allIds);
       const numCommands = allIds.length;
       if (uniqueIds.size !== numCommands) {
@@ -34,8 +34,8 @@ export class Path {
             return {
               subIdx,
               cmdIdx,
-              id: c.getId(),
-              isDup: allIds.filter(id => id === c.getId()).length > 1,
+              id: c.id,
+              isDup: allIds.filter(id => id === c.id).length > 1,
             };
           });
         });
@@ -125,10 +125,7 @@ export class Path {
   isMorphableWith(path: Path) {
     const cmds1 = this.getCommands();
     const cmds2 = path.getCommands();
-    return (
-      cmds1.length === cmds2.length &&
-      cmds1.every((cmd1, i) => cmd1.getSvgChar() === cmds2[i].getSvgChar())
-    );
+    return cmds1.length === cmds2.length && cmds1.every((cmd1, i) => cmd1.type === cmds2[i].type);
   }
 
   /**
@@ -287,7 +284,7 @@ export class PathMutator {
     }
     const firstCmd = sps.getCommandStates()[0].getCommands()[0];
     const lastCmd = _.last(_.last(sps.getCommandStates()).getCommands());
-    if (!MathUtil.arePointsEqual(firstCmd.getEnd(), lastCmd.getEnd())) {
+    if (!MathUtil.arePointsEqual(firstCmd.end, lastCmd.end)) {
       // TODO: in some cases there may be rounding errors that cause a closed subpath
       // to show up as non-closed. is there anything we can do to alleviate this?
       console.warn('Ignoring attempt to shift a non-closed subpath');
@@ -536,7 +533,7 @@ export class PathMutator {
       } else if (csIdx < i) {
         endCommandStates.push(css[i]);
       } else {
-        const splitPoint = css[i].getCommands()[splitIdx].getEnd();
+        const splitPoint = css[i].getCommands()[splitIdx].end;
         const { left, right } = css[i].slice(splitIdx);
         startCommandStates.push(left);
         let endMoveCs = new CommandState(new Command('M', [splitPoint, splitPoint]));
@@ -574,9 +571,8 @@ export class PathMutator {
   deleteStrokedSubPath(subIdx: number) {
     LOG('unsplitStrokedSubPath', subIdx);
     const parent = this.findSubPathStateParent(subIdx);
-    const splitId = _.last(
-      _.last(parent.getSplitSubPaths()[0].getCommandStates()).getCommands(),
-    ).getId();
+    const splitId = _.last(_.last(parent.getSplitSubPaths()[0].getCommandStates()).getCommands())
+      .id;
     const mutator = parent.mutate().setSplitSubPaths([]);
     this.deleteSpsSplitPoint(parent.getCommandStates(), splitId, mutator);
     this.subPathStateMap = this.replaceSubPathStateNode(
@@ -649,9 +645,9 @@ export class PathMutator {
     const { left: firstLeft, right: firstRight } = targetCss[startCsIdx].slice(startSplitIdx);
     const { left: secondLeft, right: secondRight } = targetCss[endCsIdx].slice(endSplitIdx);
     const startSplitCmd = firstLeft.getCommands()[startSplitIdx];
-    const startSplitPoint = startSplitCmd.getEnd();
+    const startSplitPoint = startSplitCmd.end;
     const endSplitCmd = secondLeft.getCommands()[endSplitIdx];
-    const endSplitPoint = endSplitCmd.getEnd();
+    const endSplitPoint = endSplitCmd.end;
 
     // Give both line segments the same unique ID so that we can later identify which
     // split segments were added together during the deletion phase.
@@ -883,12 +879,12 @@ export class PathMutator {
       updatedSplitSubPaths = splits;
     }
     const mutator = psps.mutate().setSplitSubPaths(updatedSplitSubPaths);
-    const firstSplitSegId = _.last(splitCss2[0].getParentCommandState().getCommands()).getId();
+    const firstSplitSegId = _.last(splitCss2[0].getParentCommandState().getCommands()).id;
     const secondSplitSegId = _.last(
       _.last(splitCss2)
         .getParentCommandState()
         .getCommands(),
-    ).getId();
+    ).id;
     for (const id of [firstSplitSegId, secondSplitSegId]) {
       this.deleteSpsSplitPoint(pcss, id, mutator);
     }
@@ -967,7 +963,7 @@ export class PathMutator {
    */
   addCollapsingSubPath(point: Point, numCommands: number) {
     const prevCmd = _.last(this.buildOrderedCommands());
-    const css = [new CommandState(new Command('M', [prevCmd.getEnd(), point]))];
+    const css = [new CommandState(new Command('M', [prevCmd.end, point]))];
     for (let i = 1; i < numCommands; i++) {
       css.push(new CommandState(new Command('L', [point, point])));
     }
@@ -1042,16 +1038,16 @@ export class PathMutator {
     return _(orderedSubPathCmds)
       .map((cmds, subIdx) => {
         const moveCmd = cmds[0];
-        if (subIdx === 0 && moveCmd.getStart()) {
+        if (subIdx === 0 && moveCmd.start) {
           cmds[0] = moveCmd
             .mutate()
-            .setPoints(undefined, moveCmd.getEnd())
+            .setPoints(undefined, moveCmd.end)
             .build();
         } else if (subIdx !== 0) {
-          const start = _.last(orderedSubPathCmds[subIdx - 1]).getEnd();
+          const start = _.last(orderedSubPathCmds[subIdx - 1]).end;
           cmds[0] = moveCmd
             .mutate()
-            .setPoints(start, moveCmd.getEnd())
+            .setPoints(start, moveCmd.end)
             .build();
         }
         return cmds;
@@ -1214,10 +1210,7 @@ function reverseCommandStates(css: CommandState[], isReversed: boolean) {
   if (isReversed) {
     const revCss = [
       new CommandState(
-        new Command('M', [
-          css[0].getCommands()[0].getStart(),
-          _.last(_.last(css).getCommands()).getEnd(),
-        ]),
+        new Command('M', [css[0].getCommands()[0].start, _.last(_.last(css).getCommands()).end]),
       ),
     ];
     for (let i = css.length - 1; i > 0; i--) {
@@ -1267,10 +1260,7 @@ function shiftCommandStates(css: CommandState[], isReversed: boolean, shiftOffse
 
   newCss.push(
     new CommandState(
-      new Command('M', [
-        css[0].getCommands()[0].getStart(),
-        targetCs.getCommands()[targetSplitIdx].getEnd(),
-      ]),
+      new Command('M', [css[0].getCommands()[0].start, targetCs.getCommands()[targetSplitIdx].end]),
     ),
   );
   const { left, right } = targetCs.slice(targetSplitIdx);
@@ -1311,7 +1301,7 @@ function reverseCommands(subPathState: SubPathState) {
     // BC non-split. When reversed, we want the user to see
     // C ---- B ---- A w/ CB split and BA non-split.
     const cmCmds = [...cm.getCommands()];
-    if (cmCmds[0].getSvgChar() === 'M') {
+    if (cmCmds[0].type === 'M') {
       return cmCmds;
     }
     cmCmds[0] = cmCmds[0]
@@ -1328,11 +1318,11 @@ function reverseCommands(subPathState: SubPathState) {
   // If the last command is a 'Z', replace it with a line before we reverse.
   // TODO: replacing the 'Z' messes up certain stroke-linejoin values
   const lastCmd = _.last(cmds);
-  if (lastCmd.getSvgChar() === 'Z') {
+  if (lastCmd.type === 'Z') {
     cmds[cmds.length - 1] = lastCmd
       .mutate()
       .setSvgChar('L')
-      .setPoints(...lastCmd.getPoints())
+      .setPoints(...lastCmd.points)
       .build();
   }
 
@@ -1349,7 +1339,7 @@ function reverseCommands(subPathState: SubPathState) {
   newCmds.unshift(
     cmds[0]
       .mutate()
-      .setPoints(cmds[0].getStart(), newCmds[0].getStart())
+      .setPoints(cmds[0].start, newCmds[0].start)
       .build(),
   );
   return newCmds;
@@ -1363,7 +1353,7 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
   if (
     !shiftOffset ||
     cmds.length === 1 ||
-    !MathUtil.arePointsEqual(_.first(cmds).getEnd(), _.last(cmds).getEnd())
+    !MathUtil.arePointsEqual(_.first(cmds).end, _.last(cmds).end)
   ) {
     // If there is no shift offset, the sub path is one command long,
     // or if the sub path is not closed, then do nothing.
@@ -1378,12 +1368,12 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
 
   // If the last command is a 'Z', replace it with a line before we shift.
   const lastCmd = _.last(cmds);
-  if (lastCmd.getSvgChar() === 'Z') {
+  if (lastCmd.type === 'Z') {
     // TODO: replacing the 'Z' messes up certain stroke-linejoin values
     cmds[numCommands - 1] = lastCmd
       .mutate()
       .setSvgChar('L')
-      .setPoints(...lastCmd.getPoints())
+      .setPoints(...lastCmd.points)
       .build();
   }
 
@@ -1394,7 +1384,7 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
     newCmds.push(
       cmds[0]
         .mutate()
-        .setPoints(cmds[0].getStart(), cmds[1].getEnd())
+        .setPoints(cmds[0].start, cmds[1].end)
         .build(),
     );
     for (let i = 2; i < cmds.length; i++) {
@@ -1406,7 +1396,7 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
     newCmds.push(
       cmds[0]
         .mutate()
-        .setPoints(cmds[0].getStart(), cmds[numCommands - 2].getEnd())
+        .setPoints(cmds[0].start, cmds[numCommands - 2].end)
         .build(),
     );
     newCmds.push(_.last(cmds));
@@ -1429,7 +1419,7 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
   newCmds.unshift(
     cmds[0]
       .mutate()
-      .setPoints(prevMoveCmd.getStart(), _.last(newCmds).getEnd())
+      .setPoints(prevMoveCmd.start, _.last(newCmds).end)
       .build(),
   );
   return newCmds;

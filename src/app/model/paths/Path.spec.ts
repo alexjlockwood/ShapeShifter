@@ -72,7 +72,7 @@ describe('Path', () => {
       it(test.desc, () => {
         const actualPath = buildPath(test.actual);
         const actualSvgChars = _.flatMap(actualPath.getSubPaths(), subPath => {
-          return subPath.getCommands().map(cmd => cmd.getSvgChar());
+          return subPath.getCommands().map(cmd => cmd.type);
         }).join('');
         expect(actualSvgChars).toEqual(test.expected[0] as string);
         expect(actualPath.getSubPaths().length).toEqual(test.expected[1] as number);
@@ -101,7 +101,7 @@ describe('Path', () => {
     it('command IDs persist correctly after mutations', () => {
       const totalIds = new Set();
       const extractPathIdsFn = (p: Path, expectedSize: number, expectedTotalSize: number) => {
-        const ids = p.getCommands().map(cmd => cmd.getId());
+        const ids = p.getCommands().map(cmd => cmd.id);
         ids.forEach(id => totalIds.add(id));
         expect(new Set(ids).size).toEqual(expectedSize);
         expect(totalIds.size).toEqual(expectedTotalSize);
@@ -967,11 +967,11 @@ function checkCommandsEqual(actual: ReadonlyArray<Command>, expected: ReadonlyAr
   for (let i = 0; i < actual.length; i++) {
     const a = actual[i];
     const e = expected[i];
-    expect(a.getSvgChar()).toEqual(e.getSvgChar());
-    expect(a.getPoints().length).toEqual(e.getPoints().length);
-    for (let j = 0; j < a.getPoints().length; j++) {
-      const ap = a.getPoints()[j];
-      const ep = e.getPoints()[j];
+    expect(a.type).toEqual(e.type);
+    expect(a.points.length).toEqual(e.points.length);
+    for (let j = 0; j < a.points.length; j++) {
+      const ap = a.points[j];
+      const ep = e.points[j];
       if (!ap || !ep) {
         expect(ap).toEqual(undefined);
         expect(ep).toEqual(undefined);

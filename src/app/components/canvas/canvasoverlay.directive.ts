@@ -658,7 +658,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       executeLabeledPoint(
         ctx,
         this.attrScale,
-        applyGroupTransform(_.last(cmd.getPoints()), flattenedTransform),
+        applyGroupTransform(_.last(cmd.points), flattenedTransform),
         radius,
         color,
         text,

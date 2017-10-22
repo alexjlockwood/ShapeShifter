@@ -196,14 +196,14 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
   // commands are considered matches. However, the farther away the points
   // are from each other, the lower the score.
   const getScoreFn = (a: Command, b: Command) => {
-    const charA = a.getSvgChar();
-    const charB = b.getSvgChar();
+    const charA = a.type;
+    const charB = b.type;
     if (charA !== charB && !a.canConvertTo(charB) && !b.canConvertTo(charA)) {
       return MISMATCH;
     }
-    const { x, y } = a.getEnd();
+    const { x, y } = a.end;
     const start = { x, y };
-    const end = b.getEnd();
+    const end = b.end;
     return 1 / Math.max(MATCH, MathUtil.distance(start, end));
   };
 
@@ -326,13 +326,13 @@ function autoConvertSubPath(from: Path, to: Path, subIdx: number): [Path, Path] 
   for (let cmdIdx = 0; cmdIdx < numFrom; cmdIdx++) {
     const fromCmd = from.getCommand(subIdx, cmdIdx);
     const toCmd = to.getCommand(subIdx, cmdIdx);
-    if (fromCmd.getSvgChar() === toCmd.getSvgChar()) {
+    if (fromCmd.type === toCmd.type) {
       continue;
     }
-    if (fromCmd.canConvertTo(toCmd.getSvgChar())) {
-      fromPm.convertCommand(subIdx, cmdIdx, toCmd.getSvgChar());
-    } else if (toCmd.canConvertTo(fromCmd.getSvgChar())) {
-      toPm.convertCommand(subIdx, cmdIdx, fromCmd.getSvgChar());
+    if (fromCmd.canConvertTo(toCmd.type)) {
+      fromPm.convertCommand(subIdx, cmdIdx, toCmd.type);
+    } else if (toCmd.canConvertTo(fromCmd.type)) {
+      toPm.convertCommand(subIdx, cmdIdx, fromCmd.type);
     }
   }
   return [fromPm.build(), toPm.build()];
@@ -369,7 +369,7 @@ function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
     let sumOfSquares = 0;
     const toCmds = to.getSubPath(subIdx).getCommands();
     fromCmds.forEach(
-      (c, cmdIdx) => (sumOfSquares += MathUtil.distance(c.getEnd(), toCmds[cmdIdx].getEnd()) ** 2),
+      (c, cmdIdx) => (sumOfSquares += MathUtil.distance(c.end, toCmds[cmdIdx].end) ** 2),
     );
     if (sumOfSquares < min) {
       min = sumOfSquares;

@@ -16,9 +16,9 @@ export function interpolate(start: Path, end: Path, fraction: number) {
   start.getCommands().forEach((startCmd, i) => {
     const endCmd = end.getCommands()[i];
     const points: Point[] = [];
-    for (let j = 0; j < startCmd.getPoints().length; j++) {
-      const p1 = startCmd.getPoints()[j];
-      const p2 = endCmd.getPoints()[j];
+    for (let j = 0; j < startCmd.points.length; j++) {
+      const p1 = startCmd.points[j];
+      const p2 = endCmd.points[j];
       if (p1 && p2) {
         // The 'start' point of the first Move command in a path
         // will be undefined. Skip it.
@@ -30,7 +30,7 @@ export function interpolate(start: Path, end: Path, fraction: number) {
       }
     }
     // TODO: avoid re-generating unique ids on each animation frame.
-    newCommands.push(new Command(startCmd.getSvgChar(), points));
+    newCommands.push(new Command(startCmd.type, points));
   });
   return new Path(newCommands);
 }
