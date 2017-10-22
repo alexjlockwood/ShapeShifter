@@ -3,12 +3,12 @@ import { environment } from 'environments/environment';
 
 import * as fromActionMode from './actionmode/reducer';
 import * as fromLayers from './layers/reducer';
+import * as metaLogger from './logger/metareducer';
 import * as metaMultiAction from './multiaction/metareducer';
 import * as fromPlayback from './playback/reducer';
 import * as metaReset from './reset/metareducer';
 import * as fromReset from './reset/reducer';
 import * as metaStoreFreeze from './storefreeze/metareducer';
-import * as metaStoreLogger from './storelogger/metareducer';
 import * as fromTheme from './theme/reducer';
 import * as fromTimeline from './timeline/reducer';
 import * as metaUndoRedo from './undoredo/metareducer';
@@ -47,7 +47,7 @@ const prodMetaReducers = [
 const devMetaReducers = [
   // Meta reducer that logs the before/after state of the store
   // as actions are performed in dev builds.
-  metaStoreLogger.metaReducer({ collapsed: true }),
+  metaLogger.metaReducer({ collapsed: true }),
   // Meta reducer that freezes the state tree to ensure that
   // accidental mutations fail fast in dev builds.
   metaStoreFreeze.metaReducer,
