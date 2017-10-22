@@ -322,24 +322,22 @@ export class ActionModeService {
       pairedSubPaths.add(pairedSubPaths.size);
       actions.push(new SetPairedSubPaths(pairedSubPaths));
       actions.push(new SetActionModeHover(undefined));
-      actions.push(
-        this.buildUpdatedActivePathBlockAnimationAction(
-          fromSource,
-          this.getActivePathBlockValue(fromSource)
-            .mutate()
-            .moveSubPath(fromSubIdx, 0)
-            .build(),
-        ),
+      let updatedAnimation = this.buildUpdatedActivePathBlockAnimation(
+        fromSource,
+        this.getActivePathBlockValue(fromSource)
+          .mutate()
+          .moveSubPath(fromSubIdx, 0)
+          .build(),
       );
-      actions.push(
-        this.buildUpdatedActivePathBlockAnimationAction(
-          toSource,
-          this.getActivePathBlockValue(toSource)
-            .mutate()
-            .moveSubPath(toSubIdx, 0)
-            .build(),
-        ),
+      updatedAnimation = this.buildUpdatedActivePathBlockAnimation(
+        toSource,
+        this.getActivePathBlockValue(toSource)
+          .mutate()
+          .moveSubPath(toSubIdx, 0)
+          .build(),
+        updatedAnimation,
       );
+      actions.push(new SetAnimation(updatedAnimation));
     } else {
       actions.push(new SetUnpairedSubPath({ source: actionSource, subIdx }));
     }
