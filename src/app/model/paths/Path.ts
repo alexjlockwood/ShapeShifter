@@ -364,7 +364,7 @@ export class PathMutator {
     return this;
   }
 
-  // If 0 <= csIdx <= shiftOffset, then that means we need to increase the
+  // If 0 <= position <= shiftOffset, then that means we need to increase the
   // shift offset to account for the new split points that are about to be inserted.
   // Note that this method assumes all splits will occur within the same cmdIdx
   // command. This means that the shift offset will only ever increase by either
@@ -379,11 +379,11 @@ export class PathMutator {
   ) {
     const sps = this.findSubPathStateLeaf(subIdx);
     const shiftOffset = sps.getShiftOffset();
-    let sum = splitIdx;
+    let position = splitIdx;
     for (let i = 0; i < csIdx; i++) {
-      sum += sps.getCommandStates()[i].getCommands().length;
+      position += sps.getCommandStates()[i].getCommands().length;
     }
-    if (shiftOffset && sum <= shiftOffset) {
+    if (shiftOffset && position <= shiftOffset) {
       return shiftOffset + numSplits;
     }
     return shiftOffset;
@@ -414,11 +414,11 @@ export class PathMutator {
     );
     const sps = this.findSubPathStateLeaf(subIdx);
     const shiftOffset = sps.getShiftOffset();
-    let sum = splitIdx;
+    let position = splitIdx;
     for (let i = 0; i < csIdx; i++) {
-      sum += sps.getCommandStates()[i].getCommands().length;
+      position += sps.getCommandStates()[i].getCommands().length;
     }
-    if (shiftOffset && sum <= shiftOffset) {
+    if (shiftOffset && position <= shiftOffset) {
       // Subtract the shift offset by 1 to ensure that the unsplit operation
       // doesn't alter the positions of the path points.
       this.setSubPathStateLeaf(
