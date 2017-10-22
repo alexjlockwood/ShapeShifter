@@ -176,7 +176,7 @@ export class FileImportService {
       this.layerTimelineService.importLayers(vls);
       // TODO: count number of individual layers?
       this.snackBarService.show(
-        `Imported ${vls.length} layers${vls.length === 1 ? '' : 's'}`,
+        `Imported ${vls.length} layer${vls.length === 1 ? '' : 's'}`,
         'Dismiss',
         Duration.Short,
       );
