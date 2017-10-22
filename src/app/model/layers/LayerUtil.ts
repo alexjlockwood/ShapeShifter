@@ -269,7 +269,7 @@ export function getUniqueLayerName(layers: ReadonlyArray<Layer>, prefix: string)
   return getUniqueName(prefix, name => findLayerByName(layers, name));
 }
 
-export function getUniqueName(prefix = '', objectByNameFn = (s: string): Layer => undefined) {
+export function getUniqueName(prefix = '', objectByNameFn = (s: string) => undefined) {
   let n = 0;
   const nameFn = () => prefix + (n ? `_${n}` : '');
   while (true) {
