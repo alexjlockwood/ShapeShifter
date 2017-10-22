@@ -193,7 +193,7 @@ export function addLayer(
 
 export function removeLayers(vl: VectorLayer, ...removedLayerIds: string[]) {
   const layerIds = new Set(removedLayerIds);
-  return (function recurseFn(curr: Layer) {
+  return (function recurseFn(curr: Layer): Layer {
     if (layerIds.has(curr.id)) {
       return undefined;
     }
@@ -210,7 +210,7 @@ export function replaceLayer(vl: VectorLayer, layerId: string, replacement: Laye
   if (IS_DEV_BUILD && !vl.findLayerById(layerId)) {
     console.warn('Attempt to replace a layer that does not exist in the tree');
   }
-  return (function recurseFn(curr: Layer) {
+  return (function recurseFn(curr: Layer): Layer {
     return curr.id === layerId
       ? replacement
       : setLayerChildren(curr, curr.children.map(child => recurseFn(child)));
@@ -269,7 +269,7 @@ export function getUniqueLayerName(layers: ReadonlyArray<Layer>, prefix: string)
   return getUniqueName(prefix, name => findLayerByName(layers, name));
 }
 
-export function getUniqueName(prefix = '', objectByNameFn = (s: string) => undefined) {
+export function getUniqueName(prefix = '', objectByNameFn = (s: string): Layer => undefined) {
   let n = 0;
   const nameFn = () => prefix + (n ? `_${n}` : '');
   while (true) {
