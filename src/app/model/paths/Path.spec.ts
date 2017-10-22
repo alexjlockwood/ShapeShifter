@@ -72,7 +72,7 @@ describe('Path', () => {
       it(test.desc, () => {
         const actualPath = buildPath(test.actual);
         const actualSvgChars = _.flatMap(actualPath.getSubPaths(), subPath => {
-          return subPath.getCommands().map(cmd => cmd.getSvgChar());
+          return subPath.getCommands().map(cmd => cmd.type);
         }).join('');
         expect(actualSvgChars).toEqual(test.expected[0] as string);
         expect(actualPath.getSubPaths().length).toEqual(test.expected[1] as number);
@@ -101,7 +101,7 @@ describe('Path', () => {
     it('command IDs persist correctly after mutations', () => {
       const totalIds = new Set();
       const extractPathIdsFn = (p: Path, expectedSize: number, expectedTotalSize: number) => {
-        const ids = p.getCommands().map(cmd => cmd.getId());
+        const ids = p.getCommands().map(cmd => cmd.id);
         ids.forEach(id => totalIds.add(id));
         expect(new Set(ids).size).toEqual(expectedSize);
         expect(totalIds.size).toEqual(expectedTotalSize);
@@ -190,6 +190,16 @@ describe('Path', () => {
         'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
         'S 0 2 0.5',
         'M 20 22 L 4 22 L 4 12 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
+      ),
+      makeTest(
+        'M 5 11 L 5 13 L 19 13 L 19 11 L 5 11',
+        'SIH 0 4 S 0 4 1 SB 0 SB 0 SB 0 SB 0 SIH 0 6 US 0 2 S 0 5 1 US 0 2',
+        'M 19 13 L 19 11 L 5 11 L 5 13 L 12 13 L 12 13 L 19 13',
+      ),
+      makeTest(
+        'M 5 11 L 5 13 L 19 13 L 19 11 L 5 11',
+        'SIH 0 2 SIH 0 2 SF 0 SF 0 SF 0 US 0 6 SIH 0 3 US 0 6 SIH 0 4',
+        'M 5 13 L 19 13 L 19 11 L 12 11 L 8.5 11 L 5 11 L 5 13',
       ),
       // Split at t=0.
       makeTest('M 0 0 L 0 10 L 10 10', 'S 0 2 0', 'M 0 0 L 0 10 L 0 10 L 10 10'),
@@ -957,11 +967,11 @@ function checkCommandsEqual(actual: ReadonlyArray<Command>, expected: ReadonlyAr
   for (let i = 0; i < actual.length; i++) {
     const a = actual[i];
     const e = expected[i];
-    expect(a.getSvgChar()).toEqual(e.getSvgChar());
-    expect(a.getPoints().length).toEqual(e.getPoints().length);
-    for (let j = 0; j < a.getPoints().length; j++) {
-      const ap = a.getPoints()[j];
-      const ep = e.getPoints()[j];
+    expect(a.type).toEqual(e.type);
+    expect(a.points.length).toEqual(e.points.length);
+    for (let j = 0; j < a.points.length; j++) {
+      const ap = a.points[j];
+      const ep = e.points[j];
       if (!ap || !ep) {
         expect(ap).toEqual(undefined);
         expect(ep).toEqual(undefined);

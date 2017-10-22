@@ -12,14 +12,14 @@ export function executeCommands(ctx: Context, commands: ReadonlyArray<Command>, 
   ctx.transform(a, b, c, d, e, f);
   ctx.beginPath();
 
-  if (commands.length === 1 && commands[0].getSvgChar() !== 'M') {
-    ctx.moveTo(commands[0].getStart().x, commands[0].getStart().y);
+  if (commands.length === 1 && commands[0].type !== 'M') {
+    ctx.moveTo(commands[0].start.x, commands[0].start.y);
   }
 
   let previousEndPoint: Point;
   commands.forEach(cmd => {
-    const start = cmd.getStart();
-    const end = cmd.getEnd();
+    const start = cmd.start;
+    const end = cmd.end;
 
     if (start && !MathUtil.arePointsEqual(start, previousEndPoint)) {
       // This is to support the case where the list of commands
@@ -27,27 +27,22 @@ export function executeCommands(ctx: Context, commands: ReadonlyArray<Command>, 
       ctx.moveTo(start.x, start.y);
     }
 
-    if (cmd.getSvgChar() === 'M') {
+    if (cmd.type === 'M') {
       ctx.moveTo(end.x, end.y);
-    } else if (cmd.getSvgChar() === 'L') {
+    } else if (cmd.type === 'L') {
       ctx.lineTo(end.x, end.y);
-    } else if (cmd.getSvgChar() === 'Q') {
-      ctx.quadraticCurveTo(
-        cmd.getPoints()[1].x,
-        cmd.getPoints()[1].y,
-        cmd.getPoints()[2].x,
-        cmd.getPoints()[2].y,
-      );
-    } else if (cmd.getSvgChar() === 'C') {
+    } else if (cmd.type === 'Q') {
+      ctx.quadraticCurveTo(cmd.points[1].x, cmd.points[1].y, cmd.points[2].x, cmd.points[2].y);
+    } else if (cmd.type === 'C') {
       ctx.bezierCurveTo(
-        cmd.getPoints()[1].x,
-        cmd.getPoints()[1].y,
-        cmd.getPoints()[2].x,
-        cmd.getPoints()[2].y,
-        cmd.getPoints()[3].x,
-        cmd.getPoints()[3].y,
+        cmd.points[1].x,
+        cmd.points[1].y,
+        cmd.points[2].x,
+        cmd.points[2].y,
+        cmd.points[3].x,
+        cmd.points[3].y,
       );
-    } else if (cmd.getSvgChar() === 'Z') {
+    } else if (cmd.type === 'Z') {
       if (MathUtil.arePointsEqual(start, previousEndPoint)) {
         ctx.closePath();
       } else {

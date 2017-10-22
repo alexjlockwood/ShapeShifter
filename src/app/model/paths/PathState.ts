@@ -150,8 +150,8 @@ export class PathState {
           .map(obj => {
             const { subPath, subIdx } = obj;
             return subPath.getCommands().map((cmd, cmdIdx) => {
-              const { x, y } = cmd.getEnd();
-              const d = MathUtil.distance(cmd.getEnd(), point);
+              const { x, y } = cmd.end;
+              const d = MathUtil.distance(cmd.end, point);
               const t = 1;
               const projection = { x, y, d, t };
               return { subIdx, cmdIdx, projection, cmd };
@@ -259,13 +259,13 @@ export class PathState {
   getPoleOfInaccessibility(subIdx: number) {
     const cmds = this.subPaths[subIdx].getCommands().slice(1);
     const polygon = _.flatMap(cmds, cmd => {
-      const { x: p1x, y: p1y } = cmd.getStart();
-      const { x: p2x, y: p2y } = cmd.getEnd();
+      const { x: p1x, y: p1y } = cmd.start;
+      const { x: p2x, y: p2y } = cmd.end;
       return [[p1x, p1y], [p2x, p2y]];
     });
     if (cmds.length && !this.subPaths[subIdx].isClosed()) {
-      const { x: p1x, y: p1y } = cmds[0].getStart();
-      const { x: p2x, y: p2y } = _.last(cmds).getEnd();
+      const { x: p1x, y: p1y } = cmds[0].start;
+      const { x: p2x, y: p2y } = _.last(cmds).end;
       polygon.push(...[[p1x, p1y], [p2x, p2y]]);
     }
     const pole = polylabel([polygon]);
@@ -366,13 +366,13 @@ function containsPoint(rect: Rect, p: Point) {
 }
 
 function getArea(cmd: Command) {
-  if (cmd.getSvgChar() === 'M') {
+  if (cmd.type === 'M') {
     return 0;
   }
-  const { x: x0, y: y0 } = cmd.getStart();
-  const { x: x3, y: y3 } = cmd.getEnd();
+  const { x: x0, y: y0 } = cmd.start;
+  const { x: x3, y: y3 } = cmd.end;
   let area = 0;
-  switch (cmd.getSvgChar()) {
+  switch (cmd.type) {
     case 'L':
     case 'Z':
       area = (x3 - x0) * (y3 - y0);
@@ -383,17 +383,17 @@ function getArea(cmd: Command) {
       let y1: number;
       let x2: number;
       let y2: number;
-      if (cmd.getSvgChar() === 'Q') {
-        const cp = cmd.getPoints()[1];
+      if (cmd.type === 'Q') {
+        const cp = cmd.points[1];
         x1 = x0 + 2 / 3 * (cp.x - x0);
         y1 = y0 + 2 / 3 * (cp.y - y0);
         x2 = x3 + 2 / 3 * (cp.x - x3);
         y2 = y3 + 2 / 3 * (cp.y - y3);
       } else {
-        x1 = cmd.getPoints()[1].x;
-        y1 = cmd.getPoints()[1].y;
-        x2 = cmd.getPoints()[2].x;
-        y2 = cmd.getPoints()[2].y;
+        x1 = cmd.points[1].x;
+        y1 = cmd.points[1].y;
+        x2 = cmd.points[2].x;
+        y2 = cmd.points[2].y;
       }
       area =
         3 *
