@@ -82,6 +82,7 @@
     "karma-jasmine": "~1.1.0",
     "karma-jasmine-html-reporter": "^0.2.2",
     "karma-verbose-reporter": "0.0.6",
+    "prettier": "1.7.4",
     "protractor": "^5.2.0",
     "redux": "^3.7.2",
     "ts-node": "^3.3.0",
