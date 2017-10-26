@@ -26,6 +26,8 @@ Support us with a monthly donation and help us continue our activities.
 We'll display your logo below with a link to your site. 
 🙏 [[Become a backer](https://opencollective.com/shapeshifter#backer)]
 
+<a href="https://opencollective.com/preact/backer/0/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/0/avatar.svg"></a>
+
 ## Sponsors
 
 Is your company using Shape Shifter? Ask your manager to support us! 
