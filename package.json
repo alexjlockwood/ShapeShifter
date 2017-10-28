@@ -64,7 +64,7 @@
     "@angular/cli": "^1.4.9",
     "@angular/compiler-cli": "^4.4.6",
     "@angular/language-service": "^4.4.6",
-    "@types/google.analytics": "0.0.35",
+    "@types/google.analytics": "^0.0.36",
     "@types/hammerjs": "^2.0.35",
     "@types/jasmine": "^2.6.2",
     "@types/jquery": "^3.2.15",
