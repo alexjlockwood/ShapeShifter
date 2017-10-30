@@ -62,7 +62,7 @@
     "@types/google.analytics": "^0.0.36",
     "@types/hammerjs": "^2.0.35",
     "@types/jasmine": "^2.6.2",
-    "@types/jquery": "^3.2.15",
+    "@types/jquery": "^3.2.16",
     "@types/jszip": "^3.1.2",
     "@types/lodash": "^4.14.80",
     "@types/node": "^8.0.47",
