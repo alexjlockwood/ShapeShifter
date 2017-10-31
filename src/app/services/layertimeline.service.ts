@@ -511,14 +511,19 @@ export class LayerTimelineService {
       }
     });
     let animation = this.getAnimation();
+    const addedBlocks: { id?: string }[] = [];
     for (const block of blocks) {
-      animation = this.addBlockToAnimation(animation, block);
+      const anim = this.addBlockToAnimation(animation, block);
+      if (animation !== anim) {
+        animation = anim;
+        addedBlocks.push(block);
+      }
     }
     this.store.dispatch(
       new MultiAction(
         new SetAnimation(animation),
         new SelectAnimation(false),
-        new SetSelectedBlocks(new Set(blocks.map(b => b.id))),
+        new SetSelectedBlocks(new Set(addedBlocks.map(b => b.id))),
         new SetSelectedLayers(new Set()),
       ),
     );
