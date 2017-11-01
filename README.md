@@ -29,6 +29,7 @@ We'll display your logo below with a link to your site.
 <a href="https://opencollective.com/shapeshifter/backer/0/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/0/avatar.svg"></a>
 <a href="https://opencollective.com/shapeshifter/backer/1/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/1/avatar.svg"></a>
 <a href="https://opencollective.com/shapeshifter/backer/2/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/2/avatar.svg"></a>
+<a href="https://opencollective.com/shapeshifter/backer/3/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/3/avatar.svg"></a>
 
 ## Sponsors
 
