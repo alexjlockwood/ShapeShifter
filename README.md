@@ -1,5 +1,7 @@
 # Shape Shifter
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/alexjlockwood/ShapeShifter.svg)](https://greenkeeper.io/)
+
 [![Build Status][travis-badge]][travis-badge-url]
 [![Coverage Status][coveralls-badge]][coveralls-badge-url]
 [![GitHub Stats](https://img.shields.io/badge/github-stats-ff5500.svg)](http://githubstats.com/alexjlockwood/ShapeShifter)
