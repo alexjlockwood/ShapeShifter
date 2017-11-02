@@ -31,76 +31,73 @@
           <button mat-menu-item
             (click)="this.onLaunchFilePickerClick('openFileButton')">
             Open
-            <input
-              id="openFileButton"
+            <input id="openFileButton"
               type="file"
               accept=".shapeshifter"
               (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
           </button>
           <button mat-menu-item
             (click)="this.onSaveToFileClick()">
-          Save
-        </button>
+            Save
+          </button>
           <button mat-menu-item
             (click)="this.onLoadDemoClick()">
-          Demo
-        </button>
+            Demo
+          </button>
         </mat-menu>
         <button class="slt-layers-menu-group-button"
           (click)="$event.stopPropagation()"
           [matMenuTriggerFor]="fileMenu">
-        File
-      </button>
+          File
+        </button>
 
         <!-- Import menu. -->
         <mat-menu #importMenu="matMenu">
           <button mat-menu-item
             (click)="this.onLaunchFilePickerClick('addPathsFromSvgButton')">
-          SVG
-          <input
-            multiple
-            id="addPathsFromSvgButton"
-            type="file"
-            accept=".svg"
-            (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
-        </button>
+            SVG
+            <input multiple
+              id="addPathsFromSvgButton"
+              type="file"
+              accept=".svg"
+              (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+          </button>
           <button mat-menu-item
             (click)="this.onLaunchFilePickerClick('addPathsFromXmlButton')">
-          Vector Drawable
-          <input
-            multiple
-            id="addPathsFromXmlButton"
-            type="file"
-            accept=".xml"
-            (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
-        </button>
+            Vector Drawable
+            <input multiple
+              id="addPathsFromXmlButton"
+              type="file"
+              accept=".xml"
+              (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+          </button>
         </mat-menu>
         <button class="slt-layers-menu-group-button"
           (click)="$event.stopPropagation()"
           [ngClass]="{'is-disabled': model.isActionMode}"
           [disabled]="model.isActionMode"
           [matMenuTriggerFor]="importMenu">
-        Import
-      </button>
+          Import
+        </button>
 
         <!-- Export menu. -->
         <mat-menu #exportMenu="matMenu">
           <button mat-menu-item
             (click)="this.onExportSvgClick()">
-          SVG
-        </button>
+            SVG
+          </button>
           <button mat-menu-item
             (click)="this.onExportVectorDrawableClick()">
-          Vector Drawable
-        </button>
+            Vector Drawable
+          </button>
           <button mat-menu-item
             (click)="this.onExportAnimatedVectorDrawableClick()">
-          Animated Vector Drawable
-        </button>
+            Animated Vector Drawable
+          </button>
           <button mat-menu-item
             (click)="this.onExportSvgSpritesheetClick()">
-          SVG spritesheet
-        </button>
+            SVG spritesheet
+          </button>
           <!--<button mat-menu-item
           [disabled]="true"
           (click)="this.onExportCssKeyframesClick()">
@@ -112,8 +109,8 @@
           [ngClass]="{'is-disabled': model.isActionMode}"
           [disabled]="model.isActionMode"
           [matMenuTriggerFor]="exportMenu">
-        Export
-      </button>
+          Export
+        </button>
 
         <div fxFlex></div>
 
@@ -121,16 +118,16 @@
         <mat-menu #addLayerMenu="matMenu">
           <button mat-menu-item
             (click)="this.onAddPathLayerClick()">
-          New path
-        </button>
+            New path
+          </button>
           <button mat-menu-item
             (click)="this.onAddClipPathLayerClick()">
-          New clip path
-        </button>
+            New clip path
+          </button>
           <button mat-menu-item
             (click)="this.onAddGroupLayerClick()">
-          New group layer
-        </button>
+            New group layer
+          </button>
         </mat-menu>
         <button mat-icon-button
           (click)="$event.stopPropagation()"
@@ -139,8 +136,8 @@
           matTooltipShowDelay="500"
           [disabled]="model.isActionMode"
           [matMenuTriggerFor]="addLayerMenu">
-        <mat-icon svgIcon="addlayer"></mat-icon>
-      </button>
+          <mat-icon svgIcon="addlayer"></mat-icon>
+        </button>
       </div>
 
       <div appScrollGroup="timeline"
@@ -175,7 +172,7 @@
           }">
         </div>
         <div class="slt-layers-empty"
-          *ngIf="model.vectorLayer.children.length === 0">
+          *ngIf="model.vectorLayer.children.length === 0 && model.animation.blocks.length === 0">
           To get started, drag + drop an SVG file here
         </div>
       </div>
