@@ -23,6 +23,7 @@ file a [feature request][report-feature-request]!
 ## Backers
 
 Support us with a monthly donation and help us continue our activities. 
+Funds will go towards hiring new developers to work on awesome features! 
 We'll display your logo below with a link to your site. 
 🙏 [[Become a backer](https://opencollective.com/shapeshifter#backer)]
 
@@ -31,6 +32,7 @@ We'll display your logo below with a link to your site.
 <a href="https://opencollective.com/shapeshifter/backer/2/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/2/avatar.svg"></a>
 <a href="https://opencollective.com/shapeshifter/backer/3/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/3/avatar.svg"></a>
 <a href="https://opencollective.com/shapeshifter/backer/4/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/4/avatar.svg"></a>
+<a href="https://opencollective.com/shapeshifter/backer/6/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/6/avatar.svg"></a>
 
 ## Sponsors
 
