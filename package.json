@@ -15,7 +15,8 @@
     "e2e": "node --max-old-space-size=8192 ./node_modules/.bin/ng e2e",
     "deploy": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ngh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "bundle-report": "node --max-old-space-size=8192 ./node_modules/.bin/ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json"
+    "bundle-report": "node --max-old-space-size=8192 ./node_modules/.bin/ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json",
+    "postinstall": "opencollective postinstall"
   },
   "dependencies": {
     "@angular/animations": "^5.0.0",
@@ -43,6 +44,7 @@
     "js-yaml": "^3.10.0",
     "jszip": "^3.1.4",
     "lodash": "^4.17.4",
+    "opencollective": "^1.0.3",
     "polylabel": "^1.0.2",
     "redux-undo": "^1.0.0-beta9-9-7",
     "reselect": "^3.0.1",
@@ -99,5 +101,10 @@
       "parser": "typescript",
       "style": "module"
     }
+  },
+  "collective": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/shapeshifter",
+    "logo": "https://opencollective.com/opencollective/logo.txt"
   }
 }
