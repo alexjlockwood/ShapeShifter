@@ -178,6 +178,7 @@ export class PaperLayer extends paper.Layer {
       this.selectionBoundsItem = undefined;
     }
     const selectedItems = Array.from(this.selectedLayerIds).map(id => this.findItemByLayerId(id));
+    console.log(this.selectedLayerIds);
     if (selectedItems.length > 0) {
       this.selectionBoundsItem = newSelectionBoundsItem(
         PaperUtil.transformRectangle(
