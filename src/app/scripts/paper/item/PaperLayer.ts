@@ -27,7 +27,6 @@ import { SelectionBoundsRaster } from './SelectionBoundsRaster';
  * viewport coordinates.
  *
  * TODO: scaling rasters down causes their hit tolerances remain the same
- * TODO: scaling rasters seems to have no effect when the user zooms in
  */
 export class PaperLayer extends paper.Layer {
   private canvasColorRect: paper.Path.Rectangle;
@@ -434,7 +433,7 @@ function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
     // TODO: avoid creating rasters in a loop like this
     const center = bounds[pivotType];
     const handle = SelectionBoundsRaster.of(pivotType, center);
-    const scaleFactor = 1 / (cssScaling * devicePixelRatio);
+    const scaleFactor = 1 / (1.8 * cssScaling * paper.view.zoom);
     handle.scale(scaleFactor, scaleFactor);
     group.addChild(handle);
   });
@@ -447,7 +446,7 @@ function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
  */
 function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling: number) {
   const group = new paper.Group();
-  const scaleFactor = 1 / (cssScaling * devicePixelRatio);
+  const scaleFactor = 1 / (1.8 * cssScaling * paper.view.zoom);
 
   const matrix = path.globalMatrix.prepended(
     new paper.Matrix(1 / cssScaling, 0, 0, 1 / cssScaling, 0, 0),

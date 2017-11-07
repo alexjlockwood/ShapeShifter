@@ -40,7 +40,7 @@ export class GestureTool extends Tool {
 
   // @Override
   onToolModeChanged(toolMode: ToolMode) {
-    console.log(`tool mode changed: ${this.toolMode} --> ${toolMode}`);
+    // console.log(`tool mode changed: ${this.toolMode} --> ${toolMode}`);
     this.toolMode = toolMode;
     this.resetDefaultGesture();
   }
