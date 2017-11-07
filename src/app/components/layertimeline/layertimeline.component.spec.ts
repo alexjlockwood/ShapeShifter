@@ -1,6 +1,6 @@
+import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { HttpModule } from '@angular/http';
 import {
   MatButtonModule,
   MatDialogModule,
@@ -10,7 +10,6 @@ import {
   MatSnackBarModule,
   MatTooltipModule,
 } from '@angular/material';
-import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.directive';
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
@@ -51,7 +50,7 @@ describe('LayerTimelineComponent', () => {
           TimelineAnimationRowComponent,
         ],
         imports: [
-          HttpModule,
+          HttpClientModule,
           FlexLayoutModule,
           MatButtonModule,
           MatIconModule,
@@ -73,7 +72,6 @@ describe('LayerTimelineComponent', () => {
           ShortcutService,
           SnackBarService,
           ThemeService,
-          { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
         ],
       }).compileComponents();
       loadSvgIcons([

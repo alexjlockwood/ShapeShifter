@@ -1,9 +1,9 @@
 import 'hammerjs';
 
+import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
 import {
   MatButtonModule,
   MatDialogModule,
@@ -18,7 +18,6 @@ import {
   MatToolbarModule,
   MatTooltipModule,
 } from '@angular/material';
-import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import {
@@ -97,7 +96,7 @@ describe('RootComponent', () => {
           BrowserModule,
           FlexLayoutModule,
           FormsModule,
-          HttpModule,
+          HttpClientModule,
           NoopAnimationsModule,
           // Angular material components.
           MatButtonModule,
@@ -126,7 +125,6 @@ describe('RootComponent', () => {
           ShortcutService,
           SnackBarService,
           ThemeService,
-          { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
         ],
       }).compileComponents();
       loadSvgIcons([

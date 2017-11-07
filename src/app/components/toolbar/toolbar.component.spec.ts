@@ -1,7 +1,7 @@
+import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
 import {
   MatButtonModule,
   MatIconModule,
@@ -10,7 +10,6 @@ import {
   MatSlideToggleModule,
   MatTooltipModule,
 } from '@angular/material';
-import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActionModeService, LayerTimelineService, ThemeService } from 'app/services';
@@ -28,7 +27,7 @@ describe('ToolbarComponent', () => {
       TestBed.configureTestingModule({
         declarations: [ToolbarComponent],
         imports: [
-          HttpModule,
+          HttpClientModule,
           FlexLayoutModule,
           FormsModule,
           MatButtonModule,
@@ -43,7 +42,6 @@ describe('ToolbarComponent', () => {
           ActionModeService,
           LayerTimelineService,
           ThemeService,
-          { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
         ],
       }).compileComponents();
       loadSvgIcons([

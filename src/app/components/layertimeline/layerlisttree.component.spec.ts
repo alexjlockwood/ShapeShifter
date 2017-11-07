@@ -1,6 +1,6 @@
+import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { HttpModule } from '@angular/http';
 import {
   MatButtonModule,
   MatIconModule,
@@ -8,7 +8,6 @@ import {
   MatMenuModule,
   MatTooltipModule,
 } from '@angular/material';
-import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { By, DomSanitizer } from '@angular/platform-browser';
 import { ActionModeService, LayerTimelineService } from 'app/services';
 import { Store } from 'app/store';
@@ -28,7 +27,7 @@ describe('LayerListTreeComponent', () => {
       TestBed.configureTestingModule({
         declarations: [LayerListTreeComponent],
         imports: [
-          HttpModule,
+          HttpClientModule,
           FlexLayoutModule,
           MatButtonModule,
           MatIconModule,
@@ -39,7 +38,6 @@ describe('LayerListTreeComponent', () => {
           { provide: Store, useValue: new MockStore() },
           ActionModeService,
           LayerTimelineService,
-          { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
         ],
       }).compileComponents();
       loadSvgIcons([
