@@ -159,6 +159,7 @@ export class PaperLayer extends paper.Layer {
       new paper.Point(0, 0),
       new paper.Size(this.vectorLayer.width, this.vectorLayer.height),
     );
+    this.canvasColorRect.guide = true;
     this.canvasColorRect.fillColor = parseAndroidColor(this.vectorLayer.canvasColor) || 'white';
     this.updateChildren();
   }

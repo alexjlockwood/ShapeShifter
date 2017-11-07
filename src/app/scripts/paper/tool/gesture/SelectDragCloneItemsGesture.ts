@@ -14,6 +14,7 @@ import { Gesture } from './Gesture';
  *
  * Preconditions:
  * - The user is in selection mode.
+ * - The user hit an item in the previous mousedown event.
  */
 export class SelectDragCloneItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -21,7 +22,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
   private isDragging = false;
 
   // TODO: dragging items that are contained in transformed groups currently doesn't work...
-  constructor(private readonly ps: PaperService, private readonly hitLayerId: string | undefined) {
+  constructor(private readonly ps: PaperService, private readonly hitLayerId: string) {
     super();
   }
 
@@ -37,10 +38,8 @@ export class SelectDragCloneItemsGesture extends Gesture {
       selectedLayers.clear();
     }
 
-    if (this.hitLayerId) {
-      // Select the hit item.
-      selectedLayers.add(this.hitLayerId);
-    }
+    // Select the hit item.
+    selectedLayers.add(this.hitLayerId);
     this.ps.setSelectedLayers(selectedLayers);
 
     // Save a copy of the initial vector layer so that we can make changes
