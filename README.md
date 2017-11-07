@@ -25,6 +25,7 @@ file a [feature request][report-feature-request]!
 Support us with a monthly donation and help us continue our activities. 
 Funds will go towards hiring new developers to work on awesome features! 
 We'll display your logo below with a link to your site. 
+
 🙏 [[Become a backer](https://opencollective.com/shapeshifter#backer)]
 
 <a href="https://opencollective.com/shapeshifter/backer/0/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/0/avatar.svg"></a>
@@ -33,11 +34,14 @@ We'll display your logo below with a link to your site.
 <a href="https://opencollective.com/shapeshifter/backer/3/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/3/avatar.svg"></a>
 <a href="https://opencollective.com/shapeshifter/backer/4/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/4/avatar.svg"></a>
 <a href="https://opencollective.com/shapeshifter/backer/6/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/6/avatar.svg"></a>
+<a href="https://opencollective.com/shapeshifter/backer/7/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/7/avatar.svg"></a>
+<a href="https://opencollective.com/shapeshifter/backer/8/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/8/avatar.svg"></a>
 
 ## Sponsors
 
 Is your company using Shape Shifter? Ask your manager to support us! 
 We'll display your logo below with a link to your site. 
+
 🙏 [[Become a sponsor](https://opencollective.com/shapeshifter#sponsor)]
 
 ## Examples
