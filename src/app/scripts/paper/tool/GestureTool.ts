@@ -103,7 +103,6 @@ export class GestureTool extends Tool {
     }
 
     const hitResult = HitTests.selectionMode(event.point);
-    console.log(hitResult);
     if (!hitResult) {
       // If there is no hit item, then batch select items using a selection box.
       return new BatchSelectItemsGesture(this.ps);
