@@ -2,17 +2,31 @@ import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 import { Action } from 'app/store/ngrx';
 
-export enum ActionType {
-  SetToolMode = '__paper__SET_TOOL_MODE',
-  SetSelectionBox = '__paper__SET_SELECTION_BOX',
-  SetCreatePathInfo = '__paper__SET_CREATE_PATH_INFO',
-  SetSplitCurveInfo = '__paper__SET_SPLIT_CURVE_INFO',
-  SetFocusedPathInfo = '__paper__SET_FOCUSED_PATH_INFO',
-  SetCanvasCursor = '__paper__SET_CANVAS_CURSOR',
-  SetSnapGuideInfo = '__paper__SET_SNAP_GUIDE_INFO',
-  SetZoomPanInfo = '__paper__SET_ZOOM_PAN_INFO',
-  SetTooltipInfo = '__paper__SET_TOOLTIP_INFO',
+// TODO: remove this when TypeScript 2.5 is supported
+interface ActionTypes {
+  SetToolMode: '__paper__SET_TOOL_MODE';
+  SetSelectionBox: '__paper__SET_SELECTION_BOX';
+  SetCreatePathInfo: '__paper__SET_CREATE_PATH_INFO';
+  SetSplitCurveInfo: '__paper__SET_SPLIT_CURVE_INFO';
+  SetFocusedPathInfo: '__paper__SET_FOCUSED_PATH_INFO';
+  SetCanvasCursor: '__paper__SET_CANVAS_CURSOR';
+  SetSnapGuideInfo: '__paper__SET_SNAP_GUIDE_INFO';
+  SetZoomPanInfo: '__paper__SET_ZOOM_PAN_INFO';
+  SetTooltipInfo: '__paper__SET_TOOLTIP_INFO';
 }
+
+// TODO: turn this into a string enum when TypeScript 2.5 is supported
+export const ActionType: ActionTypes = {
+  SetToolMode: '__paper__SET_TOOL_MODE',
+  SetSelectionBox: '__paper__SET_SELECTION_BOX',
+  SetCreatePathInfo: '__paper__SET_CREATE_PATH_INFO',
+  SetSplitCurveInfo: '__paper__SET_SPLIT_CURVE_INFO',
+  SetFocusedPathInfo: '__paper__SET_FOCUSED_PATH_INFO',
+  SetCanvasCursor: '__paper__SET_CANVAS_CURSOR',
+  SetSnapGuideInfo: '__paper__SET_SNAP_GUIDE_INFO',
+  SetZoomPanInfo: '__paper__SET_ZOOM_PAN_INFO',
+  SetTooltipInfo: '__paper__SET_TOOLTIP_INFO',
+};
 
 export class SetToolMode implements Action {
   readonly type = ActionType.SetToolMode;

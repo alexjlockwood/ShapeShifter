@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import * as createDistorter from 'perspective-transform';
 
 import { Matrix } from './Matrix';
 import { Point } from './Point';
@@ -70,14 +69,3 @@ export function isNearZero(n: number) {
 }
 
 type Quadrilateral = [Point, Point, Point, Point];
-
-/**
- * Distorts a source point to a new destination coordinate space.
- */
-export function distortPoint(srcPoint: Point, src: Quadrilateral, dst: Quadrilateral) {
-  const srcCorners = _.flatMap(src, p => [p.x, p.y]);
-  const dstCorners = _.flatMap(dst, p => [p.x, p.y]);
-  const distorter = createDistorter(srcCorners, dstCorners);
-  const [x, y] = distorter.transform(srcPoint.x, srcPoint.y);
-  return { x, y };
-}

@@ -30,7 +30,7 @@ import { SelectionBoundsRaster } from './SelectionBoundsRaster';
  * TODO: scaling rasters seems to have no effect when the user zooms in
  */
 export class PaperLayer extends paper.Layer {
-  private readonly canvasColorShape: paper.Shape;
+  private canvasColorRect: paper.Path.Rectangle;
   private vectorLayerItem: paper.Item;
   private selectionBoundsItem: paper.Item;
   private hoverPathItem: paper.Path;
@@ -52,8 +52,8 @@ export class PaperLayer extends paper.Layer {
 
   constructor() {
     super();
-    this.canvasColorShape = paper.Shape.Rectangle(new paper.Point(0, 0));
-    this.canvasColorShape.guide = true;
+    this.canvasColorRect = new paper.Path.Rectangle(new paper.Point(0, 0), new paper.Size(0, 0));
+    this.canvasColorRect.guide = true;
     this.updateChildren();
   }
 
@@ -155,11 +155,11 @@ export class PaperLayer extends paper.Layer {
   }
 
   private updateCanvasColorShape() {
-    this.canvasColorShape.size = new paper.Size(
-      this.vectorLayer.width,
-      this.vectorLayer.height,
-    ).multiply(devicePixelRatio);
-    this.canvasColorShape.fillColor = parseAndroidColor(this.vectorLayer.canvasColor) || 'white';
+    this.canvasColorRect = new paper.Path.Rectangle(
+      new paper.Point(0, 0),
+      new paper.Size(this.vectorLayer.width, this.vectorLayer.height),
+    );
+    this.canvasColorRect.fillColor = parseAndroidColor(this.vectorLayer.canvasColor) || 'white';
     this.updateChildren();
   }
 
@@ -238,7 +238,7 @@ export class PaperLayer extends paper.Layer {
 
   private updateChildren() {
     this.children = _.compact([
-      this.canvasColorShape,
+      this.canvasColorRect,
       this.vectorLayerItem,
       this.selectionBoundsItem,
       this.hoverPathItem,

@@ -13,4 +13,3 @@ export { SelectDragCloneItemsGesture } from './SelectDragCloneItemsGesture';
 export { SelectDragDrawSegmentsGesture } from './SelectDragDrawSegmentsGesture';
 export { SelectDragHandleGesture } from './SelectDragHandleGesture';
 export { SetFocusedPathGesture } from './SetFocusedPathGesture';
-export { TransformPathsGesture } from './TransformPathsGesture';
