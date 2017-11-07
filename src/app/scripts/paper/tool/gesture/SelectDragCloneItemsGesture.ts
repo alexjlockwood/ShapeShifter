@@ -30,7 +30,6 @@ export class SelectDragCloneItemsGesture extends Gesture {
     // Clear the current hover layer, if it exists.
     this.ps.setHoveredLayer(undefined);
 
-    console.log(this.hitLayerId);
     const selectedLayers = new Set(this.ps.getSelectedLayers());
     if (!event.modifiers.shift && !selectedLayers.has(this.hitLayerId)) {
       // If shift isn't pressed and the hit layer isn't already selected,
