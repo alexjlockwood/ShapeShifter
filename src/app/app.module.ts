@@ -1,9 +1,9 @@
 import 'hammerjs';
 
+import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
 import {
   MatButtonModule,
   MatDialogModule,
@@ -18,7 +18,6 @@ import {
   MatToolbarModule,
   MatTooltipModule,
 } from '@angular/material';
-import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { StoreModule } from 'app/store/ngrx';
@@ -91,7 +90,7 @@ import { reducer } from './store';
     BrowserAnimationsModule,
     FlexLayoutModule,
     FormsModule,
-    HttpModule,
+    HttpClientModule,
     StoreModule.provideStore(reducer),
     // Angular material components.
     MatButtonModule,
@@ -119,7 +118,6 @@ import { reducer } from './store';
     ShortcutService,
     SnackBarService,
     ThemeService,
-    { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
   ],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],
