@@ -422,6 +422,19 @@ declare module 'paper' {
     hitTest<C extends Item = Item>(point: Point, options?: HitOptions<C>): HitResult<C>;
 
     /**
+     * Performs a hit-test on the item and its children (if it is a Group or Layer)
+     * at the location of the specified point, returning all found hits.
+     *
+     * The options object allows you to control the specifics of the hit- test.
+     * See hitTest(point[, options]) for a list of all options.
+     *
+     * @param point - the point where the hit-test should be performed
+     * @param options: Object — optional,
+     * default: { fill: true, stroke: true, segments: true, tolerance: settings.hitTolerance }
+     */
+    hitTestAll<C extends Item = Item>(point: Point, options?: HitOptions<C>): HitResult<C>[];
+
+    /**
      * Checks whether the item matches the criteria described by the given object, by iterating
      * over all of its properties and matching against their values through matches(name, compare).
      * See project.getItems(match) for a selection of illustrated examples.
