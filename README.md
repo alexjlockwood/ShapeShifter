@@ -26,14 +26,7 @@ Support us with a monthly donation and help us continue our activities.
 Funds will go towards hiring new developers to work on awesome features! 
 We'll display your logo below with a link to your site. 
 
-<a href="https://opencollective.com/shapeshifter/backer/0/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/0/avatar.svg"></a>
-<a href="https://opencollective.com/shapeshifter/backer/1/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/1/avatar.svg"></a>
-<a href="https://opencollective.com/shapeshifter/backer/2/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/2/avatar.svg"></a>
-<a href="https://opencollective.com/shapeshifter/backer/3/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/3/avatar.svg"></a>
-<a href="https://opencollective.com/shapeshifter/backer/4/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/4/avatar.svg"></a>
-<a href="https://opencollective.com/shapeshifter/backer/6/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/6/avatar.svg"></a>
-<a href="https://opencollective.com/shapeshifter/backer/7/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/7/avatar.svg"></a>
-<a href="https://opencollective.com/shapeshifter/backer/8/website" target="_blank"><img src="https://opencollective.com/shapeshifter/backer/8/avatar.svg"></a>
+<a href="https://opencollective.com/shapeshifter#backers" target="_blank"><img src="https://opencollective.com/shapeshifter/backers.svg?width=890"></a>
 
 🙏 [Become a backer](https://opencollective.com/shapeshifter#backer) 🙏
 
