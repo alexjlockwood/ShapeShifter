@@ -1,7 +1,8 @@
 import { ToolMode } from 'app/model/paper';
-import { HitTests } from 'app/scripts/paper/item';
+import { HitResult, HitTests } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
+import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
@@ -23,6 +24,7 @@ export class HoverItemsGesture extends Gesture {
 
     const selectedLayers = this.ps.getSelectedLayers();
     if (selectedLayers.size > 0) {
+      // TODO: only perform a hit test if we are in focused path mode?
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
         const toolMode = this.ps.getToolMode();
@@ -32,12 +34,22 @@ export class HoverItemsGesture extends Gesture {
         return;
       }
     }
-    const hitResult = HitTests.selectionMode(event.point, {
-      // TODO: support hovering over groups
-      class: paper.Path,
-      match: ({ item }) => !selectedLayers.has(item.data.id),
+
+    const { children } = HitTests.selectionMode(event.point);
+    // TODO: make hit layer ID dependent on currently selected layers
+    const firstHitResult = _.find(children, function recurseFn(hitResult: HitResult) {
+      const firstChildHitResult = _.find(hitResult.children, recurseFn);
+      if (firstChildHitResult) {
+        return firstChildHitResult;
+      }
+      if (hitResult.hitItem && selectedLayers.has(hitResult.hitItem.data.id)) {
+      }
     });
-    this.ps.setHoveredLayer(hitResult ? hitResult.item.data.id : undefined);
+    if (firstHitResult && !selectedLayers.has(firstHitResult.hitItem.data.id)) {
+      this.ps.setHoveredLayer(firstHitResult.hitItem.data.id);
+    } else {
+      this.ps.setHoveredLayer(undefined);
+    }
   }
 }
 

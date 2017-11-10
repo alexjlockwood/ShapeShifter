@@ -7,12 +7,9 @@ import { SelectionBoundsRaster } from './SelectionBoundsRaster';
 /**
  * Performs the default selection mode hit test.
  */
-export function selectionMode(
-  projPoint: paper.Point,
-  extraOptions: Pick<paper.HitOptions, 'class' | 'match'> = {},
-) {
+export function selectionMode(projPoint: paper.Point) {
   const pl = paper.project.activeLayer as PaperLayer;
-  return pl.hitTest(projPoint, { fill: true, stroke: true, ...extraOptions });
+  return pl.hitTestVectorLayer(projPoint);
 }
 
 /**
