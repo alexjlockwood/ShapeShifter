@@ -63,7 +63,7 @@
     "@types/jasmine": "^2.6.3",
     "@types/jquery": "^3.2.16",
     "@types/jszip": "^3.1.2",
-    "@types/lodash": "^4.14.84",
+    "@types/lodash": "^4.14.85",
     "@types/node": "^8.0.51",
     "@types/polylabel": "^1.0.5",
     "@types/tinycolor2": "^1.4.0",
