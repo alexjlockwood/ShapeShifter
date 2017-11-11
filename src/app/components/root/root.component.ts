@@ -1,7 +1,3 @@
-import 'rxjs/add/operator/distinctUntilChanged';
-import 'rxjs/add/operator/combineLatest';
-import 'rxjs/add/operator/map';
-
 import { OverlayContainer } from '@angular/cdk/overlay';
 import {
   AfterViewInit,
@@ -36,6 +32,8 @@ import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
+import { combineLatest } from 'rxjs/observable/combineLatest';
+import { distinctUntilChanged, first, map } from 'rxjs/operators';
 
 const SHOULD_AUTO_LOAD_DEMO = false;
 const IS_DEV_BUILD = !environment.production;
@@ -109,7 +107,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       let isDirty: boolean;
       this.store
         .select(isWorkspaceDirty)
-        .first()
+        .pipe(first())
         .subscribe(dirty => (isDirty = dirty));
       if (isDirty && !IS_DEV_BUILD) {
         return `You've made changes but haven't saved. Are you sure you want to navigate away?`;
@@ -117,28 +115,33 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       return undefined;
     });
 
-    const displaySize$ = this.displayBoundsSubject.asObservable().distinctUntilChanged((s1, s2) => {
-      return s1.w === s2.w && s1.h === s2.h;
-    });
-    this.isActionMode$ = this.store.select(getActionMode).map(mode => mode !== ActionMode.None);
-    this.canvasBounds$ = Observable.combineLatest(
-      displaySize$,
-      this.isActionMode$,
-    ).map(([{ w, h }, shouldShowThreeCanvases]) => {
-      return { w: w / (shouldShowThreeCanvases ? 3 : 1), h };
-    });
+    const displaySize$ = this.displayBoundsSubject.asObservable().pipe(
+      distinctUntilChanged((s1, s2) => {
+        return s1.w === s2.w && s1.h === s2.h;
+      }),
+    );
+    this.isActionMode$ = this.store
+      .select(getActionMode)
+      .pipe(map(mode => mode !== ActionMode.None));
+    this.canvasBounds$ = combineLatest(displaySize$, this.isActionMode$).pipe(
+      map(([{ w, h }, shouldShowThreeCanvases]) => {
+        return { w: w / (shouldShowThreeCanvases ? 3 : 1), h };
+      }),
+    );
 
-    this.cursorType$ = Observable.combineLatest(
+    this.cursorType$ = combineLatest(
       this.store.select(getActionMode),
       this.store.select(getActionModeHover),
-    ).map(([mode, hover]) => {
-      if (mode === ActionMode.SplitCommands || mode === ActionMode.SplitSubPaths) {
-        return CursorType.Pen;
-      } else if (hover) {
-        return CursorType.Pointer;
-      }
-      return CursorType.Default;
-    });
+    ).pipe(
+      map(([mode, hover]) => {
+        if (mode === ActionMode.SplitCommands || mode === ActionMode.SplitSubPaths) {
+          return CursorType.Pen;
+        } else if (hover) {
+          return CursorType.Pointer;
+        }
+        return CursorType.Default;
+      }),
+    );
   }
 
   ngAfterViewInit() {

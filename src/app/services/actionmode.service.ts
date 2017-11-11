@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/first';
-
 import { Injectable } from '@angular/core';
 import {
   ActionMode,
@@ -33,6 +31,7 @@ import { Action } from 'app/store/ngrx';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
+import { first } from 'rxjs/operators';
 
 import { LayerTimelineService } from './layertimeline.service';
 
@@ -509,7 +508,7 @@ export class ActionModeService {
     let obj: T;
     this.store
       .select(selector)
-      .first()
+      .pipe(first())
       .subscribe(o => (obj = o));
     return obj;
   }

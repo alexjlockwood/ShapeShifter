@@ -1,6 +1,3 @@
-import 'rxjs/add/operator/first';
-import 'rxjs/add/observable/combineLatest';
-
 import { Injectable } from '@angular/core';
 import { INTERPOLATORS } from 'app/model/interpolators';
 import {
@@ -36,10 +33,11 @@ import {
 } from 'app/store/timeline/selectors';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
+import { first } from 'rxjs/operators';
 
 /**
  * A simple service that provides an interface for making layer/timeline changes.
-*/
+ */
 @Injectable()
 export class LayerTimelineService {
   constructor(private readonly store: Store<State>) {}
@@ -662,7 +660,7 @@ export class LayerTimelineService {
     let obj: T;
     this.store
       .select(selector)
-      .first()
+      .pipe(first())
       .subscribe(o => (obj = o));
     return obj;
   }

@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/first';
-
 import {
   ClipPathLayer,
   FillType,

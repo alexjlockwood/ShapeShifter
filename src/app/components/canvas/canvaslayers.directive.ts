@@ -1,7 +1,3 @@
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/first';
-
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
 import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
@@ -14,6 +10,9 @@ import { getActionModeEndState, getActionModeStartState } from 'app/store/action
 import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import { Observable } from 'rxjs/Observable';
+import { combineLatest } from 'rxjs/observable/combineLatest';
+import { merge } from 'rxjs/observable/merge';
+import { first, map } from 'rxjs/operators';
 
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
@@ -47,9 +46,9 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     if (this.actionSource === ActionSource.Animated) {
       // Preview canvas specific setup.
       this.registerSubscription(
-        Observable.combineLatest(
-          Observable.merge(
-            this.animatorService.asObservable().map(event => event.vl),
+        combineLatest(
+          merge(
+            this.animatorService.asObservable().pipe(map(event => event.vl)),
             this.store.select(getVectorLayer),
           ),
           this.store.select(getHiddenLayerIds),

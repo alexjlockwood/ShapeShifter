@@ -1,6 +1,3 @@
-import 'rxjs/add/operator/combineLatest';
-import 'rxjs/add/operator/map';
-
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActionMode, ActionSource, Selection, SelectionType } from 'app/model/actionmode';
 import { MorphableLayer } from 'app/model/layers';
@@ -12,6 +9,8 @@ import { getToolbarState } from 'app/store/actionmode/selectors';
 import { ThemeType } from 'app/store/theme/reducer';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
+import { combineLatest } from 'rxjs/observable/combineLatest';
+import { map } from 'rxjs/operators';
 
 declare const ga: Function;
 
@@ -43,28 +42,30 @@ export class ToolbarComponent implements OnInit {
     let prevIsActionMode: boolean;
     let currIsActionMode = this.actionModeService.getActionMode() !== ActionMode.None;
     const toolbarState = this.store.select(getToolbarState);
-    this.toolbarData$ = toolbarState.map(
-      ({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
+    this.toolbarData$ = toolbarState.pipe(
+      map(({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
         return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
-      },
+      }),
     );
-    this.themeState$ = Observable.combineLatest(
+    this.themeState$ = combineLatest(
       toolbarState,
-      this.themeService.asObservable().map(t => t.themeType),
-    ).map(([{ mode }, themeType]) => {
-      hasActionModeBeenEnabled = hasActionModeBeenEnabled || mode !== ActionMode.None;
-      prevThemeType = currThemeType;
-      currThemeType = themeType;
-      prevIsActionMode = currIsActionMode;
-      currIsActionMode = mode !== ActionMode.None;
-      return {
-        hasActionModeBeenEnabled,
-        prevThemeType,
-        currThemeType,
-        prevIsActionMode,
-        currIsActionMode,
-      };
-    });
+      this.themeService.asObservable().pipe(map(t => t.themeType)),
+    ).pipe(
+      map(([{ mode }, themeType]) => {
+        hasActionModeBeenEnabled = hasActionModeBeenEnabled || mode !== ActionMode.None;
+        prevThemeType = currThemeType;
+        currThemeType = themeType;
+        prevIsActionMode = currIsActionMode;
+        currIsActionMode = mode !== ActionMode.None;
+        return {
+          hasActionModeBeenEnabled,
+          prevThemeType,
+          currThemeType,
+          prevIsActionMode,
+          currIsActionMode,
+        };
+      }),
+    );
   }
 
   get darkTheme() {

@@ -1,10 +1,9 @@
-import 'rxjs/add/operator/first';
-
 import { Injectable } from '@angular/core';
 import { State, Store } from 'app/store';
 import { SetTheme } from 'app/store/theme/actions';
 import { ThemeType } from 'app/store/theme/reducer';
 import { getThemeType } from 'app/store/theme/selectors';
+import { first } from 'rxjs/operators';
 
 // TODO: make the canvas theme aware
 // TODO: change the animation block green color
@@ -35,7 +34,10 @@ export class ThemeService {
 
   getThemeType() {
     let result: { themeType: ThemeType; isInitialPageLoad: boolean };
-    this.store.select(getThemeType).first().subscribe(res => (result = res));
+    this.store
+      .select(getThemeType)
+      .pipe(first())
+      .subscribe(res => (result = res));
     return result;
   }
 
