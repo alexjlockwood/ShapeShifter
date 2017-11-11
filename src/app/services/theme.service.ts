@@ -1,10 +1,9 @@
-import 'rxjs/add/operator/first';
-
 import { Injectable } from '@angular/core';
 import { State, Store } from 'app/store';
 import { SetTheme } from 'app/store/theme/actions';
 import { ThemeType } from 'app/store/theme/reducer';
 import { getThemeType } from 'app/store/theme/selectors';
+import { first } from 'rxjs/operators';
 
 // TODO: change the animation block green color
 
@@ -34,7 +33,9 @@ export class ThemeService {
 
   getThemeType() {
     let result: { themeType: ThemeType; isInitialPageLoad: boolean };
-    this.asObservable().first().subscribe(res => (result = res));
+    this.asObservable()
+      .pipe(first())
+      .subscribe(res => (result = res));
     return result;
   }
 

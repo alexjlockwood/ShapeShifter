@@ -1,7 +1,3 @@
-import 'rxjs/add/observable/combineLatest';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/operator/map';
-
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import {
   ActionMode,
@@ -41,6 +37,9 @@ import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
+import { combineLatest } from 'rxjs/observable/combineLatest';
+import { merge } from 'rxjs/observable/merge';
+import { map } from 'rxjs/operators';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
@@ -128,9 +127,9 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     if (this.actionSource === ActionSource.Animated) {
       // Animated canvas specific setup.
       this.registerSubscription(
-        Observable.combineLatest(
-          Observable.merge(
-            this.animatorService.asObservable().map(event => event.vl),
+        combineLatest(
+          merge(
+            this.animatorService.asObservable().pipe(map(event => event.vl)),
             this.store.select(getVectorLayer),
           ),
           this.store.select(getCanvasOverlayState),

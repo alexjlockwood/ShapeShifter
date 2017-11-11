@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/map';
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -16,6 +14,7 @@ import { State, Store } from 'app/store';
 import { getTimelineAnimationRowState } from 'app/store/common/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-timelineanimationrow',
@@ -41,9 +40,8 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   ) {}
 
   ngOnInit() {
-    this.animationRowModel$ = this.store
-      .select(getTimelineAnimationRowState)
-      .map(({ animation, collapsedLayerIds, selectedBlockIds, isActionMode }) => {
+    this.animationRowModel$ = this.store.select(getTimelineAnimationRowState).pipe(
+      map(({ animation, collapsedLayerIds, selectedBlockIds, isActionMode }) => {
         // Returns a list of animation block lists. Each animation block list corresponds to
         // a property name displayed in the layer list tree.
         const blocksByPropertyNameValues = _.values(
@@ -56,7 +54,8 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
           selectedBlockIds,
           isActionMode,
         };
-      });
+      }),
+    );
   }
 
   // @Override Callbacks

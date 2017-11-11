@@ -1,5 +1,3 @@
-import 'rxjs/add/observable/of';
-
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { ActionSource } from 'app/model/actionmode';
@@ -12,7 +10,7 @@ import {
   ThemeService,
 } from 'app/services';
 import { Store } from 'app/store';
-import { Observable } from 'rxjs/Observable';
+import { of } from 'rxjs/observable/of';
 import { MockStore } from 'test/MockStore';
 
 import { CanvasComponent } from './canvas.component';
@@ -54,7 +52,7 @@ describe('CanvasComponent', () => {
       fixture = TestBed.createComponent(CanvasComponent);
       component = fixture.componentInstance;
       component.actionSource = ActionSource.Animated;
-      component.canvasBounds$ = Observable.of({ w: 1000, h: 1000 });
+      component.canvasBounds$ = of({ w: 1000, h: 1000 });
       fixture.detectChanges();
     }),
   );

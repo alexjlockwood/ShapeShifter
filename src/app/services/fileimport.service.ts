@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/first';
-
 import { Injectable } from '@angular/core';
 import { LayerUtil, VectorLayer } from 'app/model/layers';
 import { Animation } from 'app/model/timeline';
@@ -12,6 +10,7 @@ import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
+import { first } from 'rxjs/operators';
 
 declare const ga: Function;
 
@@ -37,7 +36,7 @@ export class FileImportService {
     let vectorLayer: VectorLayer;
     this.store
       .select(getVectorLayer)
-      .first()
+      .pipe(first())
       .subscribe(vl => (vectorLayer = vl));
     return vectorLayer;
   }
