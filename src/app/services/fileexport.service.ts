@@ -120,7 +120,7 @@ export class FileExportService {
     let vectorLayer: VectorLayer;
     this.store
       .select(getVectorLayer)
-      .first()
+      .pipe(first())
       .subscribe(vl => (vectorLayer = vl));
     return vectorLayer;
   }
