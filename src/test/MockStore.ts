@@ -4,8 +4,9 @@ import { Action, ActionReducer, Store } from 'app/store/ngrx';
 import { State as PlaybackState } from 'app/store/playback/reducer';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
+import { of } from 'rxjs/observable/of';
 import { Observer } from 'rxjs/Observer';
-import { map } from 'rxjs/operator/map';
+import { map } from 'rxjs/operators';
 
 const INIT_ACTION: Action = { type: '__test123__' };
 
@@ -21,9 +22,9 @@ export class MockStore extends Store<State> {
     this.subject = new BehaviorSubject(prodReducer(undefined, INIT_ACTION));
   }
 
-  readonly select = <R>(mapFn: any, ...paths: string[]): Observable<R> => {
-    return map.call(this.subject, mapFn);
-  };
+  select<R>(mapFn: (state: State) => R) {
+    return this.subject.pipe(map(mapFn));
+  }
 
   dispatch(action: Action) {}
 
