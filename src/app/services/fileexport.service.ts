@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/first';
-
 import { Injectable } from '@angular/core';
 import { LayerUtil, VectorLayer } from 'app/model/layers';
 import { Animation } from 'app/model/timeline';
@@ -10,6 +8,7 @@ import { getAnimation } from 'app/store/timeline/selectors';
 import * as $ from 'jquery';
 import * as JSZip from 'jszip';
 import * as _ from 'lodash';
+import { first } from 'rxjs/operators';
 
 // Store a version number just in case we ever change the export format...
 const IMPORT_EXPORT_VERSION = 1;
@@ -121,7 +120,7 @@ export class FileExportService {
     let vectorLayer: VectorLayer;
     this.store
       .select(getVectorLayer)
-      .first()
+      .pipe(first())
       .subscribe(vl => (vectorLayer = vl));
     return vectorLayer;
   }
@@ -130,7 +129,7 @@ export class FileExportService {
     let animation: Animation;
     this.store
       .select(getAnimation)
-      .first()
+      .pipe(first())
       .subscribe(anim => (animation = anim));
     return animation;
   }
@@ -139,7 +138,7 @@ export class FileExportService {
     let hiddenLayerIds: ReadonlySet<string>;
     this.store
       .select(getHiddenLayerIds)
-      .first()
+      .pipe(first())
       .subscribe(ids => (hiddenLayerIds = ids));
     return hiddenLayerIds;
   }

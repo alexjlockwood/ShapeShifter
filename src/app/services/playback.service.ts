@@ -1,10 +1,9 @@
-import 'rxjs/add/operator/first';
-
 import { Injectable } from '@angular/core';
 import { State, Store } from 'app/store';
 import { SetIsPlaying, SetIsRepeating, SetIsSlowMotion } from 'app/store/playback/actions';
 import { getIsPlaying, getIsRepeating, getIsSlowMotion } from 'app/store/playback/selectors';
 import { OutputSelector } from 'reselect';
+import { first } from 'rxjs/operators';
 
 /**
  * A simple service that provides an interface for making playback changes.
@@ -33,7 +32,10 @@ export class PlaybackService {
 
   private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
     let obj: T;
-    this.store.select(selector).first().subscribe(o => (obj = o));
+    this.store
+      .select(selector)
+      .pipe(first())
+      .subscribe(o => (obj = o));
     return obj;
   }
 }

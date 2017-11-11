@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve",
+    "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve --aot",
     "build": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod",
     "test": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --browser ChromeHeadless",
     "test-once": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --browser ChromeHeadless --single-run --code-coverage",
@@ -64,7 +64,7 @@
     "@types/jasmine": "^2.6.3",
     "@types/jquery": "^3.2.16",
     "@types/jszip": "^3.1.2",
-    "@types/lodash": "^4.14.84",
+    "@types/lodash": "^4.14.85",
     "@types/node": "^8.0.51",
     "@types/polylabel": "^1.0.5",
     "@types/tinycolor2": "^1.4.0",

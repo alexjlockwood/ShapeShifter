@@ -1,7 +1,5 @@
 import { Observable } from 'rxjs/Observable';
-import { distinctUntilChanged } from 'rxjs/operator/distinctUntilChanged';
-import { map } from 'rxjs/operator/map';
-import { pluck } from 'rxjs/operator/pluck';
+import { distinctUntilChanged, map, pluck } from 'rxjs/operators';
 
 export interface SelectSignature<T> {
   <R>(...paths: string[]): Observable<R>;

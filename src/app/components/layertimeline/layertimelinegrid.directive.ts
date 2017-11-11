@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/filter';
-
 import {
   Directive,
   ElementRef,
@@ -15,6 +13,7 @@ import { DestroyableMixin } from 'app/scripts/mixins';
 import { ShortcutService, ThemeService } from 'app/services';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
+import { filter } from 'rxjs/operators';
 
 import { TIMELINE_ANIMATION_PADDING } from './constants';
 
@@ -42,7 +41,7 @@ export class LayerTimelineGridDirective extends DestroyableMixin() implements On
     this.registerSubscription(
       this.themeService
         .asObservable()
-        .filter(t => !t.isInitialPageLoad)
+        .pipe(filter(t => !t.isInitialPageLoad))
         .subscribe(t => this.redraw()),
     );
   }

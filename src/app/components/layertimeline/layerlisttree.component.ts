@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/map';
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -16,6 +14,7 @@ import { State, Store } from 'app/store';
 import { getLayerListTreeState } from 'app/store/common/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-layerlisttree',
@@ -47,9 +46,8 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   ) {}
 
   ngOnInit() {
-    this.layerModel$ = this.store
-      .select(getLayerListTreeState)
-      .map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds, isActionMode }) => {
+    this.layerModel$ = this.store.select(getLayerListTreeState).pipe(
+      map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds, isActionMode }) => {
         const isExpandable = this.isLayerExpandable();
         const availablePropertyNames = Array.from(
           ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animation),
@@ -87,7 +85,8 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
           isMorphableLayer: isClipPathLayer || isPathLayer,
           isMergeable,
         };
-      });
+      }),
+    );
   }
 
   // @Override Callbacks

@@ -1,6 +1,3 @@
-import 'rxjs/add/operator/combineLatest';
-import 'rxjs/add/operator/map';
-
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActionMode } from 'app/model/actionmode';
 import {
@@ -28,6 +25,8 @@ import { SetAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
+import { combineLatest } from 'rxjs/observable/combineLatest';
+import { map } from 'rxjs/operators';
 
 import { InspectedProperty } from './InspectedProperty';
 
@@ -60,34 +59,34 @@ export class PropertyInputComponent implements OnInit {
   ngOnInit() {
     let prevThemeType: ThemeType;
     let currThemeType = this.themeService.getThemeType().themeType;
-    this.propertyInputModel$ = this.store
-      .select(getPropertyInputState)
-      .map(
-        ({ animation, isAnimationSelected, selectedBlockIds, vectorLayer, selectedLayerIds }) => {
-          prevThemeType = currThemeType = this.themeService.getThemeType().themeType;
-          if (selectedLayerIds.size) {
-            return this.buildInspectedLayerProperties(vectorLayer, selectedLayerIds, animation);
-          } else if (selectedBlockIds.size) {
-            return this.buildInspectedBlockProperties(vectorLayer, animation, selectedBlockIds);
-          } else if (isAnimationSelected) {
-            return this.buildInspectedAnimationProperties(animation);
-          } else {
-            return {
-              numSelections: 0,
-              inspectedProperties: [],
-              availablePropertyNames: [],
-            } as PropertyInputModel;
-          }
-        },
-      );
-    this.themeState$ = Observable.combineLatest(
+    this.propertyInputModel$ = this.store.select(getPropertyInputState).pipe(
+      map(({ animation, isAnimationSelected, selectedBlockIds, vectorLayer, selectedLayerIds }) => {
+        prevThemeType = currThemeType = this.themeService.getThemeType().themeType;
+        if (selectedLayerIds.size) {
+          return this.buildInspectedLayerProperties(vectorLayer, selectedLayerIds, animation);
+        } else if (selectedBlockIds.size) {
+          return this.buildInspectedBlockProperties(vectorLayer, animation, selectedBlockIds);
+        } else if (isAnimationSelected) {
+          return this.buildInspectedAnimationProperties(animation);
+        } else {
+          return {
+            numSelections: 0,
+            inspectedProperties: [],
+            availablePropertyNames: [],
+          } as PropertyInputModel;
+        }
+      }),
+    );
+    this.themeState$ = combineLatest(
       this.propertyInputModel$,
       this.themeService.asObservable(),
-    ).map(([unused, { themeType }]) => {
-      prevThemeType = currThemeType;
-      currThemeType = this.themeService.getThemeType().themeType;
-      return { prevThemeType, currThemeType };
-    });
+    ).pipe(
+      map(([unused, { themeType }]) => {
+        prevThemeType = currThemeType;
+        currThemeType = this.themeService.getThemeType().themeType;
+        return { prevThemeType, currThemeType };
+      }),
+    );
   }
 
   shouldShowStartActionModeButton(pim: PropertyInputModel) {

@@ -1,7 +1,3 @@
-import 'rxjs/add/observable/combineLatest';
-import 'rxjs/add/operator/distinctUntilChanged';
-import 'rxjs/add/operator/map';
-
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -22,6 +18,8 @@ import { getCanvasCursor, getZoomPanInfo } from 'app/store/paper/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
+import { combineLatest } from 'rxjs/observable/combineLatest';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
@@ -64,13 +62,9 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   ngAfterViewInit() {
     const activeViewport$ = this.store
       .select(getVectorLayer)
-      .map(vl => ({ w: vl.width, h: vl.height }))
-      .distinctUntilChanged(_.isEqual);
+      .pipe(map(vl => ({ w: vl.width, h: vl.height })), distinctUntilChanged(_.isEqual));
     this.registerSubscription(
-      Observable.combineLatest(
-        this.canvasBounds$,
-        activeViewport$,
-      ).subscribe(([bounds, viewport]) => {
+      combineLatest(this.canvasBounds$, activeViewport$).subscribe(([bounds, viewport]) => {
         const w = Math.max(1, bounds.w - CANVAS_MARGIN * 2);
         const h = Math.max(1, bounds.h - CANVAS_MARGIN * 2);
         this.setDimensions({ w, h }, viewport);

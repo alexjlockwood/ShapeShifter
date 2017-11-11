@@ -1,7 +1,3 @@
-import 'rxjs/add/operator/first';
-import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/map';
-
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -48,6 +44,7 @@ import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
+import { filter, first, map } from 'rxjs/operators';
 
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { LayerTimelineGridDirective, ScrubEvent } from './layertimelinegrid.directive';
@@ -137,9 +134,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   ngOnInit() {
     let currActionMode: ActionMode;
-    this.layerTimelineModel$ = this.store
-      .select(getLayerTimelineState)
-      .map(
+    this.layerTimelineModel$ = this.store.select(getLayerTimelineState).pipe(
+      map(
         ({
           animation,
           vectorLayer,
@@ -170,7 +166,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
             isActionMode,
           };
         },
-      );
+      ),
+    );
     this.registerSubscription(
       this.shortcutService.asObservable().subscribe(shortcut => {
         if (shortcut === Shortcut.ZoomToFit) {
@@ -218,12 +215,12 @@ export class LayerTimelineComponent extends DestroyableMixin()
     };
     this.store
       .select(isWorkspaceDirty)
-      .first()
+      .pipe(first())
       .subscribe(isDirty => {
         if (isDirty && !IS_DEV_BUILD) {
           this.dialogService
             .confirm('Start over?', `You'll lose any unsaved changes.`)
-            .filter(result => result)
+            .pipe(filter(result => result))
             .subscribe(resetWorkspaceFn);
         } else {
           resetWorkspaceFn();
@@ -242,7 +239,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     ga('send', 'event', 'File', 'Demo');
     this.dialogService
       .pickDemo()
-      .filter(demoInfo => !!demoInfo)
+      .pipe(filter(demoInfo => !!demoInfo))
       .subscribe(selectedDemoInfo => {
         ga('send', 'event', 'Demos', 'Demo selected', selectedDemoInfo.title);
 
@@ -320,7 +317,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   onAddPathLayerClick() {
     this.store
       .select(getVectorLayer)
-      .first()
+      .pipe(first())
       .subscribe(vl => {
         const layer = new PathLayer({
           name: LayerUtil.getUniqueLayerName([vl], 'path'),
@@ -335,7 +332,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   onAddClipPathLayerClick() {
     this.store
       .select(getVectorLayer)
-      .first()
+      .pipe(first())
       .subscribe(vl => {
         const layer = new ClipPathLayer({
           name: LayerUtil.getUniqueLayerName([vl], 'mask'),
@@ -350,7 +347,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   onAddGroupLayerClick() {
     this.store
       .select(getVectorLayer)
-      .first()
+      .pipe(first())
       .subscribe(vl => {
         const name = LayerUtil.getUniqueLayerName([vl], 'group');
         const layer = new GroupLayer({ name, children: [] });
@@ -694,7 +691,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
         }
         this.store
           .select(getAnimation)
-          .first()
+          .pipe(first())
           .subscribe(anim => {
             const blocks = replacementBlocks.filter(replacementBlock => {
               const existingBlock = _.find(anim.blocks, b => replacementBlock.id === b.id);
