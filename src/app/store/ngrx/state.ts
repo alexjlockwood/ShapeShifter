@@ -1,20 +1,23 @@
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Observable } from 'rxjs/Observable';
 import { observeOn, scan, withLatestFrom } from 'rxjs/operators';
 import { queue } from 'rxjs/scheduler/queue';
 
-import { Dispatcher } from './dispatcher';
-import { Reducer } from './reducer';
+import { Action, Dispatcher } from './dispatcher';
+import { ActionReducer, Reducer } from './reducer';
 
 export class State<T> extends BehaviorSubject<T> {
   constructor(initialState: T, action$: Dispatcher, reducer$: Reducer) {
     super(initialState);
-    const actionInQueue$ = observeOn.call(action$, queue);
-    const actionAndReducer$ = withLatestFrom.call(actionInQueue$, reducer$);
-    const state$ = scan.call(
-      actionAndReducer$,
-      (state, [action, reducer]) => reducer(state, action),
-      initialState,
-    );
-    state$.subscribe(value => this.next(value));
+    action$
+      .pipe(
+        observeOn(queue),
+        withLatestFrom(reducer$),
+        scan<[Action<any>, ActionReducer<any>], T>(
+          (state, [action, reducer]) => reducer(state, action),
+          initialState,
+        ),
+      )
+      .subscribe(value => this.next(value));
   }
 }
