@@ -2,7 +2,7 @@ import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular
 import { ActionSource } from 'app/model/actionmode';
 import { VectorLayer } from 'app/model/layers';
 import { DestroyableMixin } from 'app/scripts/mixins';
-import { Paper } from 'app/scripts/paper';
+import { PaperProject } from 'app/scripts/paper';
 import { PaperService } from 'app/services';
 import { State, Store } from 'app/store';
 import { SetVectorLayer } from 'app/store/layers/actions';
@@ -14,8 +14,8 @@ import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit, OnDestroy {
   @Input() actionSource: ActionSource;
-
   private readonly $canvas: JQuery<HTMLCanvasElement>;
+  private paperProject: PaperProject;
 
   constructor(
     elementRef: ElementRef,
@@ -27,7 +27,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   ngAfterViewInit() {
-    Paper.initialize(this.$canvas.get(0), this.ps);
+    this.paperProject = new PaperProject(this.$canvas.get(0), this.ps);
 
     // TODO: remove this debug code
     // TODO: explicitly set paths with no Z to closed? (i.e. M 1 1 h 6 v 6 h -6 v -6)
@@ -72,7 +72,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   ngOnDestroy() {
-    // TODO: support the ability to detach paper.js features? (i.e. Paper.detach(canvas))
+    this.paperProject.remove();
   }
 
   // @Override
@@ -80,6 +80,6 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     const { w, h } = this.getViewport();
     const scale = this.cssScale;
     this.$canvas.css({ width: w * scale, height: h * scale });
-    Paper.updateDimensions(w, h, w * scale, h * scale);
+    this.paperProject.setDimensions(w, h, w * scale, h * scale);
   }
 }
