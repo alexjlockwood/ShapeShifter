@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve",
+    "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve --aot",
     "build": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod",
     "test": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --browser ChromeHeadless",
     "test-once": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --browser ChromeHeadless --single-run --code-coverage",
