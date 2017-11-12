@@ -34,7 +34,7 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
   rootNode.appendChild(vectorLayerContainerNode);
 
   const vectorLayerNode = xmlDoc.createElement('vector');
-  vectorLayerToXmlNode(vl, vectorLayerNode, xmlDoc);
+  vectorLayerToXmlNode(vl, vectorLayerNode, xmlDoc, false);
   vectorLayerContainerNode.appendChild(vectorLayerNode);
 
   // create animation nodes (one per layer)
@@ -62,7 +62,6 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
 
       // <set> for multiple property animations on a single layer.
       blockContainerNode = xmlDoc.createElement('set');
-      blockContainerNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
       animationNode.appendChild(blockContainerNode);
     }
 
@@ -70,9 +69,6 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
 
     blocksForLayer.forEach(block => {
       const blockNode = xmlDoc.createElement('objectAnimator');
-      if (!multiBlock) {
-        blockNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
-      }
       blockNode.setAttributeNS(ANDROID_NS, 'android:propertyName', block.propertyName);
       conditionalAttr_(blockNode, 'android:startOffset', block.startTime, 0);
       conditionalAttr_(blockNode, 'android:duration', block.endTime - block.startTime);
@@ -102,8 +98,11 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
  * Helper method that serializes an VectorLayer to a destinationNode in an xmlDoc.
  * The destinationNode should be a <vector> node.
  */
-function vectorLayerToXmlNode(vl: VectorLayer, destinationNode, xmlDoc) {
-  destinationNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
+function vectorLayerToXmlNode(vl: VectorLayer, destinationNode, xmlDoc, withAndroidNs = true) {
+  if (withAndroidNs) {
+    destinationNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
+  }
+  conditionalAttr_(destinationNode, 'android:name', vl.name);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:width', `${vl.width}dp`);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:height', `${vl.height}dp`);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:viewportWidth', `${vl.width}`);
