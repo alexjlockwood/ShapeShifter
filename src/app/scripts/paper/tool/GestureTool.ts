@@ -1,6 +1,5 @@
 import { ToolMode } from 'app/model/paper';
 import { ClickDetector } from 'app/scripts/paper/detector';
-import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import {
   AddDeleteHandlesGesture,
   BatchSelectItemsGesture,
@@ -17,7 +16,8 @@ import {
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
   SetFocusedPathGesture,
-} from 'app/scripts/paper/tool/gesture';
+} from 'app/scripts/paper/gesture';
+import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
