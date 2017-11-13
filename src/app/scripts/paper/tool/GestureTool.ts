@@ -102,24 +102,33 @@ export class GestureTool extends Tool {
       }
     }
 
-    // TODO: use same logic as is used in hover items gesture
-    const hitResult = HitTests.selectionMode(event.point, this.ps);
+    const { children } = this.pl.hitTestVectorLayer(event.point);
+    const selectionMap = HitTests.getSelectedLayerMap(this.ps);
+    const hitResult = HitTests.findFirstHitResult(children, selectionMap);
     if (!hitResult) {
       // If there is no hit item, then batch select items using a selection box.
       return new BatchSelectItemsGesture(this.ps);
     }
 
-    // TODO: only enter focused path mode for paths (not groups)
     const hitItemId = hitResult.hitItem.data.id;
     if (this.clickDetector.isDoubleClick()) {
-      // If a double click event occurs on top of a hit item, then enter focused path mode.
-
-      // TODO: It should only be possible to enter focused path mode
-      // for an editable item (i.e. a path, but not a group). Double clicking
-      // on a non-selected and editable item that is contained inside a selected
-      // parent layer should result in the editable item being selected (it is
-      // actually a tiny bit more complicated than that but you get the idea).
-      return new SetFocusedPathGesture(this.ps, hitItemId);
+      const hitLayer = this.ps.getVectorLayer().findLayerById(hitItemId);
+      if (hitLayer.children.length) {
+        const newHitResult = HitTests.findFirstHitResult(
+          children,
+          selectionMap,
+          new Set([hitLayer.id]),
+        );
+        if (newHitResult) {
+          return new SelectDragCloneItemsGesture(this.ps, newHitResult.hitItem.data.id);
+        } else {
+          return new BatchSelectItemsGesture(this.ps);
+        }
+      } else {
+        // If a double click event occurs on top of a hit item w/ no children,
+        // then enter focused path mode.
+        return new SetFocusedPathGesture(this.ps, hitItemId);
+      }
     }
 
     if (selectedLayers.has(hitItemId) && event.modifiers.shift && selectedLayers.size > 1) {

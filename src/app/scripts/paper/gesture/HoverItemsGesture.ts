@@ -52,10 +52,9 @@ export class HoverItemsGesture extends Gesture {
       }
     }
 
-    // TODO: should we show hover paths for children of a selected group?
-    const firstHitResult = HitTests.selectionMode(event.point, this.ps);
-    if (firstHitResult) {
-      this.ps.setHoveredLayer(firstHitResult.hitItem.data.id);
+    const hitResult = HitTests.selectionMode(event.point, this.ps);
+    if (hitResult && !selectedLayers.has(hitResult.hitItem.data.id)) {
+      this.ps.setHoveredLayer(hitResult.hitItem.data.id);
     } else {
       this.ps.setHoveredLayer(undefined);
     }

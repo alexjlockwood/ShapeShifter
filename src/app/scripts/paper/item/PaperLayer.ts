@@ -335,7 +335,6 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
       ? LayerUtil.toStrokeDashOffset(trimPathStart, trimPathEnd, trimPathOffset, pathLength)
       : undefined;
     // TODO: import a compound path instead
-    // TODO: set closed to true if end points are the same?
     return new paper.Path({
       data: { id: layer.id },
       pathData: layer.pathData ? layer.pathData.getPathString() : '',
@@ -348,15 +347,17 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
       fillRule: layer.fillType === 'evenOdd' ? 'evenodd' : 'nonzero',
       dashArray,
       dashOffset,
+      closed: layer.pathData && layer.pathData.isClosed(),
     });
   };
 
   const fromClipPathLayerFn = (layer: ClipPathLayer) => {
-    // TODO: set closed to true if end points are the same?
+    const pathData = layer.pathData ? layer.pathData.getPathString() : '';
     return new paper.Path({
       data: { id: layer.id },
-      pathData: layer.pathData ? layer.pathData.getPathString() : '',
+      pathData,
       clipMask: true,
+      closed: layer.pathData && layer.pathData.isClosed(),
     });
   };
 
@@ -415,6 +416,7 @@ function newHoverPathItem(item: paper.Item) {
     hoverPath.strokeScaling = false;
     hoverPath.strokeWidth = 2 / paper.view.zoom;
     // Transform the hover path from local coordinates to viewport coordinates.
+    // TODO: this doesn't seem to work all of the time...
     hoverPath.matrix = item.globalMatrix.prepended(paper.project.activeLayer.matrix.inverted());
   }
   return hoverPath;

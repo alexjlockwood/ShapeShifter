@@ -11,28 +11,17 @@ import { SelectionBoundsRaster } from './SelectionBoundsRaster';
  * Performs the default selection mode hit test.
  */
 export function selectionMode(projPoint: paper.Point, ps: PaperService) {
+  const pl = paper.project.activeLayer as PaperLayer;
+  const { children } = pl.hitTestVectorLayer(projPoint);
   const selectionMap = getSelectedLayerMap(ps);
-  const { children } = (paper.project.activeLayer as PaperLayer).hitTestVectorLayer(projPoint);
-  let firstHitResult: HitResult;
-  _.forEach(children, function recurseFn(hitResult: HitResult) {
-    if (firstHitResult) {
-      return false;
-    }
-    if (!selectionMap.get(hitResult.hitItem.data.id)) {
-      firstHitResult = hitResult;
-      return false;
-    }
-    _.forEach(hitResult.children, recurseFn);
-    return true;
-  });
-  return firstHitResult;
+  return findFirstHitResult(children, selectionMap);
 }
 
 /**
  * Returns a map of layerIds to booleans. Each key-value pair indicates whether
  * the subtree rooted at layerId contains a selected layer.
  */
-function getSelectedLayerMap(ps: PaperService) {
+export function getSelectedLayerMap(ps: PaperService) {
   const map = new Map<string, boolean>();
   const selectedLayers = ps.getSelectedLayers();
   (function containsSelectedLayerFn(layer: Layer) {
@@ -42,6 +31,29 @@ function getSelectedLayerMap(ps: PaperService) {
     return result;
   })(ps.getVectorLayer());
   return map;
+}
+
+export function findFirstHitResult(
+  hitResults: ReadonlyArray<HitResult>,
+  selectionMap: Map<string, boolean>,
+  ignoredLayerIds = new Set<string>(),
+) {
+  let firstHitResult: HitResult;
+  _.forEach(hitResults, function recurseFn(hitResult: HitResult) {
+    if (firstHitResult) {
+      return false;
+    }
+    const hasSelectedChildLayer = (hitResult.hitItem.children || []).some(c =>
+      selectionMap.get(c.data.id),
+    );
+    if (!hasSelectedChildLayer && !ignoredLayerIds.has(hitResult.hitItem.data.id)) {
+      firstHitResult = hitResult;
+      return false;
+    }
+    _.forEach(hitResult.children, recurseFn);
+    return true;
+  });
+  return firstHitResult;
 }
 
 /**
