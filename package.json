@@ -13,7 +13,7 @@
     "test-once": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --browser ChromeHeadless --single-run --code-coverage",
     "lint": "node --max-old-space-size=8192 ./node_modules/.bin/ng lint --type-check",
     "e2e": "node --max-old-space-size=8192 ./node_modules/.bin/ng e2e",
-    "deploy": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ngh",
+    "deploy": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ./node_modules/.bin/ngh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "bundle-report": "node --max-old-space-size=8192 ./node_modules/.bin/ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json"
   },
