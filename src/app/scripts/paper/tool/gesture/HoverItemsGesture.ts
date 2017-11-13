@@ -52,40 +52,12 @@ export class HoverItemsGesture extends Gesture {
       }
     }
 
-    const { children } = HitTests.selectionMode(event.point);
-    const selectionMap = this.getSelectedLayerMap();
-    let firstHitResult: HitResult;
-    _.forEach(children, function recurseFn(hitResult: HitResult) {
-      if (firstHitResult) {
-        return false;
-      }
-      if (!selectionMap.get(hitResult.hitItem.data.id)) {
-        firstHitResult = hitResult;
-        return false;
-      }
-      _.forEach(hitResult.children, recurseFn);
-      return true;
-    });
+    // TODO: should we show hover paths for children of a selected group?
+    const firstHitResult = HitTests.selectionMode(event.point, this.ps);
     if (firstHitResult) {
       this.ps.setHoveredLayer(firstHitResult.hitItem.data.id);
     } else {
       this.ps.setHoveredLayer(undefined);
     }
-  }
-
-  /**
-   * Returns a map of layerIds to booleans. Each key-value pair indicates whether
-   * the subtree rooted at layerId contains a selected layer.
-   */
-  private getSelectedLayerMap() {
-    const map = new Map<string, boolean>();
-    const selectedLayers = this.ps.getSelectedLayers();
-    (function containsSelectedLayerFn(layer: Layer) {
-      let result = selectedLayers.has(layer.id);
-      layer.children.forEach(c => (result = containsSelectedLayerFn(c) || result));
-      map.set(layer.id, result);
-      return result;
-    })(this.ps.getVectorLayer());
-    return map;
   }
 }

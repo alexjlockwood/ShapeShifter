@@ -103,13 +103,14 @@ export class GestureTool extends Tool {
     }
 
     // TODO: use same logic as is used in hover items gesture
-    const hitResult = this.pl.hitTest(event.point);
+    const hitResult = HitTests.selectionMode(event.point, this.ps);
     if (!hitResult) {
       // If there is no hit item, then batch select items using a selection box.
       return new BatchSelectItemsGesture(this.ps);
     }
 
-    const hitItemId = hitResult.item.data.id;
+    // TODO: only enter focused path mode for paths (not groups)
+    const hitItemId = hitResult.hitItem.data.id;
     if (this.clickDetector.isDoubleClick()) {
       // If a double click event occurs on top of a hit item, then enter focused path mode.
 
