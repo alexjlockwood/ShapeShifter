@@ -1,10 +1,28 @@
+import { Layer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
-import { HitTests } from 'app/scripts/paper/item';
+import { HitResult, HitTests } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
+import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
+
+// prettier-ignore
+const RESIZE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([
+  ['bottomLeft', Cursor.Resize45], ['leftCenter', Cursor.Resize90],
+  ['topLeft', Cursor.Resize135], ['topCenter', Cursor.Resize0],
+  ['topRight', Cursor.Resize45], ['rightCenter', Cursor.Resize90],
+  ['bottomRight', Cursor.Resize135], ['bottomCenter', Cursor.Resize0],
+] as [PivotType, Cursor][]);
+
+// prettier-ignore
+const ROTATE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([
+  ['bottomLeft', Cursor.Rotate225], ['leftCenter', Cursor.Rotate270],
+  ['topLeft', Cursor.Rotate315], ['topCenter', Cursor.Rotate0],
+  ['topRight', Cursor.Rotate45], ['rightCenter', Cursor.Rotate90],
+  ['bottomRight', Cursor.Rotate135], ['bottomCenter', Cursor.Rotate180],
+] as [PivotType, Cursor][]);
 
 /**
  * A gesture that performs hover operations on items.
@@ -23,6 +41,7 @@ export class HoverItemsGesture extends Gesture {
 
     const selectedLayers = this.ps.getSelectedLayers();
     if (selectedLayers.size > 0) {
+      // TODO: only perform a hit test if we are in focused path mode?
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
         const toolMode = this.ps.getToolMode();
@@ -32,33 +51,13 @@ export class HoverItemsGesture extends Gesture {
         return;
       }
     }
-    const hitResult = HitTests.selectionMode(event.point, {
-      // TODO: support hovering over groups
-      class: paper.Path,
-      match: ({ item }) => !selectedLayers.has(item.data.id),
-    });
-    this.ps.setHoveredLayer(hitResult ? hitResult.item.data.id : undefined);
+
+    // TODO: should we show hover paths for children of a selected group?
+    const firstHitResult = HitTests.selectionMode(event.point, this.ps);
+    if (firstHitResult) {
+      this.ps.setHoveredLayer(firstHitResult.hitItem.data.id);
+    } else {
+      this.ps.setHoveredLayer(undefined);
+    }
   }
 }
-
-const RESIZE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([
-  ['bottomLeft', Cursor.Resize45],
-  ['leftCenter', Cursor.Resize90],
-  ['topLeft', Cursor.Resize135],
-  ['topCenter', Cursor.Resize0],
-  ['topRight', Cursor.Resize45],
-  ['rightCenter', Cursor.Resize90],
-  ['bottomRight', Cursor.Resize135],
-  ['bottomCenter', Cursor.Resize0],
-] as [PivotType, Cursor][]);
-
-const ROTATE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([
-  ['bottomLeft', Cursor.Rotate225],
-  ['leftCenter', Cursor.Rotate270],
-  ['topLeft', Cursor.Rotate315],
-  ['topCenter', Cursor.Rotate0],
-  ['topRight', Cursor.Rotate45],
-  ['rightCenter', Cursor.Rotate90],
-  ['bottomRight', Cursor.Rotate135],
-  ['bottomCenter', Cursor.Rotate180],
-] as [PivotType, Cursor][]);

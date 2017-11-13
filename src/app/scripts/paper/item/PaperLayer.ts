@@ -56,6 +56,35 @@ export class PaperLayer extends paper.Layer {
     this.updateChildren();
   }
 
+  hitTestVectorLayer(projPoint: paper.Point) {
+    const hitResult = (function recurseFn(item: paper.Item): HitResult {
+      const localPoint = item.globalToLocal(projPoint);
+      let hitItem: paper.Item;
+      let children: HitResult[] = [];
+      if (item instanceof paper.Path) {
+        // TODO: figure out what to do with compound paths?
+        const res = item.hitTest(localPoint, { fill: true, stroke: true });
+        if (res) {
+          hitItem = res.item;
+        }
+      } else if (item instanceof paper.Group) {
+        const { strokeBounds } = item;
+        if (strokeBounds.contains(localPoint)) {
+          hitItem = item;
+          children = item.children.map(recurseFn).filter(r => !!r.hitItem);
+        }
+      }
+      return { hitItem, children };
+    })(this.vectorLayerItem);
+    const { width, height } = this.vectorLayer;
+    const vectorLayerBounds = new paper.Rectangle(0, 0, width, height);
+    const vpPoint = this.vectorLayerItem.globalToLocal(projPoint);
+    return {
+      hitItem: vectorLayerBounds.contains(vpPoint) ? this.vectorLayerItem : undefined,
+      children: hitResult.children,
+    };
+  }
+
   setDimensions(
     viewportWidth: number,
     viewportHeight: number,
@@ -657,4 +686,9 @@ function newPixelGridItem(viewportWidth: number, viewportHeight: number) {
     group.addChild(newLineFn(new paper.Point(0, y), new paper.Point(viewportWidth, y)));
   }
   return group;
+}
+
+export interface HitResult {
+  hitItem: paper.Item | undefined;
+  children: ReadonlyArray<HitResult>;
 }

@@ -1,18 +1,47 @@
+import { Layer, VectorLayer } from 'app/model/layers';
+import { PaperService } from 'app/services';
+import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { FocusedPathRaster } from './FocusedPathRaster';
-import { PaperLayer } from './PaperLayer';
+import { HitResult, PaperLayer } from './PaperLayer';
 import { SelectionBoundsRaster } from './SelectionBoundsRaster';
 
 /**
  * Performs the default selection mode hit test.
  */
-export function selectionMode(
-  projPoint: paper.Point,
-  extraOptions: Pick<paper.HitOptions, 'class' | 'match'> = {},
-) {
-  const pl = paper.project.activeLayer as PaperLayer;
-  return pl.hitTest(projPoint, { fill: true, stroke: true, ...extraOptions });
+export function selectionMode(projPoint: paper.Point, ps: PaperService) {
+  const selectionMap = getSelectedLayerMap(ps);
+  const { children } = (paper.project.activeLayer as PaperLayer).hitTestVectorLayer(projPoint);
+  let firstHitResult: HitResult;
+  _.forEach(children, function recurseFn(hitResult: HitResult) {
+    if (firstHitResult) {
+      return false;
+    }
+    if (!selectionMap.get(hitResult.hitItem.data.id)) {
+      firstHitResult = hitResult;
+      return false;
+    }
+    _.forEach(hitResult.children, recurseFn);
+    return true;
+  });
+  return firstHitResult;
+}
+
+/**
+ * Returns a map of layerIds to booleans. Each key-value pair indicates whether
+ * the subtree rooted at layerId contains a selected layer.
+ */
+function getSelectedLayerMap(ps: PaperService) {
+  const map = new Map<string, boolean>();
+  const selectedLayers = ps.getSelectedLayers();
+  (function containsSelectedLayerFn(layer: Layer) {
+    let result = selectedLayers.has(layer.id);
+    layer.children.forEach(c => (result = containsSelectedLayerFn(c) || result));
+    map.set(layer.id, result);
+    return result;
+  })(ps.getVectorLayer());
+  return map;
 }
 
 /**
