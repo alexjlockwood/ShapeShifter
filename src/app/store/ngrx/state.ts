@@ -1,5 +1,4 @@
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
 import { observeOn, scan, withLatestFrom } from 'rxjs/operators';
 import { queue } from 'rxjs/scheduler/queue';
 
@@ -13,7 +12,7 @@ export class State<T> extends BehaviorSubject<T> {
       .pipe(
         observeOn(queue),
         withLatestFrom(reducer$),
-        scan<[Action<any>, ActionReducer<any>], T>(
+        scan<[Action, ActionReducer<any>], T>(
           (state, [action, reducer]) => reducer(state, action),
           initialState,
         ),

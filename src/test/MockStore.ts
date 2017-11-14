@@ -4,7 +4,6 @@ import { Action, ActionReducer, Store } from 'app/store/ngrx';
 import { State as PlaybackState } from 'app/store/playback/reducer';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
 import { Observer } from 'rxjs/Observer';
 import { map } from 'rxjs/operators';
 

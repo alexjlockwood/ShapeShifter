@@ -9,10 +9,9 @@ import { State, Store } from 'app/store';
 import { getActionModeEndState, getActionModeStartState } from 'app/store/actionmode/selectors';
 import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
-import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 import { merge } from 'rxjs/observable/merge';
-import { first, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';

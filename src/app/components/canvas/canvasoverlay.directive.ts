@@ -36,7 +36,6 @@ import { getCanvasOverlayState } from 'app/store/common/selectors';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
-import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 import { merge } from 'rxjs/observable/merge';
 import { map } from 'rxjs/operators';
