@@ -1,3 +1,5 @@
+import 'core-js/es7/reflect';
+
 import { ComponentFixture, TestBed, async, fakeAsync, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatButtonModule, MatIconModule, MatTooltipModule } from '@angular/material';

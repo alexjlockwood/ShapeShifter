@@ -1,3 +1,5 @@
+import 'core-js/es7/reflect';
+
 import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 
 import { SplitterComponent } from './splitter.component';
