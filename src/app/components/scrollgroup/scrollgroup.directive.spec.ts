@@ -1,3 +1,5 @@
+import 'core-js/es7/reflect';
+
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 

@@ -1,4 +1,5 @@
 import 'hammerjs';
+import 'core-js/es7/reflect';
 
 import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
