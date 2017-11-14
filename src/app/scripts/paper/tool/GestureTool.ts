@@ -102,9 +102,9 @@ export class GestureTool extends Tool {
       }
     }
 
-    const { children } = this.pl.hitTestVectorLayer(event.point);
+    const hitResults = this.pl.hitTestVectorLayer(event.point);
     const selectionMap = HitTests.getSelectedLayerMap(this.ps);
-    const hitResult = HitTests.findFirstHitResult(children, selectionMap);
+    const hitResult = HitTests.findFirstHitResult(hitResults.children, selectionMap);
     if (!hitResult) {
       // If there is no hit item, then batch select items using a selection box.
       return new BatchSelectItemsGesture(this.ps);
@@ -115,7 +115,7 @@ export class GestureTool extends Tool {
       const hitLayer = this.ps.getVectorLayer().findLayerById(hitItemId);
       if (hitLayer.children.length) {
         const newHitResult = HitTests.findFirstHitResult(
-          children,
+          hitResults.children,
           selectionMap,
           new Set([hitLayer.id]),
         );
