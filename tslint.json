@@ -100,15 +100,12 @@
     "use-pipe-transform-interface": true,
     "component-class-suffix": true,
     "directive-class-suffix": true,
-    "templates-use-public": true,
-    "invoke-injectable": true,
     "prefer-object-spread": true,
     "angular-whitespace": [true, "check-interpolation"],
     "banana-in-box": true,
     "templates-no-negated-async": true,
     "no-attribute-parameter-decorator": true,
     "no-forward-ref": true,
-    "use-view-encapsulation": true,
-    "template-to-ng-template": true
+    "use-view-encapsulation": true
   }
 }
