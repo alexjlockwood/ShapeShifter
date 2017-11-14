@@ -67,5 +67,3 @@ export function snapVectorToAngle(delta: Point, snapAngleDegrees: number): Point
 export function isNearZero(n: number) {
   return round(n) === 0;
 }
-
-type Quadrilateral = [Point, Point, Point, Point];

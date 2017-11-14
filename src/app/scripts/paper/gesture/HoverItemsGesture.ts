@@ -1,9 +1,7 @@
-import { Layer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
-import { HitResult, HitTests } from 'app/scripts/paper/item';
+import { HitTests } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
-import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';

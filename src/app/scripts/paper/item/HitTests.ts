@@ -1,4 +1,4 @@
-import { Layer, VectorLayer } from 'app/model/layers';
+import { Layer } from 'app/model/layers';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
