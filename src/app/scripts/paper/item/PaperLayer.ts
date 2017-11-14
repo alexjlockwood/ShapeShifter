@@ -206,7 +206,10 @@ export class PaperLayer extends paper.Layer {
       this.selectionBoundsItem.remove();
       this.selectionBoundsItem = undefined;
     }
-    const selectedItems = Array.from(this.selectedLayerIds).map(id => this.findItemByLayerId(id));
+    const selectedItems = Array.from(this.selectedLayerIds)
+      .map(id => this.findItemByLayerId(id))
+      // Filter out any selected empty groups.
+      .filter(i => !(i instanceof paper.Group) || i.children.length);
     if (selectedItems.length > 0) {
       this.selectionBoundsItem = newSelectionBoundsItem(
         PaperUtil.transformRectangle(
