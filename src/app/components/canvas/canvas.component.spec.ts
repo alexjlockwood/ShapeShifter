@@ -5,6 +5,7 @@ import {
   ActionModeService,
   AnimatorService,
   LayerTimelineService,
+  PaperService,
   PlaybackService,
   ShortcutService,
   ThemeService,
@@ -17,6 +18,7 @@ import { CanvasComponent } from './canvas.component';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import { CanvasPaperDirective } from './canvaspaper.directive';
 import { CanvasRulerDirective } from './canvasruler.directive';
 
 describe('CanvasComponent', () => {
@@ -31,6 +33,7 @@ describe('CanvasComponent', () => {
           CanvasContainerDirective,
           CanvasLayersDirective,
           CanvasOverlayDirective,
+          CanvasPaperDirective,
           CanvasRulerDirective,
         ],
         imports: [FlexLayoutModule],
@@ -39,6 +42,7 @@ describe('CanvasComponent', () => {
           ActionModeService,
           AnimatorService,
           LayerTimelineService,
+          PaperService,
           PlaybackService,
           ShortcutService,
           ThemeService,

@@ -25,6 +25,7 @@ import {
   CanvasContainerDirective,
   CanvasLayersDirective,
   CanvasOverlayDirective,
+  CanvasPaperDirective,
   CanvasRulerDirective,
 } from 'app/components/canvas';
 import {
@@ -46,6 +47,7 @@ import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.dir
 import { SplashScreenComponent } from 'app/components/splashscreen/splashscreen.component';
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import { ToolbarComponent } from 'app/components/toolbar/toolbar.component';
+import { ToolPanelComponent } from 'app/components/toolpanel/toolpanel.component';
 import {
   ActionModeService,
   AnimatorService,
@@ -55,6 +57,7 @@ import {
   FileExportService,
   FileImportService,
   LayerTimelineService,
+  PaperService,
   PlaybackService,
   ShortcutService,
   SnackBarService,
@@ -75,6 +78,7 @@ describe('RootComponent', () => {
           CanvasContainerDirective,
           CanvasLayersDirective,
           CanvasOverlayDirective,
+          CanvasPaperDirective,
           CanvasRulerDirective,
           ConfirmDialogComponent,
           DemoDialogComponent,
@@ -91,6 +95,7 @@ describe('RootComponent', () => {
           SplitterComponent,
           TimelineAnimationRowComponent,
           ToolbarComponent,
+          ToolPanelComponent,
         ],
         imports: [
           BrowserModule,
@@ -121,6 +126,7 @@ describe('RootComponent', () => {
           FileExportService,
           FileImportService,
           LayerTimelineService,
+          PaperService,
           PlaybackService,
           ShortcutService,
           SnackBarService,
