@@ -130,6 +130,7 @@ function vectorLayerToXmlNode(vl: VectorLayer, destinationNode, xmlDoc, withAndr
         conditionalAttr_(node, 'android:strokeLineCap', layer.strokeLinecap, 'butt');
         conditionalAttr_(node, 'android:strokeLineJoin', layer.strokeLinejoin, 'miter');
         conditionalAttr_(node, 'android:strokeMiterLimit', layer.strokeMiterLimit, 4);
+        conditionalAttr_(node, 'android:fillType', layer.fillType, 'nonZero');
         parentNode.appendChild(node);
         return parentNode;
       } else if (layer instanceof ClipPathLayer) {
