@@ -7,13 +7,11 @@
 // };
 
 export function cleanupOutData(data, params) {
-
   var str = '',
     delimiter,
     prev;
 
-  data.forEach(function (item, i) {
-
+  data.forEach(function(item, i) {
     // space delimiter by default
     delimiter = ' ';
 
@@ -33,9 +31,7 @@ export function cleanupOutData(data, params) {
     // in front of a floating number if a previous number is floating too
     if (
       params.negativeExtraSpace &&
-      (item < 0 ||
-        (String(item).charCodeAt(0) == 46 && prev % 1 !== 0)
-      )
+      (item < 0 || (String(item).charCodeAt(0) == 46 && prev % 1 !== 0))
     ) {
       delimiter = '';
     }
@@ -44,12 +40,10 @@ export function cleanupOutData(data, params) {
     prev = item;
 
     str += delimiter + item;
-
   });
 
   return str;
-
-};
+}
 
 /**
  * Remove floating-point numbers leading zero.
@@ -74,5 +68,4 @@ export function removeLeadingZero(num) {
   }
 
   return strNum;
-
-};
+}
