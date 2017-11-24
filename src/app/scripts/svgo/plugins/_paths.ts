@@ -1,8 +1,8 @@
 /* tslint:disable */
 
 import * as collections from './_collections';
-import * as transforms from './_transforms';
 import * as tools from './_tools';
+import * as transforms from './_transforms';
 
 var regPathInstructions = /([MmLlHhVvCcSsQqTtAaZz])\s*/,
   regPathData = /[-+]?(?:\d*\.\d+|\d+\.?)([eE][-+]?\d+)?/g,
@@ -26,58 +26,78 @@ var regPathInstructions = /([MmLlHhVvCcSsQqTtAaZz])\s*/,
 export function path2js(path) {
   if (path.pathJS) return path.pathJS;
 
-  var paramsLength = { // Number of parameters of every path command
-    H: 1, V: 1, M: 2, L: 2, T: 2, Q: 4, S: 4, C: 6, A: 7,
-    h: 1, v: 1, m: 2, l: 2, t: 2, q: 4, s: 4, c: 6, a: 7
-  },
-    pathData = [],   // JS representation of the path data
+  var paramsLength = {
+      // Number of parameters of every path command
+      H: 1,
+      V: 1,
+      M: 2,
+      L: 2,
+      T: 2,
+      Q: 4,
+      S: 4,
+      C: 6,
+      A: 7,
+      h: 1,
+      v: 1,
+      m: 2,
+      l: 2,
+      t: 2,
+      q: 4,
+      s: 4,
+      c: 6,
+      a: 7,
+    },
+    pathData = [], // JS representation of the path data
     instruction, // current instruction context
     startMoveto = false;
 
   // splitting path string into array like ['M', '10 50', 'L', '20 30']
-  path.attr('d').value.split(regPathInstructions).forEach(function (data) {
-    if (!data) return;
-    if (!startMoveto) {
-      if (data == 'M' || data == 'm') {
-        startMoveto = true;
-      } else return;
-    }
-
-    // instruction item
-    if (regPathInstructions.test(data)) {
-      instruction = data;
-
-      // z - instruction w/o data
-      if (instruction == 'Z' || instruction == 'z') {
-        pathData.push({
-          instruction: 'z'
-        });
-      }
-      // data item
-    } else {
-      data = data.match(regPathData);
+  path
+    .attr('d')
+    .value.split(regPathInstructions)
+    .forEach(function(data) {
       if (!data) return;
-
-      data = data.map(Number);
-
-      // Subsequent moveto pairs of coordinates are threated as implicit lineto commands
-      // http://www.w3.org/TR/SVG/paths.html#PathDataMovetoCommands
-      if (instruction == 'M' || instruction == 'm') {
-        pathData.push({
-          instruction: pathData.length == 0 ? 'M' : instruction,
-          data: data.splice(0, 2)
-        });
-        instruction = instruction == 'M' ? 'L' : 'l';
+      if (!startMoveto) {
+        if (data == 'M' || data == 'm') {
+          startMoveto = true;
+        } else return;
       }
 
-      for (var pair = paramsLength[instruction]; data.length;) {
-        pathData.push({
-          instruction: instruction,
-          data: data.splice(0, pair)
-        });
+      // instruction item
+      if (regPathInstructions.test(data)) {
+        instruction = data;
+
+        // z - instruction w/o data
+        if (instruction == 'Z' || instruction == 'z') {
+          pathData.push({
+            instruction: 'z',
+          });
+        }
+        // data item
+      } else {
+        data = data.match(regPathData);
+        if (!data) return;
+
+        data = data.map(Number);
+
+        // Subsequent moveto pairs of coordinates are threated as implicit lineto commands
+        // http://www.w3.org/TR/SVG/paths.html#PathDataMovetoCommands
+        if (instruction == 'M' || instruction == 'm') {
+          pathData.push({
+            instruction: pathData.length == 0 ? 'M' : instruction,
+            data: data.splice(0, 2),
+          });
+          instruction = instruction == 'M' ? 'L' : 'l';
+        }
+
+        for (var pair = paramsLength[instruction]; data.length; ) {
+          pathData.push({
+            instruction: instruction,
+            data: data.splice(0, pair),
+          });
+        }
       }
-    }
-  });
+    });
 
   // First moveto is actually absolute. Subsequent coordinates were separated above.
   if (pathData.length && pathData[0].instruction == 'm') {
@@ -86,7 +106,7 @@ export function path2js(path) {
   path.pathJS = pathData;
 
   return pathData;
-};
+}
 
 /**
  * Convert relative Path data to absolute.
@@ -99,18 +119,14 @@ export function relative2absolute(data) {
     subpathPoint = [0, 0],
     i;
 
-  data = data.map(function (item) {
-
+  data = data.map(function(item) {
     var instruction = item.instruction,
       itemData = item.data && item.data.slice();
 
     if (instruction == 'M') {
-
       set(currentPoint, itemData);
       set(subpathPoint, itemData);
-
     } else if ('mlcsqt'.indexOf(instruction) > -1) {
-
       for (i = 0; i < itemData.length; i++) {
         itemData[i] += currentPoint[i % 2];
       }
@@ -119,52 +135,36 @@ export function relative2absolute(data) {
       if (instruction == 'm') {
         set(subpathPoint, itemData);
       }
-
     } else if (instruction == 'a') {
-
       itemData[5] += currentPoint[0];
       itemData[6] += currentPoint[1];
       set(currentPoint, itemData);
-
     } else if (instruction == 'h') {
-
       itemData[0] += currentPoint[0];
       currentPoint[0] = itemData[0];
-
     } else if (instruction == 'v') {
-
       itemData[0] += currentPoint[1];
       currentPoint[1] = itemData[0];
-
     } else if ('MZLCSQTA'.indexOf(instruction) > -1) {
-
       set(currentPoint, itemData);
-
     } else if (instruction == 'H') {
-
       currentPoint[0] = itemData[0];
-
     } else if (instruction == 'V') {
-
       currentPoint[1] = itemData[0];
-
     } else if (instruction == 'z') {
-
       set(currentPoint, subpathPoint);
-
     }
 
-    return instruction == 'z' ?
-      { instruction: 'z' } :
-      {
-        instruction: instruction.toUpperCase(),
-        data: itemData
-      };
-
+    return instruction == 'z'
+      ? { instruction: 'z' }
+      : {
+          instruction: instruction.toUpperCase(),
+          data: itemData,
+        };
   });
 
   return data;
-};
+}
 
 /**
  * Apply transformation(s) to the Path data.
@@ -177,22 +177,28 @@ export function relative2absolute(data) {
 export function applyTransforms(elem, path, params) {
   // if there are no 'stroke' attr and references to other objects such as
   // gradiends or clip-path which are also subjects to transform.
-  if (!elem.hasAttr('transform') || !elem.attr('transform').value ||
-    elem.someAttr(function (attr) {
+  if (
+    !elem.hasAttr('transform') ||
+    !elem.attr('transform').value ||
+    elem.someAttr(function(attr) {
       return ~referencesProps.indexOf(attr.name) && ~attr.value.indexOf('url(');
-    }))
+    })
+  )
     return path;
 
   var matrix = transformsMultiply(transform2js(elem.attr('transform').value)),
     stroke = elem.computedAttr('stroke'),
     id = elem.computedAttr('id'),
     transformPrecision = params.transformPrecision,
-    newPoint, scale;
+    newPoint,
+    scale;
 
   if (stroke && stroke != 'none') {
-    if (!params.applyTransformsStroked ||
-      (matrix.data[0] != matrix.data[3] || matrix.data[1] != -matrix.data[2]) &&
-      (matrix.data[0] != -matrix.data[3] || matrix.data[1] != matrix.data[2]))
+    if (
+      !params.applyTransformsStroked ||
+      ((matrix.data[0] != matrix.data[3] || matrix.data[1] != -matrix.data[2]) &&
+        (matrix.data[0] != -matrix.data[3] || matrix.data[1] != matrix.data[2]))
+    )
       return path;
 
     // "stroke-width" should be inside the part with ID, otherwise it can be overrided in <use>
@@ -207,52 +213,51 @@ export function applyTransforms(elem, path, params) {
       if (!hasStrokeWidth) return path;
     }
 
-    scale = +Math.sqrt(matrix.data[0] * matrix.data[0] + matrix.data[1] * matrix.data[1]).toFixed(transformPrecision);
+    scale = +Math.sqrt(matrix.data[0] * matrix.data[0] + matrix.data[1] * matrix.data[1]).toFixed(
+      transformPrecision,
+    );
 
     if (scale !== 1) {
       var strokeWidth = elem.computedAttr('stroke-width') || defaultStrokeWidth;
 
       if (elem.hasAttr('stroke-width')) {
-        elem.attrs['stroke-width'].value = elem.attrs['stroke-width'].value.trim()
-          .replace(regNumericValues, function (num) { return removeLeadingZero(num * scale) });
+        elem.attrs['stroke-width'].value = elem.attrs['stroke-width'].value
+          .trim()
+          .replace(regNumericValues, function(num) {
+            return removeLeadingZero(num * scale);
+          });
       } else {
         elem.addAttr({
           name: 'stroke-width',
           prefix: '',
           local: 'stroke-width',
-          value: strokeWidth.replace(regNumericValues, function (num) { return removeLeadingZero(num * scale) })
+          value: strokeWidth.replace(regNumericValues, function(num) {
+            return removeLeadingZero(num * scale);
+          }),
         });
       }
     }
-  } else if (id) { // Stroke and stroke-width can be redefined with <use>
+  } else if (id) {
+    // Stroke and stroke-width can be redefined with <use>
     return path;
   }
 
-  path.forEach(function (pathItem) {
-
+  path.forEach(function(pathItem) {
     if (pathItem.data) {
-
       // h -> l
       if (pathItem.instruction === 'h') {
-
         pathItem.instruction = 'l';
         pathItem.data[1] = 0;
 
         // v -> l
       } else if (pathItem.instruction === 'v') {
-
         pathItem.instruction = 'l';
         pathItem.data[1] = pathItem.data[0];
         pathItem.data[0] = 0;
-
       }
 
       // if there is a translate() transform
-      if (pathItem.instruction === 'M' &&
-        (matrix.data[4] !== 0 ||
-          matrix.data[5] !== 0)
-      ) {
-
+      if (pathItem.instruction === 'M' && (matrix.data[4] !== 0 || matrix.data[5] !== 0)) {
         // then apply it only to the first absoluted M
         newPoint = transformPoint(matrix.data, pathItem.data[0], pathItem.data[1]);
         set(pathItem.data, newPoint);
@@ -261,11 +266,8 @@ export function applyTransforms(elem, path, params) {
         // clear translate() data from transform matrix
         matrix.data[4] = 0;
         matrix.data[5] = 0;
-
       } else {
-
         if (pathItem.instruction == 'a') {
-
           transformArc(pathItem.data, matrix.data);
 
           // reduce number of digits in rotation angle
@@ -280,9 +282,7 @@ export function applyTransforms(elem, path, params) {
           newPoint = transformPoint(matrix.data, pathItem.data[5], pathItem.data[6]);
           pathItem.data[5] = newPoint[0];
           pathItem.data[6] = newPoint[1];
-
         } else {
-
           for (var i = 0; i < pathItem.data.length; i += 2) {
             newPoint = transformPoint(matrix.data, pathItem.data[i], pathItem.data[i + 1]);
             pathItem.data[i] = newPoint[0];
@@ -292,18 +292,15 @@ export function applyTransforms(elem, path, params) {
 
         pathItem.coords[0] = pathItem.base[0] + pathItem.data[pathItem.data.length - 2];
         pathItem.coords[1] = pathItem.base[1] + pathItem.data[pathItem.data.length - 1];
-
       }
-
     }
-
   });
 
   // remove transform attr
   elem.removeAttr('transform');
 
   return path;
-};
+}
 
 /**
  * Apply transform 3x3 matrix to x-y point.
@@ -313,12 +310,7 @@ export function applyTransforms(elem, path, params) {
  * @return {Array} point with new coordinates
  */
 function transformPoint(matrix, x, y) {
-
-  return [
-    matrix[0] * x + matrix[2] * y + matrix[4],
-    matrix[1] * x + matrix[3] * y + matrix[5]
-  ];
-
+  return [matrix[0] * x + matrix[2] * y + matrix[4], matrix[1] * x + matrix[3] * y + matrix[5]];
 }
 
 // /**
@@ -525,18 +517,16 @@ function transformPoint(matrix, x, y) {
  * @return {String} output path string
  */
 export function js2path(path, data, params) {
-
   path.pathJS = data;
 
   if (params.collapseRepeated) {
     data = collapseRepeated(data);
   }
 
-  path.attr('d').value = data.reduce(function (pathString, item) {
-    return pathString += item.instruction + (item.data ? cleanupOutData(item.data, params) : '');
+  path.attr('d').value = data.reduce(function(pathString, item) {
+    return (pathString += item.instruction + (item.data ? cleanupOutData(item.data, params) : ''));
   }, '');
-
-};
+}
 
 /**
  * Collapse repeated instructions data
@@ -545,23 +535,18 @@ export function js2path(path, data, params) {
  * @return {Array} output path data
  */
 function collapseRepeated(data) {
-
-  var prev,
-    prevIndex;
+  var prev, prevIndex;
 
   // copy an array and modifieds item to keep original data untouched
-  data = data.reduce(function (newPath, item) {
-    if (
-      prev && item.data &&
-      item.instruction == prev.instruction
-    ) {
+  data = data.reduce(function(newPath, item) {
+    if (prev && item.data && item.instruction == prev.instruction) {
       // concat previous data with current
       if (item.instruction != 'M') {
         prev = newPath[prevIndex] = {
           instruction: prev.instruction,
           data: prev.data.concat(item.data),
           coords: item.coords,
-          base: prev.base
+          base: prev.base,
         };
       } else {
         prev.data = item.data;
@@ -577,7 +562,6 @@ function collapseRepeated(data) {
   }, []);
 
   return data;
-
 }
 
 function set(dest, source) {
@@ -603,27 +587,33 @@ export function intersects(path1, path2) {
     points2 = relative2absolute(path2).reduce(gatherPoints, []);
 
   // Axis-aligned bounding box check.
-  if (points1.maxX <= points2.minX || points2.maxX <= points1.minX ||
-    points1.maxY <= points2.minY || points2.maxY <= points1.minY ||
-    points1.every(function (set1) {
-      return points2.every(function (set2) {
-        return set1[set1.maxX][0] <= set2[set2.minX][0] ||
+  if (
+    points1.maxX <= points2.minX ||
+    points2.maxX <= points1.minX ||
+    points1.maxY <= points2.minY ||
+    points2.maxY <= points1.minY ||
+    points1.every(function(set1) {
+      return points2.every(function(set2) {
+        return (
+          set1[set1.maxX][0] <= set2[set2.minX][0] ||
           set2[set2.maxX][0] <= set1[set1.minX][0] ||
           set1[set1.maxY][1] <= set2[set2.minY][1] ||
-          set2[set2.maxY][1] <= set1[set1.minY][1];
+          set2[set2.maxY][1] <= set1[set1.minY][1]
+        );
       });
     })
-  ) return false;
+  )
+    return false;
 
   // Get a convex hull from points of each subpath. Has the most complexity O(n·log n).
   var hullNest1 = points1.map(convexHull),
     hullNest2 = points2.map(convexHull);
 
   // Check intersection of every subpath of the first path with every subpath of the second.
-  return hullNest1.some(function (hull1) {
+  return hullNest1.some(function(hull1) {
     if (hull1.length < 3) return false;
 
-    return hullNest2.some(function (hull2) {
+    return hullNest2.some(function(hull2) {
       if (hull2.length < 3) return false;
 
       var simplex = [getSupport(hull1, hull2, [1, 0])], // create the initial simplex
@@ -653,9 +643,10 @@ export function intersects(path1, path2) {
   // Thanks to knowledge of min/max x and y coordinates we can choose a quadrant to search in.
   // Since we're working on convex hull, the dot product is increasing until we find the farthest point.
   function supportPoint(polygon, direction) {
-    var index = direction[1] >= 0 ?
-      direction[0] < 0 ? polygon.maxY : polygon.maxX :
-      direction[0] < 0 ? polygon.minX : polygon.minY,
+    var index =
+        direction[1] >= 0
+          ? direction[0] < 0 ? polygon.maxY : polygon.maxX
+          : direction[0] < 0 ? polygon.minX : polygon.minY,
       max = -Infinity,
       value;
     while ((value = dot(polygon[index], direction)) > max) {
@@ -664,13 +655,14 @@ export function intersects(path1, path2) {
     }
     return polygon[(index || polygon.length) - 1];
   }
-};
+}
 
 function processSimplex(simplex, direction) {
   /* jshint -W004 */
 
   // we only need to handle to 1-simplex and 2-simplex
-  if (simplex.length == 2) { // 1-simplex
+  if (simplex.length == 2) {
+    // 1-simplex
     var a = simplex[1],
       b = simplex[0],
       AO = minus(simplex[1]),
@@ -684,7 +676,8 @@ function processSimplex(simplex, direction) {
       // only A remains in the simplex
       simplex.shift();
     }
-  } else { // 2-simplex
+  } else {
+    // 2-simplex
     var a = simplex[2], // [a, b, c] = simplex
       b = simplex[1],
       c = simplex[0],
@@ -695,23 +688,26 @@ function processSimplex(simplex, direction) {
       ABC = orth(AC, AB); // the vector perpendicular to AC facing away from B
 
     if (dot(ACB, AO) > 0) {
-      if (dot(AB, AO) > 0) { // region 4
+      if (dot(AB, AO) > 0) {
+        // region 4
         set(direction, ACB);
         simplex.shift(); // simplex = [b, a]
-      } else { // region 5
+      } else {
+        // region 5
         set(direction, AO);
         simplex.splice(0, 2); // simplex = [a]
       }
     } else if (dot(ABC, AO) > 0) {
-      if (dot(AC, AO) > 0) { // region 6
+      if (dot(AC, AO) > 0) {
+        // region 6
         set(direction, ABC);
         simplex.splice(1, 1); // simplex = [c, a]
-      } else { // region 5 (again)
+      } else {
+        // region 5 (again)
         set(direction, AO);
         simplex.splice(0, 2); // simplex = [a]
       }
-    } else // region 7
-      return true;
+    } else return true; // region 7
   }
   return false;
 }
@@ -734,7 +730,6 @@ function orth(v, from) {
 }
 
 function gatherPoints(points, item, index, path) {
-
   var subPath = points.length && points[points.length - 1],
     prev = index && path[index - 1],
     basePoint = subPath.length && subPath[subPath.length - 1],
@@ -743,7 +738,7 @@ function gatherPoints(points, item, index, path) {
 
   switch (item.instruction) {
     case 'M':
-      points.push(subPath = []);
+      points.push((subPath = []));
       break;
     case 'H':
       addPoint(subPath, [data[0], basePoint[1]]);
@@ -756,7 +751,7 @@ function gatherPoints(points, item, index, path) {
       prevCtrlPoint = [data[2] - data[0], data[3] - data[1]]; // Save control point for shorthand
       break;
     case 'T':
-      if (prev.instruction == 'Q' && prev.instruction == 'T') {
+      if (prev.instruction == 'Q' || prev.instruction == 'T') {
         ctrlPoint = [basePoint[0] + prevCtrlPoint[0], basePoint[1] + prevCtrlPoint[1]];
         addPoint(subPath, ctrlPoint);
         prevCtrlPoint = [data[0] - ctrlPoint[0], data[1] - ctrlPoint[1]];
@@ -764,28 +759,31 @@ function gatherPoints(points, item, index, path) {
       break;
     case 'C':
       // Approximate quibic Bezier curve with middle points between control points
-      addPoint(subPath, [.5 * (basePoint[0] + data[0]), .5 * (basePoint[1] + data[1])]);
-      addPoint(subPath, [.5 * (data[0] + data[2]), .5 * (data[1] + data[3])]);
-      addPoint(subPath, [.5 * (data[2] + data[4]), .5 * (data[3] + data[5])]);
+      addPoint(subPath, [0.5 * (basePoint[0] + data[0]), 0.5 * (basePoint[1] + data[1])]);
+      addPoint(subPath, [0.5 * (data[0] + data[2]), 0.5 * (data[1] + data[3])]);
+      addPoint(subPath, [0.5 * (data[2] + data[4]), 0.5 * (data[3] + data[5])]);
       prevCtrlPoint = [data[4] - data[2], data[5] - data[3]]; // Save control point for shorthand
       break;
     case 'S':
-      if (prev.instruction == 'C' && prev.instruction == 'S') {
-        addPoint(subPath, [basePoint[0] + .5 * prevCtrlPoint[0], basePoint[1] + .5 * prevCtrlPoint[1]]);
+      if (prev.instruction == 'C' || prev.instruction == 'S') {
+        addPoint(subPath, [
+          basePoint[0] + 0.5 * prevCtrlPoint[0],
+          basePoint[1] + 0.5 * prevCtrlPoint[1],
+        ]);
         ctrlPoint = [basePoint[0] + prevCtrlPoint[0], basePoint[1] + prevCtrlPoint[1]];
       }
-      addPoint(subPath, [.5 * (ctrlPoint[0] + data[0]), .5 * (ctrlPoint[1] + data[1])]);
-      addPoint(subPath, [.5 * (data[0] + data[2]), .5 * (data[1] + data[3])]);
+      addPoint(subPath, [0.5 * (ctrlPoint[0] + data[0]), 0.5 * (ctrlPoint[1] + data[1])]);
+      addPoint(subPath, [0.5 * (data[0] + data[2]), 0.5 * (data[1] + data[3])]);
       prevCtrlPoint = [data[2] - data[0], data[3] - data[1]];
       break;
     case 'A':
       // Convert the arc to bezier curves and use the same approximation
       var curves = a2c.apply(0, basePoint.concat(data));
-      for (var cData; (cData = curves.splice(0, 6).map(toAbsolute)).length;) {
-        addPoint(subPath, [.5 * (basePoint[0] + cData[0]), .5 * (basePoint[1] + cData[1])]);
-        addPoint(subPath, [.5 * (cData[0] + cData[2]), .5 * (cData[1] + cData[3])]);
-        addPoint(subPath, [.5 * (cData[2] + cData[4]), .5 * (cData[3] + cData[5])]);
-        if (curves.length) addPoint(subPath, basePoint = cData.slice(-2));
+      for (var cData; (cData = curves.splice(0, 6).map(toAbsolute)).length; ) {
+        addPoint(subPath, [0.5 * (basePoint[0] + cData[0]), 0.5 * (basePoint[1] + cData[1])]);
+        addPoint(subPath, [0.5 * (cData[0] + cData[2]), 0.5 * (cData[1] + cData[3])]);
+        addPoint(subPath, [0.5 * (cData[2] + cData[4]), 0.5 * (cData[3] + cData[5])]);
+        if (curves.length) addPoint(subPath, (basePoint = cData.slice(-2)));
       }
       break;
   }
@@ -793,7 +791,9 @@ function gatherPoints(points, item, index, path) {
   if (data && data.length >= 2) addPoint(subPath, data.slice(-2));
   return points;
 
-  function toAbsolute(n, i) { return n + basePoint[i % 2] }
+  function toAbsolute(n, i) {
+    return n + basePoint[i % 2];
+  }
 
   // Writes data about the extreme points on each axle
   function addPoint(path, point) {
@@ -826,7 +826,7 @@ function gatherPoints(points, item, index, path) {
 function convexHull(points) {
   /* jshint -W004 */
 
-  points.sort(function (a, b) {
+  points.sort(function(a, b) {
     return a[0] == b[0] ? a[1] - b[1] : a[0] - b[0];
   });
 
@@ -834,7 +834,10 @@ function convexHull(points) {
     minY = 0,
     bottom = 0;
   for (var i = 0; i < points.length; i++) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], points[i]) <= 0) {
+    while (
+      lower.length >= 2 &&
+      cross(lower[lower.length - 2], lower[lower.length - 1], points[i]) <= 0
+    ) {
       lower.pop();
     }
     if (points[i][1] < points[minY][1]) {
@@ -847,8 +850,11 @@ function convexHull(points) {
   var upper = [],
     maxY = points.length - 1,
     top = 0;
-  for (let i = points.length; i--;) {
-    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], points[i]) <= 0) {
+  for (let i = points.length; i--; ) {
+    while (
+      upper.length >= 2 &&
+      cross(upper[upper.length - 2], upper[upper.length - 1], points[i]) <= 0
+    ) {
       upper.pop();
     }
     if (points[i][1] > points[maxY][1]) {
@@ -887,8 +893,12 @@ function a2c(x1, y1, rx, ry, angle, large_arc_flag, sweep_flag, x2, y2, recursiv
   var _120 = Math.PI * 120 / 180,
     rad = Math.PI / 180 * (+angle || 0),
     res = [],
-    rotateX = function (x, y, rad) { return x * Math.cos(rad) - y * Math.sin(rad) },
-    rotateY = function (x, y, rad) { return x * Math.sin(rad) + y * Math.cos(rad) };
+    rotateX = function(x, y, rad) {
+      return x * Math.cos(rad) - y * Math.sin(rad);
+    },
+    rotateY = function(x, y, rad) {
+      return x * Math.sin(rad) + y * Math.cos(rad);
+    };
   if (!recursive) {
     x1 = rotateX(x1, y1, -rad);
     y1 = rotateY(x1, y1, -rad);
@@ -896,7 +906,7 @@ function a2c(x1, y1, rx, ry, angle, large_arc_flag, sweep_flag, x2, y2, recursiv
     y2 = rotateY(x2, y2, -rad);
     var x = (x1 - x2) / 2,
       y = (y1 - y2) / 2;
-    var h = (x * x) / (rx * rx) + (y * y) / (ry * ry);
+    var h = x * x / (rx * rx) + y * y / (ry * ry);
     if (h > 1) {
       h = Math.sqrt(h);
       rx = h * rx;
@@ -904,7 +914,8 @@ function a2c(x1, y1, rx, ry, angle, large_arc_flag, sweep_flag, x2, y2, recursiv
     }
     var rx2 = rx * rx,
       ry2 = ry * ry,
-      k = (large_arc_flag == sweep_flag ? -1 : 1) *
+      k =
+        (large_arc_flag == sweep_flag ? -1 : 1) *
         Math.sqrt(Math.abs((rx2 * ry2 - rx2 * y * y - ry2 * x * x) / (rx2 * y * y + ry2 * x * x))),
       cx = k * rx * y / ry + (x1 + x2) / 2,
       cy = k * -ry * x / rx + (y1 + y2) / 2,
@@ -945,11 +956,7 @@ function a2c(x1, y1, rx, ry, angle, large_arc_flag, sweep_flag, x2, y2, recursiv
     t = Math.tan(df / 4),
     hx = 4 / 3 * rx * t,
     hy = 4 / 3 * ry * t,
-    m = [
-      - hx * s1, hy * c1,
-      x2 + hx * s2 - x1, y2 - hy * c2 - y1,
-      x2 - x1, y2 - y1
-    ];
+    m = [-hx * s1, hy * c1, x2 + hx * s2 - x1, y2 - hy * c2 - y1, x2 - x1, y2 - y1];
   if (recursive) {
     return m.concat(res);
   } else {
