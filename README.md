@@ -39,6 +39,10 @@ We'll display your logo below with a link to your site.
 
 ## Examples
 
+I gave a couple of live demos that illustrate how to use the tool at Droidcon SF ([15:15 - 20:33](https://youtu.be/JhryKMOM6GI?t=15m15s)):
+
+[![In-depth path morphing with Shape Shifter](art/droidcon-sf-video-embed.png)](https://youtu.be/JhryKMOM6GI?t=15m15s)
+
 Here are some example icon animations created by Shape Shifter:
 
 <img src="art/expandcollapse.gif" alt="Expand to collapse animation" width="216px"/><img src="art/moreback.gif" alt="Overflow to back arrow animation" width="216px"/><img src="art/playpausestop.gif" alt="Play-pause-stop animation" width="216px"/><img src="art/animals.gif" alt="Animals animation" width="216px" vspace="34px"/><!--<img src="art/plusminus.gif" alt="Plus-to-minus animation" width="216px"/><img src="art/cast.gif" alt="Cast animation" width="216px"/><img src="art/drawerarrow.gif" alt="Drawer-to-arrow animation" width="216px"/><img src="art/digits.gif" alt="Digits animation" width="216px"/>-->
