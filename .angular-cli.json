@@ -20,10 +20,10 @@
       "tsconfig": "tsconfig.app.json",
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "app",
+      "serviceWorker": true,
       "styles": [
         "styles.scss"
       ],
-      "serviceWorker": true,
       "scripts": [],
       "environmentSource": "environments/environment.ts",
       "environments": {
@@ -56,8 +56,8 @@
   "defaults": {
     "styleExt": "scss",
     "component": {
-      "inlineTemplate": false,
-      "spec": false
+      "spec": false,
+      "inlineTemplate": false
     }
   }
 }
