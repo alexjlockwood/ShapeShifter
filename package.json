@@ -23,7 +23,7 @@
     "@angular/common": "^5.1.1",
     "@angular/compiler": "^5.1.1",
     "@angular/core": "^5.1.1",
-    "@angular/flex-layout": "^2.0.0-rc.1",
+    "@angular/flex-layout": "^2.0.0-beta.10-4905443",
     "@angular/forms": "^5.1.1",
     "@angular/material": "^5.0.1",
     "@angular/platform-browser": "^5.1.1",
