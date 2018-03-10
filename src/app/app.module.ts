@@ -65,7 +65,6 @@ import { PlaybackService } from './services/playback.service';
 import { ShortcutService } from './services/shortcut.service';
 import { SnackBarService } from './services/snackbar.service';
 import { ThemeService } from './services/theme.service';
-
 import { reducer } from './store';
 
 @NgModule({
