@@ -23,7 +23,7 @@
     "@angular/common": "^5.2.8",
     "@angular/compiler": "^5.2.8",
     "@angular/core": "^5.2.8",
-    "@angular/flex-layout": "2.0.0-beta.12",
+    "@angular/flex-layout": "^5.0.0-beta.13",
     "@angular/forms": "^5.2.8",
     "@angular/material": "^5.2.4",
     "@angular/platform-browser": "^5.2.8",
@@ -81,12 +81,12 @@
     "karma-jasmine": "^1.1.1",
     "karma-jasmine-html-reporter": "^0.2.2",
     "karma-verbose-reporter": "0.0.6",
-    "prettier": "1.11.0",
+    "prettier": "^1.11.1",
     "protractor": "^5.3.0",
     "redux": "^3.7.2",
     "ts-node": "^5.0.1",
     "tslint": "^5.9.1",
-    "typescript": "~2.5.0",
+    "typescript": "~2.5.3",
     "webdriver-manager": "12.0.6"
   },
   "importSort": {
