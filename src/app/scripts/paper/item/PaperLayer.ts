@@ -58,7 +58,7 @@ export class PaperLayer extends paper.Layer {
 
   hitTestVectorLayer(projPoint: paper.Point) {
     const hitResult = (function recurseFn(item: paper.Item): HitResult {
-      const localPoint = item.globalToLocal(projPoint);
+      const localPoint = item.globalToLocal(projPoint).transform(item.matrix);
       let hitItem: paper.Item;
       let children: HitResult[] = [];
       if (item instanceof paper.Path) {
@@ -419,8 +419,9 @@ function newHoverPathItem(item: paper.Item) {
     hoverPath.strokeScaling = false;
     hoverPath.strokeWidth = 2 / paper.view.zoom;
     // Transform the hover path from local coordinates to viewport coordinates.
-    // TODO: this doesn't seem to work all of the time...
-    hoverPath.matrix = item.globalMatrix.prepended(paper.project.activeLayer.matrix.inverted());
+    hoverPath.matrix = item.globalMatrix
+      .prepended(paper.project.activeLayer.matrix.inverted())
+      .prepend(item.matrix.inverted());
   }
   return hoverPath;
 }

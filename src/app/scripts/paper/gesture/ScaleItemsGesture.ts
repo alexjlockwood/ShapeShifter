@@ -183,10 +183,10 @@ export class ScaleItemsGesture extends Gesture {
       // TODO: should we pass 'false' to clone below?
       const path = item.clone() as paper.Path;
       path.applyMatrix = true;
-      const localToViewportMatrix = this.localToVpItemMatrices[index];
-      const matrix = localToViewportMatrix.clone();
+      const localToVpMatrix = this.localToVpItemMatrices[index];
+      const matrix = localToVpMatrix.clone();
       matrix.scale(sx, sy, vpFixedPivot);
-      matrix.append(localToViewportMatrix.inverted());
+      matrix.append(localToVpMatrix.inverted());
       path.matrix = matrix;
       const newPl = newVl.findLayerById(item.data.id).clone() as PathLayer;
       newPl.pathData = new Path(path.pathData);
