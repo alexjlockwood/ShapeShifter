@@ -142,7 +142,9 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     } else if (layer instanceof PathLayer) {
       this.drawPathLayer(vl, layer, ctx);
     } else {
+      ctx.save();
       layer.children.forEach(child => this.drawLayer(vl, child, ctx));
+      ctx.restore();
     }
   }
 

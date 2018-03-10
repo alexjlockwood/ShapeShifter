@@ -20,8 +20,29 @@ import {
 } from '@angular/material';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ServiceWorkerModule } from '@angular/service-worker';
 import { StoreModule } from 'app/store/ngrx';
 
+import { environment } from '../environments/environment';
+import {
+  CanvasComponent,
+  CanvasContainerDirective,
+  CanvasLayersDirective,
+  CanvasOverlayDirective,
+  CanvasPaperDirective,
+  CanvasRulerDirective,
+} from './components/canvas';
+import {
+  ConfirmDialogComponent,
+  DemoDialogComponent,
+  DropFilesDialogComponent,
+} from './components/dialogs';
+import {
+  LayerListTreeComponent,
+  LayerTimelineComponent,
+  LayerTimelineGridDirective,
+  TimelineAnimationRowComponent,
+} from './components/layertimeline';
 import { PlaybackComponent } from './components/playback/playback.component';
 import { PropertyInputComponent } from './components/propertyinput/propertyinput.component';
 import { DropTargetDirective } from './components/root/droptarget.directive';
@@ -44,25 +65,7 @@ import { PlaybackService } from './services/playback.service';
 import { ShortcutService } from './services/shortcut.service';
 import { SnackBarService } from './services/snackbar.service';
 import { ThemeService } from './services/theme.service';
-import {
-  CanvasComponent,
-  CanvasContainerDirective,
-  CanvasLayersDirective,
-  CanvasOverlayDirective,
-  CanvasPaperDirective,
-  CanvasRulerDirective,
-} from './components/canvas';
-import {
-  ConfirmDialogComponent,
-  DemoDialogComponent,
-  DropFilesDialogComponent,
-} from './components/dialogs';
-import {
-  LayerListTreeComponent,
-  LayerTimelineComponent,
-  LayerTimelineGridDirective,
-  TimelineAnimationRowComponent,
-} from './components/layertimeline';
+
 import { reducer } from './store';
 
 @NgModule({
@@ -96,6 +99,7 @@ import { reducer } from './store';
     FlexLayoutModule,
     FormsModule,
     HttpClientModule,
+    ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),
     StoreModule.provideStore(reducer),
     // Angular material components.
     MatButtonModule,
