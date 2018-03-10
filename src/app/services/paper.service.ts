@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/first';
-
 import { Injectable } from '@angular/core';
 import { VectorLayer } from 'app/model/layers';
 import { CanvasCursor, ToolMode } from 'app/model/paper';
@@ -37,13 +35,11 @@ import {
 } from 'app/store/paper/selectors';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
+import { first } from 'rxjs/operators';
 
 import { LayerTimelineService } from './layertimeline.service';
 
-/**
- * A simple service that provides an interface for making paper.js
- * changes to the store.
- */
+/** A simple service that provides an interface for making paper.js changes to the store. */
 @Injectable()
 export class PaperService {
   constructor(
@@ -167,7 +163,7 @@ export class PaperService {
     let obj: T;
     this.store
       .select(selector)
-      .first()
+      .pipe(first())
       .subscribe(o => (obj = o));
     return obj;
   }
