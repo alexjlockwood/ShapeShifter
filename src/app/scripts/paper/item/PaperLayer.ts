@@ -348,6 +348,9 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
       ? LayerUtil.toStrokeDashOffset(trimPathStart, trimPathEnd, trimPathOffset, pathLength)
       : undefined;
     // TODO: import a compound path instead
+    // Only paths with more than one command can be closed.
+    const closed =
+      layer.pathData && layer.pathData.isClosed() && layer.pathData.getCommands().length > 1;
     return new paper.Path({
       data: { id: layer.id },
       pathData: layer.pathData ? layer.pathData.getPathString() : '',
@@ -360,17 +363,20 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
       fillRule: layer.fillType === 'evenOdd' ? 'evenodd' : 'nonzero',
       dashArray,
       dashOffset,
-      closed: layer.pathData && layer.pathData.isClosed(),
+      closed,
     });
   };
 
   const fromClipPathLayerFn = (layer: ClipPathLayer) => {
     const pathData = layer.pathData ? layer.pathData.getPathString() : '';
+    // Only paths with more than one command can be closed.
+    const closed =
+      layer.pathData && layer.pathData.isClosed() && layer.pathData.getCommands().length > 1;
     return new paper.Path({
       data: { id: layer.id },
       pathData,
       clipMask: true,
-      closed: layer.pathData && layer.pathData.isClosed(),
+      closed,
     });
   };
 
