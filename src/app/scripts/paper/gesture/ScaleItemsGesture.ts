@@ -37,8 +37,8 @@ export class ScaleItemsGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    this.ps.setHoveredLayer(undefined);
-    this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
+    this.ps.setHoveredLayerId(undefined);
+    this.selectedItems = Array.from(this.ps.getSelectedLayerIds()).map(id =>
       this.pl.findItemByLayerId(id),
     );
     this.localToVpItemMatrices = this.selectedItems.map(item => {
@@ -198,7 +198,7 @@ export class ScaleItemsGesture extends Gesture {
 
   // TODO: reuse this code with SelectDragCloneItemsGesture
   private buildSnapInfo() {
-    const selectedLayerIds = this.ps.getSelectedLayers();
+    const selectedLayerIds = this.ps.getSelectedLayerIds();
     if (!selectedLayerIds.size) {
       return undefined;
     }

@@ -4,7 +4,11 @@ import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import { SetHoveredLayer } from 'app/store/layers/actions';
-import { getHoveredLayerId, getSelectedLayerIds } from 'app/store/layers/selectors';
+import {
+  getHiddenLayerIds,
+  getHoveredLayerId,
+  getSelectedLayerIds,
+} from 'app/store/layers/selectors';
 import {
   CreatePathInfo,
   FocusedPathInfo,
@@ -58,22 +62,32 @@ export class PaperService {
   }
 
   /** Sets the set of selected layer IDs. */
-  setSelectedLayers(layerIds: Set<string>) {
+  setSelectedLayerIds(layerIds: Set<string>) {
     if (!_.isEqual(this.queryStore(getSelectedLayerIds), layerIds)) {
       this.layerTimelineService.setSelectedLayers(layerIds);
     }
   }
 
   /** Gets the set of selected layer IDs. */
-  getSelectedLayers() {
+  getSelectedLayerIds() {
     return this.queryStore(getSelectedLayerIds);
   }
 
   /** Sets or clears the currently hovered layer ID. */
-  setHoveredLayer(layerId: string | undefined) {
+  setHoveredLayerId(layerId: string | undefined) {
     if (this.queryStore(getHoveredLayerId) !== layerId) {
       this.store.dispatch(new SetHoveredLayer(layerId));
     }
+  }
+
+  /** Gets the current hover layer ID. */
+  getHoveredLayerId() {
+    return this.queryStore(getHoveredLayerId);
+  }
+
+  /** Gets the current set of hidden layer IDs. */
+  getHiddenLayerIds() {
+    return this.queryStore(getHiddenLayerIds);
   }
 
   /** Sets the current selection box. */

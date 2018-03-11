@@ -90,7 +90,7 @@ export class GestureTool extends Tool {
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
-    const selectedLayers = this.ps.getSelectedLayers();
+    const selectedLayers = this.ps.getSelectedLayerIds();
     if (selectedLayers.size) {
       // First perform a hit test on the selection bound's segments.
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
@@ -161,7 +161,7 @@ export class GestureTool extends Tool {
     if (!fpi) {
       // Then the user has created the first segment of a new path, in which
       // case we must create a new dummy path and bring it into focus.
-      this.ps.setSelectedLayers(new Set());
+      this.ps.setSelectedLayerIds(new Set());
       const newPathLayer = PaperUtil.addPathToStore(this.ps, '');
       fpi = {
         layerId: newPathLayer.id,

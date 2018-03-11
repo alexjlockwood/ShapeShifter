@@ -24,10 +24,10 @@ export class BatchSelectItemsGesture extends Gesture {
       // A selection box implies that the gesture began with a failed hit
       // test, so deselect everything on mouse down (unless the user is
       // holding shift).
-      this.ps.setSelectedLayers(new Set());
+      this.ps.setSelectedLayerIds(new Set());
     }
     // TODO: make use of this information (i.e. toggle the layers when shift is pressed)
-    this.initialSelectedLayers = this.ps.getSelectedLayers();
+    this.initialSelectedLayers = this.ps.getSelectedLayerIds();
   }
 
   // @Override
@@ -65,7 +65,7 @@ export class BatchSelectItemsGesture extends Gesture {
       const from = new paper.Point(box.from);
       const to = new paper.Point(box.to);
       const selectedItems = this.pl.findItemsInBounds(new paper.Rectangle(from, to), !isAltPressed);
-      this.ps.setSelectedLayers(new Set(selectedItems.map(i => i.data.id)));
+      this.ps.setSelectedLayerIds(new Set(selectedItems.map(i => i.data.id)));
     }
   }
 }

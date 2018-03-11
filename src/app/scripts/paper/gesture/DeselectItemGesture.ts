@@ -13,9 +13,9 @@ export class DeselectItemGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    this.ps.setSelectedLayers(new Set());
-    const layerIds = new Set(this.ps.getSelectedLayers());
+    this.ps.setSelectedLayerIds(new Set());
+    const layerIds = new Set(this.ps.getSelectedLayerIds());
     layerIds.delete(this.deselectedItemId);
-    this.ps.setSelectedLayers(layerIds);
+    this.ps.setSelectedLayerIds(layerIds);
   }
 }

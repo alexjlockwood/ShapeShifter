@@ -30,7 +30,7 @@ abstract class CreateShapeGesture extends Gesture {
     if (this.lastDragEventInfo) {
       const { pathData } = this.ps.getCreatePathInfo();
       const newPathLayer = PaperUtil.addPathToStore(this.ps, pathData);
-      this.ps.setSelectedLayers(new Set([newPathLayer.id]));
+      this.ps.setSelectedLayerIds(new Set([newPathLayer.id]));
     }
     this.finishGesture();
   }

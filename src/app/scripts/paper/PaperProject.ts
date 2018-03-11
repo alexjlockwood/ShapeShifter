@@ -27,20 +27,20 @@ export class PaperProject extends paper.Project {
 
   constructor(canvas: HTMLCanvasElement, ps: PaperService) {
     super(canvas);
-    const pl = new PaperLayer();
+    const pl = new PaperLayer(ps);
     paper.project.addLayer(pl);
     this.paperLayer = pl;
     this.masterTool = new MasterTool(ps);
     this.subscriptions.push(
       ps.store.select(getToolMode).subscribe(toolMode => this.masterTool.setToolMode(toolMode)),
-      ps.store.select(getVectorLayer).subscribe(vl => pl.setVectorLayer(vl)),
-      ps.store.select(getSelectedLayerIds).subscribe(ids => pl.setSelectedLayers(ids)),
-      ps.store.select(getHoveredLayerId).subscribe(id => pl.setHoveredLayer(id)),
+      ps.store.select(getVectorLayer).subscribe(() => pl.onVectorLayerChanged()),
+      ps.store.select(getSelectedLayerIds).subscribe(() => pl.onSelectedLayerIdsChanged()),
+      ps.store.select(getHoveredLayerId).subscribe(() => pl.onHoveredLayerIdChanged()),
+      ps.store.select(getHiddenLayerIds).subscribe(() => pl.onHiddenLayerIdsChanged()),
       ps.store.select(getCreatePathInfo).subscribe(info => pl.setCreatePathInfo(info)),
       ps.store.select(getSplitCurveInfo).subscribe(info => pl.setSplitCurveInfo(info)),
-      ps.store.select(getFocusedPathInfo).subscribe(info => pl.setFocusedPathInfo(info)),
+      ps.store.select(getFocusedPathInfo).subscribe(info => pl.onFocusedPathInfoChanged()),
       ps.store.select(getSnapGuideInfo).subscribe(info => pl.setSnapGuideInfo(info)),
-      ps.store.select(getHiddenLayerIds).subscribe(ids => pl.setHiddenLayers(ids)),
       ps.store.select(getTooltipInfo).subscribe(info => pl.setTooltipInfo(info)),
       ps.store.select(getSelectionBox).subscribe(box => {
         if (box) {

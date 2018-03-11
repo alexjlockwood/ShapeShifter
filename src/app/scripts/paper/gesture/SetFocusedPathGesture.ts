@@ -18,7 +18,7 @@ export class SetFocusedPathGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    this.ps.setSelectedLayers(new Set());
+    this.ps.setSelectedLayerIds(new Set());
     const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
     this.ps.setToolMode(ToolMode.Vector);
     this.ps.setFocusedPathInfo({

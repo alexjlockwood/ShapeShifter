@@ -8,6 +8,7 @@ import {
 } from 'app/model/layers';
 import { ColorUtil } from 'app/scripts/common';
 import { PaperUtil } from 'app/scripts/paper/util';
+import { PaperService } from 'app/services/paper.service';
 import {
   CreatePathInfo,
   FocusedPathInfo,
@@ -41,19 +42,33 @@ export class PaperLayer extends paper.Layer {
   private pixelGridItem: paper.Item;
   private tooltipItem: paper.Item;
 
-  private vectorLayer: VectorLayer;
-  private selectedLayerIds: ReadonlySet<string> = new Set();
-  private hoveredLayerId: string;
-  private focusedPathInfo: FocusedPathInfo;
-  private hiddenLayerIds: ReadonlySet<string> = new Set();
-
   private cssScaling = 1;
 
-  constructor() {
+  constructor(private readonly ps: PaperService) {
     super();
     this.canvasColorRect = new paper.Path.Rectangle(new paper.Point(0, 0), new paper.Size(0, 0));
     this.canvasColorRect.guide = true;
     this.updateChildren();
+  }
+
+  private get vectorLayer() {
+    return this.ps.getVectorLayer();
+  }
+
+  private get selectedLayerIds() {
+    return this.ps.getSelectedLayerIds();
+  }
+
+  private get hoveredLayerId() {
+    return this.ps.getHoveredLayerId();
+  }
+
+  private get hiddenLayerIds() {
+    return this.ps.getHiddenLayerIds();
+  }
+
+  private get focusedPathInfo() {
+    return this.ps.getFocusedPathInfo();
   }
 
   hitTestVectorLayer(projPoint: paper.Point) {
@@ -97,8 +112,7 @@ export class PaperLayer extends paper.Layer {
     this.updatePixelGridItem(viewportWidth, viewportHeight);
   }
 
-  setVectorLayer(vl: VectorLayer) {
-    this.vectorLayer = vl;
+  onVectorLayerChanged() {
     this.updateCanvasColorShape();
     this.updateVectorLayerItem();
     this.updateFocusedPathItem();
@@ -106,20 +120,21 @@ export class PaperLayer extends paper.Layer {
     this.updateHoverPathItem();
   }
 
-  setSelectedLayers(layerIds: ReadonlySet<string>) {
-    this.selectedLayerIds = new Set(layerIds);
+  onSelectedLayerIdsChanged() {
     this.updateSelectionBoundsItem();
   }
 
-  setHiddenLayers(layerIds: ReadonlySet<string>) {
-    this.hiddenLayerIds = new Set(layerIds);
+  onHiddenLayerIdsChanged() {
     this.updateHiddenLayers();
     // TODO: should we hide selection bounds, overlays, etc. for invisible layers?
   }
 
-  setHoveredLayer(layerId: string) {
-    this.hoveredLayerId = layerId;
+  onHoveredLayerIdChanged() {
     this.updateHoverPathItem();
+  }
+
+  onFocusedPathInfoChanged() {
+    this.updateFocusedPathItem();
   }
 
   setCreatePathInfo(info: CreatePathInfo) {
@@ -142,11 +157,6 @@ export class PaperLayer extends paper.Layer {
       this.splitCurveItem = newSplitCurveItem(info, this.cssScaling);
       this.updateChildren();
     }
-  }
-
-  setFocusedPathInfo(info: FocusedPathInfo) {
-    this.focusedPathInfo = info;
-    this.updateFocusedPathItem();
   }
 
   setTooltipInfo(info: TooltipInfo) {

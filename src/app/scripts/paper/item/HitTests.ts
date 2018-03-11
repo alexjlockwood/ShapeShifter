@@ -23,7 +23,7 @@ export function selectionMode(projPoint: paper.Point, ps: PaperService) {
  */
 export function getSelectedLayerMap(ps: PaperService) {
   const map = new Map<string, boolean>();
-  const selectedLayers = ps.getSelectedLayers();
+  const selectedLayers = ps.getSelectedLayerIds();
   (function containsSelectedLayerFn(layer: Layer) {
     let result = selectedLayers.has(layer.id);
     layer.children.forEach(c => (result = containsSelectedLayerFn(c) || result));

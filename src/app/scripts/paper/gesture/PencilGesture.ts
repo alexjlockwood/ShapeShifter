@@ -48,7 +48,7 @@ export class PencilGesture extends Gesture {
       }
       newPath.smooth({ type: 'continuous' });
       const newPathLayer = PaperUtil.addPathToStore(this.ps, newPath.pathData);
-      this.ps.setSelectedLayers(new Set([newPathLayer.id]));
+      this.ps.setSelectedLayerIds(new Set([newPathLayer.id]));
       this.ps.setCreatePathInfo(undefined);
     }
     this.ps.setToolMode(ToolMode.Selection);

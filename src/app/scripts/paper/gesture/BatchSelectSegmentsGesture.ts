@@ -49,7 +49,7 @@ export class BatchSelectSegmentsGesture extends Gesture {
       this.processToolEvent(event);
     } else if (this.clearFocusedPathAfterDraglessClick) {
       this.ps.setFocusedPathInfo(undefined);
-      this.ps.setSelectedLayers(new Set([this.focusedPathId]));
+      this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
     }
     this.ps.setSelectionBox(undefined);
   }

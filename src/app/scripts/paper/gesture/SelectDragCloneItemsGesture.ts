@@ -29,9 +29,9 @@ export class SelectDragCloneItemsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     // Clear the current hover layer, if it exists.
-    this.ps.setHoveredLayer(undefined);
+    this.ps.setHoveredLayerId(undefined);
 
-    const selectedLayers = new Set(this.ps.getSelectedLayers());
+    const selectedLayers = new Set(this.ps.getSelectedLayerIds());
     if (!event.modifiers.shift && !selectedLayers.has(this.hitLayerId)) {
       // If shift isn't pressed and the hit layer isn't already selected,
       // then clear any existing selections.
@@ -40,7 +40,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
     // Select the hit item.
     selectedLayers.add(this.hitLayerId);
-    this.ps.setSelectedLayers(selectedLayers);
+    this.ps.setSelectedLayerIds(selectedLayers);
 
     // Save a copy of the initial vector layer so that we can make changes
     // to it as we drag.
@@ -85,7 +85,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
     projPoint: paper.Point,
     shouldSnapDelta = false,
   ) {
-    Array.from(this.ps.getSelectedLayers()).forEach(layerId => {
+    Array.from(this.ps.getSelectedLayerIds()).forEach(layerId => {
       const item = this.pl.findItemByLayerId(layerId);
       const localDelta = item.globalToLocal(projPoint).subtract(item.globalToLocal(projDownPoint));
       const localFinalDelta = shouldSnapDelta
@@ -98,7 +98,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
   // TODO: reuse this code with ScaleItemsGesture
   private buildSnapInfo() {
-    const selectedLayerIds = this.ps.getSelectedLayers();
+    const selectedLayerIds = this.ps.getSelectedLayerIds();
     if (!selectedLayerIds.size) {
       return undefined;
     }

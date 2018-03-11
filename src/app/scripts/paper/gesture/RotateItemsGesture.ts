@@ -28,8 +28,8 @@ export class RotateItemsGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    this.ps.setHoveredLayer(undefined);
-    this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
+    this.ps.setHoveredLayerId(undefined);
+    this.selectedItems = Array.from(this.ps.getSelectedLayerIds()).map(id =>
       this.pl.findItemByLayerId(id),
     );
     const invertedPaperLayerMatrix = this.pl.matrix.inverted();

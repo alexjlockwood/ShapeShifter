@@ -37,7 +37,7 @@ export class HoverItemsGesture extends Gesture {
   onMouseMove(event: paper.ToolEvent) {
     CursorUtil.clear();
 
-    const selectedLayers = this.ps.getSelectedLayers();
+    const selectedLayers = this.ps.getSelectedLayerIds();
     if (selectedLayers.size > 0) {
       // TODO: only perform a hit test if we are in focused path mode?
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
@@ -45,16 +45,16 @@ export class HoverItemsGesture extends Gesture {
         const toolMode = this.ps.getToolMode();
         const cursorMap = toolMode === ToolMode.Rotate ? ROTATE_CURSOR_MAP : RESIZE_CURSOR_MAP;
         CursorUtil.set(cursorMap.get(selectionBoundSegmentsHitResult.item.pivotType));
-        this.ps.setHoveredLayer(undefined);
+        this.ps.setHoveredLayerId(undefined);
         return;
       }
     }
 
     const hitResult = HitTests.selectionMode(event.point, this.ps);
     if (hitResult && !selectedLayers.has(hitResult.hitItem.data.id)) {
-      this.ps.setHoveredLayer(hitResult.hitItem.data.id);
+      this.ps.setHoveredLayerId(hitResult.hitItem.data.id);
     } else {
-      this.ps.setHoveredLayer(undefined);
+      this.ps.setHoveredLayerId(undefined);
     }
   }
 }

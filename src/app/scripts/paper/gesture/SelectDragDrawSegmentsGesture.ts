@@ -233,7 +233,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     this.ps.setSnapGuideInfo(undefined);
     if (this.exitFocusedPathModeOnMouseUp) {
       this.ps.setToolMode(ToolMode.Selection);
-      this.ps.setSelectedLayers(new Set([this.focusedPathId]));
+      this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
     }
   }
 }
