@@ -2,7 +2,6 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 export interface Action<T = any> {
   type: string;
-  // TODO: remove this field?
   payload?: T;
 }
 
