@@ -12,7 +12,7 @@ export class Dispatcher extends BehaviorSubject<Action> {
     super({ type: Dispatcher.INIT });
   }
 
-  dispatch(action: Action): void {
+  dispatch(action: Action) {
     this.next(action);
   }
 
