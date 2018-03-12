@@ -116,7 +116,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
     // Perform the snap test.
     const toSnapPointsFn = (items: ReadonlyArray<paper.Item>) => {
-      const { topLeft, center, bottomRight } = PaperUtil.computeGlobalBounds(items);
+      const { topLeft, center, bottomRight } = PaperUtil.computeBounds(items);
       return [topLeft, center, bottomRight];
     };
     return SnapUtil.computeSnapInfo(

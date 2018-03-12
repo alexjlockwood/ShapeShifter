@@ -1,3 +1,4 @@
+import { ToolMode } from 'app/model/paper';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -50,6 +51,7 @@ export class BatchSelectSegmentsGesture extends Gesture {
     } else if (this.clearFocusedPathAfterDraglessClick) {
       this.ps.setFocusedPathInfo(undefined);
       this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
+      this.ps.setToolMode(ToolMode.Selection);
     }
     this.ps.setSelectionBox(undefined);
   }

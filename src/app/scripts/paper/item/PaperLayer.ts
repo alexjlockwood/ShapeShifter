@@ -223,7 +223,7 @@ export class PaperLayer extends paper.Layer {
     if (selectedItems.length > 0) {
       this.selectionBoundsItem = newSelectionBoundsItem(
         PaperUtil.transformRectangle(
-          PaperUtil.computeGlobalBounds(selectedItems),
+          PaperUtil.computeBounds(selectedItems),
           this.matrix.inverted(),
         ),
         this.cssScaling,
@@ -504,7 +504,6 @@ function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling:
   );
   const addRasterFn = (raster: paper.Raster) => {
     raster.scale(scaleFactor, scaleFactor);
-    raster.transform(matrix);
     group.addChild(raster);
     return raster;
   };
@@ -514,7 +513,7 @@ function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling:
     line.strokeColor = '#aaaaaa';
     line.strokeWidth = 1 / paper.view.zoom;
     line.strokeScaling = false;
-    line.transform(matrix);
+    // line.transform(matrix);
     group.addChild(line);
   };
   const {
@@ -526,9 +525,9 @@ function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling:
   } = info;
   // TODO: avoid creating rasters in a loop like this
   path.segments.forEach(({ point, handleIn, handleOut }, segmentIndex) => {
-    const center = point;
+    const center = point.transform(matrix);
     if (handleIn && visibleHandleIns.has(segmentIndex)) {
-      handleIn = center.add(handleIn);
+      handleIn = point.add(handleIn).transform(matrix);
       addLineFn(center, handleIn);
       addRasterFn(
         new FocusedPathRaster(
@@ -540,7 +539,7 @@ function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling:
       );
     }
     if (handleOut && visibleHandleOuts.has(segmentIndex)) {
-      handleOut = center.add(handleOut);
+      handleOut = point.add(handleOut).transform(matrix);
       addLineFn(center, handleOut);
       addRasterFn(
         new FocusedPathRaster(

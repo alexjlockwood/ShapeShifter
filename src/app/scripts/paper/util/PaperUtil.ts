@@ -10,7 +10,10 @@ export function addPathToStore(ps: PaperService, pathData: string) {
     name: LayerUtil.getUniqueLayerName([vl], 'path'),
     children: [] as Layer[],
     pathData: new Path(pathData),
-    fillColor: '#000',
+    // TODO: make this customizable
+    fillColor: '#d8d8d8',
+    strokeColor: '#979797',
+    strokeWidth: 0.1,
   });
   vl.children = [...vl.children, pl];
   ps.setVectorLayer(vl);
@@ -67,7 +70,7 @@ export function transformRectangle(rect: paper.Rectangle, m: paper.Matrix) {
 }
 
 /** Computes the bounds for the specified items in global project coordinates. */
-export function computeGlobalBounds(arg: paper.Item | ReadonlyArray<paper.Item>) {
+export function computeBounds(arg: paper.Item | ReadonlyArray<paper.Item>) {
   const flattenedItems: paper.Item[] = [];
   (Array.isArray(arg) ? arg : [arg]).forEach(function recurseFn(i: paper.Item) {
     if (i.hasChildren()) {

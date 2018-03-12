@@ -38,7 +38,7 @@ export class RotateItemsGesture extends Gesture {
       return item.globalMatrix.prepended(invertedPaperLayerMatrix).inverted();
     });
     this.pivot = PaperUtil.transformRectangle(
-      PaperUtil.computeGlobalBounds(this.selectedItems),
+      PaperUtil.computeBounds(this.selectedItems),
       this.pl.matrix.inverted(),
     ).center;
     this.initialVectorLayer = this.ps.getVectorLayer();

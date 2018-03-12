@@ -46,7 +46,7 @@ export class ScaleItemsGesture extends Gesture {
       return item.globalMatrix.prepended(this.pl.matrix.inverted()).inverted();
     });
     const bounds = PaperUtil.transformRectangle(
-      PaperUtil.computeGlobalBounds(this.selectedItems),
+      PaperUtil.computeBounds(this.selectedItems),
       this.pl.matrix.inverted(),
     );
     this.vpInitialPivot = bounds[this.selectionBoundsRaster.oppositePivotType];
@@ -216,7 +216,7 @@ export class ScaleItemsGesture extends Gesture {
 
     // Perform the snap test.
     const toSnapPointsFn = (items: ReadonlyArray<paper.Item>) => {
-      const { topLeft, center, bottomRight } = PaperUtil.computeGlobalBounds(items);
+      const { topLeft, center, bottomRight } = PaperUtil.computeBounds(items);
       return [topLeft, center, bottomRight];
     };
     return SnapUtil.computeSnapInfo(
