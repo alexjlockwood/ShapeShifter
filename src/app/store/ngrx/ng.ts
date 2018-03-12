@@ -6,33 +6,33 @@ import { State } from './state';
 import { Store } from './store';
 import { combineReducers } from './utils';
 
-const INITIAL_REDUCER = new InjectionToken<string>('Token ngrx/store/reducer');
-const INITIAL_STATE = new InjectionToken<string>('Token ngrx/store/initial-state');
+export const INITIAL_REDUCER = new InjectionToken<string>('Token ngrx/store/reducer');
+export const INITIAL_STATE = new InjectionToken<string>('Token ngrx/store/initial-state');
 
-const _INITIAL_REDUCER = new InjectionToken<string>('Token _ngrx/store/reducer');
-const _INITIAL_STATE = new InjectionToken<string>('Token _ngrx/store/initial-state');
+export const _INITIAL_REDUCER = new InjectionToken<string>('Token _ngrx/store/reducer');
+export const _INITIAL_STATE = new InjectionToken<string>('Token _ngrx/store/initial-state');
 
-function _initialReducerFactory(reducer) {
+export function _initialReducerFactory(reducer) {
   return typeof reducer === 'function' ? reducer : combineReducers(reducer);
 }
 
-function _initialStateFactory(initialState, reducer) {
+export function _initialStateFactory(initialState, reducer) {
   return initialState || reducer(undefined, { type: Dispatcher.INIT });
 }
 
-function _storeFactory(dispatcher, reducer, state$) {
+export function _storeFactory(dispatcher, reducer, state$) {
   return new Store(dispatcher, reducer, state$);
 }
 
-function _stateFactory(initialState: any, dispatcher: Dispatcher, reducer: Reducer) {
+export function _stateFactory(initialState: any, dispatcher: Dispatcher, reducer: Reducer) {
   return new State(initialState, dispatcher, reducer);
 }
 
-function _reducerFactory(dispatcher, reducer) {
+export function _reducerFactory(dispatcher, reducer) {
   return new Reducer(dispatcher, reducer);
 }
 
-function provideStore(_reducer: any, _initialState?: any): any[] {
+export function provideStore(_reducer: any, _initialState?: any): any[] {
   return [
     Dispatcher,
     { provide: Store, useFactory: _storeFactory, deps: [Dispatcher, Reducer, State] },
