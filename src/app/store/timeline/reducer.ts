@@ -1,6 +1,6 @@
 import { Animation } from 'app/model/timeline';
 
-import * as actions from './actions';
+import { TimelineActionTypes, TimelineActions } from './actions';
 
 export interface State {
   readonly animation: Animation;
@@ -16,13 +16,13 @@ export function buildInitialState(): State {
   };
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions): State {
+export function reducer(state = buildInitialState(), action: TimelineActions): State {
   switch (action.type) {
-    case actions.SET_ANIMATION:
+    case TimelineActionTypes.SetAnimation:
       return { ...state, animation: action.payload.animation };
-    case actions.SELECT_ANIMATION:
+    case TimelineActionTypes.SelectAnimation:
       return { ...state, isAnimationSelected: action.payload.isAnimationSelected };
-    case actions.SET_SELECTED_BLOCKS:
+    case TimelineActionTypes.SetSelectedBlocks:
       return { ...state, selectedBlockIds: new Set<string>(action.payload.blockIds) };
   }
   return state;
