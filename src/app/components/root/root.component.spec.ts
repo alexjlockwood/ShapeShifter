@@ -140,6 +140,12 @@ describe('RootComponent', () => {
         { name: 'contribute', path: 'assets/icons/contribute.svg' },
         { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
         { name: 'vector', path: 'assets/icons/vectorlayer.svg' },
+        { name: 'tool_ellipse', path: 'assets/tools/tool_ellipse.svg' },
+        { name: 'tool_pencil', path: 'assets/tools/tool_pencil.svg' },
+        { name: 'tool_rectangle', path: 'assets/tools/tool_rectangle.svg' },
+        { name: 'tool_select', path: 'assets/tools/tool_select.svg' },
+        { name: 'tool_vector', path: 'assets/tools/tool_vector.svg' },
+        { name: 'tool_zoompan', path: 'assets/tools/tool_zoompan.svg' },
       ]);
     }),
   );
