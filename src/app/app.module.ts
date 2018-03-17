@@ -152,9 +152,9 @@ export class AppModule {
       .addSvgIcon('selectioncursor', this.trustUrl('assets/cursors/selectioncursor.svg'))
       // Tools.
       .addSvgIcon('tool_select', this.trustUrl('assets/tools/tool_select.svg'))
-      .addSvgIcon('tool_draw', this.trustUrl('assets/tools/tool_draw.svg'))
-      .addSvgIcon('tool_bezier', this.trustUrl('assets/tools/tool_bezier.svg'))
-      .addSvgIcon('tool_circle', this.trustUrl('assets/tools/tool_circle.svg'))
+      .addSvgIcon('tool_pencil', this.trustUrl('assets/tools/tool_pencil.svg'))
+      .addSvgIcon('tool_vector', this.trustUrl('assets/tools/tool_vector.svg'))
+      .addSvgIcon('tool_ellipse', this.trustUrl('assets/tools/tool_ellipse.svg'))
       .addSvgIcon('tool_rectangle', this.trustUrl('assets/tools/tool_rectangle.svg'))
       .addSvgIcon('tool_zoompan', this.trustUrl('assets/tools/tool_zoompan.svg'));
   }

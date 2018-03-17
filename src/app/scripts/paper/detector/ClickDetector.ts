@@ -16,7 +16,7 @@ export class ClickDetector {
   private deferSingleClick = false;
   private stillDown = false;
 
-  onMouseEvent(event: paper.ToolEvent) {
+  onToolEvent(event: paper.ToolEvent) {
     if (event.type === 'mousedown') {
       this.processMouseDown(event);
     } else if (event.type === 'mouseup') {
