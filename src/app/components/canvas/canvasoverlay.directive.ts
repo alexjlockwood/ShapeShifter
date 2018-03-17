@@ -806,7 +806,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       // Detect layer selections.
       const hitLayer = this.hitTestForLayer(mouseDown);
       const isMetaOrShiftPressed =
-        ShortcutService.getOsDependentModifierKey(event) || event.shiftKey;
+        ShortcutService.isOsDependentModifierKey(event) || event.shiftKey;
       if (hitLayer) {
         this.layerTimelineService.selectLayer(hitLayer.id, !isMetaOrShiftPressed);
       } else if (!isMetaOrShiftPressed) {
@@ -821,12 +821,12 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     if (this.actionMode === ActionMode.Selection) {
       this.selectionHelper.onMouseDown(
         mouseDown,
-        event.shiftKey || ShortcutService.getOsDependentModifierKey(event),
+        event.shiftKey || ShortcutService.isOsDependentModifierKey(event),
       );
     } else if (this.actionMode === ActionMode.PairSubPaths) {
       this.pairSubPathHelper.onMouseDown(
         mouseDown,
-        event.shiftKey || ShortcutService.getOsDependentModifierKey(event),
+        event.shiftKey || ShortcutService.isOsDependentModifierKey(event),
       );
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseDown(mouseDown);
@@ -871,7 +871,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     if (this.actionMode === ActionMode.Selection) {
       this.selectionHelper.onMouseUp(
         mouseUp,
-        event.shiftKey || ShortcutService.getOsDependentModifierKey(event),
+        event.shiftKey || ShortcutService.isOsDependentModifierKey(event),
       );
     } else if (this.actionMode === ActionMode.PairSubPaths) {
       this.pairSubPathHelper.onMouseUp(mouseUp);

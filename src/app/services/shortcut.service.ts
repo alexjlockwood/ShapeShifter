@@ -23,12 +23,13 @@ export class ShortcutService {
   private isInit = false;
   private readonly shortcutSubject = new Subject<Shortcut>();
 
-  static isMac() {
-    return navigator.appVersion.includes('Mac');
+  /** Returns true if the event is a modifier key (meta for Macs, ctrl for others). */
+  static isOsDependentModifierKey(event: ModifierKeyEvent) {
+    return !!(ShortcutService.isMac() ? !!event.metaKey : !!event.ctrlKey);
   }
 
-  static getOsDependentModifierKey(event: ModifierKeyEvent) {
-    return !!(ShortcutService.isMac() ? !!event.metaKey : !!event.ctrlKey);
+  private static isMac() {
+    return navigator.appVersion.includes('Mac');
   }
 
   constructor(
@@ -50,11 +51,9 @@ export class ShortcutService {
     this.isInit = true;
 
     $(window).on('keydown', event => {
-      if (ShortcutService.getOsDependentModifierKey(event)) {
+      if (ShortcutService.isOsDependentModifierKey(event)) {
         if (event.keyCode === 'Z'.charCodeAt(0)) {
-          event.shiftKey
-            ? this.store.dispatch(ActionCreators.redo())
-            : this.store.dispatch(ActionCreators.undo());
+          this.store.dispatch(event.shiftKey ? ActionCreators.redo() : ActionCreators.undo());
           return false;
         }
         if (event.keyCode === 'G'.charCodeAt(0)) {

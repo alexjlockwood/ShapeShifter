@@ -173,7 +173,7 @@ export class PropertyInputComponent implements OnInit {
         if (event.shiftKey) {
           // TODO: make this more obvious somehow
           delta *= 10;
-        } else if (ShortcutService.getOsDependentModifierKey(event)) {
+        } else if (ShortcutService.isOsDependentModifierKey(event)) {
           // TODO: make this more obvious somehow
           delta /= 10;
         }
