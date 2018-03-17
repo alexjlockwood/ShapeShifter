@@ -21,9 +21,8 @@ export class BatchSelectItemsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     if (!event.modifiers.shift) {
-      // A selection box implies that the gesture began with a failed hit
-      // test, so deselect everything on mouse down (unless the user is
-      // holding shift).
+      // A selection box implies that the gesture began with a failed hit test,
+      // so deselect everything on mouse down (unless the user is holding shift).
       this.ps.setSelectedLayerIds(new Set());
     }
     // TODO: make use of this information (i.e. toggle the layers when shift is pressed)
@@ -36,35 +35,38 @@ export class BatchSelectItemsGesture extends Gesture {
       from: this.pl.globalToLocal(event.downPoint),
       to: this.pl.globalToLocal(event.point),
     });
-    this.selectItemsInSelectionBox(event.modifiers.alt);
+    this.selectItemsInSelectionBox(!event.modifiers.alt);
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    this.selectItemsInSelectionBox(event.modifiers.alt);
+    this.selectItemsInSelectionBox(!event.modifiers.alt);
     this.ps.setSelectionBox(undefined);
   }
 
   // @Override
   onKeyDown(event: paper.KeyEvent) {
     if (event.key === 'alt') {
-      this.selectItemsInSelectionBox(true);
+      this.selectItemsInSelectionBox(false);
     }
   }
 
   // @Override
   onKeyUp(event: paper.KeyEvent) {
     if (event.key === 'alt') {
-      this.selectItemsInSelectionBox(false);
+      this.selectItemsInSelectionBox(true);
     }
   }
 
-  private selectItemsInSelectionBox(isAltPressed: boolean) {
+  private selectItemsInSelectionBox(includePartialOverlaps: boolean) {
     const box = this.ps.getSelectionBox();
     if (box) {
       const from = new paper.Point(box.from);
       const to = new paper.Point(box.to);
-      const selectedItems = this.pl.findItemsInBounds(new paper.Rectangle(from, to), !isAltPressed);
+      const selectedItems = this.pl.findItemsInBounds(
+        new paper.Rectangle(from, to),
+        includePartialOverlaps,
+      );
       this.ps.setSelectedLayerIds(new Set(selectedItems.map(i => i.data.id)));
     }
   }

@@ -167,7 +167,7 @@ export class PaperService {
   }
 
   /** Sets the current tooltip info. */
-  setTooltipInfo(info: TooltipInfo) {
+  setTooltipInfo(info: TooltipInfo | undefined) {
     if (!_.isEqual(this.queryStore(getTooltipInfo), info)) {
       this.store.dispatch(new SetTooltipInfo(info));
     }

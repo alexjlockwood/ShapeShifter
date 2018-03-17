@@ -10,16 +10,15 @@ import { ZoomPanTool } from './ZoomPanTool';
  * The master tool that is in charge of dispatching mouse, key,
  * and toolmode change events.
  */
-export class MasterTool {
+export class MasterToolDelegate {
   private readonly paperTool = new paper.Tool();
   private readonly onEventFn: (event?: paper.ToolEvent | paper.KeyEvent) => void;
 
-  constructor(ps: PaperService) {
+  constructor(private readonly ps: PaperService) {
     const gestureTool = new GestureTool(ps);
     const zoomPanTool = new ZoomPanTool(ps);
     let currentTool: Tool;
 
-    // TODO: react immediately to toolmode changes as well?
     const onEventFn = (event?: paper.ToolEvent | paper.KeyEvent) => {
       const toolMode = ps.getToolMode();
       const prevTool = currentTool;
@@ -38,7 +37,7 @@ export class MasterTool {
       } else if (event instanceof paper.KeyEvent) {
         currentTool.onKeyEvent(event);
       } else {
-        currentTool.onToolModeChanged(toolMode);
+        currentTool.onToolModeChanged();
       }
     };
 
@@ -53,8 +52,9 @@ export class MasterTool {
     this.onEventFn = onEventFn;
   }
 
-  setToolMode(toolMode: ToolMode) {
-    // TODO: move this value into the ngrx store and modify it in the children tools instead?
+  onToolModeChanged() {
+    const toolMode = this.ps.getToolMode();
+    // TODO: better way to set this?
     this.paperTool.fixedDistance = toolMode === ToolMode.Pencil ? 4 : undefined;
     this.onEventFn();
   }

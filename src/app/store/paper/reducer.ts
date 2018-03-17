@@ -1,10 +1,10 @@
 import { CanvasCursor, ToolMode } from 'app/model/paper';
 
 import {
-  ActionType,
-  Actions,
   CreatePathInfo,
   FocusedPathInfo,
+  PaperActionTypes,
+  PaperActions,
   SelectionBox,
   SnapGuideInfo,
   SplitCurveInfo,
@@ -35,29 +35,29 @@ export function buildInitialState(): State {
   };
 }
 
-export function reducer(state = buildInitialState(), action: Actions): State {
+export function reducer(state = buildInitialState(), action: PaperActions): State {
   const { toolModeInfo } = state;
   switch (action.type) {
-    case ActionType.SetZoomPanInfo:
+    case PaperActionTypes.SetZoomPanInfo:
       return { ...state, zoomPanInfo: action.zoomPanInfo };
-    case ActionType.SetToolMode:
+    case PaperActionTypes.SetToolMode:
       return { ...state, toolModeInfo: { toolMode: action.toolMode } };
-    case ActionType.SetSelectionBox:
+    case PaperActionTypes.SetSelectionBox:
       return { ...state, toolModeInfo: { ...toolModeInfo, selectionBox: action.selectionBox } };
-    case ActionType.SetCreatePathInfo:
+    case PaperActionTypes.SetCreatePathInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, createPathInfo: action.createPathInfo } };
-    case ActionType.SetSplitCurveInfo:
+    case PaperActionTypes.SetSplitCurveInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, splitCurveInfo: action.splitCurveInfo } };
-    case ActionType.SetFocusedPathInfo:
+    case PaperActionTypes.SetFocusedPathInfo:
       return {
         ...state,
         toolModeInfo: { ...toolModeInfo, focusedPathInfo: action.focusedPathInfo },
       };
-    case ActionType.SetSnapGuideInfo:
+    case PaperActionTypes.SetSnapGuideInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, snapGuideInfo: action.snapGuideInfo } };
-    case ActionType.SetTooltipInfo:
+    case PaperActionTypes.SetTooltipInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, tooltipInfo: action.tooltipInfo } };
-    case ActionType.SetCanvasCursor:
+    case PaperActionTypes.SetCanvasCursor:
       return { ...state, toolModeInfo: { ...toolModeInfo, canvasCursor: action.canvasCursor } };
   }
   return state;

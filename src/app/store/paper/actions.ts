@@ -2,78 +2,64 @@ import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 import { Action } from 'app/store/ngrx';
 
-// TODO: remove this when TypeScript 2.5 is supported
-interface ActionTypes {
-  SetToolMode: '__paper__SET_TOOL_MODE';
-  SetSelectionBox: '__paper__SET_SELECTION_BOX';
-  SetCreatePathInfo: '__paper__SET_CREATE_PATH_INFO';
-  SetSplitCurveInfo: '__paper__SET_SPLIT_CURVE_INFO';
-  SetFocusedPathInfo: '__paper__SET_FOCUSED_PATH_INFO';
-  SetCanvasCursor: '__paper__SET_CANVAS_CURSOR';
-  SetSnapGuideInfo: '__paper__SET_SNAP_GUIDE_INFO';
-  SetZoomPanInfo: '__paper__SET_ZOOM_PAN_INFO';
-  SetTooltipInfo: '__paper__SET_TOOLTIP_INFO';
+export enum PaperActionTypes {
+  SetToolMode = '__paper__SET_TOOL_MODE',
+  SetSelectionBox = '__paper__SET_SELECTION_BOX',
+  SetCreatePathInfo = '__paper__SET_CREATE_PATH_INFO',
+  SetSplitCurveInfo = '__paper__SET_SPLIT_CURVE_INFO',
+  SetFocusedPathInfo = '__paper__SET_FOCUSED_PATH_INFO',
+  SetCanvasCursor = '__paper__SET_CANVAS_CURSOR',
+  SetSnapGuideInfo = '__paper__SET_SNAP_GUIDE_INFO',
+  SetZoomPanInfo = '__paper__SET_ZOOM_PAN_INFO',
+  SetTooltipInfo = '__paper__SET_TOOLTIP_INFO',
 }
 
-// TODO: turn this into a string enum when TypeScript 2.5 is supported
-export const ActionType: ActionTypes = {
-  SetToolMode: '__paper__SET_TOOL_MODE',
-  SetSelectionBox: '__paper__SET_SELECTION_BOX',
-  SetCreatePathInfo: '__paper__SET_CREATE_PATH_INFO',
-  SetSplitCurveInfo: '__paper__SET_SPLIT_CURVE_INFO',
-  SetFocusedPathInfo: '__paper__SET_FOCUSED_PATH_INFO',
-  SetCanvasCursor: '__paper__SET_CANVAS_CURSOR',
-  SetSnapGuideInfo: '__paper__SET_SNAP_GUIDE_INFO',
-  SetZoomPanInfo: '__paper__SET_ZOOM_PAN_INFO',
-  SetTooltipInfo: '__paper__SET_TOOLTIP_INFO',
-};
-
 export class SetToolMode implements Action {
-  readonly type = ActionType.SetToolMode;
+  readonly type = PaperActionTypes.SetToolMode;
   constructor(readonly toolMode: ToolMode) {}
 }
 
 export class SetSelectionBox implements Action {
-  readonly type = ActionType.SetSelectionBox;
+  readonly type = PaperActionTypes.SetSelectionBox;
   constructor(readonly selectionBox: SelectionBox | undefined) {}
 }
 
 export class SetCreatePathInfo implements Action {
-  readonly type = ActionType.SetCreatePathInfo;
+  readonly type = PaperActionTypes.SetCreatePathInfo;
   constructor(readonly createPathInfo: CreatePathInfo | undefined) {}
 }
 
 export class SetSplitCurveInfo implements Action {
-  readonly type = ActionType.SetSplitCurveInfo;
+  readonly type = PaperActionTypes.SetSplitCurveInfo;
   constructor(readonly splitCurveInfo: SplitCurveInfo | undefined) {}
 }
 
 export class SetFocusedPathInfo implements Action {
-  readonly type = ActionType.SetFocusedPathInfo;
+  readonly type = PaperActionTypes.SetFocusedPathInfo;
   constructor(readonly focusedPathInfo: FocusedPathInfo | undefined) {}
 }
 
 export class SetCanvasCursor implements Action {
-  readonly type = ActionType.SetCanvasCursor;
+  readonly type = PaperActionTypes.SetCanvasCursor;
   constructor(readonly canvasCursor: CanvasCursor | undefined) {}
 }
 
 export class SetSnapGuideInfo implements Action {
-  readonly type = ActionType.SetSnapGuideInfo;
+  readonly type = PaperActionTypes.SetSnapGuideInfo;
   constructor(readonly snapGuideInfo: SnapGuideInfo | undefined) {}
 }
 
 export class SetZoomPanInfo implements Action {
-  readonly type = ActionType.SetZoomPanInfo;
+  readonly type = PaperActionTypes.SetZoomPanInfo;
   constructor(readonly zoomPanInfo: ZoomPanInfo) {}
 }
 
 export class SetTooltipInfo implements Action {
-  readonly type = ActionType.SetTooltipInfo;
+  readonly type = PaperActionTypes.SetTooltipInfo;
   constructor(readonly tooltipInfo: TooltipInfo | undefined) {}
 }
 
-export type Actions =
+export type PaperActions =
   | SetToolMode
   | SetSelectionBox
   | SetCreatePathInfo

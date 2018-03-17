@@ -26,22 +26,19 @@ import { Tool } from './Tool';
 
 /**
  * A tool that delegates responsibilities to different gestures given the
- * state of the current mouse event.
+ * state of the current tool mode and key/mouse events.
  */
 export class GestureTool extends Tool {
   private readonly pl = paper.project.activeLayer as PaperLayer;
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverItemsGesture(this.ps);
-  private toolMode: ToolMode;
 
   constructor(private readonly ps: PaperService) {
     super();
   }
 
   // @Override
-  onToolModeChanged(toolMode: ToolMode) {
-    // console.log(`tool mode changed: ${this.toolMode} --> ${toolMode}`);
-    this.toolMode = toolMode;
+  onToolModeChanged() {
     this.resetDefaultGesture();
   }
 
@@ -90,8 +87,8 @@ export class GestureTool extends Tool {
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
-    const selectedLayers = this.ps.getSelectedLayerIds();
-    if (selectedLayers.size) {
+    const selectedLayerIds = this.ps.getSelectedLayerIds();
+    if (selectedLayerIds.size) {
       // First perform a hit test on the selection bound's segments.
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
@@ -131,7 +128,7 @@ export class GestureTool extends Tool {
       }
     }
 
-    if (selectedLayers.has(hitItemId) && event.modifiers.shift && selectedLayers.size > 1) {
+    if (selectedLayerIds.has(hitItemId) && event.modifiers.shift && selectedLayerIds.size > 1) {
       // If the hit item is selected, shift is pressed, and there is at least
       // one other selected item, then deselect the hit item.
 

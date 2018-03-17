@@ -312,13 +312,14 @@ export class PaperLayer extends paper.Layer {
   /**
    * Finds all vector layer items that overlap with the specified bounds.
    * Note that the bounds must be in viewport coordinates.
+   * @param includePartialOverlaps iff true, include items that partially overlap the bounds
    */
-  findItemsInBounds(bounds: paper.Rectangle, includePartialOverlaps: boolean) {
+  findItemsInBounds(vpBounds: paper.Rectangle, includePartialOverlaps: boolean) {
     return this.vectorLayerItem.getItems({
       // TODO: figure out how to deal with groups and compound paths
       class: paper.Path,
-      overlapping: includePartialOverlaps ? new paper.Rectangle(bounds) : undefined,
-      inside: includePartialOverlaps ? undefined : new paper.Rectangle(bounds),
+      overlapping: includePartialOverlaps ? vpBounds : undefined,
+      inside: includePartialOverlaps ? undefined : vpBounds,
     });
   }
 }

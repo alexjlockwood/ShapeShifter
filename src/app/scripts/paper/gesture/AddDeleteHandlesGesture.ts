@@ -21,7 +21,7 @@ export class AddDeleteHandlesGesture extends Gesture {
   }
 
   // @Override
-  onMouseDown(e: paper.ToolEvent) {
+  onMouseDown(event: paper.ToolEvent) {
     const path = new paper.Path(PaperUtil.getPathFromStore(this.ps, this.focusedPathId));
     const segment = path.segments[this.hitSegmentIndex];
     if (segment.hasHandles()) {

@@ -1,3 +1,4 @@
+import { ToolMode } from 'app/model/paper';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -122,5 +123,16 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     }
     const lastIndex = path.segments.length - 1;
     return selectedSegments.has(0) ? 0 : selectedSegments.has(lastIndex) ? lastIndex : undefined;
+  }
+
+  // @Override
+  onKeyDown(event: paper.KeyEvent) {
+    // TODO: also do this in any other pen/pencil related gestures?
+    if (event.key === 'escape') {
+      CursorUtil.clear();
+      this.ps.setSnapGuideInfo(undefined);
+      this.ps.setToolMode(ToolMode.Selection);
+      this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
+    }
   }
 }

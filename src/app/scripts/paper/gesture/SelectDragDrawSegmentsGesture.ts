@@ -236,4 +236,6 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
     }
   }
+
+  // TODO: handle escape key event?
 }

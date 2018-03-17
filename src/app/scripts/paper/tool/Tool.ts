@@ -9,7 +9,7 @@ export abstract class Tool {
   onActivate() {}
 
   /** Called when the tool mode has changed. */
-  onToolModeChanged(toolMode: ToolMode) {}
+  onToolModeChanged() {}
 
   /** Called when this tool has received a mouse event. */
   onMouseEvent(event: paper.ToolEvent) {}

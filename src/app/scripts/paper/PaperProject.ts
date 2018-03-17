@@ -1,5 +1,5 @@
 import { PaperLayer } from 'app/scripts/paper/item';
-import { MasterTool } from 'app/scripts/paper/tool';
+import { MasterToolDelegate } from 'app/scripts/paper/tool';
 import { PaperService } from 'app/services';
 import {
   getHiddenLayerIds,
@@ -22,7 +22,7 @@ import { Subscription } from 'rxjs/Subscription';
 
 export class PaperProject extends paper.Project {
   private readonly paperLayer: PaperLayer;
-  private readonly masterTool: MasterTool;
+  private readonly masterToolDelegate: MasterToolDelegate;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(canvas: HTMLCanvasElement, ps: PaperService) {
@@ -30,9 +30,9 @@ export class PaperProject extends paper.Project {
     const pl = new PaperLayer(ps);
     paper.project.addLayer(pl);
     this.paperLayer = pl;
-    this.masterTool = new MasterTool(ps);
+    this.masterToolDelegate = new MasterToolDelegate(ps);
     this.subscriptions.push(
-      ps.store.select(getToolMode).subscribe(toolMode => this.masterTool.setToolMode(toolMode)),
+      ps.store.select(getToolMode).subscribe(() => this.masterToolDelegate.onToolModeChanged()),
       ps.store.select(getVectorLayer).subscribe(() => pl.onVectorLayerChanged()),
       ps.store.select(getSelectedLayerIds).subscribe(() => pl.onSelectedLayerIdsChanged()),
       ps.store.select(getHoveredLayerId).subscribe(() => pl.onHoveredLayerIdChanged()),
@@ -58,7 +58,7 @@ export class PaperProject extends paper.Project {
   }
 
   /**
-   * Sets the project's dimensions with the new VectorLayer viewport and canvas element size.
+   * Sets the project's dimensions with the new VectorLayer viewport and canvas element size (in CSS pixels).
    */
   setDimensions(
     viewportWidth: number,
@@ -66,6 +66,7 @@ export class PaperProject extends paper.Project {
     viewWidth: number,
     viewHeight: number,
   ) {
+    console.log(viewWidth, viewHeight);
     // The view size represents the actual size of the canvas in CSS pixels.
     // The viewport size represents the user-visible dimensions (i.e. the default 24x24).
     this.view.viewSize = new paper.Size(viewWidth, viewHeight);
