@@ -16,6 +16,9 @@
                 color: #fff;
             }
         }
+	&.is-hovered {
+	    box-shadow: 0 0 0 1px mat-color($accent) inset;
+	}
     }
     .slt-properties {
         background-color: mat-color($background, if($is-dark, base50, base));

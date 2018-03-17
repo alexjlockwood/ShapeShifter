@@ -2,6 +2,7 @@ import { getActionMode, isActionMode } from 'app/store/actionmode/selectors';
 import {
   getCollapsedLayerIds,
   getHiddenLayerIds,
+  getHoveredLayerId,
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/store/layers/selectors';
@@ -35,6 +36,7 @@ export const getLayerListTreeState = createStructuredSelector({
   selectedLayerIds: getSelectedLayerIds,
   collapsedLayerIds: getCollapsedLayerIds,
   hiddenLayerIds: getHiddenLayerIds,
+  hoveredLayerId: getHoveredLayerId,
   isActionMode,
 });
 
