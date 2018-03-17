@@ -108,7 +108,7 @@ export class PaperLayer extends paper.Layer {
   ) {
     // Note that viewWidth / viewportWidth === viewHeight / viewportHeight.
     this.cssScaling = viewWidth / viewportWidth;
-    this.matrix = new paper.Matrix(this.cssScaling, 0, 0, this.cssScaling, 0, 0);
+    this.matrix = new paper.Matrix().scale(this.cssScaling);
     this.updatePixelGridItem(viewportWidth, viewportHeight);
   }
 
