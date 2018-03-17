@@ -66,7 +66,6 @@ export class PaperProject extends paper.Project {
     viewWidth: number,
     viewHeight: number,
   ) {
-    console.log(viewWidth, viewHeight);
     // The view size represents the actual size of the canvas in CSS pixels.
     // The viewport size represents the user-visible dimensions (i.e. the default 24x24).
     this.view.viewSize = new paper.Size(viewWidth, viewHeight);
