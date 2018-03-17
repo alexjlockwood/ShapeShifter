@@ -46,7 +46,7 @@ export function distance(p1: Point, p2: Point) {
 
 /** Returns true if the two points are equal. */
 export function arePointsEqual(p1: Point, p2: Point) {
-  return p1 && p2 && distance(p1, p2) < 1e-9;
+  return p1 && p2 && isNearZero(distance(p1, p2));
 }
 
 /** Rounds the number to a prespecified precision. */
@@ -64,6 +64,7 @@ export function snapVectorToAngle(delta: Point, snapAngleDegrees: number): Point
   return { x: dirx * d, y: diry * d };
 }
 
+/** Returns true iff the number is near 0. */
 export function isNearZero(n: number) {
   return round(n) === 0;
 }

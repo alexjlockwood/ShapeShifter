@@ -29,7 +29,6 @@ export class PaperProject extends paper.Project {
     super(canvas);
     const pl = new PaperLayer(ps);
     paper.project.addLayer(pl);
-    console.log(paper.project);
     this.paperLayer = pl;
     this.masterToolDelegate = new MasterToolDelegate(ps);
     this.subscriptions.push(

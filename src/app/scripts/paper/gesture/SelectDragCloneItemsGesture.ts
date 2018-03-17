@@ -87,7 +87,9 @@ export class SelectDragCloneItemsGesture extends Gesture {
   ) {
     Array.from(this.ps.getSelectedLayerIds()).forEach(layerId => {
       const item = this.pl.findItemByLayerId(layerId);
-      const localDelta = item.globalToLocal(projPoint).subtract(item.globalToLocal(projDownPoint));
+      const localDown = item.globalToLocal(projDownPoint).transform(item.matrix);
+      const localCurr = item.globalToLocal(projPoint).transform(item.matrix);
+      const localDelta = localCurr.subtract(localDown);
       const localFinalDelta = shouldSnapDelta
         ? new paper.Point(MathUtil.snapVectorToAngle(localDelta, 90))
         : localDelta;
