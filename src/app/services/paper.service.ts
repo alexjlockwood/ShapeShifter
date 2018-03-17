@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { VectorLayer } from 'app/model/layers';
 import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
@@ -41,6 +41,7 @@ import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
 
+import { Action } from '../store/ngrx';
 import { LayerTimelineService } from './layertimeline.service';
 
 /** A simple service that provides an interface for making paper.js changes to the store. */
@@ -49,11 +50,15 @@ export class PaperService {
   constructor(
     private readonly layerTimelineService: LayerTimelineService,
     readonly store: Store<State>,
+    // TODO: figure out if this is the most efficient use of NgZone...
+    // TODO: can we get away with only executing in NgZone for certain dispatch store ops?
+    private readonly ngZone: NgZone,
   ) {}
 
   /** Sets the current vector layer. */
   setVectorLayer(vl: VectorLayer) {
-    return this.layerTimelineService.setVectorLayer(vl);
+    // TODO: use this.dispatchStore()
+    this.ngZone.run(() => this.layerTimelineService.setVectorLayer(vl));
   }
 
   /** Gets the current vector layer. */
@@ -64,7 +69,8 @@ export class PaperService {
   /** Sets the set of selected layer IDs. */
   setSelectedLayerIds(layerIds: Set<string>) {
     if (!_.isEqual(this.queryStore(getSelectedLayerIds), layerIds)) {
-      this.layerTimelineService.setSelectedLayers(layerIds);
+      // TODO: use this.dispatchStore()
+      this.ngZone.run(() => this.layerTimelineService.setSelectedLayers(layerIds));
     }
   }
 
@@ -76,7 +82,8 @@ export class PaperService {
   /** Sets or clears the currently hovered layer ID. */
   setHoveredLayerId(layerId: string | undefined) {
     if (this.queryStore(getHoveredLayerId) !== layerId) {
-      this.store.dispatch(new SetHoveredLayer(layerId));
+      // TODO: use this.dispatchStore()
+      this.ngZone.run(() => this.store.dispatch(new SetHoveredLayer(layerId)));
     }
   }
 
@@ -92,9 +99,7 @@ export class PaperService {
 
   /** Sets the current selection box. */
   setSelectionBox(box: { from: Point; to: Point } | undefined) {
-    if (!_.isEqual(this.getSelectionBox(), box)) {
-      this.store.dispatch(new SetSelectionBox(box));
-    }
+    this.dispatchStore(new SetSelectionBox(box), getSelectionBox);
   }
 
   /** Gets the current selection box. */
@@ -104,9 +109,7 @@ export class PaperService {
 
   /** Sets the current create path info. */
   setCreatePathInfo(info: CreatePathInfo | undefined) {
-    if (!_.isEqual(this.getCreatePathInfo(), info)) {
-      this.store.dispatch(new SetCreatePathInfo(info));
-    }
+    this.dispatchStore(new SetCreatePathInfo(info), getCreatePathInfo);
   }
 
   /** Gets the current create path info. */
@@ -116,16 +119,12 @@ export class PaperService {
 
   /** Sets the current split curve info. */
   setSplitCurveInfo(info: SplitCurveInfo | undefined) {
-    if (!_.isEqual(this.queryStore(getSplitCurveInfo), info)) {
-      this.store.dispatch(new SetSplitCurveInfo(info));
-    }
+    this.dispatchStore(new SetSplitCurveInfo(info), getSplitCurveInfo);
   }
 
   /** Sets the current tool mode. */
   setToolMode(toolMode: ToolMode) {
-    if (this.getToolMode() !== toolMode) {
-      this.store.dispatch(new SetToolMode(toolMode));
-    }
+    this.dispatchStore(new SetToolMode(toolMode), getToolMode);
   }
 
   /** Gets the current tool mode. */
@@ -135,9 +134,7 @@ export class PaperService {
 
   /** Sets the current focused path info. */
   setFocusedPathInfo(info: FocusedPathInfo | undefined) {
-    if (!_.isEqual(this.getFocusedPathInfo(), info)) {
-      this.store.dispatch(new SetFocusedPathInfo(info));
-    }
+    this.dispatchStore(new SetFocusedPathInfo(info), getFocusedPathInfo);
   }
 
   /** Gets the current focused path info. */
@@ -147,29 +144,34 @@ export class PaperService {
 
   /** Sets the current canvas cursor. */
   setCanvasCursor(canvasCursor: CanvasCursor | undefined) {
-    if (this.queryStore(getCanvasCursor) !== canvasCursor) {
-      this.store.dispatch(new SetCanvasCursor(canvasCursor));
-    }
+    this.dispatchStore(new SetCanvasCursor(canvasCursor), getCanvasCursor);
   }
 
   /** Sets the current snap guide info. */
   setSnapGuideInfo(info: SnapGuideInfo | undefined) {
-    if (!_.isEqual(this.queryStore(getSnapGuideInfo), info)) {
-      this.store.dispatch(new SetSnapGuideInfo(info));
-    }
+    this.dispatchStore(new SetSnapGuideInfo(info), getSnapGuideInfo);
   }
 
   /** Sets the current zoom/pan info. */
   setZoomPanInfo(info: ZoomPanInfo) {
-    if (!_.isEqual(this.queryStore(getZoomPanInfo), info)) {
-      this.store.dispatch(new SetZoomPanInfo(info));
-    }
+    this.dispatchStore(new SetZoomPanInfo(info), getZoomPanInfo);
   }
 
   /** Sets the current tooltip info. */
   setTooltipInfo(info: TooltipInfo | undefined) {
-    if (!_.isEqual(this.queryStore(getTooltipInfo), info)) {
-      this.store.dispatch(new SetTooltipInfo(info));
+    this.dispatchStore(new SetTooltipInfo(info), getTooltipInfo);
+  }
+
+  private dispatchStore<T>(
+    action: Action<T>,
+    selector: OutputSelector<Object, T, (res: Object) => T>,
+  ) {
+    if (!_.isEqual(this.queryStore(getTooltipInfo), action.payload)) {
+      // PaperService methods are usually executed outside of the Angular zone
+      // (since they originate from event handlers registered by paper.js). In
+      // order to ensure change detection works properly, we need to force
+      // state changes to be executed inside the Angular zone.
+      this.ngZone.run(() => this.store.dispatch(action));
     }
   }
 

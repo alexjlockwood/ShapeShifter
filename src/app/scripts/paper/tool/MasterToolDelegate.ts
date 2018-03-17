@@ -33,7 +33,7 @@ export class MasterToolDelegate {
         currentTool.onActivate();
       }
       if (event instanceof paper.ToolEvent) {
-        currentTool.onMouseEvent(event);
+        currentTool.onToolEvent(event);
       } else if (event instanceof paper.KeyEvent) {
         currentTool.onKeyEvent(event);
       } else {

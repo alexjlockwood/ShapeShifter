@@ -52,7 +52,7 @@ export class GestureTool extends Tool {
   }
 
   // @Override
-  onMouseEvent(event: paper.ToolEvent) {
+  onToolEvent(event: paper.ToolEvent) {
     this.clickDetector.onMouseEvent(event);
     if (event.type === 'mousedown') {
       this.onMouseDown(event);

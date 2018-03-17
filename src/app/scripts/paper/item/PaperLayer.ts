@@ -72,6 +72,12 @@ export class PaperLayer extends paper.Layer {
   }
 
   hitTestVectorLayer(projPoint: paper.Point) {
+    const { width: vpWidth, height: vpHeight } = this.vectorLayer;
+    const vpBounds = new paper.Rectangle(0, 0, vpWidth, vpHeight);
+    const vpPoint = this.vectorLayerItem.globalToLocal(projPoint);
+    if (!vpBounds.contains(vpPoint)) {
+      return { hitItem: undefined, children: [] };
+    }
     const hitResult = (function recurseFn(item: paper.Item): HitResult {
       const localPoint = item.globalToLocal(projPoint).transform(item.matrix);
       let hitItem: paper.Item;
@@ -91,11 +97,8 @@ export class PaperLayer extends paper.Layer {
       }
       return { hitItem, children };
     })(this.vectorLayerItem);
-    const { width, height } = this.vectorLayer;
-    const vectorLayerBounds = new paper.Rectangle(0, 0, width, height);
-    const vpPoint = this.vectorLayerItem.globalToLocal(projPoint);
     return {
-      hitItem: vectorLayerBounds.contains(vpPoint) ? this.vectorLayerItem : undefined,
+      hitItem: this.vectorLayerItem,
       children: hitResult.children,
     };
   }

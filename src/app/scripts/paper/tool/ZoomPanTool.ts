@@ -27,7 +27,7 @@ export class ZoomPanTool extends Tool {
   }
 
   // @Override
-  onMouseEvent(event: paper.ToolEvent) {
+  onToolEvent(event: paper.ToolEvent) {
     if (event.type === 'mousedown') {
       this.onMouseDown(event);
     } else if (event.type === 'mousedrag') {
