@@ -45,6 +45,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
     private readonly actionModeService: ActionModeService,
   ) {}
 
+  // @Override
   ngOnInit() {
     this.layerModel$ = this.store.select(getLayerListTreeState).pipe(
       map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds, isActionMode }) => {
@@ -89,7 +90,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
     );
   }
 
-  // @Override Callbacks
+  // @Override
   onLayerClick(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
@@ -97,14 +98,14 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
     }
   }
 
-  // @Override Callbacks
+  // @Override
   onLayerMouseDown(event: MouseEvent, layer: Layer) {
     if (!this.actionModeService.isActionMode()) {
       this.layerMouseDown.emit({ event, layer });
     }
   }
 
-  // @Override Callbacks
+  // @Override
   onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
     if (this.isLayerExpandable()) {
@@ -112,7 +113,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
     }
   }
 
-  // @Override Callbacks
+  // @Override
   onLayerToggleVisibility(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
@@ -120,28 +121,28 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
     }
   }
 
-  // @Override Callbacks
+  // @Override
   onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
     if (!this.actionModeService.isActionMode()) {
       this.addTimelineBlockClick.emit({ event, layer, propertyName });
     }
   }
 
-  // @Override Callbacks
+  // @Override
   onConvertToClipPathClick(event: MouseEvent, layer: Layer) {
     if (!this.actionModeService.isActionMode()) {
       this.convertToClipPathClick.emit({ event, layer });
     }
   }
 
-  // @Override Callbacks
+  // @Override
   onConvertToPathClick(event: MouseEvent, layer: Layer) {
     if (!this.actionModeService.isActionMode()) {
       this.convertToPathClick.emit({ event, layer });
     }
   }
 
-  // @Override Callbacks
+  // @Override
   onFlattenGroupClick(event: MouseEvent, layer: Layer) {
     if (!this.actionModeService.isActionMode()) {
       this.flattenGroupClick.emit({ event, layer });
@@ -169,13 +170,11 @@ export interface Callbacks {
   onFlattenGroupClick(event: MouseEvent, layer: Layer): void;
 }
 
-// tslint:disable: no-unused-variable
 interface LayerEvent {
   readonly event: MouseEvent;
   readonly layer: Layer;
 }
 
-// tslint:disable: no-unused-variable
 interface TimelineBlockEvent {
   readonly event: MouseEvent;
   readonly layer: Layer;

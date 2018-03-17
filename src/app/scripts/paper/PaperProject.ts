@@ -72,6 +72,7 @@ export class PaperProject extends paper.Project {
     this.paperLayer.setDimensions(viewportWidth, viewportHeight, viewWidth, viewHeight);
   }
 
+  // @Override
   remove() {
     super.remove();
     while (this.subscriptions.length) {
