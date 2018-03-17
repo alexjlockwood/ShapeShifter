@@ -298,7 +298,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     // Stop propagation to ensure that animationTimelineClick() isn't called.
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
-      const isSelected = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
+      const isSelected = !ShortcutService.isOsDependentModifierKey(event) && !event.shiftKey;
       this.layerTimelineService.selectAnimation(isSelected);
     }
   }
@@ -370,7 +370,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     const downTime = xToTimeFn(mouseDownEvent.clientX);
 
     // Determine the action based on where the user clicked and the modifier keys.
-    const metaKey = ShortcutService.getOsDependentModifierKey(mouseDownEvent);
+    const metaKey = ShortcutService.isOsDependentModifierKey(mouseDownEvent);
     let action = MouseActions.Moving;
     if ($target.hasClass('slt-timeline-block-edge-end')) {
       action =
@@ -520,7 +520,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
         // Calculate the 'time delta' (the number of milliseconds the user has moved
         // since the gesture began).
         let timeDelta = Math.round(xToTimeFn(event.clientX) - downTime);
-        const allowSnap = !event.shiftKey && !ShortcutService.getOsDependentModifierKey(event);
+        const allowSnap = !event.shiftKey && !ShortcutService.isOsDependentModifierKey(event);
         const replacementBlocks: AnimationBlock[] = [];
         switch (action) {
           case MouseActions.Moving: {
@@ -744,7 +744,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // @Override TimelineAnimationRowCallbacks
   onTimelineBlockClick(event: MouseEvent, block: AnimationBlock) {
-    const clearExisting = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
+    const clearExisting = !ShortcutService.isOsDependentModifierKey(event) && !event.shiftKey;
     this.layerTimelineService.selectBlock(block.id, clearExisting);
   }
 
@@ -790,13 +790,13 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // @Override LayerListTreeComponentCallbacks
   onLayerClick(event: MouseEvent, layer: Layer) {
-    const clearExisting = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
+    const clearExisting = !ShortcutService.isOsDependentModifierKey(event) && !event.shiftKey;
     this.layerTimelineService.selectLayer(layer.id, clearExisting);
   }
 
   // @Override LayerListTreeComponentCallbacks
   onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
-    const recursive = ShortcutService.getOsDependentModifierKey(event) || event.shiftKey;
+    const recursive = ShortcutService.isOsDependentModifierKey(event) || event.shiftKey;
     this.layerTimelineService.toggleExpandedLayer(layer.id, recursive);
   }
 
@@ -1017,7 +1017,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     };
 
     // chrome+mac trackpad pinch-zoom = ctrlKey
-    if (ShortcutService.getOsDependentModifierKey(event) || event.ctrlKey) {
+    if (ShortcutService.isOsDependentModifierKey(event) || event.ctrlKey) {
       if (!this.targetHorizZoom) {
         // Multiple changes can happen to targetHorizZoom before the
         // actual zoom level is updated (see performZoom_).

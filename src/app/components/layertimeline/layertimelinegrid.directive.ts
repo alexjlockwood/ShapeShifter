@@ -81,14 +81,14 @@ export class LayerTimelineGridDirective extends DestroyableMixin() implements On
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
-    this.handleScrubEvent(event.clientX, ShortcutService.getOsDependentModifierKey(event));
+    this.handleScrubEvent(event.clientX, ShortcutService.isOsDependentModifierKey(event));
     // tslint:disable-next-line: no-unused-expression
     new Dragger({
       direction: 'horizontal',
       downX: event.clientX,
       downY: event.clientY,
       shouldSkipSlopCheck: true,
-      onDragFn: e => this.handleScrubEvent(e.clientX, ShortcutService.getOsDependentModifierKey(e)),
+      onDragFn: e => this.handleScrubEvent(e.clientX, ShortcutService.isOsDependentModifierKey(e)),
     });
     event.preventDefault();
     return false;
