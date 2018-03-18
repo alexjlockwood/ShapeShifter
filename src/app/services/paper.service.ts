@@ -166,12 +166,16 @@ export class PaperService {
     action: Action<T>,
     selector: OutputSelector<Object, T, (res: Object) => T>,
   ) {
-    if (!_.isEqual(this.queryStore(getTooltipInfo), action.payload)) {
-      // PaperService methods are usually executed outside of the Angular zone
-      // (since they originate from event handlers registered by paper.js). In
-      // order to ensure change detection works properly, we need to force
-      // state changes to be executed inside the Angular zone.
-      this.ngZone.run(() => this.store.dispatch(action));
+    if (!_.isEqual(this.queryStore(selector), action.payload)) {
+      if (NgZone.isInAngularZone()) {
+        this.store.dispatch(action);
+      } else {
+        // PaperService methods are usually executed outside of the Angular zone
+        // (since they originate from event handlers registered by paper.js). In
+        // order to ensure change detection works properly, we need to force
+        // state changes to be executed inside the Angular zone.
+        this.ngZone.run(() => this.store.dispatch(action));
+      }
     }
   }
 

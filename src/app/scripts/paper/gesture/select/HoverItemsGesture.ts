@@ -1,10 +1,9 @@
 import { ToolMode } from 'app/model/paper';
+import { Gesture } from 'app/scripts/paper/gesture';
 import { HitTests } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
-
-import { Gesture } from './Gesture';
 
 // prettier-ignore
 const RESIZE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([

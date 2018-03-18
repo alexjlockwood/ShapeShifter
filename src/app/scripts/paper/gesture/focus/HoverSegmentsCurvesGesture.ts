@@ -1,10 +1,9 @@
 import { ToolMode } from 'app/model/paper';
+import { Gesture } from 'app/scripts/paper/gesture';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
-
-import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs hover operations over segments and curves.

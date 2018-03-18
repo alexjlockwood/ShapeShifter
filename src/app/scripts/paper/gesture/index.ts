@@ -1,15 +1,1 @@
-export { AddDeleteHandlesGesture } from './AddDeleteHandlesGesture';
-export { BatchSelectItemsGesture } from './BatchSelectItemsGesture';
-export { BatchSelectSegmentsGesture } from './BatchSelectSegmentsGesture';
-export { CreateEllipseGesture, CreateRectangleGesture } from './CreateShapeGesture';
-export { DeselectItemGesture } from './DeselectItemGesture';
 export { Gesture } from './Gesture';
-export { HoverItemsGesture } from './HoverItemsGesture';
-export { HoverSegmentsCurvesGesture } from './HoverSegmentsCurvesGesture';
-export { PencilGesture } from './PencilGesture';
-export { RotateItemsGesture } from './RotateItemsGesture';
-export { ScaleItemsGesture } from './ScaleItemsGesture';
-export { SelectDragCloneItemsGesture } from './SelectDragCloneItemsGesture';
-export { SelectDragDrawSegmentsGesture } from './SelectDragDrawSegmentsGesture';
-export { SelectDragHandleGesture } from './SelectDragHandleGesture';
-export { SetFocusedPathGesture } from './SetFocusedPathGesture';

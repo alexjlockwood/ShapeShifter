@@ -1,15 +1,12 @@
 import { ToolMode } from 'app/model/paper';
+import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
-import { Gesture } from './Gesture';
-
-/**
- * Base class for all shape-building gestures.
- */
-abstract class CreateShapeGesture extends Gesture {
+/** Base class for all shape-building gestures. */
+export abstract class ShapeGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
   private lastDragEventInfo: Readonly<{ vpDownPoint: paper.Point; vpPoint: paper.Point }>;
 
@@ -77,24 +74,4 @@ abstract class CreateShapeGesture extends Gesture {
 
   /** Factory method that creates a new path given its bounding box.  */
   protected abstract newPath(bounds: paper.Rectangle);
-}
-
-/**
- * A gesture that creates a rectangular path.
- */
-export class CreateRectangleGesture extends CreateShapeGesture {
-  // @Override
-  protected newPath(bounds: paper.Rectangle) {
-    return new paper.Path.Rectangle(bounds);
-  }
-}
-
-/**
- * A gesture that creates an elliptical path.
- */
-export class CreateEllipseGesture extends CreateShapeGesture {
-  // @Override
-  protected newPath(bounds: paper.Rectangle) {
-    return new paper.Path.Ellipse(bounds);
-  }
 }

@@ -1,7 +1,6 @@
+import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
-
-import { Gesture } from './Gesture';
 
 /**
  * A gesture that deselects a single item.

@@ -1,11 +1,10 @@
 import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
+import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
-
-import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs rotation operations.

@@ -1,8 +1,7 @@
+import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
-
-import { Gesture } from './Gesture';
 
 /**
  * A gesture that selects one or more items using a selection box.

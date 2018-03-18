@@ -1,11 +1,10 @@
 import { ToolMode } from 'app/model/paper';
+import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
-
-import { Gesture } from './Gesture';
 
 /**
  * A gesture that selects multiple segments using a bounded box.

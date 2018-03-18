@@ -1,14 +1,13 @@
 import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { MathUtil } from 'app/scripts/common';
+import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer, SelectionBoundsRaster } from 'app/scripts/paper/item';
 import { PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import { Line } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
-
-import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs scaling operations.

@@ -1,22 +1,22 @@
 import { ToolMode } from 'app/model/paper';
 import { ClickDetector } from 'app/scripts/paper/detector';
+import { Gesture } from 'app/scripts/paper/gesture';
+import { EllipseGesture, PencilGesture, RectangleGesture } from 'app/scripts/paper/gesture/create';
 import {
   AddDeleteHandlesGesture,
-  BatchSelectItemsGesture,
   BatchSelectSegmentsGesture,
-  CreateEllipseGesture,
-  CreateRectangleGesture,
-  DeselectItemGesture,
-  Gesture,
-  HoverItemsGesture,
   HoverSegmentsCurvesGesture,
-  PencilGesture,
-  ScaleItemsGesture,
-  SelectDragCloneItemsGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
-  SetFocusedPathGesture,
-} from 'app/scripts/paper/gesture';
+} from 'app/scripts/paper/gesture/focus';
+import {
+  BatchSelectItemsGesture,
+  DeselectItemGesture,
+  FocusPathGesture,
+  HoverItemsGesture,
+  ScaleItemsGesture,
+  SelectDragCloneItemsGesture,
+} from 'app/scripts/paper/gesture/select';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -68,9 +68,9 @@ export class GestureTool extends Tool {
   private onMouseDown(event: paper.ToolEvent) {
     const toolMode = this.ps.getToolMode();
     if (toolMode === ToolMode.Ellipse) {
-      this.currentGesture = new CreateEllipseGesture(this.ps);
+      this.currentGesture = new EllipseGesture(this.ps);
     } else if (toolMode === ToolMode.Rectangle) {
-      this.currentGesture = new CreateRectangleGesture(this.ps);
+      this.currentGesture = new RectangleGesture(this.ps);
     } else if (toolMode === ToolMode.Pencil) {
       this.currentGesture = new PencilGesture(this.ps);
     } else if (toolMode === ToolMode.Vector) {
@@ -124,7 +124,7 @@ export class GestureTool extends Tool {
       } else {
         // If a double click event occurs on top of a hit item w/ no children,
         // then enter focused path mode.
-        return new SetFocusedPathGesture(this.ps, hitItemId);
+        return new FocusPathGesture(this.ps, hitItemId);
       }
     }
 

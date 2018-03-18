@@ -19,7 +19,7 @@ export class ToolPanelComponent implements OnInit {
 
   toolMode$: Observable<ToolMode>;
 
-  constructor(readonly ps: PaperService) {}
+  constructor(private readonly ps: PaperService) {}
 
   ngOnInit() {
     this.toolMode$ = this.ps.store.select(getToolMode);

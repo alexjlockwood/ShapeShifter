@@ -1,12 +1,11 @@
 import { ToolMode } from 'app/model/paper';
 import { MathUtil } from 'app/scripts/common';
+import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import { Line } from 'app/store/paper/actions';
 import * as paper from 'paper';
-
-import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs selection and drag operations
