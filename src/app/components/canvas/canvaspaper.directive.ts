@@ -42,8 +42,8 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
           "id": "2",
           "type": "group",
           "name": "group",
-          "scaleX": "1.5",
-          "scaleY": "3",
+          "scaleX": "1",
+          "scaleY": "1",
           "children": [
             {
               "id": "4",

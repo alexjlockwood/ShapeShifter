@@ -3,11 +3,11 @@ import { ClickDetector } from 'app/scripts/paper/detector';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { EllipseGesture, PencilGesture, RectangleGesture } from 'app/scripts/paper/gesture/create';
 import {
-  AddDeleteHandlesGesture,
   BatchSelectSegmentsGesture,
   HoverSegmentsCurvesGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
+  ToggleSegmentHandlesGesture,
 } from 'app/scripts/paper/gesture/focus';
 import {
   BatchSelectItemsGesture,
@@ -184,9 +184,8 @@ export class GestureTool extends Tool {
         return new SelectDragHandleGesture(this.ps, focusedPathId, segmentIndex, type);
       }
       if (this.clickDetector.isDoubleClick()) {
-        // If a double click occurred on top of a segment,
-        // then add/delete the segment's handles.
-        return new AddDeleteHandlesGesture(this.ps, focusedPathId, segmentIndex);
+        // If a double click occurred on top of a segment, then toggle the segment's handles.
+        return new ToggleSegmentHandlesGesture(this.ps, focusedPathId, segmentIndex);
       }
       // If a mouse down event occurred on top of a segment,
       // then select/drag the segment.

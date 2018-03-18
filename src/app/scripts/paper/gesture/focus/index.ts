@@ -1,4 +1,4 @@
-export { AddDeleteHandlesGesture } from './AddDeleteHandlesGesture';
+export { ToggleSegmentHandlesGesture } from './ToggleSegmentHandlesGesture';
 export { BatchSelectSegmentsGesture } from './BatchSelectSegmentsGesture';
 export { HoverSegmentsCurvesGesture } from './HoverSegmentsCurvesGesture';
 export { SelectDragDrawSegmentsGesture } from './SelectDragDrawSegmentsGesture';

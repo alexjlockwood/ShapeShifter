@@ -8,10 +8,9 @@ import { Line } from 'app/store/paper/actions';
 import * as paper from 'paper';
 
 /**
- * A gesture that performs selection and drag operations
- * on one or more path segments. It also supports adding
- * a segment to an existing path's curve, as well as extending
- * an open path by appending segments to its end points.
+ * A gesture that performs selection and drag operations on one or more path
+ * segments. It also supports adding a segment to an existing path's curve,
+ * as well as extending an open path by appending segments to its end points.
  *
  * Preconditions:
  * - The user is in focused path mode.
@@ -23,8 +22,9 @@ import * as paper from 'paper';
 export class SelectDragDrawSegmentsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
 
-  // Maps segment indices to each segment's starting position.
-  private mouseDownSelectedSegmentIndexMap: ReadonlyMap<number, paper.Point>;
+  // Maps segment indices to each segment's location at the beginning of the gesture.
+  // The initial locations are expressed in the
+  private selectedSegmentIndexToInitialLocationMap: ReadonlyMap<number, paper.Point>;
   // The location of the last mouse event in the focused path's local coordinates.
   private localLastPoint: paper.Point;
   // True if we should exit focused path mode on the next mouse up event.
@@ -130,7 +130,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
     }
 
-    this.mouseDownSelectedSegmentIndexMap = new Map(
+    this.selectedSegmentIndexToInitialLocationMap = new Map(
       Array.from(afterSelectedSegmentIndices).map(segmentIndex => {
         const point = focusedPath.segments[segmentIndex].point.clone();
         return [segmentIndex, point] as [number, paper.Point];
@@ -162,11 +162,11 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     if (this.hitSegmentInfo || this.hitCurveInfo) {
       // A segment was created on mouse down and is still being grabbed,
       // so continue to drag the currently selected segments.
-      const selectedSegmentIndices = new Set(this.mouseDownSelectedSegmentIndexMap.keys());
+      const selectedSegmentIndices = new Set(this.selectedSegmentIndexToInitialLocationMap.keys());
       const nonSelectedSegmentIndices = focusedPath.segments
         .map((s, i) => i)
         .filter((s, i) => !selectedSegmentIndices.has(i));
-      this.mouseDownSelectedSegmentIndexMap.forEach((initialSegmentPoint, i) => {
+      this.selectedSegmentIndexToInitialLocationMap.forEach((initialSegmentPoint, i) => {
         const segment = focusedPath.segments[i];
         segment.point = event.modifiers.shift
           ? initialSegmentPoint.add(localSnappedDownPointDelta)
@@ -179,7 +179,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
         focusedPath.segments[draggedSegmentIndex].point,
       );
       const { topLeft, center, bottomRight } = Array.from(
-        this.mouseDownSelectedSegmentIndexMap.values(),
+        this.selectedSegmentIndexToInitialLocationMap.values(),
       ).reduce((rect: paper.Rectangle, p: paper.Point) => {
         p = focusedPath.localToGlobal(p);
         return rect ? rect.include(p) : new paper.Rectangle(p, new paper.Size(0, 0));
@@ -207,13 +207,16 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // Then we have just added a segment to the path in onMouseDown()
       // and should thus move the segment's handles onMouseDrag().
       // Note that there will only ever be one selected segment in this case.
-      const selectedSegmentIndex = this.mouseDownSelectedSegmentIndexMap.keys().next().value;
+      const selectedSegmentIndex = this.selectedSegmentIndexToInitialLocationMap.keys().next()
+        .value;
       const selectedSegment = focusedPath.segments[selectedSegmentIndex];
       // TODO: dragging a handle belonging to an endpoint doesn't work! handle info is lost!
       // TODO: snap the dragged segment handle with the newly created segment
       if (event.modifiers.shift) {
         const index = selectedSegmentIndex;
-        const initialSelectedSegmentPosition = this.mouseDownSelectedSegmentIndexMap.get(index);
+        const initialSelectedSegmentPosition = this.selectedSegmentIndexToInitialLocationMap.get(
+          index,
+        );
         const delta = localSnappedDownPointDelta;
         selectedSegment.handleIn = initialSelectedSegmentPosition.subtract(delta);
         selectedSegment.handleOut = initialSelectedSegmentPosition.add(delta);
