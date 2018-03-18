@@ -22,6 +22,9 @@ export class HoverSegmentsCurvesGesture extends Gesture {
   onMouseMove(event: paper.ToolEvent) {
     CursorUtil.clear();
     this.ps.setSplitCurveInfo(undefined);
+
+    // TODO: this seems kinda hacky
+    // TODO: currently necessary (if the previous gesture was the create/drag/draw segments gesture)
     this.ps.setCreatePathInfo(undefined);
 
     const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
@@ -33,7 +36,9 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       return;
     }
 
-    const focusedPathHitResult = HitTests.focusedPathMode(event.point, focusedPath);
+    const focusedPathHitResult = HitTests.focusedPathMode(event.point, focusedPath, {
+      curves: true,
+    });
     if (focusedPathHitResult) {
       if (focusedPathHitResult.type !== 'curve') {
         // If we hit the focused path but missed its segments/handles/curves,

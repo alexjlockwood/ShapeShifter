@@ -7,9 +7,7 @@ import { FocusedPathRaster } from './FocusedPathRaster';
 import { HitResult, PaperLayer } from './PaperLayer';
 import { SelectionBoundsRaster } from './SelectionBoundsRaster';
 
-/**
- * Performs the default selection mode hit test.
- */
+/** Performs the default selection mode hit test. */
 export function selectionMode(projPoint: paper.Point, ps: PaperService) {
   const pl = paper.project.activeLayer as PaperLayer;
   const { children } = pl.hitTestVectorLayer(projPoint);
@@ -56,23 +54,21 @@ export function findFirstHitResult(
   return firstHitResult;
 }
 
-/**
- * Performs a hit test on the currently selected selection bound handles.
- */
+/** Performs a hit test on the currently selected selection bound handles. */
 export function selectionModeSegments(projPoint: paper.Point) {
   const pl = paper.project.activeLayer as PaperLayer;
   return pl.hitTest(projPoint, { class: SelectionBoundsRaster });
 }
 
-/**
- * Performs a hit test on the current focused path.
- */
-export function focusedPathMode(projPoint: paper.Point, focusedPath: paper.Path) {
+/** Performs a hit test on the current focused path. */
+export function focusedPathMode(
+  projPoint: paper.Point,
+  focusedPath: paper.Path,
+  hitOptions: { fill?: boolean; stroke?: boolean; curves?: boolean },
+) {
   const { x: sx, y: sy } = focusedPath.globalMatrix.scaling;
   const result = focusedPath.hitTest(focusedPath.globalToLocal(projPoint), {
-    fill: true,
-    stroke: true,
-    curves: true,
+    ...(hitOptions as paper.HitOptions),
     // TODO: properly calculate scale using similar method as in Matrix.ts
     // TODO: also test that this works when zoomed in/out?
     // TODO: are we correctly handling negative scales?
@@ -82,9 +78,7 @@ export function focusedPathMode(projPoint: paper.Point, focusedPath: paper.Path)
   return result;
 }
 
-/**
- * Performs a hit test on the current focused path's segments and handles.
- */
+/** Performs a hit test on the current focused path's segments and handles. */
 export function focusedPathModeSegmentsAndHandles(projPoint: paper.Point) {
   const pl = paper.project.activeLayer as PaperLayer;
   return pl.hitTest(projPoint, { class: FocusedPathRaster });

@@ -193,7 +193,11 @@ export class GestureTool extends Tool {
     }
 
     // Second, do a hit test on the focused path itself.
-    const hitResult = HitTests.focusedPathMode(event.point, focusedPath);
+    const hitResult = HitTests.focusedPathMode(event.point, focusedPath, {
+      fill: true,
+      stroke: true,
+      curves: true,
+    });
     if (hitResult) {
       if (hitResult.type === 'curve') {
         return SelectDragDrawSegmentsGesture.hitCurve(
@@ -202,15 +206,14 @@ export class GestureTool extends Tool {
           hitResult.location.index,
           hitResult.location.time,
         );
-      } else {
-        // Note that we won't exit focused path mode on the next mouse up event
-        // (since the gesture began with a successful filled hit test).
-        return new BatchSelectSegmentsGesture(
-          this.ps,
-          focusedPathId,
-          false /* clearFocusedPathOnDraglessClick */,
-        );
       }
+      // Note that we won't exit focused path mode on the next mouse up event
+      // (since the gesture began with a successful filled hit test).
+      return new BatchSelectSegmentsGesture(
+        this.ps,
+        focusedPathId,
+        false /* clearFocusedPathOnDraglessClick */,
+      );
     }
 
     if (!focusedPath.segments.length) {
