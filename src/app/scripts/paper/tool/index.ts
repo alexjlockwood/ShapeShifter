@@ -1,1 +1,1 @@
-export { MasterToolDelegate } from './MasterToolDelegate';
+export { MasterToolPicker } from './MasterToolPicker';

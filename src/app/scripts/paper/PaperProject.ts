@@ -1,5 +1,5 @@
 import { PaperLayer } from 'app/scripts/paper/item';
-import { MasterToolDelegate } from 'app/scripts/paper/tool';
+import { MasterToolPicker } from 'app/scripts/paper/tool';
 import { PaperService } from 'app/services';
 import {
   getHiddenLayerIds,
@@ -22,7 +22,7 @@ import { Subscription } from 'rxjs/Subscription';
 
 export class PaperProject extends paper.Project {
   private readonly paperLayer: PaperLayer;
-  private readonly masterToolDelegate: MasterToolDelegate;
+  private readonly masterToolPicker: MasterToolPicker;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(canvas: HTMLCanvasElement, ps: PaperService) {
@@ -30,9 +30,9 @@ export class PaperProject extends paper.Project {
     const pl = new PaperLayer(ps);
     paper.project.addLayer(pl);
     this.paperLayer = pl;
-    this.masterToolDelegate = new MasterToolDelegate(ps);
+    this.masterToolPicker = new MasterToolPicker(ps);
     this.subscriptions.push(
-      ps.store.select(getToolMode).subscribe(() => this.masterToolDelegate.onToolModeChanged()),
+      ps.store.select(getToolMode).subscribe(() => this.masterToolPicker.onToolModeChanged()),
       ps.store.select(getVectorLayer).subscribe(() => pl.onVectorLayerChanged()),
       ps.store.select(getSelectedLayerIds).subscribe(() => pl.onSelectedLayerIdsChanged()),
       ps.store.select(getHoveredLayerId).subscribe(() => pl.onHoveredLayerIdChanged()),

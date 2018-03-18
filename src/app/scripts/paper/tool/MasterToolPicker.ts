@@ -10,7 +10,7 @@ import { ZoomPanTool } from './ZoomPanTool';
  * The master tool that is in charge of dispatching mouse, key,
  * and toolmode change events.
  */
-export class MasterToolDelegate {
+export class MasterToolPicker {
   private readonly paperTool = new paper.Tool();
   private readonly onEventFn: (event?: paper.ToolEvent | paper.KeyEvent) => void;
 
