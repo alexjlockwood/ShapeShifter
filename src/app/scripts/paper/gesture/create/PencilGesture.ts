@@ -14,8 +14,8 @@ import * as paper from 'paper';
 export class PencilGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
 
-  // The last drag point in project coordinates.
-  private projLastPoint: paper.Point;
+  // The last drag point in viewport coordinates.
+  private vpLastPoint: paper.Point;
 
   constructor(private readonly ps: PaperService) {
     super();
@@ -23,26 +23,45 @@ export class PencilGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const { downPoint, middlePoint, point } = event;
-    if (!this.projLastPoint) {
-      this.projLastPoint = downPoint;
+    const vpDownPoint = this.pl.globalToLocal(event.downPoint);
+    const vpMiddlePoint = this.pl.globalToLocal(event.middlePoint);
+    const vpPoint = this.pl.globalToLocal(event.point);
+    if (!this.vpLastPoint) {
+      this.vpLastPoint = vpDownPoint;
     }
-    const delta = this.pl.globalToLocal(point).subtract(this.pl.globalToLocal(this.projLastPoint));
-    delta.angle += 90;
-    const pathOverlayInfo = this.ps.getCreatePathInfo();
-    const pencilPath = pathOverlayInfo
-      ? new paper.Path(pathOverlayInfo.pathData)
-      : new paper.Path();
-    pencilPath.add(this.pl.globalToLocal(middlePoint).add(delta));
-    this.ps.setCreatePathInfo({ pathData: pencilPath.pathData, strokeColor: 'black' });
-    this.projLastPoint = point;
+    const vpDelta = vpPoint.subtract(this.vpLastPoint);
+    vpDelta.angle += 90;
+    const createPathInfo = this.ps.getCreatePathInfo();
+    const pencilPath = createPathInfo ? new paper.Path(createPathInfo.pathData) : new paper.Path();
+    pencilPath.add(vpMiddlePoint.add(vpDelta));
+    this.ps.setCreatePathInfo({ pathData: pencilPath.pathData, strokeColor: '#979797' });
+    this.vpLastPoint = vpPoint;
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    if (this.projLastPoint) {
+    if (this.vpLastPoint) {
+      this.vpLastPoint = this.pl.globalToLocal(event.point);
+    }
+    this.finishGesture();
+  }
+
+  // @Override
+  onKeyDown(event: paper.KeyEvent) {
+    if (event.key === 'escape') {
+      this.finishGesture();
+    }
+  }
+
+  private finishGesture() {
+    if (this.vpLastPoint) {
       const newPath = new paper.Path(this.ps.getCreatePathInfo().pathData);
-      if (arePointsClose(this.pl.localToGlobal(newPath.firstSegment.point), event.point)) {
+      const projStartPoint = this.pl.localToGlobal(newPath.firstSegment.point);
+      const projLastPoint = this.pl.localToGlobal(this.vpLastPoint);
+      // If the pencil path's start and end point are within 10px of each other
+      // at the end of the gesture, then we should close the path before saving
+      // it to the store.
+      if (projStartPoint.isClose(projLastPoint, 10)) {
         newPath.closePath(true);
       }
       newPath.smooth({ type: 'continuous' });
@@ -52,12 +71,4 @@ export class PencilGesture extends Gesture {
     }
     this.ps.setToolMode(ToolMode.Selection);
   }
-}
-
-/**
- * Checks if two points are close enough to be connected. Note that p1 and p2 should
- * belong to the project coordinate space.
- */
-function arePointsClose(p1: paper.Point, p2: paper.Point, tolerancePixels = 10) {
-  return Math.abs(p1.x - p2.x) < tolerancePixels && Math.abs(p1.y - p2.y) < tolerancePixels;
 }

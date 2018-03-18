@@ -15,9 +15,10 @@ import * as paper from 'paper';
  *
  * Preconditions:
  * - The user is in focused path mode.
- * - The user either hit a segment, a curve, or missed entirely.
- *   The last case occurs when the user is in pen mode (in which
- *   the user can create new segments by clicking on the canvas).
+ * - The user either hit a segment, a curve, or missed entirely
+ *   (the 'missed entirely' case occurs when the user is in vector
+ *   mode, in which the user can create new segments by clicking
+ *   on the canvas).
  */
 export class SelectDragDrawSegmentsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;

@@ -8,7 +8,8 @@ import * as paper from 'paper';
 /** Base class for all shape-building gestures. */
 export abstract class ShapeGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
-  private lastDragEventInfo: Readonly<{ vpDownPoint: paper.Point; vpPoint: paper.Point }>;
+
+  private vpLastDragInfo: Readonly<{ vpDownPoint: paper.Point; vpPoint: paper.Point }>;
 
   constructor(private readonly ps: PaperService) {
     super();
@@ -18,13 +19,13 @@ export abstract class ShapeGesture extends Gesture {
   onMouseDrag(event: paper.ToolEvent) {
     const vpDownPoint = this.pl.globalToLocal(event.downPoint);
     const vpPoint = this.pl.globalToLocal(event.point);
-    this.lastDragEventInfo = { vpDownPoint, vpPoint };
+    this.vpLastDragInfo = { vpDownPoint, vpPoint };
     this.processEvent(event);
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    if (this.lastDragEventInfo) {
+    if (this.vpLastDragInfo) {
       const { pathData } = this.ps.getCreatePathInfo();
       const newPathLayer = PaperUtil.addPathToStore(this.ps, pathData);
       this.ps.setSelectedLayerIds(new Set([newPathLayer.id]));
@@ -49,7 +50,7 @@ export abstract class ShapeGesture extends Gesture {
   }
 
   private processEvent({ modifiers: { alt, shift } }: paper.Event) {
-    const { vpDownPoint, vpPoint } = this.lastDragEventInfo;
+    const { vpDownPoint, vpPoint } = this.vpLastDragInfo;
 
     // If shift is pressed, then set the height equal to the width.
     const vpSize = new paper.Size(
