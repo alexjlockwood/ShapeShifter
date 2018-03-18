@@ -37,7 +37,6 @@ export abstract class ShapeGesture extends Gesture {
     if (event.key === 'shift' || event.key === 'alt') {
       this.processEvent(event);
     } else if (event.key === 'escape') {
-      // TODO: test that escape works as expected
       this.finishGesture();
     }
   }
@@ -53,17 +52,17 @@ export abstract class ShapeGesture extends Gesture {
     const { vpDownPoint, vpPoint } = this.lastDragEventInfo;
 
     // If shift is pressed, then set the height equal to the width.
-    const size = new paper.Size(
+    const vpSize = new paper.Size(
       vpPoint.x - vpDownPoint.x,
       shift ? vpPoint.x - vpDownPoint.x : vpPoint.y - vpDownPoint.y,
     ).multiply(alt ? 2 : 1);
 
     // If alt is pressed, then the initial downpoint represents the shape's center point.
-    const topLeft = alt
-      ? vpDownPoint.subtract(new paper.Point(size.width / 2, size.height / 2))
+    const vpTopLeft = alt
+      ? vpDownPoint.subtract(new paper.Point(vpSize.width / 2, vpSize.height / 2))
       : vpDownPoint;
 
-    const { pathData } = this.newPath(new paper.Rectangle(topLeft, size));
+    const { pathData } = this.newPath(new paper.Rectangle(vpTopLeft, vpSize));
     this.ps.setCreatePathInfo({ pathData, strokeColor: '#979797' });
   }
 
@@ -73,5 +72,5 @@ export abstract class ShapeGesture extends Gesture {
   }
 
   /** Factory method that creates a new path given its bounding box. */
-  protected abstract newPath(bounds: paper.Rectangle);
+  protected abstract newPath(vpBounds: paper.Rectangle);
 }
