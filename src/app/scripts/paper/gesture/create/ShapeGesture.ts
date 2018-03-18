@@ -52,19 +52,19 @@ export abstract class ShapeGesture extends Gesture {
   private processEvent({ modifiers: { alt, shift } }: paper.Event) {
     const { vpDownPoint, vpPoint } = this.lastDragEventInfo;
 
-    // If shift is pressed, then create a circle by setting the height equal to the width.
+    // If shift is pressed, then set the height equal to the width.
     const size = new paper.Size(
       vpPoint.x - vpDownPoint.x,
       shift ? vpPoint.x - vpDownPoint.x : vpPoint.y - vpDownPoint.y,
     ).multiply(alt ? 2 : 1);
 
-    // If alt is pressed, then the initial downpoint represents the ellipse's center point.
+    // If alt is pressed, then the initial downpoint represents the shape's center point.
     const topLeft = alt
       ? vpDownPoint.subtract(new paper.Point(size.width / 2, size.height / 2))
       : vpDownPoint;
 
     const { pathData } = this.newPath(new paper.Rectangle(topLeft, size));
-    this.ps.setCreatePathInfo({ pathData, strokeColor: 'black' });
+    this.ps.setCreatePathInfo({ pathData, strokeColor: '#979797' });
   }
 
   private finishGesture() {
@@ -72,6 +72,6 @@ export abstract class ShapeGesture extends Gesture {
     this.ps.setToolMode(ToolMode.Selection);
   }
 
-  /** Factory method that creates a new path given its bounding box.  */
+  /** Factory method that creates a new path given its bounding box. */
   protected abstract newPath(bounds: paper.Rectangle);
 }

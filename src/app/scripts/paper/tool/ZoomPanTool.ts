@@ -5,9 +5,7 @@ import * as paper from 'paper';
 
 import { Tool } from './Tool';
 
-/**
- * A tool that enables zooming and panning in the canvas.
- */
+/** A tool that enables zooming and panning in the canvas. */
 export class ZoomPanTool extends Tool {
   // Keep track of the last known mouse point in view space coordinates.
   private viewLastPoint = new paper.Point(0, 0);

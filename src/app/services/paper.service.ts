@@ -99,7 +99,9 @@ export class PaperService {
 
   /** Sets the current selection box. */
   setSelectionBox(box: { from: Point; to: Point } | undefined) {
-    this.dispatchStore(new SetSelectionBox(box), getSelectionBox);
+    if (!_.isEqual(this.queryStore(getSelectionBox), box)) {
+      this.dispatchStore(new SetSelectionBox(box));
+    }
   }
 
   /** Gets the current selection box. */
@@ -109,7 +111,9 @@ export class PaperService {
 
   /** Sets the current create path info. */
   setCreatePathInfo(info: CreatePathInfo | undefined) {
-    this.dispatchStore(new SetCreatePathInfo(info), getCreatePathInfo);
+    if (!_.isEqual(this.queryStore(getCreatePathInfo), info)) {
+      this.dispatchStore(new SetCreatePathInfo(info));
+    }
   }
 
   /** Gets the current create path info. */
@@ -119,12 +123,16 @@ export class PaperService {
 
   /** Sets the current split curve info. */
   setSplitCurveInfo(info: SplitCurveInfo | undefined) {
-    this.dispatchStore(new SetSplitCurveInfo(info), getSplitCurveInfo);
+    if (!_.isEqual(this.queryStore(getSplitCurveInfo), info)) {
+      this.dispatchStore(new SetSplitCurveInfo(info));
+    }
   }
 
   /** Sets the current tool mode. */
   setToolMode(toolMode: ToolMode) {
-    this.dispatchStore(new SetToolMode(toolMode), getToolMode);
+    if (!_.isEqual(this.queryStore(getToolMode), toolMode)) {
+      this.dispatchStore(new SetToolMode(toolMode));
+    }
   }
 
   /** Gets the current tool mode. */
@@ -134,7 +142,9 @@ export class PaperService {
 
   /** Sets the current focused path info. */
   setFocusedPathInfo(info: FocusedPathInfo | undefined) {
-    this.dispatchStore(new SetFocusedPathInfo(info), getFocusedPathInfo);
+    if (!_.isEqual(this.queryStore(getFocusedPathInfo), info)) {
+      this.dispatchStore(new SetFocusedPathInfo(info));
+    }
   }
 
   /** Gets the current focused path info. */
@@ -144,38 +154,41 @@ export class PaperService {
 
   /** Sets the current canvas cursor. */
   setCanvasCursor(canvasCursor: CanvasCursor | undefined) {
-    this.dispatchStore(new SetCanvasCursor(canvasCursor), getCanvasCursor);
+    if (!_.isEqual(this.queryStore(getCanvasCursor), canvasCursor)) {
+      this.dispatchStore(new SetCanvasCursor(canvasCursor));
+    }
   }
 
   /** Sets the current snap guide info. */
   setSnapGuideInfo(info: SnapGuideInfo | undefined) {
-    this.dispatchStore(new SetSnapGuideInfo(info), getSnapGuideInfo);
+    if (!_.isEqual(this.queryStore(getSnapGuideInfo), info)) {
+      this.dispatchStore(new SetSnapGuideInfo(info));
+    }
   }
 
   /** Sets the current zoom/pan info. */
   setZoomPanInfo(info: ZoomPanInfo) {
-    this.dispatchStore(new SetZoomPanInfo(info), getZoomPanInfo);
+    if (!_.isEqual(this.queryStore(getZoomPanInfo), info)) {
+      this.dispatchStore(new SetZoomPanInfo(info));
+    }
   }
 
   /** Sets the current tooltip info. */
   setTooltipInfo(info: TooltipInfo | undefined) {
-    this.dispatchStore(new SetTooltipInfo(info), getTooltipInfo);
+    if (!_.isEqual(this.queryStore(getTooltipInfo), info)) {
+      this.dispatchStore(new SetTooltipInfo(info));
+    }
   }
 
-  private dispatchStore<T>(
-    action: Action<T>,
-    selector: OutputSelector<Object, T, (res: Object) => T>,
-  ) {
-    if (!_.isEqual(this.queryStore(selector), action.payload)) {
-      if (NgZone.isInAngularZone()) {
-        this.store.dispatch(action);
-      } else {
-        // PaperService methods are usually executed outside of the Angular zone
-        // (since they originate from event handlers registered by paper.js). In
-        // order to ensure change detection works properly, we need to force
-        // state changes to be executed inside the Angular zone.
-        this.ngZone.run(() => this.store.dispatch(action));
-      }
+  private dispatchStore<T>(action: Action<T>) {
+    if (NgZone.isInAngularZone()) {
+      this.store.dispatch(action);
+    } else {
+      // PaperService methods are usually executed outside of the Angular zone
+      // (since they originate from event handlers registered by paper.js). In
+      // order to ensure change detection works properly, we need to force
+      // state changes to be executed inside the Angular zone.
+      this.ngZone.run(() => this.store.dispatch(action));
     }
   }
 
