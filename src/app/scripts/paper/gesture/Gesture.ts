@@ -7,7 +7,7 @@ import * as paper from 'paper';
  * (1) To monitor the state of events that occurs between the initial
  *     mouse down through the final mouse up.
  *
- * (2) To monitor mouse enter/move/leave events and react accordingly.
+ * (2) To monitor mouse move events and react accordingly.
  */
 export abstract class Gesture {
   onMouseDown(event: paper.ToolEvent) {}
