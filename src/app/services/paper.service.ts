@@ -9,6 +9,7 @@ import {
   getHoveredLayerId,
   getSelectedLayerIds,
 } from 'app/store/layers/selectors';
+import { Action } from 'app/store/ngrx';
 import {
   CreatePathInfo,
   FocusedPathInfo,
@@ -41,7 +42,6 @@ import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
 
-import { Action } from '../store/ngrx';
 import { LayerTimelineService } from './layertimeline.service';
 
 /** A simple service that provides an interface for making paper.js changes to the store. */
