@@ -96,8 +96,7 @@ export class MouldCurveGesture extends Gesture {
   }
 }
 
-// TODO: give these better names...
-
+// TODO: rename this...
 function lli(
   { x: x1, y: y1 }: paper.Point,
   { x: x2, y: y2 }: paper.Point,
