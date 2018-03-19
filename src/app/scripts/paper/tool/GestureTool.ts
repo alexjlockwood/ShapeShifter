@@ -4,7 +4,6 @@ import { Gesture } from 'app/scripts/paper/gesture';
 import { EllipseGesture, PencilGesture, RectangleGesture } from 'app/scripts/paper/gesture/create';
 import {
   BatchSelectSegmentsGesture,
-  DragCurveGesture,
   HoverSegmentsCurvesGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,

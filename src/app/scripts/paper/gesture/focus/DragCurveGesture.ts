@@ -1,7 +1,6 @@
-import { ToolMode } from 'app/model/paper';
 import { Gesture } from 'app/scripts/paper/gesture';
-import { HitTests, PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, CursorUtil, PaperUtil } from 'app/scripts/paper/util';
+import { PaperLayer } from 'app/scripts/paper/item';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
