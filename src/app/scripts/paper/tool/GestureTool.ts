@@ -211,10 +211,10 @@ export class GestureTool extends Tool {
           // TODO: finish this DragCurveGesture thing (currently buggy)
           // If the user is holding down command, then modify the curve
           // by dragging it.
-          return new DragCurveGesture(this.ps, focusedPathId, {
-            curveIndex: hitResult.location.index,
-            time: hitResult.location.time,
-          });
+          // return new DragCurveGesture(this.ps, focusedPathId, {
+          //   curveIndex: hitResult.location.index,
+          //   time: hitResult.location.time,
+          // });
         }
         return SelectDragDrawSegmentsGesture.hitCurve(
           this.ps,
