@@ -4,6 +4,7 @@ import { Gesture } from 'app/scripts/paper/gesture';
 import { EllipseGesture, PencilGesture, RectangleGesture } from 'app/scripts/paper/gesture/create';
 import {
   BatchSelectSegmentsGesture,
+  DragCurveGesture,
   HoverSegmentsCurvesGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
@@ -193,13 +194,28 @@ export class GestureTool extends Tool {
     }
 
     // Second, do a hit test on the focused path itself.
-    const hitResult = HitTests.focusedPathMode(event.point, focusedPath, {
+    let hitResult = HitTests.focusedPathMode(event.point, focusedPath, {
       fill: true,
       stroke: true,
       curves: true,
     });
     if (hitResult) {
-      if (hitResult.type === 'curve') {
+      if (hitResult.type !== 'curve') {
+        // TODO: is there a way to avoid a second hit test like this?
+        hitResult = HitTests.focusedPathMode(event.point, focusedPath, {
+          curves: true,
+        });
+      }
+      if (hitResult && hitResult.type === 'curve') {
+        if (event.modifiers.command) {
+          // TODO: finish this DragCurveGesture thing (currently buggy)
+          // If the user is holding down command, then modify the curve
+          // by dragging it.
+          return new DragCurveGesture(this.ps, focusedPathId, {
+            curveIndex: hitResult.location.index,
+            time: hitResult.location.time,
+          });
+        }
         return SelectDragDrawSegmentsGesture.hitCurve(
           this.ps,
           focusedPathId,

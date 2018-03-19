@@ -101,7 +101,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // at the given location and select the new segment.
       const { curveIndex, time } = this.hitCurveInfo;
       const curve = focusedPath.curves[curveIndex];
-      const newSegment = event.modifiers.command
+      const newSegment = event.modifiers.shift
         ? curve.divideAt(curve.getLocationAt(curve.length / 2))
         : curve.divideAtTime(time).segment1;
       PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);

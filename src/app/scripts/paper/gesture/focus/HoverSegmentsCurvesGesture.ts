@@ -48,8 +48,8 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       // Show a pen add cursor and highlight the curve the user is about to split.
       CursorUtil.set(Cursor.PenAdd);
       const hitCurve = focusedPathHitResult.location.curve;
-      const location = event.modifiers.command
-        ? hitCurve.getLocationAt(hitCurve.length * 0.5)
+      const location = event.modifiers.shift
+        ? hitCurve.getLocationAt(hitCurve.length / 2)
         : focusedPathHitResult.location;
       const vpSplitPoint = this.localToVpPoint(focusedPath, location.point);
       const { point: p1, handleIn: in1, handleOut: out1 } = this.localToVpSegment(
@@ -81,7 +81,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       const { pathData } = new paper.Path([vpStartSegment, vpEndSegment]);
       this.ps.setCreatePathInfo({
         pathData,
-        strokeColor: 'black',
+        strokeColor: '#979797',
       });
     }
   }

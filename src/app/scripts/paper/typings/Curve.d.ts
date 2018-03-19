@@ -171,10 +171,15 @@ declare module 'paper' {
 
     /**
      * Calculates the point on the curve at the given offset.
-     * @param offset - the offset on the curve, or the curve time parameter if isParameter is true
-     * @param isParameter [optional] - pass true if offset is a curve time parameter. default: false
+     * @param location - the offset or location on the curve.
      */
-    getPointAt(offset: number, isParameter?: boolean): Point;
+    getPointAt(location: number | CurveLocation): Point;
+
+    /**
+     * Calculates the point on the curve at the given location.
+     * @param time - the curve-time parameter on the curve
+     */
+    getPointAtTime(time: number): Point;
 
     /**
      * Calculates the tangent vector of the curve at the given location.
