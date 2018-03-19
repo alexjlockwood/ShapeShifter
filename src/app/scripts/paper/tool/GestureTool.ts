@@ -5,6 +5,7 @@ import { EllipseGesture, PencilGesture, RectangleGesture } from 'app/scripts/pap
 import {
   BatchSelectSegmentsGesture,
   HoverSegmentsCurvesGesture,
+  MouldCurveGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
   ToggleSegmentHandlesGesture,
@@ -210,10 +211,10 @@ export class GestureTool extends Tool {
           // TODO: finish this DragCurveGesture thing (currently buggy)
           // If the user is holding down command, then modify the curve
           // by dragging it.
-          // return new DragCurveGesture(this.ps, focusedPathId, {
-          //   curveIndex: hitResult.location.index,
-          //   time: hitResult.location.time,
-          // });
+          return new MouldCurveGesture(this.ps, focusedPathId, {
+            curveIndex: hitResult.location.index,
+            time: hitResult.location.time,
+          });
         }
         return SelectDragDrawSegmentsGesture.hitCurve(
           this.ps,
