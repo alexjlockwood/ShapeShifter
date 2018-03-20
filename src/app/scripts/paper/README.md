@@ -37,6 +37,45 @@ other stuff, such as selection bounds, handles, segments, etc.
 
 One of the trickiest aspects of using the library is dealing with different coordinate spaces.
 
+### Useful attributes/methods
+
+#### `Point`
+
+* `transform(m: paper.Matrix): paper.Point` - Transforms the point by the matrix as a new point.
+
+#### `Matrix`
+
+* `transform(p: paper.Point): paper.Point` - Transforms a point and returns the result.
+* `inverseTransform(p: paper.Point): paper.Point` - Inverse transforms a point and returns the result.
+* `appended(m: paper.Matrix): paper.Matrix` - Returns a new matrix as the result of appending the
+  specified matrix to this matrix. This is the equivalent of multiplying `(this matrix) * (specified matrix)`.
+* `prepended(m: paper.Matrix): paper.Matrix` - Returns a new matrix as the result of prepending the
+  specified matrix to this matrix. This is the equivalent of multiplying `(specified matrix) s * (this matrix)`.
+
+#### `Item`
+
+* `globalMatrix: paper.Matrix` - The item's global transformation matrix in relation to the global
+  project coordinate space. Note that the view's transformations resulting from zooming and
+  panning are not factored in.
+* `viewMatrix: paper.Matrix` - The item's global matrix in relation to the view coordinate space.
+  This means that the view's transformations resulting from zooming and panning are factored in.
+* `globalToLocal(p: paper.Point): paper.Point` - Converts the specified point from global
+  project coordinate space to the item's own local coordinate space.
+* `localToGlobal(p: paper.Point): paper.Point` - Converts the specified point from the
+  item's own local coordinate space to the global project coordinate space.
+* `parentToLocal(p: paper.Point): paper.Point` - Converts the specified point from the
+  parent's coordinate space to item's own local coordinate space.
+* `localToParent(p: paper.Point): paper.Point` - Converts the specified point from the
+  item's own local coordinate space to the parent's coordinate space.
+
+#### `View`
+
+* `projectToView(p: paper.Point): paper.Point` - Converts the passed point from project
+  coordinate space to view coordinate space, which is measured in browser pixels in relation
+  to the position of the view element.
+* `viewToProject(p: paper.Point): paper.Point` - Converts the passed point from view
+  coordinate space to project coordinate space.
+
 ### Project coordinates
 
 * Project coordinates are in terms of the canvas' size in CSS pixels (note that the
