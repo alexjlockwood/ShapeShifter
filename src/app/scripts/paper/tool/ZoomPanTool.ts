@@ -37,7 +37,7 @@ export class ZoomPanTool extends Tool {
 
   private onMouseDown(event: paper.ToolEvent) {
     if (event.modifiers.space) {
-      // If space is pressed, then grab/pan the artwork. We store the last known
+      // If space is pressed, then grab/pan the canvas. We store the last known
       // mouse point in view space coordinates (which means the top left corner
       // of the canvas will always be (0, 0), no matter how much we've panned/zoomed
       // so far).

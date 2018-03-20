@@ -10,31 +10,31 @@ declare module 'paper' {
      * The first Segment contained within the path.
      * Read only.
      */
-    firstSegment: Segment;
+    readonly firstSegment: Segment;
 
     /**
      * The last Segment contained within the path
      * Read only.
      */
-    lastSegment: Segment;
+    readonly lastSegment: Segment;
 
     /**
      * The curves contained within the path.
      * Array of Curve objects
      */
-    curves: Curve[];
+    readonly curves: ReadonlyArray<Curve>;
 
     /**
      * The first Curve contained within the path.
      * Read only.
      */
-    firstCurve: Curve;
+    readonly firstCurve: Curve;
 
     /**
      * The last Curve contained within the path.
      * Read only.
      */
-    lastCurve: Curve;
+    readonly lastCurve: Curve;
 
     /**
      * Specifies whether the path is closed. If it is closed, Paper.js connects the first and last segments.
@@ -45,13 +45,13 @@ declare module 'paper' {
      * The approximate length of the path in points.
      * Read only.
      */
-    length: number;
+    readonly length: number;
 
     /**
      * The area of the path in square points. Self-intersecting paths can contain sub-areas that cancel each other out.
      * Read only.
      */
-    area: number;
+    readonly area: number;
 
     /**
      * Specifies whether the path and all its segments are selected. Cannot be true on an empty path.
@@ -67,7 +67,7 @@ declare module 'paper' {
      * Returns a point that is guaranteed to be inside the path.
      * Read only.
      */
-    interiorPoint: Point;
+    readonly interiorPoint: Point;
   }
 
   export interface Path extends PathProps {}

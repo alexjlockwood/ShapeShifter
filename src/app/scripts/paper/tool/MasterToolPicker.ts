@@ -8,7 +8,7 @@ import { ZoomPanTool } from './ZoomPanTool';
 
 /**
  * The master tool that is in charge of dispatching mouse, key,
- * and toolmode change events.
+ * and tool mode change events.
  */
 export class MasterToolPicker {
   private readonly paperTool = new paper.Tool();

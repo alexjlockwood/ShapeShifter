@@ -181,25 +181,6 @@ declare module 'paper' {
      */
     getPointAtTime(time: number): Point;
 
-    /**
-     * Calculates the tangent vector of the curve at the given location.
-     */
-    getTangentAt(location: number | CurveLocation): Point;
-
-    /**
-     * Calculates the normal vector of the curve at the given offset.
-     * @param offset - the offset on the curve, or the curve time parameter if isParameter is true
-     * @param isParameter [optional] - pass true if offset is a curve time parameter. default: false
-     */
-    getNormalAt(offset: number, isParameter?: boolean): Point;
-
-    /**
-     * Calculates the curvature of the curve at the given offset. Curvatures indicate how sharply a curve changes direction. A straight line has zero curvature, where as a circle has a constant curvature. The curve's radius at the given offset is the reciprocal value of its curvature.
-     * @param offset - the offset on the curve, or the curve time parameter if isParameter is true
-     * @param isParameter - pass true if offset is a curve time parameter. default: false
-     */
-    getCurvatureAt(offset: number, isParameter?: boolean): Point;
-
     divideAt(location: CurveLocation | number): Curve;
 
     divideAtTime(time: number): Curve;

@@ -181,7 +181,7 @@ export class GestureTool extends Tool {
       const { segmentIndex, type } = segmentsAndHandlesHitResult.item;
       if (type === 'handle-in' || type === 'handle-out') {
         // If a mouse down event occurred on top of a handle,
-        // then select/drag or begin to drag the handle.
+        // then select/drag the handle.
         return new SelectDragHandleGesture(this.ps, focusedPathId, segmentIndex, type);
       }
       if (this.clickDetector.isDoubleClick()) {
@@ -208,7 +208,6 @@ export class GestureTool extends Tool {
       }
       if (hitResult && hitResult.type === 'curve') {
         if (event.modifiers.command) {
-          // TODO: finish this DragCurveGesture thing (currently buggy)
           // If the user is holding down command, then modify the curve
           // by dragging it.
           return new MouldCurveGesture(this.ps, focusedPathId, {
@@ -216,6 +215,7 @@ export class GestureTool extends Tool {
             time: hitResult.location.time,
           });
         }
+        // Add a segment to the curve.
         return SelectDragDrawSegmentsGesture.hitCurve(
           this.ps,
           focusedPathId,
@@ -224,7 +224,7 @@ export class GestureTool extends Tool {
         );
       }
       // Note that we won't exit focused path mode on the next mouse up event
-      // (since the gesture began with a successful filled hit test).
+      // (since the gesture began with a successful hit test).
       return new BatchSelectSegmentsGesture(
         this.ps,
         focusedPathId,
@@ -247,7 +247,8 @@ export class GestureTool extends Tool {
 
     // If there is no hit item and we are in focused path mode, then
     // enter selection box mode for the focused path so we can
-    // batch select its segments.
+    // batch select its segments. If no drag occurs, the gesture will
+    // exit focused path mode on the next mouse up event.
     return new BatchSelectSegmentsGesture(
       this.ps,
       focusedPathId,

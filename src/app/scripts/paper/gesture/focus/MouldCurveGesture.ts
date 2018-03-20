@@ -116,8 +116,7 @@ function hull(points: CubicPoints, t: number): CubicHull {
   let p = points as paper.Point[];
   let _p: paper.Point[] = [];
   let pt: paper.Point;
-  const q: paper.Point[] = [];
-  q.push(p[0], p[1], p[2], p[3]);
+  const q = [...p];
   // We lerp between all points at each iteration, until we have 1 point left.
   while (p.length > 1) {
     _p = [];
