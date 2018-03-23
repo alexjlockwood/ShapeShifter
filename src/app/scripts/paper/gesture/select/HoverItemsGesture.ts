@@ -38,7 +38,6 @@ export class HoverItemsGesture extends Gesture {
 
     const selectedLayers = this.ps.getSelectedLayerIds();
     if (selectedLayers.size > 0) {
-      // TODO: only perform a hit test if we are in focused path mode?
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
         const toolMode = this.ps.getToolMode();

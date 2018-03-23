@@ -20,7 +20,6 @@ export class SelectDragCloneItemsGesture extends Gesture {
   private initialVectorLayer: VectorLayer;
   private isDragging = false;
 
-  // TODO: dragging items that are contained in transformed groups currently doesn't work...
   constructor(private readonly ps: PaperService, private readonly hitLayerId: string) {
     super();
   }
@@ -132,7 +131,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
     CursorUtil.clear();
   }
 
-  private projToVpLine({ from, to }: Line) {
+  private projToVpLine({ from, to }: Line): Line {
     return {
       from: this.pl.globalToLocal(new paper.Point(from)),
       to: this.pl.globalToLocal(new paper.Point(to)),
