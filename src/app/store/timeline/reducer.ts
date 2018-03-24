@@ -18,15 +18,12 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: TimelineActions) {
   switch (action.type) {
-    case TimelineActionTypes.SetAnimation: {
+    case TimelineActionTypes.SetAnimation:
       return { ...state, animation: action.payload.animation };
-    }
-    case TimelineActionTypes.SelectAnimation: {
+    case TimelineActionTypes.SelectAnimation:
       return { ...state, isAnimationSelected: action.payload.isAnimationSelected };
-    }
-    case TimelineActionTypes.SetSelectedBlocks: {
+    case TimelineActionTypes.SetSelectedBlocks:
       return { ...state, selectedBlockIds: new Set<string>(action.payload.blockIds) };
-    }
   }
   return state;
 }

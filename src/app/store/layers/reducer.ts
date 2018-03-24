@@ -20,18 +20,14 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: LayerActions) {
   switch (action.type) {
-    case LayerActionTypes.SetVectorLayer: {
+    case LayerActionTypes.SetVectorLayer:
       return { ...state, vectorLayer: action.payload.vectorLayer };
-    }
-    case LayerActionTypes.SetSelectedLayers: {
+    case LayerActionTypes.SetSelectedLayers:
       return { ...state, selectedLayerIds: new Set<string>(action.payload.layerIds) };
-    }
-    case LayerActionTypes.SetHiddenLayers: {
+    case LayerActionTypes.SetHiddenLayers:
       return { ...state, hiddenLayerIds: new Set<string>(action.payload.layerIds) };
-    }
-    case LayerActionTypes.SetCollapsedLayers: {
+    case LayerActionTypes.SetCollapsedLayers:
       return { ...state, collapsedLayerIds: new Set<string>(action.payload.layerIds) };
-    }
   }
   return state;
 }
