@@ -4,11 +4,8 @@ import { Animation } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
 import { State, Store } from 'app/store';
-import { BatchAction } from 'app/store/batch/actions';
-import { SetHiddenLayers, SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
-import { SetAnimation } from 'app/store/timeline/actions';
 import { first } from 'rxjs/operators';
 
 import { FileExportService } from './fileexport.service';
@@ -158,14 +155,7 @@ export class FileImportService {
   ) {
     if (importType === ImportType.Json) {
       ga('send', 'event', 'Import', 'JSON');
-      this.store.dispatch(
-        new BatchAction(
-          new ResetWorkspace(),
-          new SetVectorLayer(vls[0]),
-          new SetAnimation(animation),
-          new SetHiddenLayers(hiddenLayerIds),
-        ),
-      );
+      this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds));
     } else {
       if (importType === ImportType.Svg) {
         ga('send', 'event', 'Import', 'SVG');
