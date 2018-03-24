@@ -4,8 +4,7 @@ import { ComponentFixture, TestBed, async, fakeAsync, inject } from '@angular/co
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatButtonModule, MatIconModule, MatTooltipModule } from '@angular/material';
 import { By } from '@angular/platform-browser';
-import { AnimatorService } from 'app/services/animator.service';
-import { PlaybackService } from 'app/services/playback.service';
+import { PlaybackService } from 'app/services';
 import { Store } from 'app/store';
 import { State as PlaybackState } from 'app/store/playback/reducer';
 import { MockStore } from 'test/MockStore';
@@ -22,11 +21,7 @@ describe('PlaybackComponent', () => {
       TestBed.configureTestingModule({
         declarations: [PlaybackComponent],
         imports: [FlexLayoutModule, MatButtonModule, MatIconModule, MatTooltipModule],
-        providers: [
-          { provide: Store, useValue: new MockStore() },
-          AnimatorService,
-          PlaybackService,
-        ],
+        providers: [{ provide: Store, useValue: new MockStore() }, PlaybackService],
       }).compileComponents();
     }),
   );

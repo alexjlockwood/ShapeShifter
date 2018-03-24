@@ -51,7 +51,6 @@ import { ToolbarComponent } from 'app/components/toolbar/toolbar.component';
 import { ToolPanelComponent } from 'app/components/toolpanel/toolpanel.component';
 import {
   ActionModeService,
-  AnimatorService,
   ClipboardService,
   DemoService,
   DialogService,
@@ -120,7 +119,6 @@ describe('RootComponent', () => {
         providers: [
           { provide: Store, useValue: new MockStore() },
           ActionModeService,
-          AnimatorService,
           ClipboardService,
           DemoService,
           DialogService,

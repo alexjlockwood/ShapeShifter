@@ -1,6 +1,6 @@
 import { VectorLayer } from 'app/model/layers';
 
-import * as actions from './actions';
+import { LayerActionTypes, LayerActions } from './actions';
 
 export interface State {
   readonly vectorLayer: VectorLayer;
@@ -20,17 +20,17 @@ export function buildInitialState(): State {
   };
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions): State {
+export function reducer(state = buildInitialState(), action: LayerActions): State {
   switch (action.type) {
-    case actions.SET_VECTOR_LAYER:
+    case LayerActionTypes.SetVectorLayer:
       return { ...state, vectorLayer: action.payload.vectorLayer };
-    case actions.SET_SELECTED_LAYERS:
+    case LayerActionTypes.SetSelectedLayers:
       return { ...state, selectedLayerIds: new Set<string>(action.payload.layerIds) };
-    case actions.SET_HOVERED_LAYER:
+    case LayerActionTypes.SetHoveredLayer:
       return { ...state, hoveredLayerId: action.payload.layerId };
-    case actions.SET_HIDDEN_LAYERS:
+    case LayerActionTypes.SetHiddenLayers:
       return { ...state, hiddenLayerIds: new Set<string>(action.payload.layerIds) };
-    case actions.SET_COLLAPSED_LAYERS:
+    case LayerActionTypes.SetCollapsedLayers:
       return { ...state, collapsedLayerIds: new Set<string>(action.payload.layerIds) };
   }
   return state;

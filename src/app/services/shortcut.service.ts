@@ -5,7 +5,6 @@ import { ActionCreators } from 'redux-undo';
 import { Subject } from 'rxjs/Subject';
 
 import { ActionModeService } from './actionmode.service';
-import { AnimatorService } from './animator.service';
 import { LayerTimelineService } from './layertimeline.service';
 import { PlaybackService } from './playback.service';
 
@@ -34,7 +33,6 @@ export class ShortcutService {
 
   constructor(
     private readonly store: Store<State>,
-    private readonly animatorService: AnimatorService,
     private readonly actionModeService: ActionModeService,
     private readonly playbackService: PlaybackService,
     private readonly layerTimelineService: LayerTimelineService,
@@ -96,12 +94,12 @@ export class ShortcutService {
       // }
       if (event.keyCode === 37) {
         // Left arrow.
-        this.animatorService.rewind();
+        this.playbackService.rewind();
         return false;
       }
       if (event.keyCode === 39) {
         // Right arrow.
-        this.animatorService.fastForward();
+        this.playbackService.fastForward();
         return false;
       }
       if (event.keyCode === 'R'.charCodeAt(0)) {

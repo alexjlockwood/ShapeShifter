@@ -1,14 +1,16 @@
 import { ActionMode, ActionSource, Hover, Selection } from 'app/model/actionmode';
 import { Action } from 'app/store/ngrx';
 
-export const SET_ACTION_MODE = '__actionmode__SET_ACTION_MODE';
-export const SET_ACTION_MODE_HOVER = '__actionmode__SET_ACTION_MODE_HOVER';
-export const SET_ACTION_MODE_SELECTIONS = '__actionmode__SET_ACTION_MODE_SELECTIONS';
-export const SET_PAIRED_SUBPATHS = '__actionmode__SET_PAIRED_SUBPATHS';
-export const SET_UNPAIRED_SUBPATH = '__actionmode__SET_UNPAIRED_SUBPATH';
+export enum ActionModeActionTypes {
+  SetActionMode = '__actionmode__SET_ACTION_MODE',
+  SetActionModeHover = '__actionmode__SET_ACTION_MODE_HOVER',
+  SetActionModeSelections = '__actionmode__SET_ACTION_MODE_SELECTIONS',
+  SetPairedSubPaths = '__actionmode__SET_PAIRED_SUBPATHS',
+  SetUnpairedSubPath = '__actionmode__SET_UNPAIRED_SUBPATH',
+}
 
 export class SetActionMode implements Action {
-  readonly type = SET_ACTION_MODE;
+  readonly type = ActionModeActionTypes.SetActionMode;
   readonly payload: { mode: ActionMode };
   constructor(mode: ActionMode) {
     this.payload = { mode };
@@ -16,7 +18,7 @@ export class SetActionMode implements Action {
 }
 
 export class SetActionModeHover implements Action {
-  readonly type = SET_ACTION_MODE_HOVER;
+  readonly type = ActionModeActionTypes.SetActionModeHover;
   readonly payload: { hover: Hover };
   constructor(hover: Hover) {
     this.payload = { hover };
@@ -24,7 +26,7 @@ export class SetActionModeHover implements Action {
 }
 
 export class SetActionModeSelections implements Action {
-  readonly type = SET_ACTION_MODE_SELECTIONS;
+  readonly type = ActionModeActionTypes.SetActionModeSelections;
   readonly payload: { selections: ReadonlyArray<Selection> };
   constructor(selections: ReadonlyArray<Selection>) {
     this.payload = { selections };
@@ -32,7 +34,7 @@ export class SetActionModeSelections implements Action {
 }
 
 export class SetPairedSubPaths implements Action {
-  readonly type = SET_PAIRED_SUBPATHS;
+  readonly type = ActionModeActionTypes.SetPairedSubPaths;
   readonly payload: { pairedSubPaths: ReadonlySet<number> };
   constructor(pairedSubPaths: ReadonlySet<number>) {
     this.payload = { pairedSubPaths };
@@ -40,14 +42,14 @@ export class SetPairedSubPaths implements Action {
 }
 
 export class SetUnpairedSubPath implements Action {
-  readonly type = SET_UNPAIRED_SUBPATH;
+  readonly type = ActionModeActionTypes.SetUnpairedSubPath;
   readonly payload: { unpairedSubPath: { source: ActionSource; subIdx: number } };
   constructor(unpairedSubPath: { source: ActionSource; subIdx: number }) {
     this.payload = { unpairedSubPath };
   }
 }
 
-export type Actions =
+export type ActionModeActions =
   | SetActionMode
   | SetActionModeHover
   | SetActionModeSelections

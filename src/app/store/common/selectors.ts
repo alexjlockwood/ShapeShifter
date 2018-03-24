@@ -58,11 +58,6 @@ export const getLayerTimelineState = createStructuredSelector({
   singleSelectedPathBlock: getSingleSelectedPathBlock,
 });
 
-export const getAnimatorState = createStructuredSelector({
-  animation: getAnimation,
-  vectorLayer: getVectorLayer,
-});
-
 export const isWorkspaceDirty = createSelector(
   [getVectorLayer, getAnimation],
   (vl, anim) => vl.children.length > 0 || anim.blocks.length > 0,

@@ -52,7 +52,7 @@ export function createSvgFrames(vectorLayer: VectorLayer, animation: Animation, 
   const { width, height } = vectorLayer;
   for (let i = 0; i <= numSteps; i++) {
     const time = i / numSteps * animation.duration;
-    svgs.push(SvgSerializer.toSvgString(renderer.setAnimationTime(time), width, height));
+    svgs.push(SvgSerializer.toSvgString(renderer.setCurrentTime(time), width, height));
   }
   return svgs;
 }
@@ -63,7 +63,7 @@ export function createSvgSprite(vectorLayer: VectorLayer, animation: Animation, 
   const { width, height } = vectorLayer;
   for (let i = 0; i <= numSteps; i++) {
     const time = i / numSteps * animation.duration;
-    const vl = renderer.setAnimationTime(time);
+    const vl = renderer.setCurrentTime(time);
     svgs.push(SvgSerializer.toSvgString(vl, width, height, width * i, 0, false, i.toString()));
   }
   const totalWidth = width * numSteps + width;

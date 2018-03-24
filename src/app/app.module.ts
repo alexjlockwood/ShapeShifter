@@ -53,7 +53,6 @@ import { SplitterComponent } from './components/splitter/splitter.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ToolPanelComponent } from './components/toolpanel/toolpanel.component';
 import { ActionModeService } from './services/actionmode.service';
-import { AnimatorService } from './services/animator.service';
 import { ClipboardService } from './services/clipboard.service';
 import { DemoService } from './services/demo.service';
 import { DialogService } from './services/dialog.service';
@@ -115,7 +114,6 @@ import { reducer } from './store';
   ],
   providers: [
     ActionModeService,
-    AnimatorService,
     ClipboardService,
     DemoService,
     DialogService,

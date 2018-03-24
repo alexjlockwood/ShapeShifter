@@ -30,7 +30,7 @@ export class AnimationRenderer {
         orderedBlocks: animDataByLayer[layerId],
       };
     });
-    this.setAnimationTime(0);
+    this.setCurrentTime(0);
   }
 
   /**
@@ -39,7 +39,7 @@ export class AnimationRenderer {
    * vector layer should not be mutated externally, as it will be cached and
    * returned on subsequent time frames.
    */
-  setAnimationTime(timeMillis: number) {
+  setCurrentTime(timeMillis: number) {
     Object.keys(this.animDataByLayer).forEach(layerId => {
       const animData = this.animDataByLayer[layerId];
       animData.cachedState = animData.cachedState || ({} as PropertyState);

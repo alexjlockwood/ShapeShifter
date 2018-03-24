@@ -24,20 +24,23 @@ import { IntervalTree } from 'app/scripts/intervals';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
-  AnimatorService,
   DemoService,
   DialogService,
   FileExportService,
   FileImportService,
   LayerTimelineService,
+  PlaybackService,
   ThemeService,
 } from 'app/services';
 import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
+import { BatchAction } from 'app/store/batch/actions';
 import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/selectors';
+import { SetHiddenLayers, SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
+import { SetAnimation } from 'app/store/timeline/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -46,10 +49,10 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { filter, first, map } from 'rxjs/operators';
 
+import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { LayerTimelineGridDirective, ScrubEvent } from './layertimelinegrid.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
-import * as TimelineConsts from './constants';
 
 const IS_DEV_BUILD = !environment.production;
 
@@ -120,7 +123,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     private readonly fileImportService: FileImportService,
     private readonly fileExportService: FileExportService,
     private readonly snackBarService: SnackBarService,
-    private readonly animatorService: AnimatorService,
+    private readonly playbackService: PlaybackService,
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
     private readonly demoService: DemoService,
@@ -151,12 +154,13 @@ export class LayerTimelineComponent extends DestroyableMixin()
           this.vectorLayer = vectorLayer;
           this.selectedBlockIds = selectedBlockIds;
           if (isBeingReset) {
+            // TODO: store the 'zoom' info in the store to avoid using this isBeingReset flag
             this.autoZoomToAnimation();
           }
           if (currActionMode === ActionMode.None && actionMode === ActionMode.Selection) {
             // Move the current time to the beginning of the selected block when
             // entering action mode.
-            this.animatorService.setAnimationTime(singleSelectedPathBlock.startTime);
+            this.playbackService.setCurrentTime(singleSelectedPathBlock.startTime);
           }
           currActionMode = actionMode;
           return {
@@ -180,7 +184,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
   ngAfterViewInit() {
     this.$timeline = $(this.timelineRef.nativeElement);
     this.registerSubscription(
-      this.animatorService.asObservable().subscribe(event => {
+      this.playbackService.asObservable().subscribe(event => {
+        // TODO: make this reactive/avoid storing current time locally
         this.currentTime = event.currentTime;
       }),
     );
@@ -208,10 +213,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   onNewWorkspaceClick() {
     const resetWorkspaceFn = () => {
       ga('send', 'event', 'File', 'New');
-      // TODO: figure out if this hack is necessary and/or can be avoided?
-      this.animatorService.reset();
       this.store.dispatch(new ResetWorkspace());
-      this.animatorService.reset();
     };
     this.store
       .select(isWorkspaceDirty)
@@ -246,10 +248,14 @@ export class LayerTimelineComponent extends DestroyableMixin()
         this.demoService
           .getDemo(selectedDemoInfo.id)
           .then(({ vectorLayer, animation, hiddenLayerIds }) => {
-            // TODO: figure out if this hack is necessary and/or can be avoided?
-            this.animatorService.reset();
-            this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
-            this.animatorService.reset();
+            this.store.dispatch(
+              new BatchAction(
+                new ResetWorkspace(),
+                new SetVectorLayer(vectorLayer),
+                new SetAnimation(animation),
+                new SetHiddenLayers(hiddenLayerIds),
+              ),
+            );
           })
           .catch(error => {
             const msg =
@@ -288,8 +294,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // Called from the LayerTimelineComponent template.
   onExportCssKeyframesClick() {
+    // TODO: implement this feature
     ga('send', 'event', 'Export', 'CSS Keyframes');
-    // TODO: uncomment this stuff out in the HTML template once implemented
     this.fileExportService.exportCssKeyframes();
   }
 
@@ -310,7 +316,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
       time = this.snapTime(time, false);
     }
     this.currentTime = time;
-    this.animatorService.setAnimationTime(time);
+    this.playbackService.setCurrentTime(time);
   }
 
   // Called from the LayerTimelineComponent template.
@@ -750,7 +756,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // @Override TimelineAnimationRowCallbacks
   onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
-    this.animatorService.setAnimationTime(block.startTime);
+    this.playbackService.setCurrentTime(block.startTime);
   }
 
   // @Override LayerListTreeComponentCallbacks
