@@ -2,7 +2,7 @@ import { AnimationRenderer } from 'app/scripts/animator';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { getAppState } from 'app/store/selectors';
 import { getAnimation } from 'app/store/timeline/selectors';
-import { createSelector, createStructuredSelector } from 'reselect';
+import { createSelector } from 'reselect';
 
 export const getPlaybackState = createSelector(getAppState, s => s.playback);
 export const getIsSlowMotion = createSelector(getPlaybackState, p => p.isSlowMotion);
