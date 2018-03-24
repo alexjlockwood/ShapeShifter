@@ -20,6 +20,7 @@ export function buildInitialState() {
   } as State;
 }
 
+// TODO: move as much logic as possible from here into action mode service
 export function reducer(state = buildInitialState(), action: ActionModeActions) {
   switch (action.type) {
     // Set the app mode during action mode.

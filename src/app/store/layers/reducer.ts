@@ -10,17 +10,17 @@ export interface State {
   readonly hiddenLayerIds: ReadonlySet<string>;
 }
 
-export function buildInitialState(): State {
+export function buildInitialState() {
   return {
     vectorLayer: new VectorLayer(),
     selectedLayerIds: new Set<string>(),
     hoveredLayerId: undefined as string,
     collapsedLayerIds: new Set<string>(),
     hiddenLayerIds: new Set<string>(),
-  };
+  } as State;
 }
 
-export function reducer(state = buildInitialState(), action: LayerActions): State {
+export function reducer(state = buildInitialState(), action: LayerActions) {
   switch (action.type) {
     case LayerActionTypes.SetVectorLayer:
       return { ...state, vectorLayer: action.payload.vectorLayer };

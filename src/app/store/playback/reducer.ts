@@ -18,18 +18,14 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: PlaybackActions) {
   switch (action.type) {
-    case PlaybackActionTypes.SetIsSlowMotion: {
+    case PlaybackActionTypes.SetIsSlowMotion:
       return { ...state, isSlowMotion: action.payload.isSlowMotion };
-    }
-    case PlaybackActionTypes.SetIsPlaying: {
+    case PlaybackActionTypes.SetIsPlaying:
       return { ...state, isPlaying: action.payload.isPlaying };
-    }
-    case PlaybackActionTypes.SetIsRepeating: {
+    case PlaybackActionTypes.SetIsRepeating:
       return { ...state, isRepeating: action.payload.isRepeating };
-    }
-    case PlaybackActionTypes.SetCurrentTime: {
+    case PlaybackActionTypes.SetCurrentTime:
       return { ...state, currentTime: action.payload.currentTime };
-    }
   }
   return state;
 }
