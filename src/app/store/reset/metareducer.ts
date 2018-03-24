@@ -8,31 +8,6 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
     if (action.type === actions.RESET_WORKSPACE) {
       state = undefined;
     }
-    state = reducer(state, action);
-    if (action.type === actions.RESET_WORKSPACE) {
-      const { vectorLayer, animation, hiddenLayerIds } = action.payload;
-      if (vectorLayer) {
-        const { layers } = state;
-        state = {
-          ...state,
-          layers: {
-            ...layers,
-            vectorLayer,
-            hiddenLayerIds,
-          },
-        };
-      }
-      if (animation) {
-        const { timeline } = state;
-        state = {
-          ...state,
-          timeline: {
-            ...timeline,
-            animation,
-          },
-        };
-      }
-    }
-    return state;
+    return reducer(state, action);
   };
 }

@@ -4,8 +4,12 @@ import { Animation } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
 import { State, Store } from 'app/store';
+import { SetHiddenLayers, SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
+import { MultiAction } from 'app/store/multiaction/actions';
 import { ResetWorkspace } from 'app/store/reset/actions';
+import { SetAnimation } from 'app/store/timeline/actions';
+import { Action } from 'redux';
 import { first } from 'rxjs/operators';
 
 import { FileExportService } from './fileexport.service';
@@ -157,10 +161,14 @@ export class FileImportService {
   ) {
     if (importType === ImportType.Json) {
       ga('send', 'event', 'Import', 'JSON');
-      // TODO: avoid these hacks
-      this.playbackService.reset();
-      this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds));
-      this.playbackService.reset();
+      this.store.dispatch(
+        new MultiAction(
+          new ResetWorkspace(),
+          new SetVectorLayer(vls[0]),
+          new SetAnimation(animation),
+          new SetHiddenLayers(hiddenLayerIds),
+        ),
+      );
     } else {
       if (importType === ImportType.Svg) {
         ga('send', 'event', 'Import', 'SVG');
@@ -168,10 +176,7 @@ export class FileImportService {
         ga('send', 'event', 'Import', 'Vector Drawable');
       }
       if (resetWorkspace) {
-        // TODO: avoid these hacks
-        this.playbackService.reset();
         this.store.dispatch(new ResetWorkspace());
-        this.playbackService.reset();
       }
       this.layerTimelineService.importLayers(vls);
       // TODO: count number of individual layers?

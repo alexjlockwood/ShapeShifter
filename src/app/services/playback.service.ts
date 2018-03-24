@@ -104,11 +104,6 @@ export class PlaybackService {
     }
   }
 
-  // TODO: remove this method? don't think it is needed anymore?
-  reset() {
-    this.rewind();
-  }
-
   toggleIsSlowMotion() {
     this.store.dispatch(new SetIsSlowMotion(!this.queryStore(getIsSlowMotion)));
   }

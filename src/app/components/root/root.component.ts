@@ -26,7 +26,10 @@ import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
 import { getActionMode, getActionModeHover } from 'app/store/actionmode/selectors';
 import { isWorkspaceDirty } from 'app/store/common/selectors';
+import { SetHiddenLayers, SetVectorLayer } from 'app/store/layers/actions';
+import { MultiAction } from 'app/store/multiaction/actions';
 import { ResetWorkspace } from 'app/store/reset/actions';
+import { SetAnimation } from 'app/store/timeline/actions';
 import * as erd from 'element-resize-detector';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -166,6 +169,14 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       this.demoService
         .getDemo('morphinganimals')
         .then(({ vectorLayer, animation, hiddenLayerIds }) => {
+          this.store.dispatch(
+            new MultiAction(
+              new ResetWorkspace(),
+              new SetVectorLayer(vectorLayer),
+              new SetAnimation(animation),
+              new SetHiddenLayers(hiddenLayerIds),
+            ),
+          );
           this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
         });
     }

@@ -36,8 +36,11 @@ import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
 import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/selectors';
+import { SetHiddenLayers, SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
+import { MultiAction } from 'app/store/multiaction/actions';
 import { ResetWorkspace } from 'app/store/reset/actions';
+import { SetAnimation } from 'app/store/timeline/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -151,6 +154,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
           this.vectorLayer = vectorLayer;
           this.selectedBlockIds = selectedBlockIds;
           if (isBeingReset) {
+            // TODO: store the 'zoom' info in the store to avoid using this isBeingReset flag
             this.autoZoomToAnimation();
           }
           if (currActionMode === ActionMode.None && actionMode === ActionMode.Selection) {
@@ -208,10 +212,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   onNewWorkspaceClick() {
     const resetWorkspaceFn = () => {
       ga('send', 'event', 'File', 'New');
-      // TODO: figure out if this hack is necessary and/or can be avoided?
-      this.playbackService.reset();
       this.store.dispatch(new ResetWorkspace());
-      this.playbackService.reset();
     };
     this.store
       .select(isWorkspaceDirty)
@@ -246,10 +247,14 @@ export class LayerTimelineComponent extends DestroyableMixin()
         this.demoService
           .getDemo(selectedDemoInfo.id)
           .then(({ vectorLayer, animation, hiddenLayerIds }) => {
-            // TODO: figure out if this hack is necessary and/or can be avoided?
-            this.playbackService.reset();
-            this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
-            this.playbackService.reset();
+            this.store.dispatch(
+              new MultiAction(
+                new ResetWorkspace(),
+                new SetVectorLayer(vectorLayer),
+                new SetAnimation(animation),
+                new SetHiddenLayers(hiddenLayerIds),
+              ),
+            );
           })
           .catch(error => {
             const msg =
@@ -288,8 +293,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // Called from the LayerTimelineComponent template.
   onExportCssKeyframesClick() {
+    // TODO: implement this feature
     ga('send', 'event', 'Export', 'CSS Keyframes');
-    // TODO: uncomment this stuff out in the HTML template once implemented
     this.fileExportService.exportCssKeyframes();
   }
 

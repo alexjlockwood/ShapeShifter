@@ -1,5 +1,6 @@
 import * as actions from './actions';
 
+// TODO: remove this 'isBeingReset' flag... see TODO in layer timeline component
 export interface State {
   readonly isBeingReset: boolean;
 }
