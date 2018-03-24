@@ -1,10 +1,6 @@
 import { Animation } from 'app/model/timeline';
 import { Action } from 'app/store/ngrx';
 
-export const SET_ANIMATION = '__timeline__SET_ANIMATION';
-export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';
-export const SET_SELECTED_BLOCKS = '__timeline__SET_SELECTED_BLOCKS';
-
 export enum TimelineActionTypes {
   SetAnimation = '__timeline__SET_ANIMATION',
   SelectAnimation = '__timeline__SELECT_ANIMATION',
