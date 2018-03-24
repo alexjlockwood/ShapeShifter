@@ -1,6 +1,6 @@
 import { ActionMode, ActionSource, Hover, Selection } from 'app/model/actionmode';
 
-import * as actions from './actions';
+import { ActionModeActionTypes, ActionModeActions } from './actions';
 
 export interface State {
   readonly mode: ActionMode;
@@ -20,10 +20,10 @@ export function buildInitialState() {
   } as State;
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: ActionModeActions) {
   switch (action.type) {
     // Set the app mode during action mode.
-    case actions.SET_ACTION_MODE: {
+    case ActionModeActionTypes.SetActionMode: {
       const { mode } = action.payload;
       if (mode === ActionMode.None) {
         return buildInitialState();
@@ -42,25 +42,25 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     }
 
     // Set the hover mode during action mode.
-    case actions.SET_ACTION_MODE_HOVER: {
+    case ActionModeActionTypes.SetActionModeHover: {
       const { hover } = action.payload;
       return { ...state, hover };
     }
 
     // Set the path selections during action mode.
-    case actions.SET_ACTION_MODE_SELECTIONS: {
+    case ActionModeActionTypes.SetActionModeSelections: {
       const { selections } = action.payload;
       return { ...state, selections };
     }
 
     // Set the currently paired subpaths.
-    case actions.SET_PAIRED_SUBPATHS: {
+    case ActionModeActionTypes.SetPairedSubPaths: {
       const pairedSubPaths = new Set(action.payload.pairedSubPaths);
       return { ...state, pairedSubPaths };
     }
 
     // Set the currently unpaired subpath in pair subpaths mode.
-    case actions.SET_UNPAIRED_SUBPATH: {
+    case ActionModeActionTypes.SetUnpairedSubPath: {
       const { unpairedSubPath } = action.payload;
       return { ...state, unpairedSubPath };
     }
