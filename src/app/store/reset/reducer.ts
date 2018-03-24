@@ -1,4 +1,4 @@
-import * as actions from './actions';
+import { ResetActionTypes, ResetActions } from './actions';
 
 // TODO: remove this 'isBeingReset' flag... see TODO in layer timeline component
 export interface State {
@@ -11,8 +11,8 @@ export function buildInitialState() {
   } as State;
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions) {
-  if (action.type === actions.RESET_WORKSPACE) {
+export function reducer(state = buildInitialState(), action: ResetActions) {
+  if (action.type === ResetActionTypes.ResetWorkspace) {
     return { ...state, isBeingReset: true };
   }
   const { isBeingReset } = state;
