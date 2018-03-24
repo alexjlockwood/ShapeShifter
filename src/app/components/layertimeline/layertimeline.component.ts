@@ -185,6 +185,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     this.$timeline = $(this.timelineRef.nativeElement);
     this.registerSubscription(
       this.playbackService.asObservable().subscribe(event => {
+        // TODO: make this reactive/avoid storing current time locally
         this.currentTime = event.currentTime;
       }),
     );

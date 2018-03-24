@@ -46,6 +46,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
       // Preview canvas specific setup.
       this.registerSubscription(
         combineLatest(
+          // TODO: don't think this is necessary anymore? only need to query playback service now?
           merge(
             this.playbackService.asObservable().pipe(map(event => event.vl)),
             this.store.select(getVectorLayer),
