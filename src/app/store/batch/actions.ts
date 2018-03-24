@@ -1,13 +1,15 @@
 import { Action } from 'app/store/ngrx';
 
-export const BATCH_ACTION = '__batchaction__BATCH_ACTION';
+export enum BatchActionTypes {
+  BatchAction = '__batchaction__BATCH_ACTION',
+}
 
 export class BatchAction implements Action {
-  readonly type = BATCH_ACTION;
+  readonly type = BatchActionTypes.BatchAction;
   readonly payload: ReadonlyArray<Action>;
   constructor(...actions: Action[]) {
     this.payload = actions;
   }
 }
 
-export type Actions = BatchAction;
+export type BatchActions = BatchAction;
