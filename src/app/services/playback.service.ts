@@ -33,6 +33,7 @@ export class PlaybackService {
         this.setIsPlaying(true);
       },
       onAnimationUpdate: (currentTime: number) => {
+        currentTime = Math.round(currentTime);
         this.store.dispatch(new SetCurrentTime(currentTime));
       },
       onAnimationEnd: () => {
@@ -66,6 +67,7 @@ export class PlaybackService {
   }
 
   setCurrentTime(currentTime: number) {
+    currentTime = Math.round(currentTime);
     if (this.queryStore(getCurrentTime) !== currentTime) {
       this.store.dispatch(new SetCurrentTime(currentTime));
     }
