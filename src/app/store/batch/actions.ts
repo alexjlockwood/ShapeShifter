@@ -1,7 +1,7 @@
 import { Action } from 'app/store/ngrx';
 
 export enum BatchActionTypes {
-  BatchAction = '__batchaction__BATCH_ACTION',
+  BatchAction = '__batch__BATCH',
 }
 
 export class BatchAction implements Action {

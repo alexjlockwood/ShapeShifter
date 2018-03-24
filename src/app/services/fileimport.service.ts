@@ -9,12 +9,10 @@ import { SetHiddenLayers, SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import { SetAnimation } from 'app/store/timeline/actions';
-import { Action } from 'redux';
 import { first } from 'rxjs/operators';
 
 import { FileExportService } from './fileexport.service';
 import { LayerTimelineService } from './layertimeline.service';
-import { PlaybackService } from './playback.service';
 import { Duration, SnackBarService } from './snackbar.service';
 
 declare const ga: Function;
@@ -33,7 +31,6 @@ export class FileImportService {
   constructor(
     private readonly store: Store<State>,
     private readonly snackBarService: SnackBarService,
-    private readonly playbackService: PlaybackService,
     private readonly layerTimelineService: LayerTimelineService,
   ) {}
 

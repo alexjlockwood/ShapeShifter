@@ -1,4 +1,4 @@
-import * as actionModeActions from 'app/store/actionmode/actions';
+import { ActionModeActionTypes } from 'app/store/actionmode/actions';
 import { Action, ActionReducer } from 'app/store/ngrx';
 import { PlaybackActionTypes } from 'app/store/playback/actions';
 import { AppState } from 'app/store/reducer';
@@ -11,8 +11,8 @@ const UNDO_EXCLUDED_ACTIONS = [
   PlaybackActionTypes.SetIsPlaying,
   PlaybackActionTypes.SetIsRepeating,
   PlaybackActionTypes.SetCurrentTime,
-  actionModeActions.SET_ACTION_MODE,
-  actionModeActions.SET_ACTION_MODE_HOVER,
+  ActionModeActionTypes.SetActionMode,
+  ActionModeActionTypes.SetActionModeHover,
 ];
 
 let groupCounter = 1;

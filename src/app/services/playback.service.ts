@@ -1,7 +1,4 @@
 import { Injectable, NgZone } from '@angular/core';
-import { VectorLayer } from 'app/model/layers';
-import { Animation } from 'app/model/timeline';
-import { AnimationRenderer } from 'app/scripts/animator';
 import { State, Store } from 'app/store';
 import { BatchAction } from 'app/store/batch/actions';
 import { Action } from 'app/store/ngrx';
@@ -21,7 +18,6 @@ import {
 import { getAnimation } from 'app/store/timeline/selectors';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { first } from 'rxjs/operators';
 
 /** A simple service that provides an interface for making playback changes. */

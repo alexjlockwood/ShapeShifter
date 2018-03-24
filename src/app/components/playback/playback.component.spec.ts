@@ -51,7 +51,7 @@ describe('PlaybackComponent', () => {
   });
 
   it('All buttons activated', () => {
-    callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true });
+    callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true, currentTime: 0 });
     const buttons = fixture.debugElement
       .queryAll(By.css('mat-icon.activated'))
       .map(d => d.nativeElement);
@@ -61,7 +61,7 @@ describe('PlaybackComponent', () => {
   it(
     'Button click trigger store dispatch',
     fakeAsync(() => {
-      callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true });
+      callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true, currentTime: 0 });
 
       const slowMotionClickEvent = { stopPropagation: () => {} };
       const repeatingClickEvent = { stopPropagation: () => {} };
