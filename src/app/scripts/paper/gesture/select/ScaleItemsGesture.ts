@@ -12,7 +12,7 @@ import * as paper from 'paper';
 /**
  * A gesture that performs scaling operations.
  *
- * TODO: should we also scale the stroke width or no?
+ * TODO: should we also scale the stroke width?
  */
 export class ScaleItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -176,8 +176,7 @@ export class ScaleItemsGesture extends Gesture {
     }
 
     // TODO: this doesn't work yet for paths that are contained in scaled groups
-
-    this.selectedItems.forEach((item, index) => {
+    this.selectedItems.filter(i => i instanceof paper.Path).forEach((item, index) => {
       // TODO: make this stuff works for groups as well
       // TODO: should we pass 'false' to clone below?
       const path = item.clone() as paper.Path;
