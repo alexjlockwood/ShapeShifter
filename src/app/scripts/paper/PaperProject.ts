@@ -5,7 +5,6 @@ import {
   getHiddenLayerIds,
   getHoveredLayerId,
   getSelectedLayerIds,
-  getVectorLayer,
 } from 'app/store/layers/selectors';
 import {
   getCreatePathInfo,
