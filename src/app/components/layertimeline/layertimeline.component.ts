@@ -35,12 +35,9 @@ import {
 import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
-import { BatchAction } from 'app/store/batch/actions';
 import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/selectors';
-import { SetHiddenLayers, SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
-import { SetAnimation } from 'app/store/timeline/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -248,14 +245,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
         this.demoService
           .getDemo(selectedDemoInfo.id)
           .then(({ vectorLayer, animation, hiddenLayerIds }) => {
-            this.store.dispatch(
-              new BatchAction(
-                new ResetWorkspace(),
-                new SetVectorLayer(vectorLayer),
-                new SetAnimation(animation),
-                new SetHiddenLayers(hiddenLayerIds),
-              ),
-            );
+            this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
           })
           .catch(error => {
             const msg =
