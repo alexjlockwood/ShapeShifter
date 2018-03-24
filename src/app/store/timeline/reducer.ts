@@ -8,15 +8,15 @@ export interface State {
   readonly selectedBlockIds: ReadonlySet<string>;
 }
 
-export function buildInitialState(): State {
+export function buildInitialState() {
   return {
     animation: new Animation(),
     isAnimationSelected: false,
     selectedBlockIds: new Set<string>(),
-  };
+  } as State;
 }
 
-export function reducer(state = buildInitialState(), action: TimelineActions): State {
+export function reducer(state = buildInitialState(), action: TimelineActions) {
   switch (action.type) {
     case TimelineActionTypes.SetAnimation:
       return { ...state, animation: action.payload.animation };

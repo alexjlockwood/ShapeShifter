@@ -10,7 +10,7 @@ export interface State {
 
 export function buildInitialState() {
   return {
-    themeType: (window.localStorage.getItem(STORAGE_KEY_THEME_TYPE) || 'light') as ThemeType,
+    themeType: window.localStorage.getItem(STORAGE_KEY_THEME_TYPE) || 'light',
     isInitialPageLoad: true,
   } as State;
 }
