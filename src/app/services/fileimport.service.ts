@@ -4,9 +4,9 @@ import { Animation } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
 import { State, Store } from 'app/store';
+import { BatchAction } from 'app/store/batch/actions';
 import { SetHiddenLayers, SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
-import { MultiAction } from 'app/store/multiaction/actions';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import { SetAnimation } from 'app/store/timeline/actions';
 import { Action } from 'redux';
@@ -162,7 +162,7 @@ export class FileImportService {
     if (importType === ImportType.Json) {
       ga('send', 'event', 'Import', 'JSON');
       this.store.dispatch(
-        new MultiAction(
+        new BatchAction(
           new ResetWorkspace(),
           new SetVectorLayer(vls[0]),
           new SetAnimation(animation),

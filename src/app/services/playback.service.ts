@@ -3,7 +3,7 @@ import { VectorLayer } from 'app/model/layers';
 import { Animation } from 'app/model/timeline';
 import { AnimationRenderer } from 'app/scripts/animator';
 import { State, Store } from 'app/store';
-import { MultiAction } from 'app/store/multiaction/actions';
+import { BatchAction } from 'app/store/batch/actions';
 import { Action } from 'app/store/ngrx';
 import {
   SetCurrentTime,
@@ -85,7 +85,7 @@ export class PlaybackService {
       actions.push(new SetIsPlaying(false));
     }
     if (actions.length) {
-      this.store.dispatch(new MultiAction(...actions));
+      this.store.dispatch(new BatchAction(...actions));
     }
   }
 
@@ -100,7 +100,7 @@ export class PlaybackService {
       actions.push(new SetIsPlaying(false));
     }
     if (actions.length) {
-      this.store.dispatch(new MultiAction(...actions));
+      this.store.dispatch(new BatchAction(...actions));
     }
   }
 

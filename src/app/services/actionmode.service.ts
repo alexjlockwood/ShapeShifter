@@ -26,7 +26,7 @@ import {
   getPairedSubPaths,
   getUnpairedSubPath,
 } from 'app/store/actionmode/selectors';
-import { MultiAction } from 'app/store/multiaction/actions';
+import { BatchAction } from 'app/store/batch/actions';
 import { Action } from 'app/store/ngrx';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as _ from 'lodash';
@@ -236,7 +236,7 @@ export class ActionModeService {
       mutatorFn(pm, subIdx);
     }
     this.store.dispatch(
-      new MultiAction(
+      new BatchAction(
         this.buildUpdatedActivePathBlockAnimationAction(source, pm.build()),
         new SetActionModeHover(undefined),
       ),
@@ -261,7 +261,7 @@ export class ActionModeService {
     const pm = activePath.mutate();
     pm.splitCommandInHalf(subIdx, cmdIdx);
     this.store.dispatch(
-      new MultiAction(
+      new BatchAction(
         this.buildUpdatedActivePathBlockAnimationAction(source, pm.build()),
         new SetActionModeSelections([]),
         new SetActionModeHover(undefined),
@@ -340,7 +340,7 @@ export class ActionModeService {
     } else {
       actions.push(new SetUnpairedSubPath({ source: actionSource, subIdx }));
     }
-    this.store.dispatch(new MultiAction(...actions));
+    this.store.dispatch(new BatchAction(...actions));
   }
 
   private getPairedSubPaths() {
@@ -434,7 +434,7 @@ export class ActionModeService {
     }
     if (updatePathAction) {
       this.store.dispatch(
-        new MultiAction(
+        new BatchAction(
           updatePathAction,
           new SetActionModeSelections([]),
           new SetActionModeHover(undefined),

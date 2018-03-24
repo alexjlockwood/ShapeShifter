@@ -11,6 +11,7 @@ import {
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/model/timeline';
 import { Matrix, ModelUtil } from 'app/scripts/common';
 import { State, Store } from 'app/store';
+import { BatchAction } from 'app/store/batch/actions';
 import {
   SetCollapsedLayers,
   SetHiddenLayers,
@@ -23,7 +24,6 @@ import {
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/store/layers/selectors';
-import { MultiAction } from 'app/store/multiaction/actions';
 import { Action } from 'app/store/ngrx';
 import { SelectAnimation, SetAnimation, SetSelectedBlocks } from 'app/store/timeline/actions';
 import {
@@ -112,7 +112,7 @@ export class LayerTimelineService {
       actions.push(new SetSelectedLayers(selectedLayerIds));
     }
     if (actions.length) {
-      this.store.dispatch(new MultiAction(...actions));
+      this.store.dispatch(new BatchAction(...actions));
     }
   }
 
@@ -246,7 +246,7 @@ export class LayerTimelineService {
       ...newLayerBlocks,
     ];
     actions.push(new SetAnimation(newAnimation));
-    this.store.dispatch(new MultiAction(...actions));
+    this.store.dispatch(new BatchAction(...actions));
   }
 
   /**
@@ -319,7 +319,7 @@ export class LayerTimelineService {
       return block;
     });
     actions.push(new SetAnimation(newAnimation));
-    this.store.dispatch(new MultiAction(...actions));
+    this.store.dispatch(new BatchAction(...actions));
   }
 
   private buildCleanupLayerIdActions(...deletedLayerIds: string[]) {
@@ -425,7 +425,7 @@ export class LayerTimelineService {
       selectedLayerIds = new Set(newSelectedLayers.map(l => l.id));
     }
     this.store.dispatch(
-      new MultiAction(new SetVectorLayer(vl), new SetSelectedLayers(selectedLayerIds)),
+      new BatchAction(new SetVectorLayer(vl), new SetSelectedLayers(selectedLayerIds)),
     );
   }
 
@@ -466,7 +466,7 @@ export class LayerTimelineService {
     }
 
     this.store.dispatch(
-      new MultiAction(
+      new BatchAction(
         new SetVectorLayer(vl),
         new SetCollapsedLayers(collapsedLayerIds),
         new SetHiddenLayers(hiddenLayerIds),
@@ -518,7 +518,7 @@ export class LayerTimelineService {
       }
     }
     this.store.dispatch(
-      new MultiAction(
+      new BatchAction(
         new SetAnimation(animation),
         new SelectAnimation(false),
         new SetSelectedBlocks(new Set(addedBlocks.map(b => b.id))),

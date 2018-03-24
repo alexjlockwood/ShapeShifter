@@ -2,9 +2,9 @@ import { Action, ActionReducer, combineReducers, compose } from 'app/store/ngrx'
 import { environment } from 'environments/environment';
 
 import * as fromActionMode from './actionmode/reducer';
+import * as metaBatchAction from './batch/metareducer';
 import * as fromLayers from './layers/reducer';
 import * as metaLogger from './logger/metareducer';
-import * as metaMultiAction from './multiaction/metareducer';
 import * as fromPlayback from './playback/reducer';
 import * as metaReset from './reset/metareducer';
 import * as fromReset from './reset/reducer';
@@ -37,7 +37,7 @@ const prodMetaReducers = [
   // Meta-reducer that records past/present/future state.
   metaUndoRedo.metaReducer,
   // Meta-reducer that adds the ability to dispatch multiple actions at a time.
-  metaMultiAction.metaReducer,
+  metaBatchAction.metaReducer,
   // Meta-reducer that adds the ability to reset the entire state tree.
   metaReset.metaReducer,
   // Meta-reducer that maps our slice reducers to the keys in our state tree.
