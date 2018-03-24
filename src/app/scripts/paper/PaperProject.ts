@@ -17,6 +17,7 @@ import {
   getTooltipInfo,
   getZoomPanInfo,
 } from 'app/store/paper/selectors';
+import { getAnimatedVectorLayer } from 'app/store/playback/selectors';
 import * as paper from 'paper';
 import { Subscription } from 'rxjs/Subscription';
 
@@ -33,7 +34,8 @@ export class PaperProject extends paper.Project {
     this.masterToolPicker = new MasterToolPicker(ps);
     this.subscriptions.push(
       ps.store.select(getToolMode).subscribe(() => this.masterToolPicker.onToolModeChanged()),
-      ps.store.select(getVectorLayer).subscribe(() => pl.onVectorLayerChanged()),
+      // TODO: dont allow the user to modify the vector layer when current time > 0
+      ps.store.select(getAnimatedVectorLayer).subscribe(() => pl.onVectorLayerChanged()),
       ps.store.select(getSelectedLayerIds).subscribe(() => pl.onSelectedLayerIdsChanged()),
       ps.store.select(getHoveredLayerId).subscribe(() => pl.onHoveredLayerIdChanged()),
       ps.store.select(getHiddenLayerIds).subscribe(() => pl.onHiddenLayerIdsChanged()),

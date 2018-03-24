@@ -38,6 +38,7 @@ import {
   getTooltipInfo,
   getZoomPanInfo,
 } from 'app/store/paper/selectors';
+import { getAnimatedVectorLayer } from 'app/store/playback/selectors';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
@@ -57,19 +58,19 @@ export class PaperService {
 
   /** Sets the current vector layer. */
   setVectorLayer(vl: VectorLayer) {
-    // TODO: use this.dispatchStore()
+    // TODO: avoid running in angular zone whenever possible?
     this.ngZone.run(() => this.layerTimelineService.setVectorLayer(vl));
   }
 
   /** Gets the current vector layer. */
   getVectorLayer() {
-    return this.layerTimelineService.getVectorLayer();
+    // TODO: return the non-animated vector layer here (using layer timeline service) instead?
+    return this.queryStore(getAnimatedVectorLayer).vl;
   }
 
   /** Sets the set of selected layer IDs. */
   setSelectedLayerIds(layerIds: Set<string>) {
     if (!_.isEqual(this.queryStore(getSelectedLayerIds), layerIds)) {
-      // TODO: use this.dispatchStore()
       this.ngZone.run(() => this.layerTimelineService.setSelectedLayers(layerIds));
     }
   }
@@ -82,7 +83,6 @@ export class PaperService {
   /** Sets or clears the currently hovered layer ID. */
   setHoveredLayerId(layerId: string | undefined) {
     if (this.queryStore(getHoveredLayerId) !== layerId) {
-      // TODO: use this.dispatchStore()
       this.ngZone.run(() => this.store.dispatch(new SetHoveredLayer(layerId)));
     }
   }
@@ -100,6 +100,7 @@ export class PaperService {
   /** Sets the current selection box. */
   setSelectionBox(box: { from: Point; to: Point } | undefined) {
     if (!_.isEqual(this.queryStore(getSelectionBox), box)) {
+      // TODO: run this outside angular zone instead?
       this.dispatchStore(new SetSelectionBox(box));
     }
   }
@@ -192,7 +193,7 @@ export class PaperService {
     }
   }
 
-  private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
+  private queryStore<T>(selector: OutputSelector<Object, T, (...res: Object[]) => T>) {
     let obj: T;
     this.store
       .select(selector)
