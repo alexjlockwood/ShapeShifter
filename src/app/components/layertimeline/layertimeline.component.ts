@@ -156,7 +156,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
           if (currActionMode === ActionMode.None && actionMode === ActionMode.Selection) {
             // Move the current time to the beginning of the selected block when
             // entering action mode.
-            this.playbackService.setAnimationTime(singleSelectedPathBlock.startTime);
+            this.playbackService.setCurrentTime(singleSelectedPathBlock.startTime);
           }
           currActionMode = actionMode;
           return {
@@ -310,7 +310,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
       time = this.snapTime(time, false);
     }
     this.currentTime = time;
-    this.playbackService.setAnimationTime(time);
+    this.playbackService.setCurrentTime(time);
   }
 
   // Called from the LayerTimelineComponent template.
@@ -750,7 +750,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // @Override TimelineAnimationRowCallbacks
   onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
-    this.playbackService.setAnimationTime(block.startTime);
+    this.playbackService.setCurrentTime(block.startTime);
   }
 
   // @Override LayerListTreeComponentCallbacks

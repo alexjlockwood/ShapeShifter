@@ -10,6 +10,7 @@ const UNDO_EXCLUDED_ACTIONS = [
   PlaybackActionTypes.SetIsSlowMotion,
   PlaybackActionTypes.SetIsPlaying,
   PlaybackActionTypes.SetIsRepeating,
+  PlaybackActionTypes.SetCurrentTime,
   actionModeActions.SET_ACTION_MODE,
   actionModeActions.SET_ACTION_MODE_HOVER,
 ];

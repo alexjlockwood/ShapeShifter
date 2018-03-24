@@ -59,7 +59,7 @@ function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
       const renderer = new AnimationRenderer(vl, anim);
       const timeMillis = getTimeFn(block);
       // First interpolate the entire vector layer.
-      const renderedVl = renderer.setAnimationTime(timeMillis);
+      const renderedVl = renderer.setCurrentTime(timeMillis);
       // TODO: this is hacky! the real solution is to not clear path state after interpolations
       // Replace the interpolated value with the block's to/from value.
       const layer = vl.findLayerById(block.layerId).clone() as MorphableLayer;

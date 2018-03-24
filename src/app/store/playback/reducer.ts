@@ -4,6 +4,7 @@ export interface State {
   readonly isSlowMotion: boolean;
   readonly isPlaying: boolean;
   readonly isRepeating: boolean;
+  readonly currentTime: number;
 }
 
 export function buildInitialState() {
@@ -11,6 +12,7 @@ export function buildInitialState() {
     isSlowMotion: false,
     isPlaying: false,
     isRepeating: false,
+    currentTime: 0,
   } as State;
 }
 
@@ -24,6 +26,9 @@ export function reducer(state = buildInitialState(), action: PlaybackActions) {
     }
     case PlaybackActionTypes.SetIsRepeating: {
       return { ...state, isRepeating: action.payload.isRepeating };
+    }
+    case PlaybackActionTypes.SetCurrentTime: {
+      return { ...state, currentTime: action.payload.currentTime };
     }
   }
   return state;

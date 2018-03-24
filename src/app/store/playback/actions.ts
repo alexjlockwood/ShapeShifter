@@ -4,6 +4,7 @@ export enum PlaybackActionTypes {
   SetIsSlowMotion = '__playback__SET_IS_SLOW_MOTION',
   SetIsPlaying = '__playback__SET_IS_PLAYING',
   SetIsRepeating = '__playback__SET_IS_REPEATING',
+  SetCurrentTime = '__playback__SET_CURRENT_TIME',
 }
 
 export class SetIsSlowMotion implements Action {
@@ -30,4 +31,12 @@ export class SetIsRepeating implements Action {
   }
 }
 
-export type PlaybackActions = SetIsSlowMotion | SetIsPlaying | SetIsRepeating;
+export class SetCurrentTime implements Action {
+  readonly type = PlaybackActionTypes.SetCurrentTime;
+  readonly payload: { currentTime: number };
+  constructor(currentTime: number) {
+    this.payload = { currentTime };
+  }
+}
+
+export type PlaybackActions = SetIsSlowMotion | SetIsPlaying | SetIsRepeating | SetCurrentTime;

@@ -3,120 +3,128 @@ import { VectorLayer } from 'app/model/layers';
 import { Animation } from 'app/model/timeline';
 import { AnimationRenderer } from 'app/scripts/animator';
 import { State, Store } from 'app/store';
-import { getAnimatorState } from 'app/store/common/selectors';
-import { SetIsPlaying, SetIsRepeating, SetIsSlowMotion } from 'app/store/playback/actions';
-import { getIsPlaying, getIsRepeating, getIsSlowMotion } from 'app/store/playback/selectors';
+import { MultiAction } from 'app/store/multiaction/actions';
+import { Action } from 'app/store/ngrx';
+import {
+  SetCurrentTime,
+  SetIsPlaying,
+  SetIsRepeating,
+  SetIsSlowMotion,
+} from 'app/store/playback/actions';
+import {
+  getAnimatedVectorLayer,
+  getCurrentTime,
+  getIsPlaying,
+  getIsRepeating,
+  getIsSlowMotion,
+} from 'app/store/playback/selectors';
+import { getAnimation } from 'app/store/timeline/selectors';
+import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { first } from 'rxjs/operators';
 
-const DEFAULT_ANIMATOR_EVENT = {
-  vl: undefined as VectorLayer,
-  currentTime: 0,
-};
-
-/**
- * A simple service that provides an interface for making playback changes.
- */
+/** A simple service that provides an interface for making playback changes. */
 @Injectable()
 export class PlaybackService {
-  private readonly animatorSubject = new BehaviorSubject(DEFAULT_ANIMATOR_EVENT);
-  private animator: Animator;
-  private animationRenderer: AnimationRenderer;
-  private activeAnimation: Animation;
-  private readonly animatorCallback: Callback;
+  private readonly animator: Animator;
 
-  constructor(private readonly ngZone: NgZone, private readonly store: Store<State>) {
-    this.animatorCallback = {
-      setIsPlaying: (isPlaying: boolean) => {
-        this.setIsPlaying(isPlaying);
+  // TODO: set current time to 0 when animation/vector layer changes (like before)?
+  // TODO: reset time (or any other special handling) during workspace resets?
+  constructor(private readonly store: Store<State>, ngZone: NgZone) {
+    this.animator = new Animator(ngZone, {
+      onAnimationStart: () => {
+        this.setIsPlaying(true);
       },
-      runOutsideAngular: (fn: () => void) => this.ngZone.runOutsideAngular(fn),
-    };
-    this.animator = new Animator(this.animatorCallback);
-    this.store.select(getIsSlowMotion).subscribe(s => this.animator.setIsSlowMotion(s));
-    this.store.select(getIsPlaying).subscribe(p => (p ? this.play() : this.pause()));
-    this.store.select(getIsRepeating).subscribe(r => this.animator.setIsRepeating(r));
-    this.store.select(getAnimatorState).subscribe(({ vectorLayer: vl, animation }) => {
-      this.activeAnimation = animation;
-      this.animationRenderer = new AnimationRenderer(vl, animation);
-      const currentTime = this.getCurrentTime();
-      vl = this.animationRenderer.setAnimationTime(currentTime);
-      this.animatorSubject.next({ vl, currentTime });
-      this.animator.rewind();
+      onAnimationUpdate: (currentTime: number) => {
+        this.store.dispatch(new SetCurrentTime(currentTime));
+      },
+      onAnimationEnd: () => {
+        this.setIsPlaying(false);
+      },
     });
-  }
-
-  getCurrentTime() {
-    return this.animatorSubject.getValue().currentTime;
+    this.store.select(getIsPlaying).subscribe(isPlaying => {
+      if (isPlaying) {
+        const { duration } = this.queryStore(getAnimation);
+        const currentTime = this.getCurrentTime();
+        const startTime = duration === this.getCurrentTime() ? 0 : currentTime;
+        this.animator.play(duration, startTime);
+      } else {
+        this.animator.pause();
+      }
+    });
+    this.store.select(getIsSlowMotion).subscribe(isSlowMotion => {
+      this.animator.setIsSlowMotion(isSlowMotion);
+    });
+    this.store.select(getIsRepeating).subscribe(isRepeating => {
+      this.animator.setIsRepeating(isRepeating);
+    });
   }
 
   asObservable() {
-    return this.animatorSubject.asObservable();
+    return this.store.select(getAnimatedVectorLayer);
   }
 
-  // TODO: make it possible to pause/resume animations (right now playing resets the time back to 0)
-  private play() {
-    this.animator.play(this.activeAnimation.duration, fraction => {
-      const currentTime = this.activeAnimation.duration * fraction;
-      const renderedVectorLayer = this.animationRenderer.setAnimationTime(currentTime);
-      if (fraction === 0 || fraction === 1) {
-        // Allow change detection at the start/end of the animation.
-        this.ngZone.run(() => this.animatorSubject.next({ vl: renderedVectorLayer, currentTime }));
-      } else {
-        // By default the callback is invoked outside the default Angular
-        // zone. Clients receiving this callback should be aware of that.
-        this.animatorSubject.next({ vl: renderedVectorLayer, currentTime });
-      }
-    });
+  getCurrentTime() {
+    return this.queryStore(getCurrentTime);
   }
 
-  private pause() {
-    this.animator.pause();
+  setCurrentTime(currentTime: number) {
+    if (this.queryStore(getCurrentTime) !== currentTime) {
+      this.store.dispatch(new SetCurrentTime(currentTime));
+    }
   }
 
   // TODO: make it so rewind navigates to the start of the currently active block?
   rewind() {
-    this.animator.rewind();
-    const currentTime = 0;
-    const vl = this.animationRenderer.setAnimationTime(currentTime);
-    this.animatorSubject.next({ vl, currentTime });
+    const actions: Action[] = [];
+    if (this.getCurrentTime() !== 0) {
+      actions.push(new SetCurrentTime(0));
+    }
+    if (this.queryStore(getIsPlaying)) {
+      actions.push(new SetIsPlaying(false));
+    }
+    if (actions.length) {
+      this.store.dispatch(new MultiAction(...actions));
+    }
   }
 
   // TODO: make it so fast forward navigates to the end of the currently active block?
   fastForward() {
-    this.animator.fastForward();
-    const currentTime = this.activeAnimation.duration;
-    const vl = this.animationRenderer.setAnimationTime(currentTime);
-    this.animatorSubject.next({ vl, currentTime });
+    const actions: Action[] = [];
+    const { duration } = this.queryStore(getAnimation);
+    if (this.getCurrentTime() !== duration) {
+      actions.push(new SetCurrentTime(duration));
+    }
+    if (this.queryStore(getIsPlaying)) {
+      actions.push(new SetIsPlaying(false));
+    }
+    if (actions.length) {
+      this.store.dispatch(new MultiAction(...actions));
+    }
   }
 
-  setAnimationTime(currentTime: number) {
-    const vl = this.animationRenderer.setAnimationTime(currentTime);
-    this.animatorSubject.next({ vl, currentTime });
-  }
-
+  // TODO: remove this method? don't think it is needed anymore?
   reset() {
     this.rewind();
-    this.animator = new Animator(this.animatorCallback);
-  }
-
-  setIsPlaying(isPlaying: boolean) {
-    if (isPlaying !== this.queryStore(getIsPlaying)) {
-      this.store.dispatch(new SetIsPlaying(isPlaying));
-    }
   }
 
   toggleIsSlowMotion() {
     this.store.dispatch(new SetIsSlowMotion(!this.queryStore(getIsSlowMotion)));
   }
 
-  toggleIsPlaying() {
-    this.store.dispatch(new SetIsPlaying(!this.queryStore(getIsPlaying)));
-  }
-
   toggleIsRepeating() {
     this.store.dispatch(new SetIsRepeating(!this.queryStore(getIsRepeating)));
+  }
+
+  toggleIsPlaying() {
+    this.setIsPlaying(!this.queryStore(getIsPlaying));
+  }
+
+  private setIsPlaying(isPlaying: boolean) {
+    if (isPlaying !== this.queryStore(getIsPlaying)) {
+      this.store.dispatch(new SetIsPlaying(isPlaying));
+    }
   }
 
   private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
@@ -133,41 +141,70 @@ const REPEAT_DELAY = 750;
 const DEFAULT_PLAYBACK_SPEED = 1;
 const SLOW_MOTION_PLAYBACK_SPEED = 5;
 
-/**
- * A simple class that simulates an animation loop.
- */
+/** A simple class that simulates an animation loop. */
 class Animator {
   private timeoutId: number;
   private animationFrameId: number;
   private playbackSpeed = DEFAULT_PLAYBACK_SPEED;
   private isRepeating = false;
 
-  // TODO: add the ability to pause/resume animations
-  constructor(private readonly callback: Callback) {}
+  constructor(private readonly ngZone: NgZone, private readonly callback: Callback) {}
 
   setIsRepeating(isRepeating: boolean) {
     this.isRepeating = isRepeating;
   }
 
   setIsSlowMotion(isSlowMotion: boolean) {
+    // TODO: make it possible to change this mid-animation?
     this.playbackSpeed = isSlowMotion ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
   }
 
-  play(duration: number, onUpdateFn: (fraction: number) => void) {
-    this.startAnimation(duration, onUpdateFn);
-    this.callback.setIsPlaying(true);
+  play(duration: number, startTime: number) {
+    this.runOutsideAngular(() => this.startAnimation(duration, startTime));
+    this.runInsideAngular(() => this.callback.onAnimationStart());
   }
 
-  pause() {
+  private startAnimation(duration: number, startTime: number) {
+    let startTimestamp: number;
+    const playbackSpeed = this.playbackSpeed;
+    const onAnimationFrameFn = (timestamp: number) => {
+      if (!startTimestamp) {
+        startTimestamp = timestamp;
+      }
+      const progress = timestamp - startTimestamp + startTime;
+      if (progress < duration * playbackSpeed) {
+        this.animationFrameId = window.requestAnimationFrame(onAnimationFrameFn);
+      } else if (this.isRepeating) {
+        this.timeoutId = window.setTimeout(
+          () => this.startAnimation(duration, startTime),
+          REPEAT_DELAY,
+        );
+      } else {
+        this.pause(true);
+      }
+      const fraction = _.clamp(progress / (duration * playbackSpeed), 0, 1);
+      const executeFn = () => this.callback.onAnimationUpdate(fraction * duration);
+      if (fraction === 0 || fraction === 1) {
+        this.runInsideAngular(executeFn);
+      } else {
+        executeFn();
+      }
+    };
+    this.animationFrameId = window.requestAnimationFrame(onAnimationFrameFn);
+  }
+
+  pause(shouldNotify = false) {
     if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
+      window.clearTimeout(this.timeoutId);
       this.timeoutId = undefined;
     }
     if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
+      window.cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = undefined;
     }
-    this.callback.setIsPlaying(false);
+    if (shouldNotify) {
+      this.runInsideAngular(() => this.callback.onAnimationEnd());
+    }
   }
 
   rewind() {
@@ -178,34 +215,25 @@ class Animator {
     this.pause();
   }
 
-  private startAnimation(duration: number, onUpdateFn: (fraction: number) => void) {
-    let startTimestamp: number;
-    const playbackSpeed = this.playbackSpeed;
-    const onAnimationFrameFn = (timestamp: number) => {
-      if (!startTimestamp) {
-        startTimestamp = timestamp;
-      }
-      const progress = timestamp - startTimestamp;
-      if (progress < duration * playbackSpeed) {
-        this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
-      } else if (this.isRepeating) {
-        this.timeoutId = window.setTimeout(
-          () => this.startAnimation(duration, onUpdateFn),
-          REPEAT_DELAY,
-        );
-      } else {
-        this.pause();
-      }
-      const fraction = Math.min(1, progress / (duration * playbackSpeed));
-      onUpdateFn(fraction);
-    };
-    this.callback.runOutsideAngular(() => {
-      this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
-    });
+  private runInsideAngular(fn: () => void) {
+    if (NgZone.isInAngularZone()) {
+      fn();
+    } else {
+      this.ngZone.run(fn);
+    }
+  }
+
+  private runOutsideAngular(fn: () => void) {
+    if (NgZone.isInAngularZone()) {
+      this.ngZone.runOutsideAngular(fn);
+    } else {
+      fn();
+    }
   }
 }
 
 interface Callback {
-  readonly setIsPlaying: (isPlaying: boolean) => void;
-  readonly runOutsideAngular: (fn: () => void) => void;
+  onAnimationStart(): void;
+  onAnimationUpdate(currentTime: number): void;
+  onAnimationEnd(): void;
 }
