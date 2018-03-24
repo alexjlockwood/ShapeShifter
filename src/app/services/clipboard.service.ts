@@ -5,8 +5,8 @@ import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 
-import { AnimatorService } from './animator.service';
 import { LayerTimelineService } from './layertimeline.service';
+import { PlaybackService } from './playback.service';
 
 const IS_DEV_BUILD = !environment.production;
 
@@ -16,7 +16,7 @@ declare const ga: Function;
 export class ClipboardService {
   constructor(
     private readonly layerTimelineService: LayerTimelineService,
-    private readonly animatorService: AnimatorService,
+    private readonly playbackService: PlaybackService,
   ) {}
 
   init() {
@@ -98,7 +98,7 @@ export class ClipboardService {
                 propertyName,
                 fromValue,
                 toValue,
-                currentTime: this.animatorService.getCurrentTime(),
+                currentTime: this.playbackService.getCurrentTime(),
                 duration,
                 interpolator,
               };
@@ -119,13 +119,19 @@ export class ClipboardService {
     const pasteHandler = pasteHandlerFn;
 
     if (IS_DEV_BUILD) {
-      $(window).on('cut', cutHandler).on('copy', copyHandler).on('paste', pasteHandler);
+      $(window)
+        .on('cut', cutHandler)
+        .on('copy', copyHandler)
+        .on('paste', pasteHandler);
     }
   }
 
   destroy() {
     if (IS_DEV_BUILD) {
-      $(window).unbind('cut').unbind('copy').unbind('paste');
+      $(window)
+        .unbind('cut')
+        .unbind('copy')
+        .unbind('paste');
     }
   }
 }

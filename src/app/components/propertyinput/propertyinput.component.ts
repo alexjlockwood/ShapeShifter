@@ -13,8 +13,8 @@ import { Animation, PathAnimationBlock } from 'app/model/timeline';
 import { ColorUtil, ModelUtil } from 'app/scripts/common';
 import {
   ActionModeService,
-  AnimatorService,
   LayerTimelineService,
+  PlaybackService,
   ShortcutService,
   ThemeService,
 } from 'app/services';
@@ -51,7 +51,7 @@ export class PropertyInputComponent implements OnInit {
   constructor(
     private readonly store: Store<State>,
     private readonly actionModeService: ActionModeService,
-    private readonly animatorService: AnimatorService,
+    private readonly playbackService: PlaybackService,
     private readonly layerTimelineService: LayerTimelineService,
     readonly themeService: ThemeService,
   ) {}
@@ -125,7 +125,7 @@ export class PropertyInputComponent implements OnInit {
     const clonedValue = layer.inspectableProperties
       .get(propertyName)
       .cloneValue(layer[propertyName]);
-    const currentTime = this.animatorService.getCurrentTime();
+    const currentTime = this.playbackService.getCurrentTime();
     this.layerTimelineService.addBlocks([
       {
         layerId: layer.id,

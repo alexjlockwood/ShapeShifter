@@ -5,7 +5,6 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { ActionSource } from 'app/model/actionmode';
 import {
   ActionModeService,
-  AnimatorService,
   LayerTimelineService,
   PlaybackService,
   ShortcutService,
@@ -39,7 +38,6 @@ describe('CanvasComponent', () => {
         providers: [
           { provide: Store, useValue: new MockStore() },
           ActionModeService,
-          AnimatorService,
           LayerTimelineService,
           PlaybackService,
           ShortcutService,

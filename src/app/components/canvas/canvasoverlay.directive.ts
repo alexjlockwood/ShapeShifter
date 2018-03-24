@@ -21,8 +21,8 @@ import { MathUtil, Matrix, Point } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
-  AnimatorService,
   LayerTimelineService,
+  PlaybackService,
   ShortcutService,
 } from 'app/services';
 import { State, Store } from 'app/store';
@@ -115,7 +115,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     elementRef: ElementRef,
     readonly store: Store<State>,
     readonly actionModeService: ActionModeService,
-    private readonly animatorService: AnimatorService,
+    private readonly playbackService: PlaybackService,
     private readonly layerTimelineService: LayerTimelineService,
   ) {
     super();
@@ -128,17 +128,15 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       this.registerSubscription(
         combineLatest(
           merge(
-            this.animatorService.asObservable().pipe(map(event => event.vl)),
+            this.playbackService.asObservable().pipe(map(event => event.vl)),
             this.store.select(getVectorLayer),
           ),
           this.store.select(getCanvasOverlayState),
         ).subscribe(
-          (
-            [
-              vectorLayer,
-              { hiddenLayerIds, selectedLayerIds, isActionMode, selectedBlockLayerIds },
-            ],
-          ) => {
+          ([
+            vectorLayer,
+            { hiddenLayerIds, selectedLayerIds, isActionMode, selectedBlockLayerIds },
+          ]) => {
             this.vectorLayer = vectorLayer;
             this.hiddenLayerIds = hiddenLayerIds;
             this.selectedLayerIds = selectedLayerIds;

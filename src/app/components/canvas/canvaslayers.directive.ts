@@ -4,7 +4,7 @@ import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/mod
 import { PathUtil } from 'app/model/paths';
 import { ColorUtil, Matrix } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
-import { AnimatorService } from 'app/services';
+import { PlaybackService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getActionModeEndState, getActionModeStartState } from 'app/store/actionmode/selectors';
 import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
@@ -33,7 +33,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
 
   constructor(
     elementRef: ElementRef,
-    private readonly animatorService: AnimatorService,
+    private readonly playbackService: PlaybackService,
     private readonly store: Store<State>,
   ) {
     super();
@@ -47,7 +47,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
       this.registerSubscription(
         combineLatest(
           merge(
-            this.animatorService.asObservable().pipe(map(event => event.vl)),
+            this.playbackService.asObservable().pipe(map(event => event.vl)),
             this.store.select(getVectorLayer),
           ),
           this.store.select(getHiddenLayerIds),

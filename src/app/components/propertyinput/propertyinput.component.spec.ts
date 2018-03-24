@@ -13,7 +13,6 @@ import {
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import {
   ActionModeService,
-  AnimatorService,
   LayerTimelineService,
   PlaybackService,
   ThemeService,
@@ -43,7 +42,6 @@ describe('PropertyInputComponent', () => {
         providers: [
           { provide: Store, useValue: new MockStore() },
           ActionModeService,
-          AnimatorService,
           LayerTimelineService,
           PlaybackService,
           ThemeService,

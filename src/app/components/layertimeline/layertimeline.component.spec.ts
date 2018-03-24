@@ -1,3 +1,4 @@
+// TODO: can this be removed?
 import 'core-js/es7/reflect';
 
 import { HttpClientModule } from '@angular/common/http';
@@ -17,7 +18,6 @@ import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.dir
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import {
   ActionModeService,
-  AnimatorService,
   DemoService,
   DialogService,
   FileExportService,
@@ -64,7 +64,6 @@ describe('LayerTimelineComponent', () => {
         providers: [
           { provide: Store, useValue: new MockStore() },
           ActionModeService,
-          AnimatorService,
           DemoService,
           DialogService,
           FileExportService,

@@ -1,5 +1,4 @@
 export { ActionModeService } from './actionmode.service';
-export { AnimatorService } from './animator.service';
 export { ClipboardService } from './clipboard.service';
 export { DemoService } from './demo.service';
 export { DialogService } from './dialog.service';

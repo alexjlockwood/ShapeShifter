@@ -49,7 +49,6 @@ import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import { ToolbarComponent } from 'app/components/toolbar/toolbar.component';
 import {
   ActionModeService,
-  AnimatorService,
   ClipboardService,
   DemoService,
   DialogService,
@@ -115,7 +114,6 @@ describe('RootComponent', () => {
         providers: [
           { provide: Store, useValue: new MockStore() },
           ActionModeService,
-          AnimatorService,
           ClipboardService,
           DemoService,
           DialogService,

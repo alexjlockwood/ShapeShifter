@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { AnimatorService, PlaybackService } from 'app/services';
+import { PlaybackService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getPlaybackState } from 'app/store/playback/selectors';
 import { Observable } from 'rxjs/Observable';
@@ -16,7 +16,6 @@ export class PlaybackComponent implements OnInit {
   constructor(
     private readonly store: Store<State>,
     private readonly playbackService: PlaybackService,
-    private readonly animatorService: AnimatorService,
   ) {}
 
   ngOnInit() {
@@ -30,7 +29,7 @@ export class PlaybackComponent implements OnInit {
 
   rewindClick(event: MouseEvent) {
     event.stopPropagation();
-    this.animatorService.rewind();
+    this.playbackService.rewind();
   }
 
   playPauseButtonClick(event: MouseEvent) {
@@ -40,7 +39,7 @@ export class PlaybackComponent implements OnInit {
 
   fastForwardClick(event: MouseEvent) {
     event.stopPropagation();
-    this.animatorService.fastForward();
+    this.playbackService.fastForward();
   }
 
   isRepeatingClick(event: MouseEvent) {

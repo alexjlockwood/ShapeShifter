@@ -24,12 +24,12 @@ import { IntervalTree } from 'app/scripts/intervals';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
-  AnimatorService,
   DemoService,
   DialogService,
   FileExportService,
   FileImportService,
   LayerTimelineService,
+  PlaybackService,
   ThemeService,
 } from 'app/services';
 import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
@@ -46,10 +46,10 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { filter, first, map } from 'rxjs/operators';
 
+import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { LayerTimelineGridDirective, ScrubEvent } from './layertimelinegrid.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
-import * as TimelineConsts from './constants';
 
 const IS_DEV_BUILD = !environment.production;
 
@@ -120,7 +120,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     private readonly fileImportService: FileImportService,
     private readonly fileExportService: FileExportService,
     private readonly snackBarService: SnackBarService,
-    private readonly animatorService: AnimatorService,
+    private readonly playbackService: PlaybackService,
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
     private readonly demoService: DemoService,
@@ -156,7 +156,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
           if (currActionMode === ActionMode.None && actionMode === ActionMode.Selection) {
             // Move the current time to the beginning of the selected block when
             // entering action mode.
-            this.animatorService.setAnimationTime(singleSelectedPathBlock.startTime);
+            this.playbackService.setAnimationTime(singleSelectedPathBlock.startTime);
           }
           currActionMode = actionMode;
           return {
@@ -180,7 +180,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   ngAfterViewInit() {
     this.$timeline = $(this.timelineRef.nativeElement);
     this.registerSubscription(
-      this.animatorService.asObservable().subscribe(event => {
+      this.playbackService.asObservable().subscribe(event => {
         this.currentTime = event.currentTime;
       }),
     );
@@ -209,9 +209,9 @@ export class LayerTimelineComponent extends DestroyableMixin()
     const resetWorkspaceFn = () => {
       ga('send', 'event', 'File', 'New');
       // TODO: figure out if this hack is necessary and/or can be avoided?
-      this.animatorService.reset();
+      this.playbackService.reset();
       this.store.dispatch(new ResetWorkspace());
-      this.animatorService.reset();
+      this.playbackService.reset();
     };
     this.store
       .select(isWorkspaceDirty)
@@ -247,9 +247,9 @@ export class LayerTimelineComponent extends DestroyableMixin()
           .getDemo(selectedDemoInfo.id)
           .then(({ vectorLayer, animation, hiddenLayerIds }) => {
             // TODO: figure out if this hack is necessary and/or can be avoided?
-            this.animatorService.reset();
+            this.playbackService.reset();
             this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
-            this.animatorService.reset();
+            this.playbackService.reset();
           })
           .catch(error => {
             const msg =
@@ -310,7 +310,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
       time = this.snapTime(time, false);
     }
     this.currentTime = time;
-    this.animatorService.setAnimationTime(time);
+    this.playbackService.setAnimationTime(time);
   }
 
   // Called from the LayerTimelineComponent template.
@@ -750,7 +750,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // @Override TimelineAnimationRowCallbacks
   onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
-    this.animatorService.setAnimationTime(block.startTime);
+    this.playbackService.setAnimationTime(block.startTime);
   }
 
   // @Override LayerListTreeComponentCallbacks

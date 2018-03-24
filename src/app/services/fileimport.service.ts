@@ -3,14 +3,15 @@ import { LayerUtil, VectorLayer } from 'app/model/layers';
 import { Animation } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
-import { AnimatorService } from 'app/services/animator.service';
-import { FileExportService } from 'app/services/fileexport.service';
-import { LayerTimelineService } from 'app/services/layertimeline.service';
-import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import { first } from 'rxjs/operators';
+
+import { FileExportService } from './fileexport.service';
+import { LayerTimelineService } from './layertimeline.service';
+import { PlaybackService } from './playback.service';
+import { Duration, SnackBarService } from './snackbar.service';
 
 declare const ga: Function;
 
@@ -28,7 +29,7 @@ export class FileImportService {
   constructor(
     private readonly store: Store<State>,
     private readonly snackBarService: SnackBarService,
-    private readonly animatorService: AnimatorService,
+    private readonly playbackService: PlaybackService,
     private readonly layerTimelineService: LayerTimelineService,
   ) {}
 
@@ -157,9 +158,9 @@ export class FileImportService {
     if (importType === ImportType.Json) {
       ga('send', 'event', 'Import', 'JSON');
       // TODO: avoid these hacks
-      this.animatorService.reset();
+      this.playbackService.reset();
       this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds));
-      this.animatorService.reset();
+      this.playbackService.reset();
     } else {
       if (importType === ImportType.Svg) {
         ga('send', 'event', 'Import', 'SVG');
@@ -168,9 +169,9 @@ export class FileImportService {
       }
       if (resetWorkspace) {
         // TODO: avoid these hacks
-        this.animatorService.reset();
+        this.playbackService.reset();
         this.store.dispatch(new ResetWorkspace());
-        this.animatorService.reset();
+        this.playbackService.reset();
       }
       this.layerTimelineService.importLayers(vls);
       // TODO: count number of individual layers?
