@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ToolMode } from 'app/model/paper';
 import { PaperService } from 'app/services';
-import { getToolMode } from 'app/store/paper/selectors';
 import { Observable } from 'rxjs/Observable';
 
 @Component({

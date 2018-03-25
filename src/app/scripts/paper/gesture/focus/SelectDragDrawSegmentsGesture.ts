@@ -1,4 +1,3 @@
-import { ToolMode } from 'app/model/paper';
 import { MathUtil } from 'app/scripts/common';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';

@@ -22,8 +22,8 @@ import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { StoreModule } from 'app/store/ngrx';
+import { environment } from 'environments/environment';
 
-import { environment } from '../environments/environment';
 import {
   CanvasComponent,
   CanvasContainerDirective,

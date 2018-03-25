@@ -1,4 +1,3 @@
-import { ToolMode } from 'app/model/paper';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { HitTests } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PivotType } from 'app/scripts/paper/util';
@@ -14,12 +13,12 @@ const RESIZE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([
 ] as [PivotType, Cursor][]);
 
 // prettier-ignore
-const ROTATE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([
-  ['bottomLeft', Cursor.Rotate225], ['leftCenter', Cursor.Rotate270],
-  ['topLeft', Cursor.Rotate315], ['topCenter', Cursor.Rotate0],
-  ['topRight', Cursor.Rotate45], ['rightCenter', Cursor.Rotate90],
-  ['bottomRight', Cursor.Rotate135], ['bottomCenter', Cursor.Rotate180],
-] as [PivotType, Cursor][]);
+// const ROTATE_CURSOR_MAP: ReadonlyMap<PivotType, Cursor> = new Map([
+//   ['bottomLeft', Cursor.Rotate225], ['leftCenter', Cursor.Rotate270],
+//   ['topLeft', Cursor.Rotate315], ['topCenter', Cursor.Rotate0],
+//   ['topRight', Cursor.Rotate45], ['rightCenter', Cursor.Rotate90],
+//   ['bottomRight', Cursor.Rotate135], ['bottomCenter', Cursor.Rotate180],
+// ] as [PivotType, Cursor][]);
 
 /**
  * A gesture that performs hover operations on items.
@@ -40,7 +39,7 @@ export class HoverItemsGesture extends Gesture {
     if (selectedLayers.size > 0) {
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
-        const toolMode = this.ps.getToolMode();
+        // const toolMode = this.ps.getToolMode();
         const cursorMap = /*toolMode === ToolMode.Rotate ? ROTATE_CURSOR_MAP : */ RESIZE_CURSOR_MAP;
         CursorUtil.set(cursorMap.get(selectionBoundSegmentsHitResult.item.pivotType));
         this.ps.setHoveredLayerId(undefined);

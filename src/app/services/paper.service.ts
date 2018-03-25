@@ -197,7 +197,7 @@ export class PaperService {
   }
 
   getTransformPathInfo() {
-    return this.queryStore(getFocusedPathInfo);
+    return this.queryStore(getTransformPathInfo);
   }
 
   /** Sets the current canvas cursor. */

@@ -1,9 +1,7 @@
+import { ToolMode } from 'app/model/paper';
 import { getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import { createDeepEqualSelector, getAppState } from 'app/store/selectors';
 import { createSelector, createStructuredSelector } from 'reselect';
-
-import { ClipPathLayer, PathLayer } from '../../model/layers';
-import { ToolMode } from '../../model/paper';
 
 const getPaperState = createSelector(getAppState, s => s.paper);
 export const getZoomPanInfo = createDeepEqualSelector(getPaperState, p => p.zoomPanInfo);
@@ -30,6 +28,7 @@ const getSingleSelectedChildlessLayer = createSelector(
     }
     const layerId = layerIds.values().next().value;
     const layer = vl.findLayerById(layerId);
+    // TODO: consolidate this logic in a single place (the layer.children.length check is used in gestures too)
     return layer.children.length ? undefined : layer;
   },
 );
