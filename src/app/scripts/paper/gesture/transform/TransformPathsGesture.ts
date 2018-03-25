@@ -1,12 +1,12 @@
-import { MathUtil } from 'app/scripts/common';
+// import { MathUtil } from 'app/scripts/common';
 import { Gesture } from 'app/scripts/paper/gesture';
-import { PaperLayer, SelectionBoundsRaster } from 'app/scripts/paper/item';
-import { PaperService } from 'app/services';
-import * as _ from 'lodash';
+// import { PaperLayer, SelectionBoundsRaster } from 'app/scripts/paper/item';
+// import { PaperService } from 'app/services';
+// import * as _ from 'lodash';
 import * as paper from 'paper';
-import * as perspectiveTransform from 'perspective-transform';
+// import * as perspectiveTransform from 'perspective-transform';
 
-type Quadrilateral = [paper.Point, paper.Point, paper.Point, paper.Point];
+// type Quadrilateral = [paper.Point, paper.Point, paper.Point, paper.Point];
 
 /**
  * A gesture that performs transform operations.
@@ -18,13 +18,12 @@ type Quadrilateral = [paper.Point, paper.Point, paper.Point, paper.Point];
  * - One or more paths are selected.
  */
 export class TransformPathsGesture extends Gesture {
-  private readonly pl = paper.project.activeLayer as PaperLayer;
-  private selectedPaths: ReadonlyArray<paper.Path>;
+  // private readonly pl = paper.project.activeLayer as PaperLayer;
+  // private selectedPaths: ReadonlyArray<paper.Path>;
 
-  constructor(
-    private readonly ps: PaperService,
-    private readonly selectionBoundsRaster: SelectionBoundsRaster,
-  ) {
+  // private readonly ps: PaperService,
+  // private readonly selectionBoundsRaster: SelectionBoundsRaster,
+  constructor() {
     super();
   }
 
@@ -112,9 +111,9 @@ export class TransformPathsGesture extends Gesture {
 }
 
 /** Distorts a source point to a new destination coordinate space. */
-function distortPoint(srcPoint: paper.Point, src: Quadrilateral, dst: Quadrilateral) {
-  const srcCorners = _.flatMap(src, p => [p.x, p.y]);
-  const dstCorners = _.flatMap(dst, p => [p.x, p.y]);
-  const [x, y] = perspectiveTransform(srcCorners, dstCorners).transform(srcPoint.x, srcPoint.y);
-  return { x, y };
-}
+// function distortPoint(srcPoint: paper.Point, src: Quadrilateral, dst: Quadrilateral) {
+//   const srcCorners = _.flatMap(src, p => [p.x, p.y]);
+//   const dstCorners = _.flatMap(dst, p => [p.x, p.y]);
+//   const [x, y] = perspectiveTransform(srcCorners, dstCorners).transform(srcPoint.x, srcPoint.y);
+//   return { x, y };
+// }
