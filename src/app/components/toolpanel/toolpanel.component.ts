@@ -25,6 +25,7 @@ export class ToolPanelComponent implements OnInit {
 
   onSelectionClick() {
     this.ps.setToolMode(ToolMode.Selection);
+    this.ps.setFocusedPathInfo(undefined);
     event.stopPropagation();
   }
 
