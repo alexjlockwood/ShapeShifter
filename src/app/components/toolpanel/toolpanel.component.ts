@@ -29,10 +29,12 @@ export class ToolPanelComponent implements OnInit {
   }
 
   onRotateItemsClick() {
+    this.ps.enterRotateItemsMode();
     event.stopPropagation();
   }
 
-  onTransformPathClick() {
+  onTransformPathsClick() {
+    this.ps.enterTransformPathsMode();
     event.stopPropagation();
   }
 
@@ -42,7 +44,7 @@ export class ToolPanelComponent implements OnInit {
   }
 
   onFocusPathClick() {
-    this.ps.enterFocusedPathMode('');
+    this.ps.enterFocusedPathMode();
     event.stopPropagation();
   }
 
@@ -68,6 +70,6 @@ interface ToolPanelModel {
   readonly isFocusPathChecked: boolean;
   readonly isRotateItemsEnabled: boolean;
   readonly isRotateItemsChecked: boolean;
-  readonly isTransformPathEnabled: boolean;
-  readonly isTransformPathChecked: boolean;
+  readonly isTransformPathsEnabled: boolean;
+  readonly isTransformPathsChecked: boolean;
 }

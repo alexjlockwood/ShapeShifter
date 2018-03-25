@@ -15,9 +15,13 @@ import {
   DeselectItemGesture,
   FocusPathGesture,
   HoverItemsGesture,
-  ScaleItemsGesture,
   SelectDragCloneItemsGesture,
 } from 'app/scripts/paper/gesture/select';
+import {
+  RotateItemsGesture,
+  ScaleItemsGesture,
+  TransformPathsGesture,
+} from 'app/scripts/paper/gesture/transform';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -74,8 +78,6 @@ export class GestureTool extends Tool {
       this.currentGesture = new RectangleGesture(this.ps);
     } else if (toolMode === ToolMode.Pencil) {
       this.currentGesture = new PencilGesture(this.ps);
-    } else if (this.ps.getFocusedPathInfo()) {
-      this.currentGesture = this.createFocusedPathModeGesture(event);
     } else {
       this.currentGesture = this.createSelectionModeGesture(event);
     }
@@ -88,6 +90,9 @@ export class GestureTool extends Tool {
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
+    if (this.ps.getFocusedPathInfo()) {
+      return this.createFocusedPathModeGesture(event);
+    }
     const selectedLayerIds = this.ps.getSelectedLayerIds();
     if (selectedLayerIds.size) {
       // First perform a hit test on the selection bound's segments.
@@ -95,7 +100,12 @@ export class GestureTool extends Tool {
       if (selectionBoundSegmentsHitResult) {
         // If the hit item is a selection bound segment, then perform
         // a scale/rotate/transform gesture.
-        // TODO: also add support for rotate/transform
+        if (this.ps.getRotateItemsInfo()) {
+          return new RotateItemsGesture(this.ps);
+        }
+        if (this.ps.getTransformPathsInfo()) {
+          return new TransformPathsGesture(this.ps, selectionBoundSegmentsHitResult.item);
+        }
         return new ScaleItemsGesture(this.ps, selectionBoundSegmentsHitResult.item);
       }
     }
@@ -156,7 +166,6 @@ export class GestureTool extends Tool {
 
   private createFocusedPathModeGesture(event: paper.ToolEvent) {
     let fpi = this.ps.getFocusedPathInfo();
-    console.log(fpi, !fpi.layerId);
     if (!fpi.layerId) {
       // Then the user has created the first segment of a new path, in which
       // case we must create a new dummy path and bring it into focus.
@@ -170,11 +179,9 @@ export class GestureTool extends Tool {
         selectedHandleIn: undefined,
         selectedHandleOut: undefined,
       };
-      console.log(fpi, layerId, !fpi.layerId);
       this.ps.setSelectedLayerIds(new Set([layerId]));
       this.ps.setFocusedPathInfo(fpi);
     }
-    console.log(fpi);
 
     const focusedPathId = fpi.layerId;
     const focusedPath = this.pl.findItemByLayerId(focusedPathId) as paper.Path;

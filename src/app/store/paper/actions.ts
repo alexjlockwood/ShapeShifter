@@ -46,9 +46,9 @@ export class SetRotateItemsInfo implements Action {
   constructor(readonly rotateItemsInfo: RotateItemsInfo | undefined) {}
 }
 
-export class SetTransformPathInfo implements Action {
+export class SetTransformPathsInfo implements Action {
   readonly type = PaperActionTypes.SetTransformPathInfo;
-  constructor(readonly transformPathInfo: TransformPathInfo | undefined) {}
+  constructor(readonly transformPathInfo: TransformPathsInfo | undefined) {}
 }
 
 export class SetCanvasCursor implements Action {
@@ -78,7 +78,7 @@ export type PaperActions =
   | SetSplitCurveInfo
   | SetFocusedPathInfo
   | SetRotateItemsInfo
-  | SetTransformPathInfo
+  | SetTransformPathsInfo
   | SetCanvasCursor
   | SetSnapGuideInfo
   | SetZoomPanInfo
@@ -113,12 +113,12 @@ export interface FocusedPathInfo {
 }
 
 export interface RotateItemsInfo {
-  readonly layerIds: Set<string>;
-  readonly pivot: Point;
+  readonly layerIds: ReadonlySet<string>;
+  // readonly pivot: Point;
 }
 
-export interface TransformPathInfo {
-  readonly layerId: string;
+export interface TransformPathsInfo {
+  readonly layerIds: ReadonlySet<string>;
 }
 
 export type Line = Readonly<{ from: Point; to: Point }>;

@@ -12,9 +12,9 @@ export const getCreatePathInfo = createDeepEqualSelector(getToolModeInfo, p => p
 export const getSplitCurveInfo = createDeepEqualSelector(getToolModeInfo, p => p.splitCurveInfo);
 export const getFocusedPathInfo = createDeepEqualSelector(getToolModeInfo, p => p.focusedPathInfo);
 export const getRotateItemsInfo = createDeepEqualSelector(getToolModeInfo, p => p.rotateItemsInfo);
-export const getTransformPathInfo = createDeepEqualSelector(
+export const getTransformPathsInfo = createDeepEqualSelector(
   getToolModeInfo,
-  p => p.transformPathInfo,
+  p => p.transformPathsInfo,
 );
 export const getSnapGuideInfo = createDeepEqualSelector(getToolModeInfo, p => p.snapGuideInfo);
 export const getTooltipInfo = createDeepEqualSelector(getToolModeInfo, p => p.tooltipInfo);
@@ -37,10 +37,10 @@ const isFocusPathChecked = createSelector(getFocusedPathInfo, fpi => !!fpi);
 // TODO: exclude empty groups for rotate items?
 const isRotateItemsEnabled = createSelector(getSelectedLayerIds, layerIds => layerIds.size > 0);
 const isRotateItemsChecked = createSelector(getRotateItemsInfo, rii => !!rii);
-const isTransformPathEnabled = createSelector(getSingleSelectedChildlessLayer, layer => !!layer);
-const isTransformPathChecked = createSelector(getTransformPathInfo, tpi => !!tpi);
+const isTransformPathsEnabled = createSelector(getSingleSelectedChildlessLayer, layer => !!layer);
+const isTransformPathsChecked = createSelector(getTransformPathsInfo, tpi => !!tpi);
 const isSelectionChecked = createSelector(
-  [getToolMode, isFocusPathChecked, isRotateItemsChecked, isTransformPathChecked],
+  [getToolMode, isFocusPathChecked, isRotateItemsChecked, isTransformPathsChecked],
   (toolMode, focusPathChecked, rotateItemsChecked, transformPathChecked) => {
     return (
       toolMode === ToolMode.Selection &&
@@ -57,6 +57,6 @@ export const getToolPanelState = createStructuredSelector({
   isFocusPathChecked,
   isRotateItemsEnabled,
   isRotateItemsChecked,
-  isTransformPathEnabled,
-  isTransformPathChecked,
+  isTransformPathsEnabled,
+  isTransformPathsChecked,
 });

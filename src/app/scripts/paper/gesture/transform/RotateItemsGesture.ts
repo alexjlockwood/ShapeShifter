@@ -9,8 +9,14 @@ import * as paper from 'paper';
 /**
  * A gesture that performs rotation operations.
  *
+ * Preconditions:
+ * - The user is in selection mode.
+ * - One or more layers are selected.
+ *
  * TODO: make it possible to move the pivot with the mouse
  * TODO: avoid jank at beginning of rotation (when angle is near 0)
+ * TODO: don't allow user to rotate empty groups?
+ * TODO: rotating groups not implemented yet
  */
 export class RotateItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -66,14 +72,11 @@ export class RotateItemsGesture extends Gesture {
     }
   }
 
+  // TODO: this doesn't work yet for paths that are contained in scaled groups
   private processEvent(event: paper.Event) {
     if (!this.vpPoint) {
       return;
     }
-
-    // TODO: set strokeScaling to false?
-    // TODO: this doesn't work yet for paths that are contained in scaled groups
-
     const rotationAngle = this.getRotationAngle(event);
     let newVl = this.initialVectorLayer.clone();
     this.selectedItems.forEach((item, index) => {

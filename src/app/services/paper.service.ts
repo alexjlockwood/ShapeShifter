@@ -23,10 +23,12 @@ import {
   SetSplitCurveInfo,
   SetToolMode,
   SetTooltipInfo,
+  SetTransformPathsInfo,
   SetZoomPanInfo,
   SnapGuideInfo,
   SplitCurveInfo,
   TooltipInfo,
+  TransformPathsInfo,
   ZoomPanInfo,
 } from 'app/store/paper/actions';
 import {
@@ -40,7 +42,7 @@ import {
   getToolMode,
   getToolPanelState,
   getTooltipInfo,
-  getTransformPathInfo,
+  getTransformPathsInfo,
   getZoomPanInfo,
 } from 'app/store/paper/selectors';
 import { getAnimatedVectorLayer } from 'app/store/playback/selectors';
@@ -65,7 +67,7 @@ export class PaperService {
     return this.store.select(getToolPanelState);
   }
 
-  enterFocusedPathMode(layerId: string) {
+  enterFocusedPathMode(layerId = '') {
     this.setToolMode(ToolMode.Selection);
     this.setFocusedPathInfo({
       layerId: '',
@@ -77,12 +79,18 @@ export class PaperService {
     });
   }
 
-  enterRotateItemsMode(layerIds: Set<string>) {
+  enterRotateItemsMode() {
     this.setToolMode(ToolMode.Selection);
+    this.setRotateItemsInfo({
+      layerIds: this.getSelectedLayerIds(),
+    });
   }
 
-  enterTransformPathMode(layerId: string) {
+  enterTransformPathsMode() {
     this.setToolMode(ToolMode.Selection);
+    this.setTransformPathsInfo({
+      layerIds: this.getSelectedLayerIds(),
+    });
   }
 
   /** Sets the current vector layer. */
@@ -190,14 +198,14 @@ export class PaperService {
     return this.queryStore(getRotateItemsInfo);
   }
 
-  setTransformPathInfo(info: FocusedPathInfo | undefined) {
-    if (!_.isEqual(this.queryStore(getFocusedPathInfo), info)) {
-      this.dispatchStore(new SetFocusedPathInfo(info));
+  setTransformPathsInfo(info: TransformPathsInfo | undefined) {
+    if (!_.isEqual(this.queryStore(getTransformPathsInfo), info)) {
+      this.dispatchStore(new SetTransformPathsInfo(info));
     }
   }
 
-  getTransformPathInfo() {
-    return this.queryStore(getTransformPathInfo);
+  getTransformPathsInfo() {
+    return this.queryStore(getTransformPathsInfo);
   }
 
   /** Sets the current canvas cursor. */

@@ -10,7 +10,7 @@ import {
   SnapGuideInfo,
   SplitCurveInfo,
   TooltipInfo,
-  TransformPathInfo,
+  TransformPathsInfo,
   ZoomPanInfo,
 } from './actions';
 
@@ -26,7 +26,7 @@ interface ToolModeInfo {
   readonly splitCurveInfo?: SplitCurveInfo;
   readonly focusedPathInfo?: FocusedPathInfo;
   readonly rotateItemsInfo?: RotateItemsInfo;
-  readonly transformPathInfo?: TransformPathInfo;
+  readonly transformPathsInfo?: TransformPathsInfo;
   readonly snapGuideInfo?: SnapGuideInfo;
   readonly tooltipInfo?: TooltipInfo;
   readonly canvasCursor?: CanvasCursor;
@@ -66,7 +66,7 @@ export function reducer(state = buildInitialState(), action: PaperActions): Stat
     case PaperActionTypes.SetTransformPathInfo:
       return {
         ...state,
-        toolModeInfo: { ...toolModeInfo, transformPathInfo: action.transformPathInfo },
+        toolModeInfo: { ...toolModeInfo, transformPathsInfo: action.transformPathInfo },
       };
     case PaperActionTypes.SetSnapGuideInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, snapGuideInfo: action.snapGuideInfo } };
