@@ -77,6 +77,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
     }
   }
 
+  // TODO: dragging a parent and child simultaneously doesn't work
   private dragItems(
     newVl: VectorLayer,
     projDownPoint: paper.Point,
@@ -105,7 +106,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
     const draggedItems = Array.from(selectedLayerIds).map(id => this.pl.findItemByLayerId(id));
     const { parent } = draggedItems[0];
     if (!draggedItems.every(item => item.parent === parent)) {
-      // TODO: determine if there is an alternative to exiting early here?
+      // TODO: copy the behavior used in Sketch
       console.warn('All snapped items must share the same parent item.');
       return undefined;
     }
@@ -139,6 +140,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
   }
 }
 
+// TODO: should we bake transforms into children (to be consistent with scale items gesture?)
 function dragItem(newVl: VectorLayer, layerId: string, localDelta: paper.Point) {
   const initialLayer = newVl.findLayerById(layerId);
   const { x, y } = localDelta;

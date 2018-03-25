@@ -138,6 +138,7 @@ export class PaperLayer extends paper.Layer {
 
   onFocusedPathInfoChanged() {
     this.updateFocusedPathItem();
+    this.updateSelectionBoundsItem();
   }
 
   setCreatePathInfo(info: CreatePathInfo) {
@@ -219,18 +220,20 @@ export class PaperLayer extends paper.Layer {
       this.selectionBoundsItem.remove();
       this.selectionBoundsItem = undefined;
     }
-    const selectedItems = Array.from(this.selectedLayerIds)
-      .map(id => this.findItemByLayerId(id))
-      // Filter out any selected empty groups.
-      .filter(i => !(i instanceof paper.Group) || i.children.length);
-    if (selectedItems.length > 0) {
-      this.selectionBoundsItem = newSelectionBoundsItem(
-        PaperUtil.transformRectangle(
-          PaperUtil.computeBounds(selectedItems),
-          this.matrix.inverted(),
-        ),
-        this.cssScaling,
-      );
+    if (!this.focusedPathInfo) {
+      const selectedItems = Array.from(this.selectedLayerIds)
+        .map(id => this.findItemByLayerId(id))
+        // Filter out any selected empty groups.
+        .filter(i => !(i instanceof paper.Group) || i.children.length);
+      if (selectedItems.length > 0) {
+        this.selectionBoundsItem = newSelectionBoundsItem(
+          PaperUtil.transformRectangle(
+            PaperUtil.computeBounds(selectedItems),
+            this.matrix.inverted(),
+          ),
+          this.cssScaling,
+        );
+      }
     }
     this.updateChildren();
   }
@@ -262,10 +265,11 @@ export class PaperLayer extends paper.Layer {
       this.focusedPathItem.remove();
       this.focusedPathItem = undefined;
     }
-    if (this.focusedPathInfo) {
+    const fpi = this.focusedPathInfo;
+    if (fpi && fpi.layerId) {
       // TODO: is it possible for pathData to be undefined?
-      const path = this.findItemByLayerId(this.focusedPathInfo.layerId) as paper.Path;
-      this.focusedPathItem = newFocusedPathItem(path, this.focusedPathInfo, this.cssScaling);
+      const path = this.findItemByLayerId(fpi.layerId) as paper.Path;
+      this.focusedPathItem = newFocusedPathItem(path, fpi, this.cssScaling);
       this.updateChildren();
     }
   }

@@ -13,9 +13,11 @@ import { Action } from 'app/store/ngrx';
 import {
   CreatePathInfo,
   FocusedPathInfo,
+  RotateItemsInfo,
   SetCanvasCursor,
   SetCreatePathInfo,
   SetFocusedPathInfo,
+  SetRotateItemsInfo,
   SetSelectionBox,
   SetSnapGuideInfo,
   SetSplitCurveInfo,
@@ -31,11 +33,14 @@ import {
   getCanvasCursor,
   getCreatePathInfo,
   getFocusedPathInfo,
+  getRotateItemsInfo,
   getSelectionBox,
   getSnapGuideInfo,
   getSplitCurveInfo,
   getToolMode,
+  getToolPanelState,
   getTooltipInfo,
+  getTransformPathInfo,
   getZoomPanInfo,
 } from 'app/store/paper/selectors';
 import { getAnimatedVectorLayer } from 'app/store/playback/selectors';
@@ -55,6 +60,30 @@ export class PaperService {
     // TODO: can we get away with only executing in NgZone for certain dispatch store ops?
     private readonly ngZone: NgZone,
   ) {}
+
+  observeToolPanelState() {
+    return this.store.select(getToolPanelState);
+  }
+
+  enterFocusedPathMode(layerId: string) {
+    this.setToolMode(ToolMode.Selection);
+    this.setFocusedPathInfo({
+      layerId: '',
+      selectedSegments: new Set<number>(),
+      visibleHandleIns: new Set<number>(),
+      visibleHandleOuts: new Set<number>(),
+      selectedHandleIn: undefined,
+      selectedHandleOut: undefined,
+    });
+  }
+
+  enterRotateItemsMode(layerIds: Set<string>) {
+    this.setToolMode(ToolMode.Selection);
+  }
+
+  enterTransformPathMode(layerId: string) {
+    this.setToolMode(ToolMode.Selection);
+  }
 
   /** Sets the current vector layer. */
   setVectorLayer(vl: VectorLayer) {
@@ -141,15 +170,33 @@ export class PaperService {
     return this.queryStore(getToolMode);
   }
 
-  /** Sets the current focused path info. */
   setFocusedPathInfo(info: FocusedPathInfo | undefined) {
     if (!_.isEqual(this.queryStore(getFocusedPathInfo), info)) {
       this.dispatchStore(new SetFocusedPathInfo(info));
     }
   }
 
-  /** Gets the current focused path info. */
   getFocusedPathInfo() {
+    return this.queryStore(getFocusedPathInfo);
+  }
+
+  setRotateItemsInfo(info: RotateItemsInfo | undefined) {
+    if (!_.isEqual(this.queryStore(getRotateItemsInfo), info)) {
+      this.dispatchStore(new SetRotateItemsInfo(info));
+    }
+  }
+
+  getRotateItemsInfo() {
+    return this.queryStore(getRotateItemsInfo);
+  }
+
+  setTransformPathInfo(info: FocusedPathInfo | undefined) {
+    if (!_.isEqual(this.queryStore(getFocusedPathInfo), info)) {
+      this.dispatchStore(new SetFocusedPathInfo(info));
+    }
+  }
+
+  getTransformPathInfo() {
     return this.queryStore(getFocusedPathInfo);
   }
 

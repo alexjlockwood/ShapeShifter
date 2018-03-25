@@ -20,9 +20,8 @@ export class FocusPathGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    this.ps.setSelectedLayerIds(new Set());
     const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
-    this.ps.setToolMode(ToolMode.Vector);
+    this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
     this.ps.setFocusedPathInfo({
       layerId: this.focusedPathId,
       ...PaperUtil.selectCurves(this.ps, focusedPath, new Set([focusedPath.segments.length - 1])),

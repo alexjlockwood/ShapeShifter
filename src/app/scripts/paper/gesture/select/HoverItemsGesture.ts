@@ -41,7 +41,7 @@ export class HoverItemsGesture extends Gesture {
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
         const toolMode = this.ps.getToolMode();
-        const cursorMap = toolMode === ToolMode.Rotate ? ROTATE_CURSOR_MAP : RESIZE_CURSOR_MAP;
+        const cursorMap = /*toolMode === ToolMode.Rotate ? ROTATE_CURSOR_MAP : */ RESIZE_CURSOR_MAP;
         CursorUtil.set(cursorMap.get(selectionBoundSegmentsHitResult.item.pivotType));
         this.ps.setHoveredLayerId(undefined);
         return;

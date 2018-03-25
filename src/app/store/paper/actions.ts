@@ -8,6 +8,8 @@ export enum PaperActionTypes {
   SetCreatePathInfo = '__paper__SET_CREATE_PATH_INFO',
   SetSplitCurveInfo = '__paper__SET_SPLIT_CURVE_INFO',
   SetFocusedPathInfo = '__paper__SET_FOCUSED_PATH_INFO',
+  SetRotateItemsInfo = '__paper__SET_ROTATE_ITEMS_INFO',
+  SetTransformPathInfo = '__paper__SET_TRANSFORM_PATH_INFO',
   SetCanvasCursor = '__paper__SET_CANVAS_CURSOR',
   SetSnapGuideInfo = '__paper__SET_SNAP_GUIDE_INFO',
   SetZoomPanInfo = '__paper__SET_ZOOM_PAN_INFO',
@@ -39,6 +41,16 @@ export class SetFocusedPathInfo implements Action {
   constructor(readonly focusedPathInfo: FocusedPathInfo | undefined) {}
 }
 
+export class SetRotateItemsInfo implements Action {
+  readonly type = PaperActionTypes.SetRotateItemsInfo;
+  constructor(readonly rotateItemsInfo: RotateItemsInfo | undefined) {}
+}
+
+export class SetTransformPathInfo implements Action {
+  readonly type = PaperActionTypes.SetTransformPathInfo;
+  constructor(readonly transformPathInfo: TransformPathInfo | undefined) {}
+}
+
 export class SetCanvasCursor implements Action {
   readonly type = PaperActionTypes.SetCanvasCursor;
   constructor(readonly canvasCursor: CanvasCursor | undefined) {}
@@ -65,6 +77,8 @@ export type PaperActions =
   | SetCreatePathInfo
   | SetSplitCurveInfo
   | SetFocusedPathInfo
+  | SetRotateItemsInfo
+  | SetTransformPathInfo
   | SetCanvasCursor
   | SetSnapGuideInfo
   | SetZoomPanInfo
@@ -89,7 +103,6 @@ export interface SplitCurveInfo {
 }
 
 export interface FocusedPathInfo {
-  // TODO: layerId? itemId? id?
   readonly layerId: string;
   // TODO: suffix these variables with 'index'
   readonly selectedSegments: ReadonlySet<number>;
@@ -97,6 +110,15 @@ export interface FocusedPathInfo {
   readonly visibleHandleOuts: ReadonlySet<number>;
   readonly selectedHandleIn: number;
   readonly selectedHandleOut: number;
+}
+
+export interface RotateItemsInfo {
+  readonly layerIds: Set<string>;
+  readonly pivot: Point;
+}
+
+export interface TransformPathInfo {
+  readonly layerId: string;
 }
 
 export type Line = Readonly<{ from: Point; to: Point }>;

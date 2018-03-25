@@ -1,4 +1,4 @@
-import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
+import { LayerUtil, MorphableLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { MathUtil } from 'app/scripts/common';
 import { Gesture } from 'app/scripts/paper/gesture';
@@ -175,10 +175,20 @@ export class ScaleItemsGesture extends Gesture {
       sy *= signy;
     }
 
-    // TODO: this doesn't work yet for paths that are contained in scaled groups
-    this.selectedItems.filter(i => i instanceof paper.Path).forEach((item, index) => {
-      // TODO: make this stuff works for groups as well
-      // TODO: should we pass 'false' to clone below?
+    // TODO: make searches like this more efficient...
+    const scaleItems: paper.Item[] = [];
+    const scaleItemsSet = new Set<string>();
+    this.selectedItems.forEach(function recurseFn(i: paper.Item) {
+      if (i instanceof paper.Group) {
+        i.children.forEach(recurseFn);
+      } else if (!scaleItemsSet.has(i.data.id)) {
+        scaleItemsSet.add(i.data.id);
+        scaleItems.push(i);
+      }
+    });
+
+    scaleItems.forEach((item, index) => {
+      // TODO: confirm that scaling a selected group should bake transforms into the children
       const path = item.clone() as paper.Path;
       path.applyMatrix = true;
       const localToVpMatrix = this.localToVpItemMatrices[index];
@@ -186,7 +196,7 @@ export class ScaleItemsGesture extends Gesture {
       matrix.scale(sx, sy, vpFixedPivot);
       matrix.append(localToVpMatrix.inverted());
       path.matrix = matrix;
-      const newPl = newVl.findLayerById(item.data.id).clone() as PathLayer;
+      const newPl = newVl.findLayerById(item.data.id).clone() as MorphableLayer;
       newPl.pathData = new Path(path.pathData);
       newVl = LayerUtil.replaceLayer(newVl, item.data.id, newPl);
     });
@@ -203,7 +213,7 @@ export class ScaleItemsGesture extends Gesture {
     const draggedItems = Array.from(selectedLayerIds).map(id => this.pl.findItemByLayerId(id));
     const { parent } = draggedItems[0];
     if (!draggedItems.every(item => item.parent === parent)) {
-      // TODO: determine if there is an alternative to exiting early here?
+      // TODO: copy the behavior used in Sketch
       console.warn('All snapped items must share the same parent item.');
       return undefined;
     }

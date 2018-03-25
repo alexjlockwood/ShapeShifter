@@ -1,39 +1,47 @@
-<div *ngIf="(this.toolMode$ | async) as toolMode"
+<div *ngIf="(this.model$ | async) as model"
   class="tool-panel mat-elevation-z4"
   fxLayout="column"
   fxFlex>
-  <div class="tool-button"
-    [class.is-checked]="toolMode === this.TOOL_MODE_SELECT">
-    <mat-icon svgIcon="tool_select"
-      (click)="onSelectClick()">
-    </mat-icon>
-  </div>
-  <div class="tool-button"
-    [class.is-checked]="toolMode === this.TOOL_MODE_PENCIL">
-    <mat-icon svgIcon="tool_pencil"
-      (click)="onPencilClick()">
-    </mat-icon>
-  </div>
-  <div class="tool-button"
-    [class.is-checked]="toolMode === this.TOOL_MODE_VECTOR">
-    <mat-icon svgIcon="tool_vector"
-      (click)="onVectorClick()">
-    </mat-icon>
-  </div>
-  <div class="tool-button"
-    [class.is-checked]="toolMode === this.TOOL_MODE_ELLIPSE">
-    <mat-icon svgIcon="tool_ellipse"
-      (click)="onEllipseClick()">
-    </mat-icon>
-  </div>
-  <div class="tool-button"
-    [class.is-checked]="toolMode === this.TOOL_MODE_RECTANGLE">
-    <mat-icon svgIcon="tool_rectangle"
-      (click)="onRectangleClick()">
-    </mat-icon>
-  </div>
-  <div class="tool-button"
-    [class.is-checked]="toolMode === this.TOOL_MODE_ZOOMPAN">
-    <mat-icon (click)="onZoomPanClick()">zoom_in</mat-icon>
-  </div>
+  <button class="tool-button"
+    [class.is-checked]="model.isSelectionChecked"
+    (click)="onSelectionClick()">
+    <mat-icon svgIcon="tool_select"></mat-icon>
+  </button>
+  <button class="tool-button"
+    [class.is-checked]="model.isRotateItemsChecked"
+    [disabled]="!model.isRotateItemsEnabled"
+    (click)="onRotateItemsClick()">
+    <mat-icon>crop_rotate</mat-icon>
+  </button>
+  <button class="tool-button"
+    [class.is-checked]="model.isTransformPathChecked"
+    [disabled]="!model.isTransformPathEnabled"
+    (click)="onTransformPathClick()">
+    <mat-icon>transform</mat-icon>
+  </button>
+  <button class="tool-button"
+    [class.is-checked]="model.toolMode === this.TOOL_MODE_PENCIL"
+    (click)="onPencilClick()">
+    <mat-icon svgIcon="tool_pencil"></mat-icon>
+  </button>
+  <button class="tool-button"
+    [class.is-checked]="model.isFocusPathChecked"
+    (click)="onFocusPathClick()">
+    <mat-icon svgIcon="tool_vector"></mat-icon>
+  </button>
+  <button class="tool-button"
+    [class.is-checked]="model.toolMode === this.TOOL_MODE_ELLIPSE"
+    (click)="onEllipseClick()">
+    <mat-icon svgIcon="tool_ellipse"></mat-icon>
+  </button>
+  <button class="tool-button"
+    [class.is-checked]="model.toolMode === this.TOOL_MODE_RECTANGLE"
+    (click)="onRectangleClick()">
+    <mat-icon svgIcon="tool_rectangle"></mat-icon>
+  </button>
+  <button class="tool-button"
+    [class.is-checked]="model.toolMode === this.TOOL_MODE_ZOOMPAN"
+    (click)="onZoomPanClick()">
+    <mat-icon>zoom_in</mat-icon>
+  </button>
 </div>

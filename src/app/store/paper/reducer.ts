@@ -5,10 +5,12 @@ import {
   FocusedPathInfo,
   PaperActionTypes,
   PaperActions,
+  RotateItemsInfo,
   SelectionBox,
   SnapGuideInfo,
   SplitCurveInfo,
   TooltipInfo,
+  TransformPathInfo,
   ZoomPanInfo,
 } from './actions';
 
@@ -23,6 +25,8 @@ interface ToolModeInfo {
   readonly createPathInfo?: CreatePathInfo;
   readonly splitCurveInfo?: SplitCurveInfo;
   readonly focusedPathInfo?: FocusedPathInfo;
+  readonly rotateItemsInfo?: RotateItemsInfo;
+  readonly transformPathInfo?: TransformPathInfo;
   readonly snapGuideInfo?: SnapGuideInfo;
   readonly tooltipInfo?: TooltipInfo;
   readonly canvasCursor?: CanvasCursor;
@@ -41,6 +45,7 @@ export function reducer(state = buildInitialState(), action: PaperActions): Stat
     case PaperActionTypes.SetZoomPanInfo:
       return { ...state, zoomPanInfo: action.zoomPanInfo };
     case PaperActionTypes.SetToolMode:
+      // TODO: don't wipe out all of the other tool mode info here...
       return { ...state, toolModeInfo: { toolMode: action.toolMode } };
     case PaperActionTypes.SetSelectionBox:
       return { ...state, toolModeInfo: { ...toolModeInfo, selectionBox: action.selectionBox } };
@@ -52,6 +57,16 @@ export function reducer(state = buildInitialState(), action: PaperActions): Stat
       return {
         ...state,
         toolModeInfo: { ...toolModeInfo, focusedPathInfo: action.focusedPathInfo },
+      };
+    case PaperActionTypes.SetRotateItemsInfo:
+      return {
+        ...state,
+        toolModeInfo: { ...toolModeInfo, rotateItemsInfo: action.rotateItemsInfo },
+      };
+    case PaperActionTypes.SetTransformPathInfo:
+      return {
+        ...state,
+        toolModeInfo: { ...toolModeInfo, transformPathInfo: action.transformPathInfo },
       };
     case PaperActionTypes.SetSnapGuideInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, snapGuideInfo: action.snapGuideInfo } };

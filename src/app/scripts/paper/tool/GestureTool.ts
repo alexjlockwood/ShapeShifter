@@ -74,7 +74,7 @@ export class GestureTool extends Tool {
       this.currentGesture = new RectangleGesture(this.ps);
     } else if (toolMode === ToolMode.Pencil) {
       this.currentGesture = new PencilGesture(this.ps);
-    } else if (toolMode === ToolMode.Vector) {
+    } else if (this.ps.getFocusedPathInfo()) {
       this.currentGesture = this.createFocusedPathModeGesture(event);
     } else {
       this.currentGesture = this.createSelectionModeGesture(event);
@@ -156,21 +156,25 @@ export class GestureTool extends Tool {
 
   private createFocusedPathModeGesture(event: paper.ToolEvent) {
     let fpi = this.ps.getFocusedPathInfo();
-    if (!fpi) {
+    console.log(fpi, !fpi.layerId);
+    if (!fpi.layerId) {
       // Then the user has created the first segment of a new path, in which
       // case we must create a new dummy path and bring it into focus.
-      this.ps.setSelectedLayerIds(new Set());
       const newPathLayer = PaperUtil.addPathToStore(this.ps, '');
+      const layerId = newPathLayer.id;
       fpi = {
-        layerId: newPathLayer.id,
+        layerId,
         selectedSegments: new Set<number>(),
         visibleHandleIns: new Set<number>(),
         visibleHandleOuts: new Set<number>(),
         selectedHandleIn: undefined,
         selectedHandleOut: undefined,
       };
+      console.log(fpi, layerId, !fpi.layerId);
+      this.ps.setSelectedLayerIds(new Set([layerId]));
       this.ps.setFocusedPathInfo(fpi);
     }
+    console.log(fpi);
 
     const focusedPathId = fpi.layerId;
     const focusedPath = this.pl.findItemByLayerId(focusedPathId) as paper.Path;

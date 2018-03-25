@@ -10,42 +10,65 @@ import { Observable } from 'rxjs/Observable';
   styleUrls: ['./toolpanel.component.scss'],
 })
 export class ToolPanelComponent implements OnInit {
-  readonly TOOL_MODE_SELECT = ToolMode.Selection;
   readonly TOOL_MODE_PENCIL = ToolMode.Pencil;
-  readonly TOOL_MODE_VECTOR = ToolMode.Vector;
   readonly TOOL_MODE_ELLIPSE = ToolMode.Ellipse;
   readonly TOOL_MODE_RECTANGLE = ToolMode.Rectangle;
   readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
 
-  toolMode$: Observable<ToolMode>;
+  // TODO: only enable edit path/rotate/transform in selection mode?
+  model$: Observable<ToolPanelModel>;
 
   constructor(private readonly ps: PaperService) {}
 
   ngOnInit() {
-    this.toolMode$ = this.ps.store.select(getToolMode);
+    this.model$ = this.ps.observeToolPanelState();
   }
 
-  onSelectClick() {
+  onSelectionClick() {
     this.ps.setToolMode(ToolMode.Selection);
+    event.stopPropagation();
+  }
+
+  onRotateItemsClick() {
+    event.stopPropagation();
+  }
+
+  onTransformPathClick() {
+    event.stopPropagation();
   }
 
   onPencilClick() {
     this.ps.setToolMode(ToolMode.Pencil);
+    event.stopPropagation();
   }
 
-  onVectorClick() {
-    this.ps.setToolMode(ToolMode.Vector);
+  onFocusPathClick() {
+    this.ps.enterFocusedPathMode('');
+    event.stopPropagation();
   }
 
   onEllipseClick() {
     this.ps.setToolMode(ToolMode.Ellipse);
+    event.stopPropagation();
   }
 
   onRectangleClick() {
     this.ps.setToolMode(ToolMode.Rectangle);
+    event.stopPropagation();
   }
 
   onZoomPanClick() {
     this.ps.setToolMode(ToolMode.ZoomPan);
+    event.stopPropagation();
   }
+}
+
+interface ToolPanelModel {
+  readonly toolMode: ToolMode;
+  readonly isSelectionChecked: boolean;
+  readonly isFocusPathChecked: boolean;
+  readonly isRotateItemsEnabled: boolean;
+  readonly isRotateItemsChecked: boolean;
+  readonly isTransformPathEnabled: boolean;
+  readonly isTransformPathChecked: boolean;
 }

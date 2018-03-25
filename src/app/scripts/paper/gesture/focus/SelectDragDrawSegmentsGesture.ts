@@ -235,7 +235,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     CursorUtil.clear();
     this.ps.setSnapGuideInfo(undefined);
     if (this.exitFocusedPathModeOnMouseUp) {
-      this.ps.setToolMode(ToolMode.Selection);
+      this.ps.setFocusedPathInfo(undefined);
       this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
     }
   }

@@ -135,6 +135,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     if (event.key === 'escape') {
       CursorUtil.clear();
       this.ps.setSnapGuideInfo(undefined);
+      this.ps.setFocusedPathInfo(undefined);
       this.ps.setToolMode(ToolMode.Selection);
       this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
     }
