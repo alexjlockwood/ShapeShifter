@@ -17,6 +17,7 @@ import * as paper from 'paper';
  * TODO: avoid jank at beginning of rotation (when angle is near 0)
  * TODO: don't allow user to rotate empty groups?
  * TODO: rotating groups not implemented yet
+ * TODO: show a tool tip during rotations
  */
 export class RotateItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -39,7 +40,7 @@ export class RotateItemsGesture extends Gesture {
     );
     const invertedPaperLayerMatrix = this.pl.matrix.inverted();
     this.localToVpItemMatrices = this.selectedItems.map(item => {
-      // Compute the matrices to directly transform while performing rotations.
+      // Compute the matrices to directly transform during drag events.
       return item.globalMatrix.prepended(invertedPaperLayerMatrix).inverted();
     });
     this.pivot = PaperUtil.transformRectangle(

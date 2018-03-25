@@ -9,7 +9,7 @@ export enum PaperActionTypes {
   SetSplitCurveInfo = '__paper__SET_SPLIT_CURVE_INFO',
   SetFocusedPathInfo = '__paper__SET_FOCUSED_PATH_INFO',
   SetRotateItemsInfo = '__paper__SET_ROTATE_ITEMS_INFO',
-  SetTransformPathInfo = '__paper__SET_TRANSFORM_PATH_INFO',
+  SetTransformPathInfo = '__paper__SET_TRANSFORM_PATHS_INFO',
   SetCanvasCursor = '__paper__SET_CANVAS_CURSOR',
   SetSnapGuideInfo = '__paper__SET_SNAP_GUIDE_INFO',
   SetZoomPanInfo = '__paper__SET_ZOOM_PAN_INFO',

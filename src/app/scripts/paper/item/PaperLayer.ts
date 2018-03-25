@@ -8,7 +8,7 @@ import {
 } from 'app/model/layers';
 import { ColorUtil } from 'app/scripts/common';
 import { PaperUtil } from 'app/scripts/paper/util';
-import { PaperService } from 'app/services/paper.service';
+import { PaperService } from 'app/services';
 import {
   CreatePathInfo,
   FocusedPathInfo,
@@ -28,6 +28,7 @@ import { SelectionBoundsRaster } from './SelectionBoundsRaster';
  * viewport coordinates.
  *
  * TODO: scaling rasters down causes their hit tolerances remain the same
+ * TODO: when multiple items selected, show lightly outlined bounds for individual items?
  */
 export class PaperLayer extends paper.Layer {
   private canvasColorRect: paper.Path.Rectangle;

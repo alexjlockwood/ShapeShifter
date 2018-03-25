@@ -41,7 +41,7 @@ export class ScaleItemsGesture extends Gesture {
       this.pl.findItemByLayerId(id),
     );
     this.localToVpItemMatrices = this.selectedItems.map(item => {
-      // Compute the matrices to directly transform while performing rotations.
+      // Compute the matrices to directly transform during drag events.
       return item.globalMatrix.prepended(this.pl.matrix.inverted()).inverted();
     });
     const bounds = PaperUtil.transformRectangle(

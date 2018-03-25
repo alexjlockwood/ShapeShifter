@@ -11,6 +11,8 @@ type Quadrilateral = [paper.Point, paper.Point, paper.Point, paper.Point];
 /**
  * A gesture that performs transform operations.
  *
+ * TODO: finish this
+ *
  * Preconditions:
  * - The user is in selection mode.
  * - One or more paths are selected.
