@@ -1,9 +1,10 @@
 // import { MathUtil } from 'app/scripts/common';
 import { Gesture } from 'app/scripts/paper/gesture';
+import * as paper from 'paper';
 // import { PaperLayer, SelectionBoundsRaster } from 'app/scripts/paper/item';
 // import { PaperService } from 'app/services';
 // import * as _ from 'lodash';
-import * as paper from 'paper';
+
 // import * as perspectiveTransform from 'perspective-transform';
 
 // type Quadrilateral = [paper.Point, paper.Point, paper.Point, paper.Point];
@@ -12,6 +13,7 @@ import * as paper from 'paper';
  * A gesture that performs transform operations.
  *
  * TODO: finish this
+ * TODO: fix crash that can occur when 3+ points are on same axis
  *
  * Preconditions:
  * - The user is in selection mode.
