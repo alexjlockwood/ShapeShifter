@@ -81,12 +81,6 @@ export class TransformPathsGesture extends Gesture {
     if (!this.vpPoint) {
       return;
     }
-    const vpBounds = {
-      bottomLeft: this.vpBounds.bottomLeft,
-    };
-    console.log('before', JSON.stringify(vpBounds));
-    vpBounds[this.selectionBoundsRaster.pivotType] = this.vpPoint;
-    console.log('after', JSON.stringify(vpBounds));
     const sourcePoints = [
       this.vpBounds.topLeft,
       this.vpBounds.topRight,
