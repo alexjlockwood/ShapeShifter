@@ -104,7 +104,7 @@ export class GestureTool extends Tool {
           return new RotateItemsGesture(this.ps);
         }
         if (this.ps.getTransformPathsInfo()) {
-          return new TransformPathsGesture /*this.ps, selectionBoundSegmentsHitResult.item*/();
+          return new TransformPathsGesture(this.ps, selectionBoundSegmentsHitResult.item);
         }
         return new ScaleItemsGesture(this.ps, selectionBoundSegmentsHitResult.item);
       }

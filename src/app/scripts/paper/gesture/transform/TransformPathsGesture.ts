@@ -1,121 +1,147 @@
-// import { MathUtil } from 'app/scripts/common';
+import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
+import { Path } from 'app/model/paths';
+import { MathUtil, TransformUtil } from 'app/scripts/common';
 import { Gesture } from 'app/scripts/paper/gesture';
+import { PaperLayer, SelectionBoundsRaster } from 'app/scripts/paper/item';
+import { PaperUtil } from 'app/scripts/paper/util';
+import { PaperService } from 'app/services';
+import * as _ from 'lodash';
 import * as paper from 'paper';
-// import { PaperLayer, SelectionBoundsRaster } from 'app/scripts/paper/item';
-// import { PaperService } from 'app/services';
-// import * as _ from 'lodash';
-
-// import * as perspectiveTransform from 'perspective-transform';
-
-// type Quadrilateral = [paper.Point, paper.Point, paper.Point, paper.Point];
 
 /**
  * A gesture that performs transform operations.
  *
  * TODO: finish this
  * TODO: fix crash that can occur when 3+ points are on same axis
+ * TODO: could this work with generic items (not just paths)?
  *
  * Preconditions:
  * - The user is in selection mode.
  * - One or more paths are selected.
  */
 export class TransformPathsGesture extends Gesture {
-  // private readonly pl = paper.project.activeLayer as PaperLayer;
-  // private selectedPaths: ReadonlyArray<paper.Path>;
+  private readonly pl = paper.project.activeLayer as PaperLayer;
+  private selectedItems: ReadonlyArray<paper.Path>;
+  private localToVpItemMatrices: ReadonlyArray<paper.Matrix>;
+  private initialVectorLayer: VectorLayer;
+  private vpDownPoint: paper.Point;
+  private vpPoint: paper.Point;
+  private vpBounds: paper.Rectangle;
 
-  // private readonly ps: PaperService,
-  // private readonly selectionBoundsRaster: SelectionBoundsRaster,
-  constructor() {
+  constructor(
+    private readonly ps: PaperService,
+    private readonly selectionBoundsRaster: SelectionBoundsRaster,
+  ) {
     super();
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    // this.ps.setHoveredLayerId(undefined);
-    // this.selectedPaths = Array.from(this.ps.getSelectedLayerIds()).map(
-    //   id => this.pl.findItemByLayerId(id) as paper.Path,
-    // );
-    // this.selectedPaths.forEach(path => {
-    //   const initialSegmentPositions = path.segments.map(s => s.point.clone());
-    //   const { topLeft, bottomLeft, bottomRight, topRight } = path.bounds;
-    //   const initialQuad: Quadrilateral = [topLeft, bottomLeft, bottomRight, topRight];
-    //   const transformQuad: Quadrilateral = [
-    //     topLeft,
-    //     bottomLeft,
-    //     bottomRight.add(new paper.Point(0, 20)),
-    //     topRight.add(new paper.Point(0, -20)),
-    //   ];
-    //   path.segments.forEach((s, i) => {
-    //     s.point = new paper.Point(
-    //       distortPoint(initialSegmentPositions[i], initialQuad, transformQuad),
-    //     );
-    //   });
-    // });
+    this.ps.setHoveredLayerId(undefined);
+    this.selectedItems = Array.from(this.ps.getSelectedLayerIds()).map(
+      id => this.pl.findItemByLayerId(id) as paper.Path,
+    );
+    const invertedPaperLayerMatrix = this.pl.matrix.inverted();
+    this.localToVpItemMatrices = this.selectedItems.map(item => {
+      // Compute the matrices to directly transform during drag events.
+      return item.globalMatrix.prepended(invertedPaperLayerMatrix).inverted();
+    });
+    this.vpBounds = PaperUtil.transformRectangle(
+      PaperUtil.computeBounds(this.selectedItems),
+      this.pl.matrix.inverted(),
+    );
+    this.vpDownPoint = this.vpBounds[this.selectionBoundsRaster.pivotType];
+    this.vpPoint = this.vpDownPoint;
+    this.initialVectorLayer = this.ps.getVectorLayer();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    // Transform about the center if alt is pressed. Otherwise trasform about
-    // the pivot opposite of the currently active pivot.
-    // const currentPivot = event.modifiers.alt ? this.initialCenter : this.initialPivot;
-    // this.currentPivot = this.currentPivot.add(event.delta);
-    // const currentSize = this.currentPivot.subtract(currentPivot);
-    // const initialSize = event.modifiers.alt ? this.centeredInitialSize : this.initialSize;
-    // let sx = 1;
-    // let sy = 1;
-    // if (!MathUtil.isNearZero(initialSize.x)) {
-    //   sx = currentSize.x / initialSize.x;
-    // }
-    // if (!MathUtil.isNearZero(initialSize.y)) {
-    //   sy = currentSize.y / initialSize.y;
-    // }
-    // if (event.modifiers.shift) {
-    //   const signx = sx > 0 ? 1 : -1;
-    //   const signy = sy > 0 ? 1 : -1;
-    //   sx = sy = Math.max(Math.abs(sx), Math.abs(sy));
-    //   sx *= signx;
-    //   sy *= signy;
-    // }
-    // // TODO: set strokeScaling to false?
-    // this.selectedPaths.forEach((i, index) => {
-    //   i.matrix = this.initialMatrices[index].clone().scale(sx, sy, currentPivot);
-    // });
+    this.vpPoint = this.pl.globalToLocal(event.point);
+    this.processEvent(event);
   }
 
   // @Override
-  onMouseUp(event: paper.ToolEvent) {
-    // Guides.hideSelectionBoundsPath();
-    // const selectedItems = Selections.getSelectedItems();
-    // if (selectedItems.length) {
-    //   Guides.showSelectionBoundsPath(computeBoundingBox(selectedItems));
-    // }
+  onKeyDown(event: paper.KeyEvent) {
+    this.processKeyEvent(event);
   }
 
-  // function getTransformPivot(rect: paper.Rectangle, pivotType: PivotType, isCommandPressed: boolean) {
-  //   switch (pivotType) {
-  //     case 'bottomLeft':
-  //       return isCommandPressed ? rect.topRight : rect.center;
-  //     case 'topLeft':
-  //       return isCommandPressed ? rect.bottomRight : rect.center;
-  //     case 'topRight':
-  //       return isCommandPressed ? rect.bottomLeft : rect.center;
-  //     case 'bottomRight':
-  //       return isCommandPressed ? rect.topLeft : rect.center;
-  //     case 'leftCenter':
-  //       return rect.rightCenter;
-  //     case 'topCenter':
-  //       return rect.bottomCenter;
-  //     case 'rightCenter':
-  //       return rect.leftCenter;
-  //     case 'bottomCenter':
-  //       return rect.topCenter;
-  //   }
-}
+  // @Override
+  onKeyUp(event: paper.KeyEvent) {
+    this.processKeyEvent(event);
+  }
 
-/** Distorts a source point to a new destination coordinate space. */
-// function distortPoint(srcPoint: paper.Point, src: Quadrilateral, dst: Quadrilateral) {
-//   const srcCorners = _.flatMap(src, p => [p.x, p.y]);
-//   const dstCorners = _.flatMap(dst, p => [p.x, p.y]);
-//   const [x, y] = perspectiveTransform(srcCorners, dstCorners).transform(srcPoint.x, srcPoint.y);
-//   return { x, y };
-// }
+  private processKeyEvent(event: paper.KeyEvent) {
+    if (event.key === 'command') {
+      this.processEvent(event);
+    }
+  }
+
+  private processEvent(event: paper.Event) {
+    if (!this.vpPoint) {
+      return;
+    }
+    const vpBounds = {
+      bottomLeft: this.vpBounds.bottomLeft,
+    };
+    console.log('before', JSON.stringify(vpBounds));
+    vpBounds[this.selectionBoundsRaster.pivotType] = this.vpPoint;
+    console.log('after', JSON.stringify(vpBounds));
+    const sourcePoints = [
+      this.vpBounds.topLeft,
+      this.vpBounds.topRight,
+      this.vpBounds.bottomRight,
+      this.vpBounds.bottomLeft,
+    ].map(({ x, y }) => [x, y] as [number, number]);
+    const targetPoints = [...sourcePoints];
+    const vpPoint = [this.vpPoint.x, this.vpPoint.y] as [number, number];
+    switch (this.selectionBoundsRaster.pivotType) {
+      case 'topLeft':
+        targetPoints[0] = vpPoint;
+        break;
+      case 'topRight':
+        targetPoints[1] = vpPoint;
+        break;
+      case 'bottomRight':
+        targetPoints[2] = vpPoint;
+        break;
+      case 'bottomLeft':
+        targetPoints[3] = vpPoint;
+        break;
+    }
+
+    const distortFn = TransformUtil.distort(sourcePoints, targetPoints);
+
+    let newVl = this.initialVectorLayer.clone();
+    this.selectedItems.forEach((item, index) => {
+      // TODO: make this stuff works for groups as well
+      const path = item.clone() as paper.Path;
+      const localToViewportMatrix = this.localToVpItemMatrices[index];
+      const matrix = localToViewportMatrix.clone();
+      const pathDistortFn = (point: paper.Point) => {
+        point = localToViewportMatrix.transform(point);
+        const intermediatePoint = distortFn([point.x, point.y]);
+        point = new paper.Point(intermediatePoint[0], intermediatePoint[1]);
+        point = localToViewportMatrix.inverted().transform(point);
+        return point;
+      };
+      path.segments.forEach(segment => {
+        if (segment.handleIn) {
+          segment.handleIn = pathDistortFn(segment.point.add(segment.handleIn)).subtract(
+            segment.point,
+          );
+        }
+        if (segment.handleOut) {
+          segment.handleOut = pathDistortFn(segment.point.add(segment.handleOut)).subtract(
+            segment.point,
+          );
+        }
+        segment.point = pathDistortFn(segment.point);
+      });
+      const newPl = newVl.findLayerById(item.data.id).clone() as PathLayer;
+      newPl.pathData = new Path(path.pathData);
+      newVl = LayerUtil.replaceLayer(newVl, item.data.id, newPl);
+    });
+    this.ps.setVectorLayer(newVl);
+  }
+}
