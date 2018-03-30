@@ -1,5 +1,3 @@
-import { Matrix } from './Matrix';
-
 // TODO: change argument types to a Quadrilateral
 export function distort(sourcePoints: [number, number][], targetPoints: [number, number][]) {
   const a = [];
