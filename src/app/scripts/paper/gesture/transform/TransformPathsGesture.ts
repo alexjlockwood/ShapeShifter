@@ -1,11 +1,10 @@
 import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
-import { MathUtil, TransformUtil } from 'app/scripts/common';
+import { TransformUtil } from 'app/scripts/common';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer, SelectionBoundsRaster } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
-import * as _ from 'lodash';
 import * as paper from 'paper';
 
 /**
@@ -111,7 +110,6 @@ export class TransformPathsGesture extends Gesture {
       // TODO: make this stuff works for groups as well
       const path = item.clone() as paper.Path;
       const localToViewportMatrix = this.localToVpItemMatrices[index];
-      const matrix = localToViewportMatrix.clone();
       const pathDistortFn = (point: paper.Point) => {
         point = localToViewportMatrix.transform(point);
         const intermediatePoint = distortFn([point.x, point.y]);

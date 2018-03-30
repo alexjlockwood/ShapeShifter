@@ -162,6 +162,27 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       }
     }
 
+    // TODO: delete this debug code
+    // TODO: explicitly set paths with no Z to closed? (i.e. M 1 1 h 6 v 6 h -6 v -6)
+    // const jsonObj = JSON.parse(`{
+    //   "id": "1",
+    //   "name": "demo",
+    //   "type": "vector",
+    //   "width": "24",
+    //   "height": "24",
+    //   "children": [
+    //     {
+    //       "id": "2",
+    //       "name": "orange",
+    //       "type": "path",
+    //       "pathData": "M 4 4 C 20 4 20 4 20 20 C 4 20 4 20 4 4 Z",
+    //       "strokeColor": "#000",
+    //       "strokeWidth": "1"
+    //     }
+    //   ]
+    // }`);
+    // this.store.dispatch(new SetVectorLayer(new VectorLayer(jsonObj)));
+
     if (IS_DEV_BUILD && SHOULD_AUTO_LOAD_DEMO) {
       this.demoService
         .getDemo('morphinganimals')

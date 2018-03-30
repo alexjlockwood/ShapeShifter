@@ -5,6 +5,7 @@ import {
   ElementRef,
   HostListener,
   Input,
+  OnInit,
   QueryList,
   ViewChildren,
 } from '@angular/core';
@@ -21,12 +22,13 @@ import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
+import { isActionMode } from '../../store/actionmode/selectors';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { CanvasPaperDirective } from './canvaspaper.directive';
 import { CanvasRulerDirective } from './canvasruler.directive';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 
 // Canvas margin in css pixels.
 const CANVAS_MARGIN = 36;
@@ -38,7 +40,7 @@ const CANVAS_MARGIN = 36;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
-  implements AfterViewInit {
+  implements OnInit, AfterViewInit {
   @ViewChildren(CanvasContainerDirective) canvasContainer: QueryList<CanvasContainerDirective>;
   @ViewChildren(CanvasLayersDirective) canvasLayers: QueryList<CanvasLayersDirective>;
   @ViewChildren(CanvasOverlayDirective) canvasOverlay: QueryList<CanvasOverlayDirective>;
@@ -49,6 +51,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   @Input() canvasBounds$: Observable<Size>;
 
   private readonly $element: JQuery;
+  private isActionMode$: Observable<boolean>;
 
   constructor(
     elementRef: ElementRef,
@@ -57,6 +60,10 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   ) {
     super();
     this.$element = $(elementRef.nativeElement);
+  }
+
+  ngOnInit() {
+    this.isActionMode$ = this.store.select(isActionMode);
   }
 
   ngAfterViewInit() {
