@@ -29,7 +29,7 @@ export class SelectionBoundsRaster extends paper.Raster {
   }
 
   constructor() {
-    super(`/assets/handle.png`);
+    super(`/assets/paper/selection-bounds-segment.png`);
   }
 
   get pivotType() {

@@ -9,8 +9,8 @@ export class FocusedPathRaster extends paper.Raster {
   ) {
     super(
       type === 'segment'
-        ? `/assets/${isSelected ? 'vector_anchor_selected' : 'vector_anchor'}.png`
-        : `/assets/${isSelected ? 'vector_handle_selected' : 'vector_handle'}.png`,
+        ? `/assets/paper/${isSelected ? 'vector-segment-selected' : 'vector-segment'}.png`
+        : `/assets/paper/${isSelected ? 'vector-handle-selected' : 'vector-handle'}.png`,
       center,
     );
   }
