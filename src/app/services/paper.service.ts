@@ -67,7 +67,7 @@ export class PaperService {
     return this.store.select(getToolPanelState);
   }
 
-  enterFocusedPathMode(layerId = '') {
+  enterFocusedPathMode() {
     this.setToolMode(ToolMode.Selection);
     this.setFocusedPathInfo({
       layerId: '',
@@ -77,6 +77,7 @@ export class PaperService {
       selectedHandleIn: undefined,
       selectedHandleOut: undefined,
     });
+    this.setCursorType(CursorType.PenAdd);
   }
 
   enterRotateItemsMode() {
@@ -91,6 +92,16 @@ export class PaperService {
     this.setTransformPathsInfo({
       layerIds: this.getSelectedLayerIds(),
     });
+  }
+
+  enterCreateRectangleMode() {
+    this.setToolMode(ToolMode.Rectangle);
+    this.setCursorType(CursorType.Crosshair);
+  }
+
+  enterCreateEllipseMode() {
+    this.setToolMode(ToolMode.Ellipse);
+    this.setCursorType(CursorType.Crosshair);
   }
 
   /** Sets the current vector layer. */

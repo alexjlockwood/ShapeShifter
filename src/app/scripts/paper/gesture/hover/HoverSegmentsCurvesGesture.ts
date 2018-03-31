@@ -8,7 +8,7 @@ import * as paper from 'paper';
  * A gesture that performs hover operations over segments and curves.
  *
  * Preconditions:
- * - The user is in focused path mode.
+ * - The user is in focused path mode for an already existing layer id.
  */
 export class HoverSegmentsCurvesGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -26,12 +26,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // TODO: currently necessary (if the previous gesture was the create/drag/draw segments gesture)
     this.ps.setCreatePathInfo(undefined);
 
-    // TODO: investigate this! it is possible for layerId to be empty string??
     const focusedPathId = this.ps.getFocusedPathInfo().layerId;
-    if (!focusedPathId) {
-      return;
-    }
-
     const focusedPath = this.pl.findItemByLayerId(focusedPathId) as paper.Path;
     const segmentsAndHandlesHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
     if (segmentsAndHandlesHitResult) {

@@ -3,6 +3,7 @@ export enum CursorType {
   Default = 'default',
   Pointer = 'pointer',
   PointSelect = 'point-select',
+  Crosshair = 'crosshair',
   Pen = 'pen',
   PenAdd = 'pen-add',
   PenClose = 'pen-close',

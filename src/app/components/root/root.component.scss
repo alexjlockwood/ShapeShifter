@@ -66,32 +66,6 @@ app-toolpanel {
   cursor: pointer;
 }
 
-// TODO: adjust the positioning of the custom cursors below.
-
-.cursor-pen {
-  cursor: url(/assets/cursor/pen.png) 5 0, auto;
-}
-
-.cursor-pen-add {
-  cursor: url(/assets/cursor/pen-add.png) 5 0, auto;
-}
-
-.cursor-point-select {
-  cursor: url(/assets/cursor/point-select.png) 0 0, default;
-}
-
-.cursor-pen {
-  cursor: url(/assets/cursor/pen.png) 0 0, default;
-}
-
-.cursor-pen-add {
-  cursor: url(/assets/cursor/pen-add.png) 0 0, default;
-}
-
-.cursor-pen-close {
-  cursor: url(/assets/cursor/pen-close.png) 0 0, default;
-}
-
 .cursor-resize0 {
   cursor: ns-resize;
 }
@@ -106,6 +80,44 @@ app-toolpanel {
 
 .cursor-resize135 {
   cursor: nwse-resize;
+}
+
+.cursor-zoom-in {
+  cursor: zoom-in;
+}
+
+.cursor-zoom-out {
+  cursor: zoom-out;
+}
+
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing;
+}
+
+// TODO: adjust the positioning of the custom cursors below.
+
+.cursor-point-select {
+  cursor: url(/assets/cursor/point-select.png) 0 0, default;
+}
+
+.cursor-crosshair {
+  cursor: url(/assets/cursor/crosshair.png) 0 0, auto;
+}
+
+.cursor-pen {
+  cursor: url(/assets/cursor/pen.png) 5 0, auto;
+}
+
+.cursor-pen-add {
+  cursor: url(/assets/cursor/pen-add.png) 5 0, auto;
+}
+
+.cursor-pen-close {
+  cursor: url(/assets/cursor/pen-close.png) 5 0, default;
 }
 
 .cursor-rotate0 {
@@ -138,20 +150,4 @@ app-toolpanel {
 
 .cursor-rotate315 {
   cursor: url(/assets/cursor/rotate-top-left.png) 0 0, default;
-}
-
-.cursor-zoom-in {
-  cursor: zoom-in;
-}
-
-.cursor-zoom-out {
-  cursor: zoom-out;
-}
-
-.cursor-grab {
-  cursor: grab;
-}
-
-.cursor-grabbing {
-  cursor: grabbing;
 }

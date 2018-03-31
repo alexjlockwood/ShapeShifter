@@ -50,12 +50,12 @@ export class ToolPanelComponent implements OnInit {
   }
 
   onEllipseClick() {
-    this.ps.setToolMode(ToolMode.Ellipse);
+    this.ps.enterCreateEllipseMode();
     event.stopPropagation();
   }
 
   onRectangleClick() {
-    this.ps.setToolMode(ToolMode.Rectangle);
+    this.ps.enterCreateRectangleMode();
     event.stopPropagation();
   }
 

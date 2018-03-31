@@ -2,6 +2,7 @@ import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
+import { ToolMode } from '../../../../model/paper';
 import { HoverItemsGesture } from './HoverItemsGesture';
 import { HoverSegmentsCurvesGesture } from './HoverSegmentsCurvesGesture';
 
@@ -18,10 +19,15 @@ export class HoverGesture extends Gesture {
 
   // @Override
   onMouseMove(event: paper.ToolEvent) {
-    if (this.ps.getFocusedPathInfo()) {
-      this.hoverSegmentsCurvesGesture.onMouseMove(event);
-    } else {
-      this.hoverItemsGesture.onMouseMove(event);
+    if (this.ps.getToolMode() === ToolMode.Selection) {
+      const fpi = this.ps.getFocusedPathInfo();
+      if (fpi) {
+        if (fpi.layerId) {
+          this.hoverSegmentsCurvesGesture.onMouseMove(event);
+        }
+      } else {
+        this.hoverItemsGesture.onMouseMove(event);
+      }
     }
   }
 }
