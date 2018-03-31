@@ -139,9 +139,7 @@ export class AppModule {
       .addSvgIcon('mask', this.trustUrl('assets/icons/clippathlayer.svg'))
       .addSvgIcon('group', this.trustUrl('assets/icons/grouplayer.svg'))
       .addSvgIcon('path', this.trustUrl('assets/icons/pathlayer.svg'))
-      .addSvgIcon('vector', this.trustUrl('assets/icons/vectorlayer.svg'))
-      // Cursors.
-      .addSvgIcon('selectioncursor', this.trustUrl('assets/cursors/selectioncursor.svg'));
+      .addSvgIcon('vector', this.trustUrl('assets/icons/vectorlayer.svg'));
   }
 
   private trustUrl(url: string) {
