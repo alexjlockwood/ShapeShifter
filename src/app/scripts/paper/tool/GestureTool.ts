@@ -14,7 +14,6 @@ import {
   BatchSelectItemsGesture,
   DeselectItemGesture,
   FocusPathGesture,
-  HoverItemsGesture,
   SelectDragCloneItemsGesture,
 } from 'app/scripts/paper/gesture/select';
 import {
@@ -27,6 +26,7 @@ import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
+import { HoverGesture } from '../gesture/hover';
 import { Tool } from './Tool';
 
 /**
@@ -36,24 +36,10 @@ import { Tool } from './Tool';
 export class GestureTool extends Tool {
   private readonly pl = paper.project.activeLayer as PaperLayer;
   private readonly clickDetector = new ClickDetector();
-  private currentGesture: Gesture = new HoverItemsGesture(this.ps);
+  private currentGesture: Gesture = new HoverGesture(this.ps);
 
   constructor(private readonly ps: PaperService) {
     super();
-  }
-
-  // @Override
-  onToolModeChanged() {
-    this.resetDefaultGesture();
-  }
-
-  private resetDefaultGesture() {
-    const fpi = this.ps.getFocusedPathInfo();
-    if (fpi) {
-      this.currentGesture = new HoverSegmentsCurvesGesture(this.ps, fpi.layerId);
-    } else {
-      this.currentGesture = new HoverItemsGesture(this.ps);
-    }
   }
 
   // @Override
@@ -86,7 +72,7 @@ export class GestureTool extends Tool {
 
   private onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
-    this.resetDefaultGesture();
+    this.currentGesture = new HoverGesture(this.ps);
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {

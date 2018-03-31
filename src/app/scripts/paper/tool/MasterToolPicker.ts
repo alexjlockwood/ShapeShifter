@@ -12,18 +12,16 @@ import { ZoomPanTool } from './ZoomPanTool';
  */
 export class MasterToolPicker {
   private readonly paperTool = new paper.Tool();
-  private readonly onEventFn: (event?: paper.ToolEvent | paper.KeyEvent) => void;
 
   constructor(private readonly ps: PaperService) {
     const gestureTool = new GestureTool(ps);
     const zoomPanTool = new ZoomPanTool(ps);
     let currentTool: Tool;
 
-    const onEventFn = (event?: paper.ToolEvent | paper.KeyEvent) => {
-      const toolMode = ps.getToolMode();
+    const onEventFn = (event: paper.ToolEvent | paper.KeyEvent) => {
       const prevTool = currentTool;
       currentTool =
-        toolMode === ToolMode.ZoomPan || (event && event.modifiers.space)
+        this.ps.getToolMode() === ToolMode.ZoomPan || (event && event.modifiers.space)
           ? zoomPanTool
           : gestureTool;
       if (prevTool !== currentTool) {
@@ -34,10 +32,8 @@ export class MasterToolPicker {
       }
       if (event instanceof paper.ToolEvent) {
         currentTool.onToolEvent(event);
-      } else if (event instanceof paper.KeyEvent) {
-        currentTool.onKeyEvent(event);
       } else {
-        currentTool.onToolModeChanged();
+        currentTool.onKeyEvent(event);
       }
     };
 
@@ -49,13 +45,10 @@ export class MasterToolPicker {
       keydown: onEventFn,
       keyup: onEventFn,
     });
-    this.onEventFn = onEventFn;
   }
 
   onToolModeChanged() {
-    const toolMode = this.ps.getToolMode();
     // TODO: better way to set this?
-    this.paperTool.fixedDistance = toolMode === ToolMode.Pencil ? 4 : undefined;
-    this.onEventFn();
+    this.paperTool.fixedDistance = this.ps.getToolMode() === ToolMode.Pencil ? 4 : undefined;
   }
 }

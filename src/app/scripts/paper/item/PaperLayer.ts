@@ -451,7 +451,7 @@ function newHoverPathItem(item: paper.Item) {
   return hoverPath;
 }
 
-// TODO: reuse this code with SelectionBoundsRaster, CursorUtil, etc.
+// TODO: reuse this code with SelectionBoundsRaster, etc.
 const PIVOT_TYPES: Readonly<
   [
     'topLeft',

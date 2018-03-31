@@ -1,7 +1,8 @@
+import { CursorType } from 'app/model/paper';
 import { MathUtil } from 'app/scripts/common';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
+import { PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import { Line } from 'app/store/paper/actions';
 import * as paper from 'paper';
@@ -140,7 +141,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       ...fpi,
       ...PaperUtil.selectCurves(this.ps, focusedPath, afterSelectedSegmentIndices),
     });
-    CursorUtil.set(Cursor.PointSelect);
+    this.ps.setCursorType(CursorType.PointSelect);
   }
 
   // @Override
@@ -231,7 +232,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    CursorUtil.clear();
+    this.ps.setCursorType(CursorType.Default);
     this.ps.setSnapGuideInfo(undefined);
     if (this.exitFocusedPathModeOnMouseUp) {
       this.ps.setFocusedPathInfo(undefined);

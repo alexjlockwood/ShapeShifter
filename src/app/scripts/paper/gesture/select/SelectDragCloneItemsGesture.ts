@@ -2,10 +2,12 @@ import { ClipPathLayer, GroupLayer, LayerUtil, PathLayer, VectorLayer } from 'ap
 import { MathUtil, Matrix } from 'app/scripts/common';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
+import { PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import { Line } from 'app/store/paper/actions';
 import * as paper from 'paper';
+
+import { CursorType } from '../../../../model/paper';
 
 /**
  * A gesture that performs selection, move, and clone operations
@@ -52,7 +54,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
       if (event.modifiers.alt) {
         // TODO: clone the selected items
       }
-      CursorUtil.set(Cursor.Grabbing);
+      this.ps.setCursorType(CursorType.Grabbing);
     }
 
     let newVl = this.initialVectorLayer.clone();
@@ -129,7 +131,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     this.ps.setSnapGuideInfo(undefined);
-    CursorUtil.clear();
+    this.ps.setCursorType(CursorType.Default);
   }
 
   private projToVpLine({ from, to }: Line): Line {

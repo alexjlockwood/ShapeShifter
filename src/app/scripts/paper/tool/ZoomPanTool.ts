@@ -1,4 +1,4 @@
-import { Cursor, CursorUtil } from 'app/scripts/paper/util';
+import { CursorType } from 'app/model/paper';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
@@ -8,7 +8,8 @@ import { Tool } from './Tool';
 /** A tool that enables zooming and panning in the canvas. */
 export class ZoomPanTool extends Tool {
   // Keep track of the last known mouse point in view space coordinates.
-  private viewLastPoint = new paper.Point(0, 0);
+  private viewLastPoint: paper.Point;
+  private isDragging: boolean;
 
   constructor(private readonly ps: PaperService) {
     super();
@@ -16,12 +17,15 @@ export class ZoomPanTool extends Tool {
 
   // @Override
   onActivate() {
-    CursorUtil.set(Cursor.ZoomIn);
+    this.viewLastPoint = new paper.Point(0, 0);
+    this.isDragging = false;
+    this.ps.setCursorType(CursorType.ZoomIn);
   }
 
   // @Override
   onDeactivate() {
-    CursorUtil.clear();
+    // TODO: set the cursor type to whatever it was before onActivate()?
+    this.ps.setCursorType(CursorType.Default);
   }
 
   // @Override
@@ -31,11 +35,14 @@ export class ZoomPanTool extends Tool {
     } else if (event.type === 'mousedrag') {
       this.onMouseDrag(event);
     } else if (event.type === 'mouseup') {
-      CursorUtil.remove(Cursor.Grabbing);
+      this.onMouseUp(event);
     }
   }
 
   private onMouseDown(event: paper.ToolEvent) {
+    this.isDragging = false;
+    this.updateCursorType(event);
+
     if (event.modifiers.space) {
       // If space is pressed, then grab/pan the canvas. We store the last known
       // mouse point in view space coordinates (which means the top left corner
@@ -44,6 +51,7 @@ export class ZoomPanTool extends Tool {
       this.viewLastPoint = paper.view.projectToView(event.point);
       return;
     }
+
     // Zoom out if alt is pressed, and zoom in otherwise.
     const zoom = paper.view.zoom * (event.modifiers.alt ? 1 / 2 : 2);
     const { x, y } = paper.view.projectToView(event.point).subtract(event.point.multiply(zoom));
@@ -51,10 +59,12 @@ export class ZoomPanTool extends Tool {
   }
 
   private onMouseDrag(event: paper.ToolEvent) {
+    this.isDragging = false;
+    this.updateCursorType(event);
+
     if (!event.modifiers.space) {
       return;
     }
-    CursorUtil.add(Cursor.Grabbing);
 
     // In order to have coordinate changes not mess up the dragging, we need to
     // convert coordinates to view space, and then back to project space after
@@ -68,6 +78,11 @@ export class ZoomPanTool extends Tool {
     this.viewLastPoint = viewPoint;
   }
 
+  private onMouseUp(event: paper.ToolEvent) {
+    this.isDragging = false;
+    this.updateCursorType(event);
+  }
+
   private setZoomPanInfo(zoom: number, tx: number, ty: number) {
     const { width, height } = paper.view.viewSize;
     zoom = _.clamp(zoom, 1, 256);
@@ -78,26 +93,16 @@ export class ZoomPanTool extends Tool {
 
   // @Override
   onKeyEvent(event: paper.KeyEvent) {
-    if (event.type === 'keydown') {
-      this.onKeyDown(event);
-    } else if (event.type === 'keyup') {
-      this.onKeyUp(event);
+    if (event.key === 'space' || event.key === 'alt') {
+      this.updateCursorType(event);
     }
   }
 
-  private onKeyDown({ key }: paper.KeyEvent) {
-    if (key === 'alt') {
-      CursorUtil.add(Cursor.ZoomOut);
-    } else if (key === 'space') {
-      CursorUtil.add(Cursor.Grab);
-    }
-  }
-
-  private onKeyUp({ key }: paper.KeyEvent) {
-    if (key === 'alt') {
-      CursorUtil.remove(Cursor.ZoomOut);
-    } else if (key === 'space') {
-      CursorUtil.remove(Cursor.Grab);
+  private updateCursorType(event: paper.Event) {
+    if (event.modifiers.space) {
+      this.ps.setCursorType(this.isDragging ? CursorType.Grabbing : CursorType.Grab);
+    } else {
+      this.ps.setCursorType(event.modifiers.alt ? CursorType.ZoomOut : CursorType.ZoomIn);
     }
   }
 }

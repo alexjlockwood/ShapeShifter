@@ -53,7 +53,7 @@ export class SetTransformPathsInfo implements Action {
 
 export class SetCursorType implements Action {
   readonly type = PaperActionTypes.SetCursorType;
-  constructor(readonly cursorType: CursorType | undefined) {}
+  constructor(readonly cursorType: CursorType) {}
 }
 
 export class SetSnapGuideInfo implements Action {

@@ -77,18 +77,6 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
         this.setDimensions({ w, h }, viewport);
       }),
     );
-    // TODO: use an [ngClass] binding or something like that
-    this.registerSubscription(
-      this.store.select(getCursorType).subscribe(c => {
-        if (c) {
-          $('.paper-canvas').addClass(c);
-        } else {
-          $('.paper-canvas').removeClass((index, css) =>
-            (css.match(/\bcursor-\S+/g) || []).join(' '),
-          );
-        }
-      }),
-    );
     this.registerSubscription(
       this.store.select(getZoomPanInfo).subscribe(info => {
         this.setZoomPan(info.zoom, info.translation);

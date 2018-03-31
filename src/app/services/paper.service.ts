@@ -208,7 +208,7 @@ export class PaperService {
     return this.queryStore(getTransformPathsInfo);
   }
 
-  setCursorType(cursorType: CursorType | undefined) {
+  setCursorType(cursorType: CursorType) {
     if (!_.isEqual(this.queryStore(getCursorType), cursorType)) {
       this.dispatchStore(new SetCursorType(cursorType));
     }

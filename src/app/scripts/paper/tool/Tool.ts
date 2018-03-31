@@ -5,18 +5,13 @@ export abstract class Tool {
   /** Called immediately after this tool has been activated. */
   onActivate() {}
 
-  /** Called when the tool mode has changed. */
-  onToolModeChanged() {}
-
   /**
    * Called when this tool has received a tool event (i.e. mouse down,
    * mouse drag, mouse move, mouse up).
    */
   onToolEvent(event: paper.ToolEvent) {}
 
-  /**
-   * Called when this tool has received a key event (i.e. key down, key up).
-   */
+  /** Called when this tool has received a key event (i.e. key down, key up). */
   onKeyEvent(event: paper.KeyEvent) {}
 
   /** Called immediately after this tool has been deactivated. */

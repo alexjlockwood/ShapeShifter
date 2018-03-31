@@ -1,7 +1,6 @@
-import { ToolMode } from 'app/model/paper';
+import { CursorType, ToolMode } from 'app/model/paper';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, CursorUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -14,25 +13,31 @@ import * as paper from 'paper';
 export class HoverSegmentsCurvesGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
 
-  constructor(private readonly ps: PaperService, private readonly focusedPathId: string) {
+  constructor(private readonly ps: PaperService) {
     super();
   }
 
   // @Override
   onMouseMove(event: paper.ToolEvent) {
-    CursorUtil.clear();
+    this.ps.setCursorType(CursorType.Default);
     this.ps.setSplitCurveInfo(undefined);
 
     // TODO: this seems kinda hacky
     // TODO: currently necessary (if the previous gesture was the create/drag/draw segments gesture)
     this.ps.setCreatePathInfo(undefined);
 
-    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
+    // TODO: investigate this! it is possible for layerId to be empty string??
+    const focusedPathId = this.ps.getFocusedPathInfo().layerId;
+    if (!focusedPathId) {
+      return;
+    }
+
+    const focusedPath = this.pl.findItemByLayerId(focusedPathId) as paper.Path;
     const segmentsAndHandlesHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
     if (segmentsAndHandlesHitResult) {
       // If we are hovering over a segment or a handle, then show a point select
       // cursor and return.
-      CursorUtil.set(Cursor.PointSelect);
+      this.ps.setCursorType(CursorType.PointSelect);
       return;
     }
 
@@ -46,7 +51,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
         return;
       }
       // Show a pen add cursor and highlight the curve the user is about to split.
-      CursorUtil.set(Cursor.PenAdd);
+      this.ps.setCursorType(CursorType.PenAdd);
       const hitCurve = focusedPathHitResult.location.curve;
       const location = event.modifiers.shift
         ? hitCurve.getLocationAt(hitCurve.length / 2)
@@ -72,7 +77,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // is selected and the path is still open.
     const singleSelectedSegmentIndex = this.findSingleSelectedEndSegmentIndex(focusedPath);
     if (singleSelectedSegmentIndex !== undefined) {
-      CursorUtil.set(Cursor.PenAdd);
+      this.ps.setCursorType(CursorType.PenAdd);
       const vpStartSegment = this.localToVpSegment(
         focusedPath,
         focusedPath.segments[singleSelectedSegmentIndex],
@@ -133,11 +138,9 @@ export class HoverSegmentsCurvesGesture extends Gesture {
   onKeyDown(event: paper.KeyEvent) {
     // TODO: also do this in any other pen/pencil related gestures?
     if (event.key === 'escape') {
-      CursorUtil.clear();
+      this.ps.setCursorType(CursorType.Default);
       this.ps.setSnapGuideInfo(undefined);
       this.ps.setFocusedPathInfo(undefined);
-      this.ps.setToolMode(ToolMode.Selection);
-      this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
     }
   }
 }

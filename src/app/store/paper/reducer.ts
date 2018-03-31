@@ -17,6 +17,7 @@ import {
 export interface State {
   readonly zoomPanInfo: ZoomPanInfo;
   readonly toolModeInfo: ToolModeInfo;
+  readonly cursorType: CursorType;
 }
 
 interface ToolModeInfo {
@@ -29,13 +30,13 @@ interface ToolModeInfo {
   readonly transformPathsInfo?: TransformPathsInfo;
   readonly snapGuideInfo?: SnapGuideInfo;
   readonly tooltipInfo?: TooltipInfo;
-  readonly canvasCursor?: CursorType;
 }
 
 export function buildInitialState(): State {
   return {
     zoomPanInfo: { zoom: 1, translation: { tx: 0, ty: 0 } },
     toolModeInfo: { toolMode: ToolMode.Selection },
+    cursorType: CursorType.Default,
   };
 }
 
@@ -67,7 +68,7 @@ export function reducer(state = buildInitialState(), action: PaperActions): Stat
     case PaperActionTypes.SetTooltipInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, tooltipInfo: action.tooltipInfo } };
     case PaperActionTypes.SetCursorType:
-      return { ...state, toolModeInfo: { ...toolModeInfo, canvasCursor: action.cursorType } };
+      return { ...state, cursorType: action.cursorType };
   }
   return state;
 }
