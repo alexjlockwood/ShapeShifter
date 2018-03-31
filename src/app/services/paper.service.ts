@@ -57,7 +57,7 @@ import { LayerTimelineService } from './layertimeline.service';
 export class PaperService {
   constructor(
     private readonly layerTimelineService: LayerTimelineService,
-    readonly store: Store<State>,
+    private readonly store: Store<State>,
     // TODO: figure out if this is the most efficient use of NgZone...
     // TODO: can we get away with only executing in NgZone for certain dispatch store ops?
     private readonly ngZone: NgZone,

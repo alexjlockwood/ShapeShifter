@@ -3,6 +3,7 @@ import { ActionSource } from 'app/model/actionmode';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { PaperProject } from 'app/scripts/paper';
 import { PaperService } from 'app/services';
+import { State, Store } from 'app/store';
 import * as $ from 'jquery';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
@@ -14,13 +15,17 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   private readonly $canvas: JQuery<HTMLCanvasElement>;
   private paperProject: PaperProject;
 
-  constructor(elementRef: ElementRef, private readonly ps: PaperService) {
+  constructor(
+    elementRef: ElementRef,
+    private readonly ps: PaperService,
+    private readonly store: Store<State>,
+  ) {
     super();
     this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
   }
 
   ngAfterViewInit() {
-    this.paperProject = new PaperProject(this.$canvas.get(0), this.ps);
+    this.paperProject = new PaperProject(this.$canvas.get(0), this.ps, this.store);
   }
 
   ngOnDestroy() {

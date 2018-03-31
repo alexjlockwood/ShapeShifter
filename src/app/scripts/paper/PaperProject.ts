@@ -1,6 +1,7 @@
 import { PaperLayer } from 'app/scripts/paper/item';
 import { MasterToolPicker } from 'app/scripts/paper/tool';
 import { PaperService } from 'app/services';
+import { State, Store } from 'app/store';
 import {
   getHiddenLayerIds,
   getHoveredLayerId,
@@ -25,25 +26,25 @@ export class PaperProject extends paper.Project {
   private readonly masterToolPicker: MasterToolPicker;
   private readonly subscriptions: Subscription[] = [];
 
-  constructor(canvas: HTMLCanvasElement, ps: PaperService) {
+  constructor(canvas: HTMLCanvasElement, ps: PaperService, store: Store<State>) {
     super(canvas);
     const pl = new PaperLayer(ps);
     paper.project.addLayer(pl);
     this.paperLayer = pl;
     this.masterToolPicker = new MasterToolPicker(ps);
     this.subscriptions.push(
-      ps.store.select(getToolMode).subscribe(() => this.masterToolPicker.onToolModeChanged()),
+      store.select(getToolMode).subscribe(() => this.masterToolPicker.onToolModeChanged()),
       // TODO: dont allow the user to modify the vector layer when current time > 0
-      ps.store.select(getAnimatedVectorLayer).subscribe(() => pl.onVectorLayerChanged()),
-      ps.store.select(getSelectedLayerIds).subscribe(() => pl.onSelectedLayerIdsChanged()),
-      ps.store.select(getHoveredLayerId).subscribe(() => pl.onHoveredLayerIdChanged()),
-      ps.store.select(getHiddenLayerIds).subscribe(() => pl.onHiddenLayerIdsChanged()),
-      ps.store.select(getCreatePathInfo).subscribe(info => pl.setCreatePathInfo(info)),
-      ps.store.select(getSplitCurveInfo).subscribe(info => pl.setSplitCurveInfo(info)),
-      ps.store.select(getFocusedPathInfo).subscribe(info => pl.onFocusedPathInfoChanged()),
-      ps.store.select(getSnapGuideInfo).subscribe(info => pl.setSnapGuideInfo(info)),
-      ps.store.select(getTooltipInfo).subscribe(info => pl.setTooltipInfo(info)),
-      ps.store.select(getSelectionBox).subscribe(box => {
+      store.select(getAnimatedVectorLayer).subscribe(() => pl.onVectorLayerChanged()),
+      store.select(getSelectedLayerIds).subscribe(() => pl.onSelectedLayerIdsChanged()),
+      store.select(getHoveredLayerId).subscribe(() => pl.onHoveredLayerIdChanged()),
+      store.select(getHiddenLayerIds).subscribe(() => pl.onHiddenLayerIdsChanged()),
+      store.select(getCreatePathInfo).subscribe(info => pl.setCreatePathInfo(info)),
+      store.select(getSplitCurveInfo).subscribe(info => pl.setSplitCurveInfo(info)),
+      store.select(getFocusedPathInfo).subscribe(info => pl.onFocusedPathInfoChanged()),
+      store.select(getSnapGuideInfo).subscribe(info => pl.setSnapGuideInfo(info)),
+      store.select(getTooltipInfo).subscribe(info => pl.setTooltipInfo(info)),
+      store.select(getSelectionBox).subscribe(box => {
         if (box) {
           const from = new paper.Point(box.from);
           const to = new paper.Point(box.to);
@@ -52,7 +53,7 @@ export class PaperProject extends paper.Project {
           pl.setSelectionBox(undefined);
         }
       }),
-      ps.store.select(getZoomPanInfo).subscribe(({ zoom, translation: { tx, ty } }) => {
+      store.select(getZoomPanInfo).subscribe(({ zoom, translation: { tx, ty } }) => {
         this.view.matrix = new paper.Matrix(zoom, 0, 0, zoom, tx, ty);
       }),
     );
