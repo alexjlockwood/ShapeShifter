@@ -54,20 +54,14 @@ export function reducer(state = buildInitialState(), action: PaperActions): Stat
     case PaperActionTypes.SetSplitCurveInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, splitCurveInfo: action.splitCurveInfo } };
     case PaperActionTypes.SetFocusedPathInfo:
-      return {
-        ...state,
-        toolModeInfo: { ...toolModeInfo, focusedPathInfo: action.focusedPathInfo },
-      };
+      const { focusedPathInfo } = action;
+      return { ...state, toolModeInfo: { ...toolModeInfo, focusedPathInfo } };
     case PaperActionTypes.SetRotateItemsInfo:
-      return {
-        ...state,
-        toolModeInfo: { ...toolModeInfo, rotateItemsInfo: action.rotateItemsInfo },
-      };
+      const { rotateItemsInfo } = action;
+      return { ...state, toolModeInfo: { ...toolModeInfo, rotateItemsInfo } };
     case PaperActionTypes.SetTransformPathInfo:
-      return {
-        ...state,
-        toolModeInfo: { ...toolModeInfo, transformPathsInfo: action.transformPathInfo },
-      };
+      const { transformPathsInfo } = action;
+      return { ...state, toolModeInfo: { ...toolModeInfo, transformPathsInfo } };
     case PaperActionTypes.SetSnapGuideInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, snapGuideInfo: action.snapGuideInfo } };
     case PaperActionTypes.SetTooltipInfo:

@@ -48,7 +48,7 @@ export class SetRotateItemsInfo implements Action {
 
 export class SetTransformPathsInfo implements Action {
   readonly type = PaperActionTypes.SetTransformPathInfo;
-  constructor(readonly transformPathInfo: TransformPathsInfo | undefined) {}
+  constructor(readonly transformPathsInfo: TransformPathsInfo | undefined) {}
 }
 
 export class SetCanvasCursor implements Action {
