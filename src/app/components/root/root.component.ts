@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { DropFilesAction } from 'app/components/dialogs';
 import { ActionMode, ActionSource } from 'app/model/actionmode';
+import { CursorType } from 'app/model/paper';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
@@ -35,16 +36,12 @@ import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 import { distinctUntilChanged, first, map } from 'rxjs/operators';
 
+import { getCursorType } from '../../store/paper/selectors';
+
 const SHOULD_AUTO_LOAD_DEMO = false;
 const IS_DEV_BUILD = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd({ strategy: 'scroll' });
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
-
-enum CursorType {
-  Default = 1,
-  Pointer,
-  Pen,
-}
 
 @Component({
   selector: 'app-root',
@@ -68,7 +65,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
   private readonly displayBoundsSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
   canvasBounds$: Observable<Size>;
   isActionMode$: Observable<boolean>;
-  cursorType$: Observable<CursorType>;
+  cursorClassName$: Observable<string>;
 
   constructor(
     private readonly snackBarService: SnackBarService,
@@ -129,18 +126,20 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       }),
     );
 
-    this.cursorType$ = combineLatest(
+    this.cursorClassName$ = combineLatest(
+      this.store.select(getCursorType),
       this.store.select(getActionMode),
       this.store.select(getActionModeHover),
     ).pipe(
-      map(([mode, hover]) => {
+      map(([cursorType, mode, hover]) => {
         if (mode === ActionMode.SplitCommands || mode === ActionMode.SplitSubPaths) {
           return CursorType.Pen;
         } else if (hover) {
           return CursorType.Pointer;
         }
-        return CursorType.Default;
+        return cursorType || CursorType.Default;
       }),
+      map(cursorType => `cursor-${cursorType}`),
     );
   }
 

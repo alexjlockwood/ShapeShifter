@@ -15,7 +15,7 @@ import { DestroyableMixin } from 'app/scripts/mixins';
 import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
-import { getCanvasCursor, getZoomPanInfo } from 'app/store/paper/selectors';
+import { getCursorType, getZoomPanInfo } from 'app/store/paper/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -79,7 +79,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
     );
     // TODO: use an [ngClass] binding or something like that
     this.registerSubscription(
-      this.store.select(getCanvasCursor).subscribe(c => {
+      this.store.select(getCursorType).subscribe(c => {
         if (c) {
           $('.paper-canvas').addClass(c);
         } else {

@@ -17,7 +17,6 @@ export function clear() {
   $('.paper-canvas').removeClass((index, css) => (css.match(/\bcursor-\S+/g) || []).join(' '));
 }
 
-// These names correspond to the names declared in root.component.scss
 export enum Cursor {
   PointSelect = 'cursor-point-select',
   Pen = 'cursor-pen',

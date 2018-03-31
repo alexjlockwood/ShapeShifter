@@ -1,123 +1,43 @@
 .app-canvas-container {
+  position: relative;
+  .canvas-ruler {
+    position: absolute;
+    transition: opacity 0.15s ease, visibility 0s linear 0.15s;
+    opacity: 0;
+    visibility: hidden;
+  }
+  &:hover .canvas-ruler {
+    transition: opacity 0.15s ease;
+    opacity: 1;
+    visibility: visible;
+  }
+  .canvas-container {
     position: relative;
-    .canvas-ruler {
-        position: absolute;
-        transition: opacity .15s ease, visibility 0s linear .15s;
-        opacity: 0;
-        visibility: hidden;
+    canvas.rendering-canvas {
+      position: absolute;
+      z-index: 1;
     }
-    &:hover .canvas-ruler {
-        transition: opacity .15s ease;
-        opacity: 1;
-        visibility: visible;
+    canvas.overlay-canvas {
+      position: absolute;
+      background-color: transparent;
+      z-index: 2;
     }
-    .canvas-container {
-        position: relative;
-        canvas.rendering-canvas {
-            position: absolute;
-            z-index: 1;
-        }
-        canvas.overlay-canvas {
-            position: absolute;
-            background-color: transparent;
-            z-index: 2;
-        }
-        // TODO: this is referenced directly by class name in the tools file
-        canvas.paper-canvas {
-          position: absolute;
-          background-color: transparent;
-          z-index: 3;
-      }
+    // TODO: this is referenced directly by class name in the tools file
+    canvas.paper-canvas {
+      position: absolute;
+      background-color: transparent;
+      z-index: 3;
     }
-    $rulerWidth: 32px;
-    .orientation-horizontal {
-        left: -12px;
-        top: -$rulerWidth;
-        height: $rulerWidth;
-    }
-    .orientation-vertical {
-        top: -12px;
-        left: -$rulerWidth;
-        width: $rulerWidth;
-    }
-}
-
-.cursor-point-select {
-	cursor: url('/assets/cursor/pointSelectCursor.png') 0 0, default;
-}
-
-.cursor-pen {
-	cursor: url('/assets/cursor/penCursor.png') 0 0, default;
-}
-
-.cursor-pen-add {
-	cursor: url('/assets/cursor/penAddCursor.png') 0 0, default;
-}
-
-.cursor-pen-close {
-	cursor: url('/assets/cursor/penCloseCursor.png') 0 0, default;
-}
-
-.cursor-resize-0 {
-	cursor: ns-resize;
-}
-
-.cursor-resize-45 {
-	cursor: nesw-resize;
-}
-
-.cursor-resize-90 {
-	cursor: ew-resize;
-}
-
-.cursor-resize-135 {
-	cursor: nwse-resize;
-}
-
-.cursor-rotate-0 {
-	cursor: url('/assets/cursor/rotateTopCursor.png') 0 0, default;
-}
-
-.cursor-rotate-45 {
-	cursor: url('/assets/cursor/rotateTopRightCursor.png') 0 0, default;
-}
-
-.cursor-rotate-90 {
-	cursor: url('/assets/cursor/rotateRightCursor.png') 0 0, default;
-}
-
-.cursor-rotate-135 {
-	cursor: url('/assets/cursor/rotateBottomRightCursor.png') 0 0, default;
-}
-
-.cursor-rotate-180 {
-	cursor: url('/assets/cursor/rotateBottomCursor.png') 0 0, default;
-}
-
-.cursor-rotate-225 {
-	cursor: url('/assets/cursor/rotateBottomLeftCursor.png') 0 0, default;
-}
-
-.cursor-rotate-270 {
-	cursor: url('/assets/cursor/rotateLeftCursor.png') 0 0, default;
-}
-
-.cursor-rotate-315 {
-	cursor: url('/assets/cursor/rotateTopLeftCursor.png') 0 0, default;
-}
-
-.cursor-zoom-in {
-	cursor: zoom-in;
-}
-
-.cursor-zoom-out {
-	cursor: zoom-out;
-}
-
-.cursor-grab {
-	cursor: grab;
-}
-
-.cursor-grabbing {
-	cursor: grabbing;
+  }
+  $rulerWidth: 32px;
+  .orientation-horizontal {
+    left: -12px;
+    top: -$rulerWidth;
+    height: $rulerWidth;
+  }
+  .orientation-vertical {
+    top: -12px;
+    left: -$rulerWidth;
+    width: $rulerWidth;
+  }
 }

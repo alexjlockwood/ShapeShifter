@@ -146,8 +146,6 @@ export class AppModule {
       .addSvgIcon('group', this.trustUrl('assets/icons/grouplayer.svg'))
       .addSvgIcon('path', this.trustUrl('assets/icons/pathlayer.svg'))
       .addSvgIcon('vector', this.trustUrl('assets/icons/vectorlayer.svg'))
-      // Cursors.
-      .addSvgIcon('selectioncursor', this.trustUrl('assets/cursors/selectioncursor.svg'))
       // Tools.
       .addSvgIcon('tool_select', this.trustUrl('assets/tools/tool_select.svg'))
       .addSvgIcon('tool_pencil', this.trustUrl('assets/tools/tool_pencil.svg'))

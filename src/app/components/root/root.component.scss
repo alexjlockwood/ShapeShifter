@@ -30,33 +30,21 @@ div.toolbar-container {
     right: 0;
     bottom: 0;
     z-index: 9999;
-    animation: pulsate-color .66s ease 0s infinite;
+    animation: pulsate-color 0.66s ease 0s infinite;
     pointer-events: none;
     transform: translateZ(0);
   }
   @keyframes pulsate-color {
     0% {
-      opacity: .5;
+      opacity: 0.5;
     }
     50% {
       opacity: 1;
     }
     100% {
-      opacity: .5;
+      opacity: 0.5;
     }
   }
-}
-
-.show-default-cursor {
-  cursor: default;
-}
-
-.show-pointer-cursor {
-  cursor: pointer;
-}
-
-.show-pen-cursor {
-  cursor: url(/assets/cursor/penaddcursorsmall.png) 5 0, auto;
 }
 
 div.display-container {
@@ -68,4 +56,102 @@ div.display-container {
 app-toolpanel {
   // TODO: make this color theme dependent
   background-color: white;
+}
+
+.cursor-default {
+  cursor: default;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// TODO: adjust the positioning of the custom cursors below.
+
+.cursor-pen {
+  cursor: url(/assets/cursor/pen.png) 5 0, auto;
+}
+
+.cursor-pen-add {
+  cursor: url(/assets/cursor/pen-add.png) 5 0, auto;
+}
+
+.cursor-point-select {
+  cursor: url(/assets/cursor/point-select.png) 0 0, default;
+}
+
+.cursor-pen {
+  cursor: url(/assets/cursor/pen.png) 0 0, default;
+}
+
+.cursor-pen-add {
+  cursor: url(/assets/cursor/pen-add.png) 0 0, default;
+}
+
+.cursor-pen-close {
+  cursor: url(/assets/cursor/pen-close.png) 0 0, default;
+}
+
+.cursor-resize0 {
+  cursor: ns-resize;
+}
+
+.cursor-resize45 {
+  cursor: nesw-resize;
+}
+
+.cursor-resize90 {
+  cursor: ew-resize;
+}
+
+.cursor-resize135 {
+  cursor: nwse-resize;
+}
+
+.cursor-rotate0 {
+  cursor: url(/assets/cursor/rotate-top.png) 0 0, default;
+}
+
+.cursor-rotate45 {
+  cursor: url(/assets/cursor/rotate-top-right.png) 0 0, default;
+}
+
+.cursor-rotate90 {
+  cursor: url(/assets/cursor/rotate-right.png) 0 0, default;
+}
+
+.cursor-rotate135 {
+  cursor: url(/assets/cursor/rotate-bottom-right.png) 0 0, default;
+}
+
+.cursor-rotate180 {
+  cursor: url(/assets/cursor/rotate-bottom.png) 0 0, default;
+}
+
+.cursor-rotate225 {
+  cursor: url(/assets/cursor/rotate-bottom-left.png) 0 0, default;
+}
+
+.cursor-rotate270 {
+  cursor: url(/assets/cursor/rotate-left.png) 0 0, default;
+}
+
+.cursor-rotate315 {
+  cursor: url(/assets/cursor/rotate-top-left.png) 0 0, default;
+}
+
+.cursor-zoom-in {
+  cursor: zoom-in;
+}
+
+.cursor-zoom-out {
+  cursor: zoom-out;
+}
+
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing;
 }

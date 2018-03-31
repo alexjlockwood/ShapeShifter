@@ -1,4 +1,4 @@
-import { CanvasCursor, ToolMode } from 'app/model/paper';
+import { CursorType, ToolMode } from 'app/model/paper';
 
 import {
   CreatePathInfo,
@@ -29,7 +29,7 @@ interface ToolModeInfo {
   readonly transformPathsInfo?: TransformPathsInfo;
   readonly snapGuideInfo?: SnapGuideInfo;
   readonly tooltipInfo?: TooltipInfo;
-  readonly canvasCursor?: CanvasCursor;
+  readonly canvasCursor?: CursorType;
 }
 
 export function buildInitialState(): State {
@@ -66,8 +66,8 @@ export function reducer(state = buildInitialState(), action: PaperActions): Stat
       return { ...state, toolModeInfo: { ...toolModeInfo, snapGuideInfo: action.snapGuideInfo } };
     case PaperActionTypes.SetTooltipInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, tooltipInfo: action.tooltipInfo } };
-    case PaperActionTypes.SetCanvasCursor:
-      return { ...state, toolModeInfo: { ...toolModeInfo, canvasCursor: action.canvasCursor } };
+    case PaperActionTypes.SetCursorType:
+      return { ...state, toolModeInfo: { ...toolModeInfo, canvasCursor: action.cursorType } };
   }
   return state;
 }

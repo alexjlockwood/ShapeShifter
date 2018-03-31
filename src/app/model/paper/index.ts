@@ -1,2 +1,2 @@
 export { ToolMode } from './ToolMode';
-export { CanvasCursor } from './CanvasCursor';
+export { CursorType } from './CursorType';

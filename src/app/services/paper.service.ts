@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { VectorLayer } from 'app/model/layers';
-import { CanvasCursor, ToolMode } from 'app/model/paper';
+import { CursorType, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import { SetHoveredLayer } from 'app/store/layers/actions';
@@ -14,8 +14,8 @@ import {
   CreatePathInfo,
   FocusedPathInfo,
   RotateItemsInfo,
-  SetCanvasCursor,
   SetCreatePathInfo,
+  SetCursorType,
   SetFocusedPathInfo,
   SetRotateItemsInfo,
   SetSelectionBox,
@@ -32,8 +32,8 @@ import {
   ZoomPanInfo,
 } from 'app/store/paper/actions';
 import {
-  getCanvasCursor,
   getCreatePathInfo,
+  getCursorType,
   getFocusedPathInfo,
   getRotateItemsInfo,
   getSelectionBox,
@@ -208,10 +208,9 @@ export class PaperService {
     return this.queryStore(getTransformPathsInfo);
   }
 
-  /** Sets the current canvas cursor. */
-  setCanvasCursor(canvasCursor: CanvasCursor | undefined) {
-    if (!_.isEqual(this.queryStore(getCanvasCursor), canvasCursor)) {
-      this.dispatchStore(new SetCanvasCursor(canvasCursor));
+  setCursorType(cursorType: CursorType | undefined) {
+    if (!_.isEqual(this.queryStore(getCursorType), cursorType)) {
+      this.dispatchStore(new SetCursorType(cursorType));
     }
   }
 

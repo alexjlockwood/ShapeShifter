@@ -1,4 +1,4 @@
-import { CanvasCursor, ToolMode } from 'app/model/paper';
+import { CursorType, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 import { Action } from 'app/store/ngrx';
 
@@ -10,7 +10,7 @@ export enum PaperActionTypes {
   SetFocusedPathInfo = '__paper__SET_FOCUSED_PATH_INFO',
   SetRotateItemsInfo = '__paper__SET_ROTATE_ITEMS_INFO',
   SetTransformPathInfo = '__paper__SET_TRANSFORM_PATHS_INFO',
-  SetCanvasCursor = '__paper__SET_CANVAS_CURSOR',
+  SetCursorType = '__paper__SET_CANVAS_CURSOR',
   SetSnapGuideInfo = '__paper__SET_SNAP_GUIDE_INFO',
   SetZoomPanInfo = '__paper__SET_ZOOM_PAN_INFO',
   SetTooltipInfo = '__paper__SET_TOOLTIP_INFO',
@@ -51,9 +51,9 @@ export class SetTransformPathsInfo implements Action {
   constructor(readonly transformPathsInfo: TransformPathsInfo | undefined) {}
 }
 
-export class SetCanvasCursor implements Action {
-  readonly type = PaperActionTypes.SetCanvasCursor;
-  constructor(readonly canvasCursor: CanvasCursor | undefined) {}
+export class SetCursorType implements Action {
+  readonly type = PaperActionTypes.SetCursorType;
+  constructor(readonly cursorType: CursorType | undefined) {}
 }
 
 export class SetSnapGuideInfo implements Action {
@@ -79,7 +79,7 @@ export type PaperActions =
   | SetFocusedPathInfo
   | SetRotateItemsInfo
   | SetTransformPathsInfo
-  | SetCanvasCursor
+  | SetCursorType
   | SetSnapGuideInfo
   | SetZoomPanInfo
   | SetTooltipInfo;
