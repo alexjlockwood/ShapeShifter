@@ -14,6 +14,7 @@ export enum PaperActionTypes {
   SetSnapGuideInfo = '__paper__SET_SNAP_GUIDE_INFO',
   SetZoomPanInfo = '__paper__SET_ZOOM_PAN_INFO',
   SetTooltipInfo = '__paper__SET_TOOLTIP_INFO',
+  SetHoveredLayerId = '__paper__SET_HOVERED_LAYER_ID',
 }
 
 export class SetToolMode implements Action {
@@ -71,6 +72,11 @@ export class SetTooltipInfo implements Action {
   constructor(readonly tooltipInfo: TooltipInfo | undefined) {}
 }
 
+export class SetHoveredLayerId implements Action {
+  readonly type = PaperActionTypes.SetHoveredLayerId;
+  constructor(readonly hoveredLayerId: string | undefined) {}
+}
+
 export type PaperActions =
   | SetToolMode
   | SetSelectionBox
@@ -82,7 +88,8 @@ export type PaperActions =
   | SetCursorType
   | SetSnapGuideInfo
   | SetZoomPanInfo
-  | SetTooltipInfo;
+  | SetTooltipInfo
+  | SetHoveredLayerId;
 
 export interface SelectionBox {
   readonly from: Point;

@@ -2,10 +2,10 @@ import { getActionMode, isActionMode } from 'app/store/actionmode/selectors';
 import {
   getCollapsedLayerIds,
   getHiddenLayerIds,
-  getHoveredLayerId,
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/store/layers/selectors';
+import { getHoveredLayerId } from 'app/store/paper/selectors';
 import { isBeingReset } from 'app/store/reset/selectors';
 import {
   getAnimation,

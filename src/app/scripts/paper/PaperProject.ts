@@ -2,14 +2,11 @@ import { PaperLayer } from 'app/scripts/paper/item';
 import { MasterToolPicker } from 'app/scripts/paper/tool';
 import { PaperService } from 'app/services';
 import { State, Store } from 'app/store';
-import {
-  getHiddenLayerIds,
-  getHoveredLayerId,
-  getSelectedLayerIds,
-} from 'app/store/layers/selectors';
+import { getHiddenLayerIds, getSelectedLayerIds } from 'app/store/layers/selectors';
 import {
   getCreatePathInfo,
   getEditPathInfo,
+  getHoveredLayerId,
   getSelectionBox,
   getSnapGuideInfo,
   getSplitCurveInfo,

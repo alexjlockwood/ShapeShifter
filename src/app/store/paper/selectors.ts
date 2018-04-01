@@ -19,6 +19,7 @@ export const getTransformPathsInfo = createDeepEqualSelector(
 export const getSnapGuideInfo = createDeepEqualSelector(getToolModeInfo, p => p.snapGuideInfo);
 export const getTooltipInfo = createDeepEqualSelector(getToolModeInfo, p => p.tooltipInfo);
 export const getCursorType = createDeepEqualSelector(getPaperState, p => p.cursorType);
+export const getHoveredLayerId = createDeepEqualSelector(getToolModeInfo, p => p.hoveredLayerId);
 
 const getSingleSelectedChildlessLayer = createSelector(
   [getVectorLayer, getSelectedLayerIds],

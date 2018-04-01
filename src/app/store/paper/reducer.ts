@@ -30,6 +30,7 @@ interface ToolModeInfo {
   readonly transformPathsInfo?: TransformPathsInfo;
   readonly snapGuideInfo?: SnapGuideInfo;
   readonly tooltipInfo?: TooltipInfo;
+  readonly hoveredLayerId?: string;
 }
 
 export function buildInitialState(): State {
@@ -69,6 +70,9 @@ export function reducer(state = buildInitialState(), action: PaperActions): Stat
       return { ...state, toolModeInfo: { ...toolModeInfo, tooltipInfo: action.tooltipInfo } };
     case PaperActionTypes.SetCursorType:
       return { ...state, cursorType: action.cursorType };
+    case PaperActionTypes.SetHoveredLayerId:
+      const { hoveredLayerId } = action;
+      return { ...state, toolModeInfo: { ...toolModeInfo, hoveredLayerId } };
   }
   return state;
 }

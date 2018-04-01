@@ -27,6 +27,7 @@ import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
 import { getActionMode, getActionModeHover } from 'app/store/actionmode/selectors';
 import { isWorkspaceDirty } from 'app/store/common/selectors';
+import { getCursorType } from 'app/store/paper/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import * as erd from 'element-resize-detector';
 import { environment } from 'environments/environment';
@@ -35,8 +36,6 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 import { distinctUntilChanged, first, map } from 'rxjs/operators';
-
-import { getCursorType } from '../../store/paper/selectors';
 
 const SHOULD_AUTO_LOAD_DEMO = false;
 const IS_DEV_BUILD = !environment.production;

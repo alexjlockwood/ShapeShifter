@@ -3,12 +3,7 @@ import { VectorLayer } from 'app/model/layers';
 import { CursorType, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
-import { SetHoveredLayer } from 'app/store/layers/actions';
-import {
-  getHiddenLayerIds,
-  getHoveredLayerId,
-  getSelectedLayerIds,
-} from 'app/store/layers/selectors';
+import { getHiddenLayerIds, getSelectedLayerIds } from 'app/store/layers/selectors';
 import { Action } from 'app/store/ngrx';
 import {
   CreatePathInfo,
@@ -17,6 +12,7 @@ import {
   SetCreatePathInfo,
   SetCursorType,
   SetEditPathInfo,
+  SetHoveredLayerId,
   SetRotateItemsInfo,
   SetSelectionBox,
   SetSnapGuideInfo,
@@ -35,6 +31,7 @@ import {
   getCreatePathInfo,
   getCursorType,
   getEditPathInfo,
+  getHoveredLayerId,
   getRotateItemsInfo,
   getSelectionBox,
   getSnapGuideInfo,
@@ -131,7 +128,7 @@ export class PaperService {
   /** Sets or clears the currently hovered layer ID. */
   setHoveredLayerId(layerId: string | undefined) {
     if (this.queryStore(getHoveredLayerId) !== layerId) {
-      this.ngZone.run(() => this.store.dispatch(new SetHoveredLayer(layerId)));
+      this.ngZone.run(() => this.store.dispatch(new SetHoveredLayerId(layerId)));
     }
   }
 

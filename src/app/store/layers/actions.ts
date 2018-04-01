@@ -4,7 +4,6 @@ import { Action } from 'app/store/ngrx';
 export enum LayerActionTypes {
   SetVectorLayer = '__layers__SET_VECTOR_LAYER',
   SetSelectedLayers = '__layers__SET_SELECTED_LAYERS',
-  SetHoveredLayer = '__layers__SET_HOVERED_LAYER',
   SetHiddenLayers = '__layers__SET_HIDDEN_LAYERS',
   SetCollapsedLayers = '__layers__SET_COLLAPSED_LAYERS',
 }
@@ -22,14 +21,6 @@ export class SetSelectedLayers implements Action {
   readonly payload: { layerIds: ReadonlySet<string> };
   constructor(layerIds: ReadonlySet<string>) {
     this.payload = { layerIds };
-  }
-}
-
-export class SetHoveredLayer implements Action {
-  readonly type = LayerActionTypes.SetHoveredLayer;
-  readonly payload: { layerId: string };
-  constructor(layerId: string) {
-    this.payload = { layerId };
   }
 }
 
@@ -52,6 +43,5 @@ export class SetCollapsedLayers implements Action {
 export type LayerActions =
   | SetVectorLayer
   | SetSelectedLayers
-  | SetHoveredLayer
   | SetHiddenLayers
   | SetCollapsedLayers;
