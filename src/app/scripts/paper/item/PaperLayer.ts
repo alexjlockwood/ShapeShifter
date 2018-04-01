@@ -69,7 +69,7 @@ export class PaperLayer extends paper.Layer {
   }
 
   private get editPathInfo() {
-    return this.ps.getgetEditPathInfoInfo();
+    return this.ps.getEditPathInfo();
   }
 
   hitTestVectorLayer(projPoint: paper.Point) {

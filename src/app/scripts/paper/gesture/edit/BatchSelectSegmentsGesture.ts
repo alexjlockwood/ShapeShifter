@@ -28,7 +28,7 @@ export class BatchSelectSegmentsGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    this.initialSelectedSegments = this.ps.getgetEditPathInfoInfo().selectedSegments;
+    this.initialSelectedSegments = this.ps.getEditPathInfo().selectedSegments;
     this.updatedSelectedSegments = new Set();
     this.updateCurrentSelection(event.modifiers.command || event.modifiers.shift);
   }

@@ -39,7 +39,7 @@ export class SelectDragHandleGesture extends Gesture {
     const selectedHandleIn = this.hitHandleType === 'handleIn' ? this.hitSegmentIndex : undefined;
     const selectedHandleOut = this.hitHandleType === 'handleOut' ? this.hitSegmentIndex : undefined;
     this.ps.setEditPathInfo({
-      ...this.ps.getgetEditPathInfoInfo(),
+      ...this.ps.getEditPathInfo(),
       selectedSegments,
       selectedHandleIn,
       selectedHandleOut,

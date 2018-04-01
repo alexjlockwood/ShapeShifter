@@ -195,7 +195,7 @@ export class PaperService {
     }
   }
 
-  getgetEditPathInfoInfo() {
+  getEditPathInfo() {
     return this.queryStore(getEditPathInfo);
   }
 

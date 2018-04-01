@@ -26,7 +26,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // TODO: currently necessary (if the previous gesture was the create/drag/draw segments gesture)
     this.ps.setCreatePathInfo(undefined);
 
-    const editPathId = this.ps.getgetEditPathInfoInfo().layerId;
+    const editPathId = this.ps.getEditPathInfo().layerId;
     const editPath = this.pl.findItemByLayerId(editPathId) as paper.Path;
     const segmentsAndHandlesHitResult = HitTests.editPathModeSegmentsAndHandles(event.point);
     if (segmentsAndHandlesHitResult) {
@@ -120,7 +120,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       // Return undefined if the path is closed.
       return undefined;
     }
-    const { selectedSegments } = this.ps.getgetEditPathInfoInfo();
+    const { selectedSegments } = this.ps.getEditPathInfo();
     if (selectedSegments.size !== 1) {
       // Return undefined if there is not a single selected segment.
       return undefined;

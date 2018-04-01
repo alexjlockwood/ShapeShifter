@@ -75,7 +75,7 @@ export class GestureTool extends Tool {
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
-    if (this.ps.getgetEditPathInfoInfo()) {
+    if (this.ps.getEditPathInfo()) {
       return this.createEditPathModeGesture(event);
     }
     const selectedLayerIds = this.ps.getSelectedLayerIds();
@@ -150,7 +150,7 @@ export class GestureTool extends Tool {
   }
 
   private createEditPathModeGesture(event: paper.ToolEvent) {
-    let fpi = this.ps.getgetEditPathInfoInfo();
+    let fpi = this.ps.getEditPathInfo();
     if (!fpi.layerId) {
       // Then the user has created the first segment of a new path, in which
       // case we must create a new dummy path and bring it into focus.

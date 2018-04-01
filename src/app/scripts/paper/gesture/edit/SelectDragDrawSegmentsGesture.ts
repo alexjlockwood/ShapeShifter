@@ -59,7 +59,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    const fpi = this.ps.getgetEditPathInfoInfo();
+    const fpi = this.ps.getEditPathInfo();
     const beforeSelectedSegmentIndices = fpi.selectedSegments;
     const afterSelectedSegmentIndices = new Set(beforeSelectedSegmentIndices);
     const editPath = this.pl.findItemByLayerId(this.editPathId) as paper.Path;
