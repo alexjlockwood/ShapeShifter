@@ -73,6 +73,8 @@ export function createSvgSprite(vectorLayer: VectorLayer, animation: Animation, 
 ${svgs.join('\n')}
 </svg>
 `;
-  Svgo.optimize(svg, optimizedSvgText => (svg = optimizedSvgText));
+  Svgo.optimize(svg)
+    .then(optimizedSvgText => (svg = optimizedSvgText))
+    .catch(() => (svg = undefined));
   return svg;
 }
