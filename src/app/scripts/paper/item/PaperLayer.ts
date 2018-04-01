@@ -11,7 +11,7 @@ import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import {
   CreatePathInfo,
-  FocusedPathInfo,
+  EditPathInfo,
   SnapGuideInfo,
   SplitCurveInfo,
   TooltipInfo,
@@ -19,7 +19,7 @@ import {
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
-import { FocusedPathRaster } from './FocusedPathRaster';
+import { EditPathRaster } from './EditPathRaster';
 import { SelectionBoundsRaster } from './SelectionBoundsRaster';
 
 /**
@@ -38,7 +38,7 @@ export class PaperLayer extends paper.Layer {
   private selectionBoxItem: paper.Path;
   private createPathItem: paper.Path;
   private splitCurveItem: paper.Item;
-  private focusedPathItem: paper.Item;
+  private editPathItem: paper.Item;
   private snapGuideItem: paper.Item;
   private pixelGridItem: paper.Item;
   private tooltipItem: paper.Item;
@@ -68,8 +68,8 @@ export class PaperLayer extends paper.Layer {
     return this.ps.getHiddenLayerIds();
   }
 
-  private get focusedPathInfo() {
-    return this.ps.getFocusedPathInfo();
+  private get editPathInfo() {
+    return this.ps.getgetEditPathInfoInfo();
   }
 
   hitTestVectorLayer(projPoint: paper.Point) {
@@ -119,7 +119,7 @@ export class PaperLayer extends paper.Layer {
   onVectorLayerChanged() {
     this.updateCanvasColorShape();
     this.updateVectorLayerItem();
-    this.updateFocusedPathItem();
+    this.updateEditPathItem();
     this.updateSelectionBoundsItem();
     this.updateHoverPathItem();
   }
@@ -137,8 +137,8 @@ export class PaperLayer extends paper.Layer {
     this.updateHoverPathItem();
   }
 
-  onFocusedPathInfoChanged() {
-    this.updateFocusedPathItem();
+  onEditPathInfoChanged() {
+    this.updateEditPathItem();
     this.updateSelectionBoundsItem();
   }
 
@@ -221,7 +221,7 @@ export class PaperLayer extends paper.Layer {
       this.selectionBoundsItem.remove();
       this.selectionBoundsItem = undefined;
     }
-    if (!this.focusedPathInfo) {
+    if (!this.editPathInfo) {
       const selectedItems = Array.from(this.selectedLayerIds)
         .map(id => this.findItemByLayerId(id))
         // Filter out any selected empty groups.
@@ -261,16 +261,16 @@ export class PaperLayer extends paper.Layer {
     this.updateChildren();
   }
 
-  private updateFocusedPathItem() {
-    if (this.focusedPathItem) {
-      this.focusedPathItem.remove();
-      this.focusedPathItem = undefined;
+  private updateEditPathItem() {
+    if (this.editPathItem) {
+      this.editPathItem.remove();
+      this.editPathItem = undefined;
     }
-    const fpi = this.focusedPathInfo;
+    const fpi = this.editPathInfo;
     if (fpi && fpi.layerId) {
       // TODO: is it possible for pathData to be undefined?
       const path = this.findItemByLayerId(fpi.layerId) as paper.Path;
-      this.focusedPathItem = newFocusedPathItem(path, fpi, this.cssScaling);
+      this.editPathItem = newEditPathItem(path, fpi, this.cssScaling);
       this.updateChildren();
     }
   }
@@ -294,7 +294,7 @@ export class PaperLayer extends paper.Layer {
       this.hoverPathItem,
       this.createPathItem,
       this.splitCurveItem,
-      this.focusedPathItem,
+      this.editPathItem,
       this.snapGuideItem,
       this.selectionBoxItem,
       this.pixelGridItem,
@@ -502,9 +502,9 @@ function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
 }
 
 /**
- * Creates the overlay decorations for the given focused path.
+ * Creates the overlay decorations for the given edit path.
  */
-function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling: number) {
+function newEditPathItem(path: paper.Path, info: EditPathInfo, cssScaling: number) {
   const group = new paper.Group();
   const scaleFactor = 1 / (1.8 * cssScaling * paper.view.zoom);
 
@@ -539,19 +539,14 @@ function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling:
       handleIn = point.add(handleIn).transform(matrix);
       addLineFn(center, handleIn);
       addRasterFn(
-        new FocusedPathRaster(
-          'handle-in',
-          segmentIndex,
-          selectedHandleIn === segmentIndex,
-          handleIn,
-        ),
+        new EditPathRaster('handle-in', segmentIndex, selectedHandleIn === segmentIndex, handleIn),
       );
     }
     if (handleOut && visibleHandleOuts.has(segmentIndex)) {
       handleOut = point.add(handleOut).transform(matrix);
       addLineFn(center, handleOut);
       addRasterFn(
-        new FocusedPathRaster(
+        new EditPathRaster(
           'handle-out',
           segmentIndex,
           selectedHandleOut === segmentIndex,
@@ -560,7 +555,7 @@ function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling:
       );
     }
     addRasterFn(
-      new FocusedPathRaster('segment', segmentIndex, selectedSegments.has(segmentIndex), center),
+      new EditPathRaster('segment', segmentIndex, selectedSegments.has(segmentIndex), center),
     );
   });
   return group;

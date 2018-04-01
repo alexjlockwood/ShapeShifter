@@ -13,7 +13,7 @@ import * as paper from 'paper';
  * as well as extending an open path by appending segments to its end points.
  *
  * Preconditions:
- * - The user is in focused path mode.
+ * - The user is in edit path mode.
  * - The user either hit a segment, a curve, or missed entirely
  *   (the 'missed entirely' case occurs when the user is in vector
  *   mode, in which the user can create new segments by clicking
@@ -25,32 +25,32 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
   // Maps segment indices to each segment's location at the beginning of the gesture.
   // The initial locations are expressed in the
   private selectedSegmentIndexToInitialLocationMap: ReadonlyMap<number, paper.Point>;
-  // The location of the last mouse event in the focused path's local coordinates.
+  // The location of the last mouse event in the edit path's local coordinates.
   private localLastPoint: paper.Point;
-  // True if we should exit focused path mode on the next mouse up event.
-  private exitFocusedPathModeOnMouseUp = false;
+  // True if we should exit edit path mode on the next mouse up event.
+  private exitEditPathModeOnMouseUp = false;
   // If this gesture was used to split a curve, this tells us the index of the
   // new segment that was created in onMouseDown().
   private newSplitCurveSegmentIndex: number;
 
   /** Static factory method to use when the user's mouse down hits a segment. */
-  static hitSegment(ps: PaperService, focusedPathId: string, segmentIndex: number) {
-    return new SelectDragDrawSegmentsGesture(ps, focusedPathId, { segmentIndex });
+  static hitSegment(ps: PaperService, editPathId: string, segmentIndex: number) {
+    return new SelectDragDrawSegmentsGesture(ps, editPathId, { segmentIndex });
   }
 
   /** Static factory method to use when the user's mouse down hits a curve. */
-  static hitCurve(ps: PaperService, focusedPathId: string, curveIndex: number, time: number) {
-    return new SelectDragDrawSegmentsGesture(ps, focusedPathId, undefined, { curveIndex, time });
+  static hitCurve(ps: PaperService, editPathId: string, curveIndex: number, time: number) {
+    return new SelectDragDrawSegmentsGesture(ps, editPathId, undefined, { curveIndex, time });
   }
 
-  /** Static factory method to use when the user misses the focused path. */
-  static miss(ps: PaperService, focusedPathId: string) {
-    return new SelectDragDrawSegmentsGesture(ps, focusedPathId);
+  /** Static factory method to use when the user misses the edit path. */
+  static miss(ps: PaperService, editPathId: string) {
+    return new SelectDragDrawSegmentsGesture(ps, editPathId);
   }
 
   private constructor(
     private readonly ps: PaperService,
-    private readonly focusedPathId: string,
+    private readonly editPathId: string,
     private readonly hitSegmentInfo?: Readonly<{ segmentIndex: number }>,
     private readonly hitCurveInfo?: Readonly<{ curveIndex?: number; time: number }>,
   ) {
@@ -59,19 +59,19 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    const fpi = this.ps.getFocusedPathInfo();
+    const fpi = this.ps.getgetEditPathInfoInfo();
     const beforeSelectedSegmentIndices = fpi.selectedSegments;
     const afterSelectedSegmentIndices = new Set(beforeSelectedSegmentIndices);
-    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
+    const editPath = this.pl.findItemByLayerId(this.editPathId) as paper.Path;
 
     if (this.hitSegmentInfo) {
-      const isEndPointFn = (i: number) => i === 0 || i === focusedPath.segments.length - 1;
+      const isEndPointFn = (i: number) => i === 0 || i === editPath.segments.length - 1;
       const { segmentIndex } = this.hitSegmentInfo;
       const singleSelectedSegmentIndex = beforeSelectedSegmentIndices.size
         ? beforeSelectedSegmentIndices.values().next().value
         : undefined;
       if (
-        !focusedPath.closed &&
+        !editPath.closed &&
         singleSelectedSegmentIndex !== undefined &&
         isEndPointFn(segmentIndex) &&
         isEndPointFn(singleSelectedSegmentIndex) &&
@@ -80,9 +80,9 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
         // If the path is open, one of the end points is selected, and the
         // user clicked the other end point segment, then close the path
         // and end the gesture on the next mouse up event.
-        focusedPath.closed = true;
-        this.exitFocusedPathModeOnMouseUp = true;
-        PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
+        editPath.closed = true;
+        this.exitEditPathModeOnMouseUp = true;
+        PaperUtil.replacePathInStore(this.ps, this.editPathId, editPath.pathData);
       }
       if (event.modifiers.shift || event.modifiers.command) {
         // If shift or command is pressed, toggle the segment's selection state.
@@ -100,11 +100,11 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // If there is no hit segment, then create one along the curve
       // at the given location and select the new segment.
       const { curveIndex, time } = this.hitCurveInfo;
-      const curve = focusedPath.curves[curveIndex];
+      const curve = editPath.curves[curveIndex];
       const newSegment = event.modifiers.shift
         ? curve.divideAt(curve.getLocationAt(curve.length / 2))
         : curve.divideAtTime(time).segment1;
-      PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
+      PaperUtil.replacePathInStore(this.ps, this.editPathId, editPath.pathData);
       afterSelectedSegmentIndices.clear();
       afterSelectedSegmentIndices.add(newSegment.index);
       this.newSplitCurveSegmentIndex = newSegment.index;
@@ -112,47 +112,47 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // Otherwise, we are either (1) extending an existing open path (beginning
       // at one of its selected end points), or (2) beginning to create a new path
       // from scratch.
-      const localPoint = focusedPath.globalToLocal(event.point);
+      const localPoint = editPath.globalToLocal(event.point);
       let addedSegment: paper.Segment;
-      if (focusedPath.segments.length === 0) {
-        addedSegment = focusedPath.add(localPoint);
+      if (editPath.segments.length === 0) {
+        addedSegment = editPath.add(localPoint);
       } else {
         // Note that there will always be a single selected end point segment in this case
         // (otherwise we would have used a batch select segments gesture instead).
         const singleSelectedSegmentIndex = beforeSelectedSegmentIndices.values().next().value;
-        const selectedSegment = focusedPath.segments[singleSelectedSegmentIndex];
+        const selectedSegment = editPath.segments[singleSelectedSegmentIndex];
         addedSegment = selectedSegment.isLast()
-          ? focusedPath.add(localPoint)
-          : focusedPath.insert(0, localPoint);
+          ? editPath.add(localPoint)
+          : editPath.insert(0, localPoint);
         afterSelectedSegmentIndices.delete(singleSelectedSegmentIndex);
       }
       afterSelectedSegmentIndices.add(addedSegment.index);
-      PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
+      PaperUtil.replacePathInStore(this.ps, this.editPathId, editPath.pathData);
     }
 
     this.selectedSegmentIndexToInitialLocationMap = new Map(
       Array.from(afterSelectedSegmentIndices).map(segmentIndex => {
-        const point = focusedPath.segments[segmentIndex].point.clone();
+        const point = editPath.segments[segmentIndex].point.clone();
         return [segmentIndex, point] as [number, paper.Point];
       }),
     );
 
-    this.ps.setFocusedPathInfo({
+    this.ps.setEditPathInfo({
       ...fpi,
-      ...PaperUtil.selectCurves(focusedPath, afterSelectedSegmentIndices),
+      ...PaperUtil.selectCurves(editPath, afterSelectedSegmentIndices),
     });
     this.ps.setCursorType(CursorType.PointSelect);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
+    const editPath = this.pl.findItemByLayerId(this.editPathId) as paper.Path;
 
-    const localDownPoint = focusedPath.globalToLocal(event.downPoint);
+    const localDownPoint = editPath.globalToLocal(event.downPoint);
     if (!this.localLastPoint) {
       this.localLastPoint = localDownPoint;
     }
-    const localPoint = focusedPath.globalToLocal(event.point);
+    const localPoint = editPath.globalToLocal(event.point);
     const localDownPointDelta = localPoint.subtract(localDownPoint);
     const localLastPointDelta = localPoint.subtract(this.localLastPoint);
     const localSnappedDownPointDelta = new paper.Point(
@@ -163,11 +163,11 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // A segment was created on mouse down and is still being grabbed,
       // so continue to drag the currently selected segments.
       const selectedSegmentIndices = new Set(this.selectedSegmentIndexToInitialLocationMap.keys());
-      const nonSelectedSegmentIndices = focusedPath.segments
+      const nonSelectedSegmentIndices = editPath.segments
         .map((s, i) => i)
         .filter((s, i) => !selectedSegmentIndices.has(i));
       this.selectedSegmentIndexToInitialLocationMap.forEach((initialSegmentPoint, i) => {
-        const segment = focusedPath.segments[i];
+        const segment = editPath.segments[i];
         segment.point = event.modifiers.shift
           ? initialSegmentPoint.add(localSnappedDownPointDelta)
           : segment.point.add(localLastPointDelta);
@@ -175,19 +175,17 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       const draggedSegmentIndex = this.hitSegmentInfo
         ? this.hitSegmentInfo.segmentIndex
         : this.newSplitCurveSegmentIndex;
-      const dragSnapPoint = focusedPath.localToGlobal(
-        focusedPath.segments[draggedSegmentIndex].point,
-      );
+      const dragSnapPoint = editPath.localToGlobal(editPath.segments[draggedSegmentIndex].point);
       const { topLeft, center, bottomRight } = Array.from(
         this.selectedSegmentIndexToInitialLocationMap.values(),
       ).reduce((rect: paper.Rectangle, p: paper.Point) => {
-        p = focusedPath.localToGlobal(p);
+        p = editPath.localToGlobal(p);
         return rect ? rect.include(p) : new paper.Rectangle(p, new paper.Size(0, 0));
       }, undefined);
       const siblingSnapPointsTable = [
         [topLeft, center, bottomRight],
         ...nonSelectedSegmentIndices.map(i => {
-          return [focusedPath.localToGlobal(focusedPath.segments[i].point)];
+          return [editPath.localToGlobal(editPath.segments[i].point)];
         }),
       ];
 
@@ -209,7 +207,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // Note that there will only ever be one selected segment in this case.
       const selectedSegmentIndex = this.selectedSegmentIndexToInitialLocationMap.keys().next()
         .value;
-      const selectedSegment = focusedPath.segments[selectedSegmentIndex];
+      const selectedSegment = editPath.segments[selectedSegmentIndex];
       // TODO: dragging a handle belonging to an endpoint doesn't work! handle info is lost!
       // TODO: snap the dragged segment handle with the newly created segment
       if (event.modifiers.shift) {
@@ -227,15 +225,15 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     }
     this.localLastPoint = localPoint;
 
-    PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
+    PaperUtil.replacePathInStore(this.ps, this.editPathId, editPath.pathData);
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     this.ps.setCursorType(CursorType.Default);
     this.ps.setSnapGuideInfo(undefined);
-    if (this.exitFocusedPathModeOnMouseUp) {
-      this.ps.setFocusedPathInfo(undefined);
+    if (this.exitEditPathModeOnMouseUp) {
+      this.ps.setEditPathInfo(undefined);
     }
   }
 

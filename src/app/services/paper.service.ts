@@ -12,11 +12,11 @@ import {
 import { Action } from 'app/store/ngrx';
 import {
   CreatePathInfo,
-  FocusedPathInfo,
+  EditPathInfo,
   RotateItemsInfo,
   SetCreatePathInfo,
   SetCursorType,
-  SetFocusedPathInfo,
+  SetEditPathInfo,
   SetRotateItemsInfo,
   SetSelectionBox,
   SetSnapGuideInfo,
@@ -34,7 +34,7 @@ import {
 import {
   getCreatePathInfo,
   getCursorType,
-  getFocusedPathInfo,
+  getEditPathInfo,
   getRotateItemsInfo,
   getSelectionBox,
   getSnapGuideInfo,
@@ -67,9 +67,9 @@ export class PaperService {
     return this.store.select(getToolPanelState);
   }
 
-  enterFocusedPathMode() {
+  enterEditPathMode() {
     this.setToolMode(ToolMode.Selection);
-    this.setFocusedPathInfo({
+    this.setEditPathInfo({
       layerId: '',
       selectedSegments: new Set<number>(),
       visibleHandleIns: new Set<number>(),
@@ -189,14 +189,14 @@ export class PaperService {
     return this.queryStore(getToolMode);
   }
 
-  setFocusedPathInfo(info: FocusedPathInfo | undefined) {
-    if (!_.isEqual(this.queryStore(getFocusedPathInfo), info)) {
-      this.dispatchStore(new SetFocusedPathInfo(info));
+  setEditPathInfo(info: EditPathInfo | undefined) {
+    if (!_.isEqual(this.queryStore(getEditPathInfo), info)) {
+      this.dispatchStore(new SetEditPathInfo(info));
     }
   }
 
-  getFocusedPathInfo() {
-    return this.queryStore(getFocusedPathInfo);
+  getgetEditPathInfoInfo() {
+    return this.queryStore(getEditPathInfo);
   }
 
   setRotateItemsInfo(info: RotateItemsInfo | undefined) {

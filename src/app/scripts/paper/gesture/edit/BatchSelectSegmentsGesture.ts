@@ -10,7 +10,7 @@ import * as paper from 'paper';
  * A gesture that selects multiple segments using a bounded box.
  *
  * Preconditions:
- * - The user is in focused path mode.
+ * - The user is in edit path mode.
  */
 export class BatchSelectSegmentsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -20,15 +20,15 @@ export class BatchSelectSegmentsGesture extends Gesture {
 
   constructor(
     private readonly ps: PaperService,
-    private readonly focusedPathId: string,
-    private readonly clearFocusedPathAfterDraglessClick: boolean,
+    private readonly editPathId: string,
+    private readonly clearEditPathAfterDraglessClick: boolean,
   ) {
     super();
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    this.initialSelectedSegments = this.ps.getFocusedPathInfo().selectedSegments;
+    this.initialSelectedSegments = this.ps.getgetEditPathInfoInfo().selectedSegments;
     this.updatedSelectedSegments = new Set();
     this.updateCurrentSelection(event.modifiers.command || event.modifiers.shift);
   }
@@ -47,22 +47,22 @@ export class BatchSelectSegmentsGesture extends Gesture {
   onMouseUp(event: paper.ToolEvent) {
     if (this.isDragging) {
       this.processToolEvent(event);
-    } else if (this.clearFocusedPathAfterDraglessClick) {
-      this.ps.setFocusedPathInfo(undefined);
+    } else if (this.clearEditPathAfterDraglessClick) {
+      this.ps.setEditPathInfo(undefined);
     }
     this.ps.setSelectionBox(undefined);
   }
 
   private processToolEvent(event: paper.ToolEvent) {
     // Calculate the bounding rectangle to use to select segments in
-    // the focused path's local coordinate space.
-    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
+    // the edit path's local coordinate space.
+    const editPath = this.pl.findItemByLayerId(this.editPathId) as paper.Path;
     const rectangle = new paper.Rectangle(
-      focusedPath.globalToLocal(event.downPoint),
-      focusedPath.globalToLocal(event.point),
+      editPath.globalToLocal(event.downPoint),
+      editPath.globalToLocal(event.point),
     );
     this.updatedSelectedSegments = new Set(
-      _.flatMap(focusedPath.segments, ({ point }, segmentIndex) => {
+      _.flatMap(editPath.segments, ({ point }, segmentIndex) => {
         return rectangle.contains(point) ? [segmentIndex] : [];
       }),
     );
@@ -96,10 +96,10 @@ export class BatchSelectSegmentsGesture extends Gesture {
         }
       });
     }
-    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
-    this.ps.setFocusedPathInfo({
-      layerId: this.focusedPathId,
-      ...PaperUtil.selectCurves(focusedPath, selectedSegments),
+    const editPath = this.pl.findItemByLayerId(this.editPathId) as paper.Path;
+    this.ps.setEditPathInfo({
+      layerId: this.editPathId,
+      ...PaperUtil.selectCurves(editPath, selectedSegments),
     });
   }
 }

@@ -20,7 +20,7 @@ export class HoverGesture extends Gesture {
   // @Override
   onMouseMove(event: paper.ToolEvent) {
     if (this.ps.getToolMode() === ToolMode.Selection) {
-      const fpi = this.ps.getFocusedPathInfo();
+      const fpi = this.ps.getgetEditPathInfoInfo();
       if (fpi) {
         if (fpi.layerId) {
           this.hoverSegmentsCurvesGesture.onMouseMove(event);

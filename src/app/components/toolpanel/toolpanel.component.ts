@@ -25,7 +25,7 @@ export class ToolPanelComponent implements OnInit {
 
   onSelectionClick() {
     this.ps.setToolMode(ToolMode.Selection);
-    this.ps.setFocusedPathInfo(undefined);
+    this.ps.setEditPathInfo(undefined);
     event.stopPropagation();
   }
 
@@ -44,8 +44,8 @@ export class ToolPanelComponent implements OnInit {
     event.stopPropagation();
   }
 
-  onFocusPathClick() {
-    this.ps.enterFocusedPathMode();
+  onEditPathClick() {
+    this.ps.enterEditPathMode();
     event.stopPropagation();
   }
 
@@ -68,7 +68,7 @@ export class ToolPanelComponent implements OnInit {
 interface ToolPanelModel {
   readonly toolMode: ToolMode;
   readonly isSelectionChecked: boolean;
-  readonly isFocusPathChecked: boolean;
+  readonly isEditPathChecked: boolean;
   readonly isRotateItemsEnabled: boolean;
   readonly isRotateItemsChecked: boolean;
   readonly isTransformPathsEnabled: boolean;

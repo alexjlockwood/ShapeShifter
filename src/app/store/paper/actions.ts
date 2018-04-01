@@ -7,7 +7,7 @@ export enum PaperActionTypes {
   SetSelectionBox = '__paper__SET_SELECTION_BOX',
   SetCreatePathInfo = '__paper__SET_CREATE_PATH_INFO',
   SetSplitCurveInfo = '__paper__SET_SPLIT_CURVE_INFO',
-  SetFocusedPathInfo = '__paper__SET_FOCUSED_PATH_INFO',
+  SetEditPathInfo = '__paper__SET_EDIT_PATH_INFO',
   SetRotateItemsInfo = '__paper__SET_ROTATE_ITEMS_INFO',
   SetTransformPathInfo = '__paper__SET_TRANSFORM_PATHS_INFO',
   SetCursorType = '__paper__SET_CANVAS_CURSOR',
@@ -36,9 +36,9 @@ export class SetSplitCurveInfo implements Action {
   constructor(readonly splitCurveInfo: SplitCurveInfo | undefined) {}
 }
 
-export class SetFocusedPathInfo implements Action {
-  readonly type = PaperActionTypes.SetFocusedPathInfo;
-  constructor(readonly focusedPathInfo: FocusedPathInfo | undefined) {}
+export class SetEditPathInfo implements Action {
+  readonly type = PaperActionTypes.SetEditPathInfo;
+  constructor(readonly editPathInfo: EditPathInfo | undefined) {}
 }
 
 export class SetRotateItemsInfo implements Action {
@@ -76,7 +76,7 @@ export type PaperActions =
   | SetSelectionBox
   | SetCreatePathInfo
   | SetSplitCurveInfo
-  | SetFocusedPathInfo
+  | SetEditPathInfo
   | SetRotateItemsInfo
   | SetTransformPathsInfo
   | SetCursorType
@@ -102,7 +102,7 @@ export interface SplitCurveInfo {
   readonly segment2: Segment;
 }
 
-export interface FocusedPathInfo {
+export interface EditPathInfo {
   readonly layerId: string;
   // TODO: suffix these variables with 'index'
   readonly selectedSegments: ReadonlySet<number>;

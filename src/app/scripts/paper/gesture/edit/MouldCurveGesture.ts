@@ -10,8 +10,8 @@ import * as paper from 'paper';
  * Based on math from here: https://pomax.github.io/bezierinfo/#moulding
  *
  * Preconditions:
- * - The user is in focused path mode.
- * - The user hit one of the focused path's curves.
+ * - The user is in edit path mode.
+ * - The user hit one of the edit path's curves.
  */
 export class MouldCurveGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -26,7 +26,7 @@ export class MouldCurveGesture extends Gesture {
   // TODO: handle cases where t === 0 and t === 1
   constructor(
     private readonly ps: PaperService,
-    private readonly focusedPathId: string,
+    private readonly editPathId: string,
     private readonly hitCurveInfo: Readonly<{ curveIndex: number; time: number }>,
   ) {
     super();
@@ -34,8 +34,8 @@ export class MouldCurveGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
-    const curve = focusedPath.curves[this.hitCurveInfo.curveIndex];
+    const editPath = this.pl.findItemByLayerId(this.editPathId) as paper.Path;
+    const curve = editPath.curves[this.hitCurveInfo.curveIndex];
     const start = curve.segment1.point;
     const end = curve.segment2.point;
     const cp1 = start.add(curve.handle1);
@@ -60,9 +60,9 @@ export class MouldCurveGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
-    const localDownPoint = focusedPath.globalToLocal(event.downPoint);
-    const localDragPoint = focusedPath.globalToLocal(event.point);
+    const editPath = this.pl.findItemByLayerId(this.editPathId) as paper.Path;
+    const localDownPoint = editPath.globalToLocal(event.downPoint);
+    const localDragPoint = editPath.globalToLocal(event.point);
 
     const { points, B, C, ratio, t } = this;
     const newB = B.add(localDragPoint.subtract(localDownPoint));
@@ -84,10 +84,10 @@ export class MouldCurveGesture extends Gesture {
     // Construct new c2` based on the fact that e--sc2 is e--c2 * (1-t).
     const nc2 = points[3].subtract(points[3].subtract(sc2).divide(1 - t));
 
-    const curve = focusedPath.curves[this.hitCurveInfo.curveIndex];
+    const curve = editPath.curves[this.hitCurveInfo.curveIndex];
     curve.handle1 = nc1.subtract(points[0]);
     curve.handle2 = nc2.subtract(points[3]);
-    PaperUtil.replacePathInStore(this.ps, this.focusedPathId, focusedPath.pathData);
+    PaperUtil.replacePathInStore(this.ps, this.editPathId, editPath.pathData);
   }
 
   // @Override

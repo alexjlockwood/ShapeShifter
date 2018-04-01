@@ -10,7 +10,7 @@ export const getToolMode = createDeepEqualSelector(getToolModeInfo, p => p.toolM
 export const getSelectionBox = createDeepEqualSelector(getToolModeInfo, p => p.selectionBox);
 export const getCreatePathInfo = createDeepEqualSelector(getToolModeInfo, p => p.createPathInfo);
 export const getSplitCurveInfo = createDeepEqualSelector(getToolModeInfo, p => p.splitCurveInfo);
-export const getFocusedPathInfo = createDeepEqualSelector(getToolModeInfo, p => p.focusedPathInfo);
+export const getEditPathInfo = createDeepEqualSelector(getToolModeInfo, p => p.editPathInfo);
 export const getRotateItemsInfo = createDeepEqualSelector(getToolModeInfo, p => p.rotateItemsInfo);
 export const getTransformPathsInfo = createDeepEqualSelector(
   getToolModeInfo,
@@ -33,18 +33,18 @@ const getSingleSelectedChildlessLayer = createSelector(
   },
 );
 
-const isFocusPathChecked = createSelector(getFocusedPathInfo, fpi => !!fpi);
+const isEditPathChecked = createSelector(getEditPathInfo, epi => !!epi);
 // TODO: exclude empty groups for rotate items?
 const isRotateItemsEnabled = createSelector(getSelectedLayerIds, layerIds => layerIds.size > 0);
 const isRotateItemsChecked = createSelector(getRotateItemsInfo, rii => !!rii);
 const isTransformPathsEnabled = createSelector(getSingleSelectedChildlessLayer, layer => !!layer);
 const isTransformPathsChecked = createSelector(getTransformPathsInfo, tpi => !!tpi);
 const isSelectionChecked = createSelector(
-  [getToolMode, isFocusPathChecked, isRotateItemsChecked, isTransformPathsChecked],
-  (toolMode, focusPathChecked, rotateItemsChecked, transformPathChecked) => {
+  [getToolMode, isEditPathChecked, isRotateItemsChecked, isTransformPathsChecked],
+  (toolMode, editPathChecked, rotateItemsChecked, transformPathChecked) => {
     return (
       toolMode === ToolMode.Selection &&
-      !focusPathChecked &&
+      !editPathChecked &&
       !rotateItemsChecked &&
       !transformPathChecked
     );
@@ -54,7 +54,7 @@ const isSelectionChecked = createSelector(
 export const getToolPanelState = createStructuredSelector({
   toolMode: getToolMode,
   isSelectionChecked,
-  isFocusPathChecked,
+  isEditPathChecked,
   isRotateItemsEnabled,
   isRotateItemsChecked,
   isTransformPathsEnabled,

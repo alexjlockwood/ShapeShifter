@@ -3,7 +3,7 @@ import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
-import { FocusedPathRaster } from './FocusedPathRaster';
+import { EditPathRaster } from './EditPathRaster';
 import { HitResult, PaperLayer } from './PaperLayer';
 import { SelectionBoundsRaster } from './SelectionBoundsRaster';
 
@@ -60,14 +60,14 @@ export function selectionModeSegments(projPoint: paper.Point) {
   return pl.hitTest(projPoint, { class: SelectionBoundsRaster });
 }
 
-/** Performs a hit test on the current focused path. */
-export function focusedPathMode(
+/** Performs a hit test on the current edit path. */
+export function editPathMode(
   projPoint: paper.Point,
-  focusedPath: paper.Path,
+  editPath: paper.Path,
   hitOptions: { fill?: boolean; stroke?: boolean; curves?: boolean },
 ) {
-  const { x: sx, y: sy } = focusedPath.globalMatrix.scaling;
-  const result = focusedPath.hitTest(focusedPath.globalToLocal(projPoint), {
+  const { x: sx, y: sy } = editPath.globalMatrix.scaling;
+  const result = editPath.hitTest(editPath.globalToLocal(projPoint), {
     ...(hitOptions as paper.HitOptions),
     // TODO: properly calculate scale using similar method as in Matrix.ts
     // TODO: also test that this works when zoomed in/out?
@@ -78,8 +78,8 @@ export function focusedPathMode(
   return result;
 }
 
-/** Performs a hit test on the current focused path's segments and handles. */
-export function focusedPathModeSegmentsAndHandles(projPoint: paper.Point) {
+/** Performs a hit test on the current edit path's segments and handles. */
+export function editPathModeSegmentsAndHandles(projPoint: paper.Point) {
   const pl = paper.project.activeLayer as PaperLayer;
-  return pl.hitTest(projPoint, { class: FocusedPathRaster });
+  return pl.hitTest(projPoint, { class: EditPathRaster });
 }

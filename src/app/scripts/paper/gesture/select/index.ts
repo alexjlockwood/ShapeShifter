@@ -1,4 +1,4 @@
 export { BatchSelectItemsGesture } from './BatchSelectItemsGesture';
 export { DeselectItemGesture } from './DeselectItemGesture';
-export { FocusPathGesture } from './FocusPathGesture';
+export { EditPathGesture } from './EditPathGesture';
 export { SelectDragCloneItemsGesture } from './SelectDragCloneItemsGesture';

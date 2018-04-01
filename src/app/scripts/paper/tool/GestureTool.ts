@@ -8,12 +8,12 @@ import {
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
   ToggleSegmentHandlesGesture,
-} from 'app/scripts/paper/gesture/focus';
+} from 'app/scripts/paper/gesture/edit';
 import { HoverGesture } from 'app/scripts/paper/gesture/hover';
 import {
   BatchSelectItemsGesture,
   DeselectItemGesture,
-  FocusPathGesture,
+  EditPathGesture,
   SelectDragCloneItemsGesture,
 } from 'app/scripts/paper/gesture/select';
 import {
@@ -75,8 +75,8 @@ export class GestureTool extends Tool {
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
-    if (this.ps.getFocusedPathInfo()) {
-      return this.createFocusedPathModeGesture(event);
+    if (this.ps.getgetEditPathInfoInfo()) {
+      return this.createEditPathModeGesture(event);
     }
     const selectedLayerIds = this.ps.getSelectedLayerIds();
     if (selectedLayerIds.size) {
@@ -119,8 +119,8 @@ export class GestureTool extends Tool {
         }
       } else {
         // If a double click event occurs on top of a hit item w/ no children,
-        // then enter focused path mode.
-        return new FocusPathGesture(this.ps, hitItemId);
+        // then enter edit path mode.
+        return new EditPathGesture(this.ps, hitItemId);
       }
     }
 
@@ -149,8 +149,8 @@ export class GestureTool extends Tool {
     return new SelectDragCloneItemsGesture(this.ps, hitItemId);
   }
 
-  private createFocusedPathModeGesture(event: paper.ToolEvent) {
-    let fpi = this.ps.getFocusedPathInfo();
+  private createEditPathModeGesture(event: paper.ToolEvent) {
+    let fpi = this.ps.getgetEditPathInfoInfo();
     if (!fpi.layerId) {
       // Then the user has created the first segment of a new path, in which
       // case we must create a new dummy path and bring it into focus.
@@ -165,32 +165,32 @@ export class GestureTool extends Tool {
         selectedHandleOut: undefined,
       };
       this.ps.setSelectedLayerIds(new Set([layerId]));
-      this.ps.setFocusedPathInfo(fpi);
+      this.ps.setEditPathInfo(fpi);
     }
 
-    const focusedPathId = fpi.layerId;
-    const focusedPath = this.pl.findItemByLayerId(focusedPathId) as paper.Path;
+    const editPathId = fpi.layerId;
+    const editPAth = this.pl.findItemByLayerId(editPathId) as paper.Path;
 
-    // First, do a hit test on the focused path's segments and handles.
-    const segmentsAndHandlesHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
+    // First, do a hit test on the edit path's segments and handles.
+    const segmentsAndHandlesHitResult = HitTests.editPathModeSegmentsAndHandles(event.point);
     if (segmentsAndHandlesHitResult) {
       const { segmentIndex, type } = segmentsAndHandlesHitResult.item;
       if (type === 'handle-in' || type === 'handle-out') {
         // If a mouse down event occurred on top of a handle,
         // then select/drag the handle.
-        return new SelectDragHandleGesture(this.ps, focusedPathId, segmentIndex, type);
+        return new SelectDragHandleGesture(this.ps, editPathId, segmentIndex, type);
       }
       if (this.clickDetector.isDoubleClick()) {
         // If a double click occurred on top of a segment, then toggle the segment's handles.
-        return new ToggleSegmentHandlesGesture(this.ps, focusedPathId, segmentIndex);
+        return new ToggleSegmentHandlesGesture(this.ps, editPathId, segmentIndex);
       }
       // If a mouse down event occurred on top of a segment,
       // then select/drag the segment.
-      return SelectDragDrawSegmentsGesture.hitSegment(this.ps, focusedPathId, segmentIndex);
+      return SelectDragDrawSegmentsGesture.hitSegment(this.ps, editPathId, segmentIndex);
     }
 
-    // Second, do a hit test on the focused path itself.
-    let hitResult = HitTests.focusedPathMode(event.point, focusedPath, {
+    // Second, do a hit test on the edit path itself.
+    let hitResult = HitTests.editPathMode(event.point, editPAth, {
       fill: true,
       stroke: true,
       curves: true,
@@ -198,7 +198,7 @@ export class GestureTool extends Tool {
     if (hitResult) {
       if (hitResult.type !== 'curve') {
         // TODO: is there a way to avoid a second hit test like this?
-        hitResult = HitTests.focusedPathMode(event.point, focusedPath, {
+        hitResult = HitTests.editPathMode(event.point, editPAth, {
           curves: true,
         });
       }
@@ -206,7 +206,7 @@ export class GestureTool extends Tool {
         if (event.modifiers.command) {
           // If the user is holding down command, then modify the curve
           // by dragging it.
-          return new MouldCurveGesture(this.ps, focusedPathId, {
+          return new MouldCurveGesture(this.ps, editPathId, {
             curveIndex: hitResult.location.index,
             time: hitResult.location.time,
           });
@@ -214,41 +214,41 @@ export class GestureTool extends Tool {
         // Add a segment to the curve.
         return SelectDragDrawSegmentsGesture.hitCurve(
           this.ps,
-          focusedPathId,
+          editPathId,
           hitResult.location.index,
           hitResult.location.time,
         );
       }
-      // Note that we won't exit focused path mode on the next mouse up event
+      // Note that we won't exit edit path mode on the next mouse up event
       // (since the gesture began with a successful hit test).
       return new BatchSelectSegmentsGesture(
         this.ps,
-        focusedPathId,
-        false /* clearFocusedPathOnDraglessClick */,
+        editPathId,
+        false /* clearEditPathOnDraglessClick */,
       );
     }
 
-    if (!focusedPath.segments.length) {
+    if (!editPAth.segments.length) {
       // Then we are beginning to build a new path from scratch.
-      return SelectDragDrawSegmentsGesture.miss(this.ps, focusedPathId);
+      return SelectDragDrawSegmentsGesture.miss(this.ps, editPathId);
     }
 
-    if (!focusedPath.closed && fpi.selectedSegments.size === 1) {
+    if (!editPAth.closed && fpi.selectedSegments.size === 1) {
       const selectedSegmentIndex = fpi.selectedSegments.values().next().value;
-      if (selectedSegmentIndex === 0 || selectedSegmentIndex === focusedPath.segments.length - 1) {
+      if (selectedSegmentIndex === 0 || selectedSegmentIndex === editPAth.segments.length - 1) {
         // Then we are extending an existing open path with a single selected end point segment.
-        return SelectDragDrawSegmentsGesture.miss(this.ps, focusedPathId);
+        return SelectDragDrawSegmentsGesture.miss(this.ps, editPathId);
       }
     }
 
-    // If there is no hit item and we are in focused path mode, then
-    // enter selection box mode for the focused path so we can
+    // If there is no hit item and we are in edit path mode, then
+    // enter selection box mode for the edit path so we can
     // batch select its segments. If no drag occurs, the gesture will
-    // exit focused path mode on the next mouse up event.
+    // exit edit path mode on the next mouse up event.
     return new BatchSelectSegmentsGesture(
       this.ps,
-      focusedPathId,
-      true /* clearFocusedPathOnDraglessClick */,
+      editPathId,
+      true /* clearEditPathOnDraglessClick */,
     );
   }
 

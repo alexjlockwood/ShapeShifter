@@ -2,7 +2,7 @@ import { CursorType, ToolMode } from 'app/model/paper';
 
 import {
   CreatePathInfo,
-  FocusedPathInfo,
+  EditPathInfo,
   PaperActionTypes,
   PaperActions,
   RotateItemsInfo,
@@ -25,7 +25,7 @@ interface ToolModeInfo {
   readonly selectionBox?: SelectionBox;
   readonly createPathInfo?: CreatePathInfo;
   readonly splitCurveInfo?: SplitCurveInfo;
-  readonly focusedPathInfo?: FocusedPathInfo;
+  readonly editPathInfo?: EditPathInfo;
   readonly rotateItemsInfo?: RotateItemsInfo;
   readonly transformPathsInfo?: TransformPathsInfo;
   readonly snapGuideInfo?: SnapGuideInfo;
@@ -54,9 +54,9 @@ export function reducer(state = buildInitialState(), action: PaperActions): Stat
       return { ...state, toolModeInfo: { ...toolModeInfo, createPathInfo: action.createPathInfo } };
     case PaperActionTypes.SetSplitCurveInfo:
       return { ...state, toolModeInfo: { ...toolModeInfo, splitCurveInfo: action.splitCurveInfo } };
-    case PaperActionTypes.SetFocusedPathInfo:
-      const { focusedPathInfo } = action;
-      return { ...state, toolModeInfo: { ...toolModeInfo, focusedPathInfo } };
+    case PaperActionTypes.SetEditPathInfo:
+      const { editPathInfo } = action;
+      return { ...state, toolModeInfo: { ...toolModeInfo, editPathInfo } };
     case PaperActionTypes.SetRotateItemsInfo:
       const { rotateItemsInfo } = action;
       return { ...state, toolModeInfo: { ...toolModeInfo, rotateItemsInfo } };

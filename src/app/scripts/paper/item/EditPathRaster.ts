@@ -1,6 +1,6 @@
 import * as paper from 'paper';
 
-export class FocusedPathRaster extends paper.Raster {
+export class EditPathRaster extends paper.Raster {
   constructor(
     readonly type: 'segment' | 'handle-in' | 'handle-out',
     readonly segmentIndex: number,

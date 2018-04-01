@@ -8,7 +8,7 @@ import * as paper from 'paper';
  * A gesture that performs hover operations over segments and curves.
  *
  * Preconditions:
- * - The user is in focused path mode for an already existing layer id.
+ * - The user is in edit path mode for an already existing layer id.
  */
 export class HoverSegmentsCurvesGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -26,9 +26,9 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // TODO: currently necessary (if the previous gesture was the create/drag/draw segments gesture)
     this.ps.setCreatePathInfo(undefined);
 
-    const focusedPathId = this.ps.getFocusedPathInfo().layerId;
-    const focusedPath = this.pl.findItemByLayerId(focusedPathId) as paper.Path;
-    const segmentsAndHandlesHitResult = HitTests.focusedPathModeSegmentsAndHandles(event.point);
+    const editPathId = this.ps.getgetEditPathInfoInfo().layerId;
+    const editPath = this.pl.findItemByLayerId(editPathId) as paper.Path;
+    const segmentsAndHandlesHitResult = HitTests.editPathModeSegmentsAndHandles(event.point);
     if (segmentsAndHandlesHitResult) {
       // If we are hovering over a segment or a handle, then show a point select
       // cursor and return.
@@ -36,28 +36,28 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       return;
     }
 
-    const focusedPathHitResult = HitTests.focusedPathMode(event.point, focusedPath, {
+    const editPathHitResult = HitTests.editPathMode(event.point, editPath, {
       curves: true,
     });
-    if (focusedPathHitResult) {
-      if (focusedPathHitResult.type !== 'curve') {
-        // If we hit the focused path but missed its segments/handles/curves,
+    if (editPathHitResult) {
+      if (editPathHitResult.type !== 'curve') {
+        // If we hit the edit path but missed its segments/handles/curves,
         // then do nothing.
         return;
       }
       // Show a pen add cursor and highlight the curve the user is about to split.
       this.ps.setCursorType(CursorType.PenAdd);
-      const hitCurve = focusedPathHitResult.location.curve;
+      const hitCurve = editPathHitResult.location.curve;
       const location = event.modifiers.shift
         ? hitCurve.getLocationAt(hitCurve.length / 2)
-        : focusedPathHitResult.location;
-      const vpSplitPoint = this.localToVpPoint(focusedPath, location.point);
+        : editPathHitResult.location;
+      const vpSplitPoint = this.localToVpPoint(editPath, location.point);
       const { point: p1, handleIn: in1, handleOut: out1 } = this.localToVpSegment(
-        focusedPath,
+        editPath,
         location.curve.segment1,
       );
       const { point: p2, handleIn: in2, handleOut: out2 } = this.localToVpSegment(
-        focusedPath,
+        editPath,
         location.curve.segment2,
       );
       this.ps.setSplitCurveInfo({
@@ -70,12 +70,12 @@ export class HoverSegmentsCurvesGesture extends Gesture {
 
     // Draw an 'extend path' preview curve if one of its end points
     // is selected and the path is still open.
-    const singleSelectedSegmentIndex = this.findSingleSelectedEndSegmentIndex(focusedPath);
+    const singleSelectedSegmentIndex = this.findSingleSelectedEndSegmentIndex(editPath);
     if (singleSelectedSegmentIndex !== undefined) {
       this.ps.setCursorType(CursorType.PenAdd);
       const vpStartSegment = this.localToVpSegment(
-        focusedPath,
-        focusedPath.segments[singleSelectedSegmentIndex],
+        editPath,
+        editPath.segments[singleSelectedSegmentIndex],
       );
       const vpEndSegment = new paper.Segment(this.pl.globalToLocal(event.point));
       const { pathData } = new paper.Path([vpStartSegment, vpEndSegment]);
@@ -120,7 +120,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       // Return undefined if the path is closed.
       return undefined;
     }
-    const { selectedSegments } = this.ps.getFocusedPathInfo();
+    const { selectedSegments } = this.ps.getgetEditPathInfoInfo();
     if (selectedSegments.size !== 1) {
       // Return undefined if there is not a single selected segment.
       return undefined;
@@ -135,7 +135,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     if (event.key === 'escape') {
       this.ps.setCursorType(CursorType.Default);
       this.ps.setSnapGuideInfo(undefined);
-      this.ps.setFocusedPathInfo(undefined);
+      this.ps.setEditPathInfo(undefined);
     }
   }
 }
