@@ -139,7 +139,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
 
     this.ps.setFocusedPathInfo({
       ...fpi,
-      ...PaperUtil.selectCurves(this.ps, focusedPath, afterSelectedSegmentIndices),
+      ...PaperUtil.selectCurves(focusedPath, afterSelectedSegmentIndices),
     });
     this.ps.setCursorType(CursorType.PointSelect);
   }
@@ -236,7 +236,6 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     this.ps.setSnapGuideInfo(undefined);
     if (this.exitFocusedPathModeOnMouseUp) {
       this.ps.setFocusedPathInfo(undefined);
-      this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
     }
   }
 

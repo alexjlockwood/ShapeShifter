@@ -36,12 +36,8 @@ export function replacePathInStore(ps: PaperService, layerId: string, pathData: 
   ps.setVectorLayer(newVl);
 }
 
-/** Selects the curves associated with the given selected segment indices. */
-export function selectCurves(
-  ps: PaperService,
-  path: paper.Path,
-  selectedSegments: ReadonlySet<number>,
-) {
+/** Computes the selected curves associated with the given selected segment indices. */
+export function selectCurves(path: paper.Path, selectedSegments: ReadonlySet<number>) {
   const visibleHandleIns = new Set(selectedSegments);
   const visibleHandleOuts = new Set(selectedSegments);
   selectedSegments.forEach(segmentIndex => {

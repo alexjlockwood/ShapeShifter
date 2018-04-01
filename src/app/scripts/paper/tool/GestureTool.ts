@@ -4,12 +4,12 @@ import { Gesture } from 'app/scripts/paper/gesture';
 import { EllipseGesture, PencilGesture, RectangleGesture } from 'app/scripts/paper/gesture/create';
 import {
   BatchSelectSegmentsGesture,
-  HoverSegmentsCurvesGesture,
   MouldCurveGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
   ToggleSegmentHandlesGesture,
 } from 'app/scripts/paper/gesture/focus';
+import { HoverGesture } from 'app/scripts/paper/gesture/hover';
 import {
   BatchSelectItemsGesture,
   DeselectItemGesture,
@@ -26,7 +26,6 @@ import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
-import { HoverGesture } from '../gesture/hover';
 import { Tool } from './Tool';
 
 /**

@@ -49,8 +49,6 @@ export class BatchSelectSegmentsGesture extends Gesture {
       this.processToolEvent(event);
     } else if (this.clearFocusedPathAfterDraglessClick) {
       this.ps.setFocusedPathInfo(undefined);
-      this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
-      this.ps.setToolMode(ToolMode.Selection);
     }
     this.ps.setSelectionBox(undefined);
   }
@@ -101,7 +99,7 @@ export class BatchSelectSegmentsGesture extends Gesture {
     const focusedPath = this.pl.findItemByLayerId(this.focusedPathId) as paper.Path;
     this.ps.setFocusedPathInfo({
       layerId: this.focusedPathId,
-      ...PaperUtil.selectCurves(this.ps, focusedPath, selectedSegments),
+      ...PaperUtil.selectCurves(focusedPath, selectedSegments),
     });
   }
 }

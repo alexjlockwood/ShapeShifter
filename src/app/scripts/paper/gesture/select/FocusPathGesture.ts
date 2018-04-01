@@ -23,7 +23,7 @@ export class FocusPathGesture extends Gesture {
     this.ps.setSelectedLayerIds(new Set([this.focusedPathId]));
     this.ps.setFocusedPathInfo({
       layerId: this.focusedPathId,
-      ...PaperUtil.selectCurves(this.ps, focusedPath, new Set([focusedPath.segments.length - 1])),
+      ...PaperUtil.selectCurves(focusedPath, new Set([focusedPath.segments.length - 1])),
     });
   }
 }
