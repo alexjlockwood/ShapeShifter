@@ -15,7 +15,7 @@ import { DestroyableMixin } from 'app/scripts/mixins';
 import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
-import { getCursorType, getZoomPanInfo } from 'app/store/paper/selectors';
+import { getZoomPanInfo } from 'app/store/paper/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';

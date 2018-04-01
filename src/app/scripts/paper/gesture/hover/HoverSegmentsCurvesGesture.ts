@@ -1,4 +1,4 @@
-import { CursorType, ToolMode } from 'app/model/paper';
+import { CursorType } from 'app/model/paper';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
