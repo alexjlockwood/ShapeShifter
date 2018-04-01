@@ -10,7 +10,7 @@ import * as paper from 'paper';
  * A gesture that performs rotation operations.
  *
  * Preconditions:
- * - The user is in selection mode.
+ * - The user is in default mode.
  * - One or more layers are selected.
  *
  * TODO: make it possible to move the pivot with the mouse

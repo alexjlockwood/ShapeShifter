@@ -14,7 +14,7 @@ import { CursorType } from '../../../../model/paper';
  * on one or more items.
  *
  * Preconditions:
- * - The user is in selection mode.
+ * - The user is in default mode.
  * - The user hit an item in the previous mousedown event.
  */
 export class SelectDragCloneItemsGesture extends Gesture {

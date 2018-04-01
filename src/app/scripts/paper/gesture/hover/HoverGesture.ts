@@ -19,7 +19,7 @@ export class HoverGesture extends Gesture {
 
   // @Override
   onMouseMove(event: paper.ToolEvent) {
-    if (this.ps.getToolMode() === ToolMode.Selection) {
+    if (this.ps.getToolMode() === ToolMode.Default) {
       const fpi = this.ps.getEditPathInfo();
       if (fpi) {
         if (fpi.layerId) {

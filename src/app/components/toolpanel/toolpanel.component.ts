@@ -14,7 +14,7 @@ export class ToolPanelComponent implements OnInit {
   readonly TOOL_MODE_RECTANGLE = ToolMode.Rectangle;
   readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
 
-  // TODO: only enable edit path/rotate/transform in selection mode?
+  // TODO: only enable edit path/rotate/transform in default mode?
   model$: Observable<ToolPanelModel>;
 
   constructor(private readonly ps: PaperService) {}
@@ -24,7 +24,7 @@ export class ToolPanelComponent implements OnInit {
   }
 
   onSelectionClick() {
-    this.ps.setToolMode(ToolMode.Selection);
+    this.ps.setToolMode(ToolMode.Default);
     this.ps.setEditPathInfo(undefined);
     event.stopPropagation();
   }

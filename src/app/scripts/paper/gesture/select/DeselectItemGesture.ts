@@ -6,7 +6,7 @@ import * as paper from 'paper';
  * A gesture that deselects a single item.
  *
  * Preconditions:
- * - The user is in selection mode.
+ * - The user is in default mode.
  */
 export class DeselectItemGesture extends Gesture {
   constructor(private readonly ps: PaperService, private readonly deselectedItemId: string) {

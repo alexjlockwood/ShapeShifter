@@ -36,7 +36,7 @@ export function reducer(state = buildInitialState(), action: ActionModeActions) 
         unpairedSubPath = undefined;
       }
       if (mode === ActionMode.Selection && mode !== state.mode) {
-        // Clear selections when switching back to selection mode.
+        // Clear selections when switching back to default mode.
         selections = [];
       }
       return { ...state, mode, selections, pairedSubPaths, unpairedSubPath };

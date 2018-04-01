@@ -5,10 +5,10 @@ import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
 /**
- * A gesture that exits selection mode and enters edit path mode.
+ * A gesture that exits default mode and enters edit path mode.
  *
  * Preconditions:
- * - The user is in selection mode.
+ * - The user is in default mode.
  */
 export class EditPathGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;

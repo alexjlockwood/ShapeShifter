@@ -1,5 +1,5 @@
 export enum ToolMode {
-  Selection = 'Selection',
+  Default = 'Default',
   Pencil = 'Pencil',
   Ellipse = 'Ellipse',
   Rectangle = 'Rectangle',

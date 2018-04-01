@@ -69,6 +69,6 @@ export class PencilGesture extends Gesture {
       this.ps.setSelectedLayerIds(new Set([newPathLayer.id]));
       this.ps.setCreatePathInfo(undefined);
     }
-    this.ps.setToolMode(ToolMode.Selection);
+    this.ps.setToolMode(ToolMode.Default);
   }
 }

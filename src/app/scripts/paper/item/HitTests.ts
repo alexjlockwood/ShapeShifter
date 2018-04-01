@@ -7,7 +7,7 @@ import { EditPathRaster } from './EditPathRaster';
 import { HitResult, PaperLayer } from './PaperLayer';
 import { SelectionBoundsRaster } from './SelectionBoundsRaster';
 
-/** Performs the default selection mode hit test. */
+/** Performs the default default mode hit test. */
 export function selectionMode(projPoint: paper.Point, ps: PaperService) {
   const pl = paper.project.activeLayer as PaperLayer;
   const { children } = pl.hitTestVectorLayer(projPoint);

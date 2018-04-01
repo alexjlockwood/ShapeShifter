@@ -7,7 +7,7 @@ import * as paper from 'paper';
  * A gesture that selects one or more items using a selection box.
  *
  * Preconditions:
- * - The user is in selection mode.
+ * - The user is in default mode.
  */
 export class BatchSelectItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;

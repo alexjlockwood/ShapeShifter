@@ -74,7 +74,7 @@ const ERROR_COLOR = '#F44336';
 // TODO: make shape shifter mode work with clip paths
 // TODO: make segment splitter work with trim paths
 // TODO: make trim paths work with shifts/reversals
-// TODO: make cursor 'drag' in selection mode when dragging points
+// TODO: make cursor 'drag' in default mode when dragging points
 // TODO: need to avoid cases where the pathData could be undefined
 // (i.e. this could happen if the user enters action mode w/o setting a path string on the layer)
 
@@ -663,7 +663,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
   }
 
-  // Draw any actively dragged points along the path in selection mode.
+  // Draw any actively dragged points along the path in default mode.
   private drawDraggingPoints(ctx: Context) {
     if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
       return;

@@ -15,7 +15,7 @@ import * as paper from 'paper';
  * TODO: could this work with generic items (not just paths)?
  *
  * Preconditions:
- * - The user is in selection mode.
+ * - The user is in default mode.
  * - One or more paths are selected.
  */
 export class TransformPathsGesture extends Gesture {

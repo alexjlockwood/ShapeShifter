@@ -43,7 +43,7 @@ const isSelectionChecked = createSelector(
   [getToolMode, isEditPathChecked, isRotateItemsChecked, isTransformPathsChecked],
   (toolMode, editPathChecked, rotateItemsChecked, transformPathChecked) => {
     return (
-      toolMode === ToolMode.Selection &&
+      toolMode === ToolMode.Default &&
       !editPathChecked &&
       !rotateItemsChecked &&
       !transformPathChecked

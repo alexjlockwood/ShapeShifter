@@ -35,7 +35,7 @@ interface ToolModeInfo {
 export function buildInitialState(): State {
   return {
     zoomPanInfo: { zoom: 1, translation: { tx: 0, ty: 0 } },
-    toolModeInfo: { toolMode: ToolMode.Selection },
+    toolModeInfo: { toolMode: ToolMode.Default },
     cursorType: CursorType.Default,
   };
 }

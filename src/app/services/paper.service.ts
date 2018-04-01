@@ -68,7 +68,7 @@ export class PaperService {
   }
 
   enterEditPathMode() {
-    this.setToolMode(ToolMode.Selection);
+    this.setToolMode(ToolMode.Default);
     this.setEditPathInfo({
       layerId: '',
       selectedSegments: new Set<number>(),
@@ -81,14 +81,14 @@ export class PaperService {
   }
 
   enterRotateItemsMode() {
-    this.setToolMode(ToolMode.Selection);
+    this.setToolMode(ToolMode.Default);
     this.setRotateItemsInfo({
       layerIds: this.getSelectedLayerIds(),
     });
   }
 
   enterTransformPathsMode() {
-    this.setToolMode(ToolMode.Selection);
+    this.setToolMode(ToolMode.Default);
     this.setTransformPathsInfo({
       layerIds: this.getSelectedLayerIds(),
     });

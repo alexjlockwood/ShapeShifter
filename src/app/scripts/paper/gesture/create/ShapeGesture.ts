@@ -69,7 +69,7 @@ export abstract class ShapeGesture extends Gesture {
 
   private finishGesture() {
     this.ps.setCreatePathInfo(undefined);
-    this.ps.setToolMode(ToolMode.Selection);
+    this.ps.setToolMode(ToolMode.Default);
   }
 
   /** Factory method that creates a new path given its bounding box. */

@@ -33,7 +33,7 @@ const TRANSFORM_CURSOR_MAP: ReadonlyMap<PivotType, CursorType> = new Map([
  * A gesture that performs hover operations on items.
  *
  * Preconditions:
- * - The user is in selection mode.
+ * - The user is in default mode.
  */
 export class HoverItemsGesture extends Gesture {
   constructor(private readonly ps: PaperService) {
