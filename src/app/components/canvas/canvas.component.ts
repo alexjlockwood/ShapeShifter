@@ -51,7 +51,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   @Input() canvasBounds$: Observable<Size>;
 
   private readonly $element: JQuery;
-  private isActionMode$: Observable<boolean>;
+  isActionMode$: Observable<boolean>;
 
   constructor(
     elementRef: ElementRef,
