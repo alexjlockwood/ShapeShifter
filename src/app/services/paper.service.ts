@@ -243,7 +243,7 @@ export class PaperService {
     }
   }
 
-  private dispatchStore<T>(action: Action<T>) {
+  private dispatchStore(action: Action) {
     if (NgZone.isInAngularZone()) {
       this.store.dispatch(action);
     } else {
