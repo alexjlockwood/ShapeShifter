@@ -9,7 +9,7 @@ export const mergePaths = {
   params: {
     collapseRepeated: true,
     leadingZero: true,
-    negativeExtraSpace: true
+    negativeExtraSpace: true,
   },
 };
 
@@ -24,15 +24,14 @@ const intersects = paths.intersects;
  * @return {Boolean} if false, item will be filtered out
  */
 function mergePathsFn(item, params) {
-
   if (!item.isElem() || item.isEmpty()) return;
 
   var prevContentItem = null,
     prevContentItemKeys = null;
 
-  item.content = item.content.filter(function (contentItem) {
-
-    if (prevContentItem &&
+  item.content = item.content.filter(function(contentItem) {
+    if (
+      prevContentItem &&
       prevContentItem.isElem('path') &&
       prevContentItem.isEmpty() &&
       prevContentItem.hasAttr('d') &&
@@ -40,17 +39,19 @@ function mergePathsFn(item, params) {
       contentItem.isEmpty() &&
       contentItem.hasAttr('d')
     ) {
-
       if (!prevContentItemKeys) {
         prevContentItemKeys = Object.keys(prevContentItem.attrs);
       }
 
       var contentItemAttrs = Object.keys(contentItem.attrs),
-        equalData = prevContentItemKeys.length == contentItemAttrs.length &&
-          contentItemAttrs.every(function (key) {
-            return key == 'd' ||
-              prevContentItem.hasAttr(key) &&
-              prevContentItem.attr(key).value == contentItem.attr(key).value;
+        equalData =
+          prevContentItemKeys.length == contentItemAttrs.length &&
+          contentItemAttrs.every(function(key) {
+            return (
+              key == 'd' ||
+              (prevContentItem.hasAttr(key) &&
+                prevContentItem.attr(key).value == contentItem.attr(key).value)
+            );
           }),
         prevPathJS = path2js(prevContentItem),
         curPathJS = path2js(contentItem);
@@ -64,7 +65,5 @@ function mergePathsFn(item, params) {
     prevContentItem = contentItem;
     prevContentItemKeys = null;
     return true;
-
   });
-
-};
+}

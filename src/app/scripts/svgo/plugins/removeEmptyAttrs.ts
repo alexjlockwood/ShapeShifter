@@ -13,7 +13,7 @@ export const removeEmptyAttrs = {
  */
 function removeEmptyAttrsFn(item) {
   if (item.elem) {
-    item.eachAttr(function (attr) {
+    item.eachAttr(function(attr) {
       if (attr.value === '') {
         item.removeAttr(attr.name);
       }

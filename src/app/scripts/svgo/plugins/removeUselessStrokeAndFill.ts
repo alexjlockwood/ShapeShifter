@@ -10,7 +10,7 @@ export const removeUselessStrokeAndFill = {
     stroke: true,
     fill: true,
     removeNone: true,
-    hasStyleOrScript: false
+    hasStyleOrScript: false,
   },
 };
 
@@ -36,15 +36,17 @@ function removeUselessStrokeAndFillFn(item, params) {
     const fill = params.fill && !item.computedAttr('fill', 'none');
 
     // remove stroke*
-    if (params.stroke
-      && (!stroke
-        || stroke == 'none'
-        || item.computedAttr('stroke-opacity', '0')
-        || item.computedAttr('stroke-width', '0'))) {
+    if (
+      params.stroke &&
+      (!stroke ||
+        stroke == 'none' ||
+        item.computedAttr('stroke-opacity', '0') ||
+        item.computedAttr('stroke-width', '0'))
+    ) {
       const parentStroke = item.parentNode.computedAttr('stroke');
       const declineStroke = parentStroke && parentStroke != 'none';
 
-      item.eachAttr(function (attr) {
+      item.eachAttr(function(attr) {
         if (regStrokeProps.test(attr.name)) {
           item.removeAttr(attr.name);
         }
@@ -55,14 +57,14 @@ function removeUselessStrokeAndFillFn(item, params) {
           name: 'stroke',
           value: 'none',
           prefix: '',
-          local: 'stroke'
+          local: 'stroke',
         });
       }
     }
 
     // remove fill*
     if (params.fill && (!fill || item.computedAttr('fill-opacity', '0'))) {
-      item.eachAttr(function (attr) {
+      item.eachAttr(function(attr) {
         if (regFillProps.test(attr.name)) {
           item.removeAttr(attr.name);
         }
@@ -75,14 +77,16 @@ function removeUselessStrokeAndFillFn(item, params) {
             name: 'fill',
             value: 'none',
             prefix: '',
-            local: 'fill'
+            local: 'fill',
           });
         }
       }
     }
-    if (params.removeNone
-      && (!stroke || item.hasAttr('stroke') && item.attr('stroke').value == 'none')
-      && (!fill || item.hasAttr('fill') && item.attr('fill').value == 'none')) {
+    if (
+      params.removeNone &&
+      (!stroke || (item.hasAttr('stroke') && item.attr('stroke').value == 'none')) &&
+      (!fill || (item.hasAttr('fill') && item.attr('fill').value == 'none'))
+    ) {
       return false;
     }
   }

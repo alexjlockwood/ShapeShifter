@@ -29,26 +29,28 @@ const referencesProps = collections.referencesProps;
  */
 function moveGroupAttrsToElemsFn(item) {
   // Move group transform attr to content's pathElems.
-  if (item.isElem('g')
-    && item.hasAttr('transform')
-    && !item.isEmpty()
-    && !item.someAttr(function (attr) {
+  if (
+    item.isElem('g') &&
+    item.hasAttr('transform') &&
+    !item.isEmpty() &&
+    !item.someAttr(function(attr) {
       // tslint:disable-next-line: no-bitwise
       return ~referencesProps.indexOf(attr.name) && ~attr.value.indexOf('url(');
-    })
-    && item.content.every(function (inner) {
+    }) &&
+    item.content.every(function(inner) {
       return inner.isElem(pathElems) && !inner.hasAttr('id');
-    })) {
-    item.content.forEach(function (inner) {
+    })
+  ) {
+    item.content.forEach(function(inner) {
       const attr = item.attr('transform');
       if (inner.hasAttr('transform')) {
         inner.attr('transform').value = attr.value + ' ' + inner.attr('transform').value;
       } else {
         inner.addAttr({
-          'name': attr.name,
-          'local': attr.local,
-          'prefix': attr.prefix,
-          'value': attr.value,
+          name: attr.name,
+          local: attr.local,
+          prefix: attr.prefix,
+          value: attr.value,
         });
       }
     });

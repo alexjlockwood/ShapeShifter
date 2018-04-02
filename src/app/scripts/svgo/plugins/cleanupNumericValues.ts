@@ -10,18 +10,19 @@ export const cleanupNumericValues = {
     floatPrecision: 10,
     leadingZero: true,
     defaultPx: true,
-    convertToPx: true
+    convertToPx: true,
   },
 };
 
 const regNumericValues = /^([\-+]?\d*\.?\d+([eE][\-+]?\d+)?)(px|pt|pc|mm|cm|m|in|ft|em|ex|%)?$/;
 const removeLeadingZero = tools.removeLeadingZero;
-const absoluteLengths = { // relative to px
+const absoluteLengths = {
+  // relative to px
   cm: 96 / 2.54,
   mm: 96 / 25.4,
   in: 96,
   pt: 4 / 3,
-  pc: 16
+  pc: 16,
 };
 
 /**
@@ -33,12 +34,10 @@ const absoluteLengths = { // relative to px
  * @return {Boolean} if false, item will be filtered out
  */
 function cleanupNumericValuesFn(item, params) {
-
   if (item.isElem()) {
-
     var match;
 
-    item.eachAttr(function (attr) {
+    item.eachAttr(function(attr) {
       match = attr.value.match(regNumericValues);
 
       // if attribute value matches regNumericValues
@@ -48,12 +47,10 @@ function cleanupNumericValuesFn(item, params) {
           units = match[3] || '';
 
         // convert absolute values to pixels
-        if (params.convertToPx && units && (units in absoluteLengths)) {
+        if (params.convertToPx && units && units in absoluteLengths) {
           var pxNum = +(absoluteLengths[units] * match[1]).toFixed(params.floatPrecision);
 
-          if (String(pxNum).length < match[0].length)
-            num = pxNum,
-              units = 'px';
+          if (String(pxNum).length < match[0].length) (num = pxNum), (units = 'px');
         }
 
         // and remove leading zero
@@ -69,7 +66,5 @@ function cleanupNumericValuesFn(item, params) {
         attr.value = num + units;
       }
     });
-
   }
-
-};
+}

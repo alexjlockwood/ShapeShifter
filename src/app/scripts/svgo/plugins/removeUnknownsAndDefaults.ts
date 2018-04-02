@@ -11,7 +11,7 @@ export const removeUnknownsAndDefaults = {
     unknownAttrs: true,
     defaultAttrs: true,
     uselessOverrides: true,
-    keepDataAttrs: true
+    keepDataAttrs: true,
   },
 };
 
@@ -28,7 +28,7 @@ for (var elem in elems) {
   if (myElem.attrsGroups) {
     myElem.attrs = myElem.attrs || [];
 
-    myElem.attrsGroups.forEach(function (attrsGroupName) {
+    myElem.attrsGroups.forEach(function(attrsGroupName) {
       myElem.attrs = myElem.attrs.concat(attrsGroups[attrsGroupName]);
 
       var groupDefaults = attrsGroupsDefaults[attrsGroupName];
@@ -41,13 +41,12 @@ for (var elem in elems) {
         }
       }
     });
-
   }
 
   if (myElem.contentGroups) {
     myElem.content = myElem.content || [];
 
-    myElem.contentGroups.forEach(function (contentGroupName) {
+    myElem.contentGroups.forEach(function(contentGroupName) {
       myElem.content = myElem.content.concat(elemsGroups[contentGroupName]);
     });
   }
@@ -62,10 +61,8 @@ for (var elem in elems) {
  * @return {Boolean} if false, item will be filtered out
  */
 function removeUnknownsAndDefaultsFn(item, params) {
-
   // elems w/o namespace prefix
   if (item.isElem() && !item.prefix) {
-
     var elem = item.elem;
 
     // remove unknown element's content
@@ -75,20 +72,14 @@ function removeUnknownsAndDefaultsFn(item, params) {
       elems[elem] && // make sure we know of this element before checking its children
       elem !== 'foreignObject' // Don't check foreignObject
     ) {
-      item.content.forEach(function (content, i) {
+      item.content.forEach(function(content, i) {
         if (
           content.isElem() &&
           !content.prefix &&
-          (
-            (
-              elems[elem].content && // Do we have a record of its permitted content?
-              elems[elem].content.indexOf(content.elem) === -1
-            ) ||
-            (
-              !elems[elem].content && // we dont know about its permitted content
-              !elems[content.elem] // check that we know about the element at all
-            )
-          )
+          ((elems[elem].content && // Do we have a record of its permitted content?
+            elems[elem].content.indexOf(content.elem) === -1) ||
+            (!elems[elem].content && // we dont know about its permitted content
+              !elems[content.elem])) // check that we know about the element at all
         ) {
           item.content.splice(i, 1);
         }
@@ -97,9 +88,7 @@ function removeUnknownsAndDefaultsFn(item, params) {
 
     // remove element's unknown attrs and attrs with default values
     if (elems[elem] && elems[elem].attrs) {
-
-      item.eachAttr(function (attr) {
-
+      item.eachAttr(function(attr) {
         if (
           attr.name !== 'xmlns' &&
           (attr.prefix === 'xml' || !attr.prefix) &&
@@ -107,35 +96,23 @@ function removeUnknownsAndDefaultsFn(item, params) {
         ) {
           if (
             // unknown attrs
-            (
-              params.unknownAttrs &&
-              elems[elem].attrs.indexOf(attr.name) === -1
-            ) ||
+            (params.unknownAttrs && elems[elem].attrs.indexOf(attr.name) === -1) ||
             // attrs with default values
-            (
-              params.defaultAttrs &&
+            (params.defaultAttrs &&
               elems[elem].defaults &&
-              elems[elem].defaults[attr.name] === attr.value && (
-                attrsInheritable.indexOf(attr.name) < 0 ||
-                !item.parentNode.computedAttr(attr.name)
-              )
-            ) ||
+              elems[elem].defaults[attr.name] === attr.value &&
+              (attrsInheritable.indexOf(attr.name) < 0 ||
+                !item.parentNode.computedAttr(attr.name))) ||
             // useless overrides
-            (
-              params.uselessOverrides &&
+            (params.uselessOverrides &&
               attr.name !== 'transform' &&
               attrsInheritable.indexOf(attr.name) > -1 &&
-              item.parentNode.computedAttr(attr.name, attr.value)
-            )
+              item.parentNode.computedAttr(attr.name, attr.value))
           ) {
             item.removeAttr(attr.name);
           }
         }
-
       });
-
     }
-
   }
-
-};
+}

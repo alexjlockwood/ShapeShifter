@@ -14,8 +14,10 @@ const animationElems = collections.elemsGroups.animation;
 
 function hasAnimatedAttr(item) {
   /* jshint validthis:true */
-  return item.isElem(animationElems) && item.hasAttr('attributeName', this) ||
-    !item.isEmpty() && item.content.some(hasAnimatedAttr, this);
+  return (
+    (item.isElem(animationElems) && item.hasAttr('attributeName', this)) ||
+    (!item.isEmpty() && item.content.some(hasAnimatedAttr, this))
+  );
 }
 
 /*
@@ -40,26 +42,23 @@ function hasAnimatedAttr(item) {
  * @return {Boolean} if false, item will be filtered out
  */
 function collapseGroupsFn(item) {
-
   // non-empty elements
   if (item.isElem() && !item.isElem('switch') && !item.isEmpty()) {
-
-    item.content.forEach(function (g, i) {
-
+    item.content.forEach(function(g, i) {
       // non-empty groups
       if (g.isElem('g') && !g.isEmpty()) {
-
         // move group attibutes to the single content element
         if (g.hasAttr() && g.content.length === 1) {
           var inner = g.content[0];
 
-          if (inner.isElem() && !inner.hasAttr('id') &&
-            !(g.hasAttr('class') && inner.hasAttr('class')) && (
-              !g.hasAttr('clip-path') && !g.hasAttr('mask') ||
-              inner.isElem('g') && !g.hasAttr('transform') && !inner.hasAttr('transform')
-            )
+          if (
+            inner.isElem() &&
+            !inner.hasAttr('id') &&
+            !(g.hasAttr('class') && inner.hasAttr('class')) &&
+            ((!g.hasAttr('clip-path') && !g.hasAttr('mask')) ||
+              (inner.isElem('g') && !g.hasAttr('transform') && !inner.hasAttr('transform')))
           ) {
-            g.eachAttr(function (attr) {
+            g.eachAttr(function(attr) {
               if (g.content.some(hasAnimatedAttr, attr.name)) return;
 
               if (!inner.hasAttr(attr.name)) {
@@ -79,13 +78,15 @@ function collapseGroupsFn(item) {
         }
 
         // collapse groups without attributes
-        if (!g.hasAttr() && !g.content.some(function (item) { return item.isElem(animationElems) })) {
+        if (
+          !g.hasAttr() &&
+          !g.content.some(function(item) {
+            return item.isElem(animationElems);
+          })
+        ) {
           item.spliceContent(i, 1, g.content);
         }
       }
-
     });
-
   }
-
-};
+}

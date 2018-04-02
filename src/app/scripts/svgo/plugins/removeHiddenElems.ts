@@ -18,7 +18,7 @@ export const removeHiddenElems = {
     imageHeight0: true,
     pathEmptyD: true,
     polylineEmptyPoints: true,
-    polygonEmptyPoints: true
+    polygonEmptyPoints: true,
   },
 };
 
@@ -42,26 +42,18 @@ const regValidPath = /M\s*(?:[-+]?(?:\d*\.\d+|\d+(?:\.|(?!\.)))([eE][-+]?\d+)?(?
  * @return {Boolean} if false, item will be filtered out
  */
 function removeHiddenElemsFn(item, params) {
-
   if (item.elem) {
-
     // display="none"
     //
     // http://www.w3.org/TR/SVG/painting.html#DisplayProperty
     // "A value of display: none indicates that the given element
     // and its children shall not be rendered directly"
-    if (
-      params.displayNone &&
-      item.hasAttr('display', 'none')
-    ) return false;
+    if (params.displayNone && item.hasAttr('display', 'none')) return false;
 
     // opacity="0"
     //
     // http://www.w3.org/TR/SVG/masking.html#ObjectAndGroupOpacityProperties
-    if (
-      params.opacity0 &&
-      item.hasAttr('opacity', '0')
-    ) return false;
+    if (params.opacity0 && item.hasAttr('opacity', '0')) return false;
 
     // Circles with zero radius
     //
@@ -69,12 +61,8 @@ function removeHiddenElemsFn(item, params) {
     // "A value of zero disables rendering of the element"
     //
     // <circle r="0">
-    if (
-      params.circleR0 &&
-      item.isElem('circle') &&
-      item.isEmpty() &&
-      item.hasAttr('r', '0')
-    ) return false;
+    if (params.circleR0 && item.isElem('circle') && item.isEmpty() && item.hasAttr('r', '0'))
+      return false;
 
     // Ellipse with zero x-axis radius
     //
@@ -82,12 +70,8 @@ function removeHiddenElemsFn(item, params) {
     // "A value of zero disables rendering of the element"
     //
     // <ellipse rx="0">
-    if (
-      params.ellipseRX0 &&
-      item.isElem('ellipse') &&
-      item.isEmpty() &&
-      item.hasAttr('rx', '0')
-    ) return false;
+    if (params.ellipseRX0 && item.isElem('ellipse') && item.isEmpty() && item.hasAttr('rx', '0'))
+      return false;
 
     // Ellipse with zero y-axis radius
     //
@@ -95,12 +79,8 @@ function removeHiddenElemsFn(item, params) {
     // "A value of zero disables rendering of the element"
     //
     // <ellipse ry="0">
-    if (
-      params.ellipseRY0 &&
-      item.isElem('ellipse') &&
-      item.isEmpty() &&
-      item.hasAttr('ry', '0')
-    ) return false;
+    if (params.ellipseRY0 && item.isElem('ellipse') && item.isEmpty() && item.hasAttr('ry', '0'))
+      return false;
 
     // Rectangle with zero width
     //
@@ -108,12 +88,8 @@ function removeHiddenElemsFn(item, params) {
     // "A value of zero disables rendering of the element"
     //
     // <rect width="0">
-    if (
-      params.rectWidth0 &&
-      item.isElem('rect') &&
-      item.isEmpty() &&
-      item.hasAttr('width', '0')
-    ) return false;
+    if (params.rectWidth0 && item.isElem('rect') && item.isEmpty() && item.hasAttr('width', '0'))
+      return false;
 
     // Rectangle with zero height
     //
@@ -127,7 +103,8 @@ function removeHiddenElemsFn(item, params) {
       item.isElem('rect') &&
       item.isEmpty() &&
       item.hasAttr('height', '0')
-    ) return false;
+    )
+      return false;
 
     // Pattern with zero width
     //
@@ -135,11 +112,7 @@ function removeHiddenElemsFn(item, params) {
     // "A value of zero disables rendering of the element (i.e., no paint is applied)"
     //
     // <pattern width="0">
-    if (
-      params.patternWidth0 &&
-      item.isElem('pattern') &&
-      item.hasAttr('width', '0')
-    ) return false;
+    if (params.patternWidth0 && item.isElem('pattern') && item.hasAttr('width', '0')) return false;
 
     // Pattern with zero height
     //
@@ -147,11 +120,8 @@ function removeHiddenElemsFn(item, params) {
     // "A value of zero disables rendering of the element (i.e., no paint is applied)"
     //
     // <pattern height="0">
-    if (
-      params.patternHeight0 &&
-      item.isElem('pattern') &&
-      item.hasAttr('height', '0')
-    ) return false;
+    if (params.patternHeight0 && item.isElem('pattern') && item.hasAttr('height', '0'))
+      return false;
 
     // Image with zero width
     //
@@ -159,11 +129,7 @@ function removeHiddenElemsFn(item, params) {
     // "A value of zero disables rendering of the element"
     //
     // <image width="0">
-    if (
-      params.imageWidth0 &&
-      item.isElem('image') &&
-      item.hasAttr('width', '0')
-    ) return false;
+    if (params.imageWidth0 && item.isElem('image') && item.hasAttr('width', '0')) return false;
 
     // Image with zero height
     //
@@ -171,11 +137,7 @@ function removeHiddenElemsFn(item, params) {
     // "A value of zero disables rendering of the element"
     //
     // <image height="0">
-    if (
-      params.imageHeight0 &&
-      item.isElem('image') &&
-      item.hasAttr('height', '0')
-    ) return false;
+    if (params.imageHeight0 && item.isElem('image') && item.hasAttr('height', '0')) return false;
 
     // Path with empty data
     //
@@ -186,30 +148,24 @@ function removeHiddenElemsFn(item, params) {
       params.pathEmptyD &&
       item.isElem('path') &&
       (!item.hasAttr('d') || !regValidPath.test(item.attr('d').value))
-    ) return false;
+    )
+      return false;
 
     // Polyline with empty points
     //
     // http://www.w3.org/TR/SVG/shapes.html#PolylineElementPointsAttribute
     //
     // <polyline points="">
-    if (
-      params.polylineEmptyPoints &&
-      item.isElem('polyline') &&
-      !item.hasAttr('points')
-    ) return false;
+    if (params.polylineEmptyPoints && item.isElem('polyline') && !item.hasAttr('points'))
+      return false;
 
     // Polygon with empty points
     //
     // http://www.w3.org/TR/SVG/shapes.html#PolygonElementPointsAttribute
     //
     // <polygon points="">
-    if (
-      params.polygonEmptyPoints &&
-      item.isElem('polygon') &&
-      !item.hasAttr('points')
-    ) return false;
-
+    if (params.polygonEmptyPoints && item.isElem('polygon') && !item.hasAttr('points'))
+      return false;
   }
   return undefined;
-};
+}

@@ -24,8 +24,10 @@ const container = collections.elemsGroups.container;
  * @return {Boolean} if false, item will be filtered out
  */
 function removeEmptyContainersFn(item) {
-  return !(item.isElem(container)
-    && !item.isElem('svg')
-    && item.isEmpty()
-    && (!item.isElem('pattern') || !item.hasAttrLocal('href')));
+  return !(
+    item.isElem(container) &&
+    !item.isElem('svg') &&
+    item.isEmpty() &&
+    (!item.isElem('pattern') || !item.hasAttrLocal('href'))
+  );
 }

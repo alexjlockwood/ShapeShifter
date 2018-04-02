@@ -19,19 +19,21 @@ const excludedAttrs = ['display', 'opacity'];
  */
 function removeNonInheritableGroupAttrsFn(item) {
   if (item.isElem('g')) {
-    item.eachAttr(function (attr) {
+    item.eachAttr(function(attr) {
       // tslint:disable-next-line: no-bitwise
-      if (~attrsGroups.presentation.indexOf(attr.name)
+      if (
+        ~attrsGroups.presentation.indexOf(attr.name) &&
         // tslint:disable-next-line: no-bitwise
-        && ~attrsGroups.graphicalEvent.indexOf(attr.name)
+        ~attrsGroups.graphicalEvent.indexOf(attr.name) &&
         // tslint:disable-next-line: no-bitwise
-        && ~attrsGroups.core.indexOf(attr.name)
+        ~attrsGroups.core.indexOf(attr.name) &&
         // tslint:disable-next-line: no-bitwise
-        && ~attrsGroups.conditionalProcessing.indexOf(attr.name)
+        ~attrsGroups.conditionalProcessing.indexOf(attr.name) &&
         // tslint:disable-next-line: no-bitwise
-        && !~excludedAttrs.indexOf(attr.name)
+        !~excludedAttrs.indexOf(attr.name) &&
         // tslint:disable-next-line: no-bitwise
-        && !~inheritableAttrs.indexOf(attr.name)) {
+        !~inheritableAttrs.indexOf(attr.name)
+      ) {
         item.removeAttr(attr.name);
       }
     });

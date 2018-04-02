@@ -22,11 +22,10 @@ const REG_NUMBER = /[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g;
  * @return {Boolean} if false, item will be filtered out
  */
 function convertShapeToPathFn(item) {
-
   if (item.isElem('rect') && item.hasAttr('width') && item.hasAttr('height')) {
     const isValidFn = val => {
-      return !(typeof (val) !== 'number' || val == Infinity || val < 0);
-    }
+      return !(typeof val !== 'number' || val == Infinity || val < 0);
+    };
 
     const x = +(item.attr('x') || NONE).value;
     const y = +(item.attr('y') || NONE).value;
@@ -63,15 +62,16 @@ function convertShapeToPathFn(item) {
     if (!rx && !ry) {
       pathData = `M ${x} ${y} H ${x + width} V ${y + height} H ${x} Z`;
     } else {
-      pathData = `M ${x + rx} ${y} `
-        + `H ${x + width - rx} `
-        + `A ${rx} ${ry} 0 0 1 ${x + width} ${y + ry} `
-        + `V ${y + height - ry} `
-        + `A ${rx} ${ry} 0 0 1 ${x + width - rx} ${y + height} `
-        + `H ${x + rx} `
-        + `A ${rx} ${ry} 0 0 1 ${x} ${y + height - ry} `
-        + `V ${y + ry} `
-        + `A ${rx} ${ry} 0 0 1 ${x + rx} ${y}`;
+      pathData =
+        `M ${x + rx} ${y} ` +
+        `H ${x + width - rx} ` +
+        `A ${rx} ${ry} 0 0 1 ${x + width} ${y + ry} ` +
+        `V ${y + height - ry} ` +
+        `A ${rx} ${ry} 0 0 1 ${x + width - rx} ${y + height} ` +
+        `H ${x + rx} ` +
+        `A ${rx} ${ry} 0 0 1 ${x} ${y + height - ry} ` +
+        `V ${y + ry} ` +
+        `A ${rx} ${ry} 0 0 1 ${x + rx} ${y}`;
     }
 
     // Values like '100%' compute to NaN, thus running after
@@ -87,9 +87,7 @@ function convertShapeToPathFn(item) {
       local: 'd',
     });
     item.renameElem('path').removeAttr(['x', 'y', 'width', 'height', 'rx', 'ry']);
-
   } else if (item.isElem('line')) {
-
     const x1 = +(item.attr('x1') || NONE).value;
     const y1 = +(item.attr('y1') || NONE).value;
     const x2 = +(item.attr('x2') || NONE).value;
@@ -104,17 +102,17 @@ function convertShapeToPathFn(item) {
       local: 'd',
     });
     item.renameElem('path').removeAttr(['x1', 'y1', 'x2', 'y2']);
-
   } else if ((item.isElem('polyline') || item.isElem('polygon')) && item.hasAttr('points')) {
-
     const coords = (item.attr('points').value.match(REG_NUMBER) || []).map(Number);
     if (coords.length < 4) {
       return false;
     }
     const pathData =
-      'M' + coords.slice(0, 2).join(' ')
-      + 'L' + coords.slice(2).join(' ')
-      + (item.isElem('polygon') ? 'z' : '');
+      'M' +
+      coords.slice(0, 2).join(' ') +
+      'L' +
+      coords.slice(2).join(' ') +
+      (item.isElem('polygon') ? 'z' : '');
     item.addAttr({
       name: 'd',
       value: pathData,
@@ -122,17 +120,15 @@ function convertShapeToPathFn(item) {
       local: 'd',
     });
     item.renameElem('path').removeAttr('points');
-
   } else if (item.isElem('circle')) {
-
     const cx = +(item.attr('cx') || NONE).value;
     const cy = +(item.attr('cy') || NONE).value;
     const r = +(item.attr('r') || NONE).value;
     if (isNaN(cx - cy + r)) {
       return undefined;
     }
-    const pathData =
-      `M ${cx} ${cy - r} A ${r} ${r} 0 1 0 ${cx} ${cy + r} A ${r} ${r} 0 1 0 ${cx} ${cy - r} Z`;
+    const pathData = `M ${cx} ${cy - r} A ${r} ${r} 0 1 0 ${cx} ${cy +
+      r} A ${r} ${r} 0 1 0 ${cx} ${cy - r} Z`;
     item.addAttr({
       name: 'd',
       value: pathData,
@@ -140,9 +136,7 @@ function convertShapeToPathFn(item) {
       local: 'd',
     });
     item.renameElem('path').removeAttr(['cx', 'cy', 'r']);
-
   } else if (item.isElem('ellipse')) {
-
     const cx = +(item.attr('cx') || NONE).value;
     const cy = +(item.attr('cy') || NONE).value;
     const rx = +(item.attr('rx') || NONE).value;
@@ -150,8 +144,8 @@ function convertShapeToPathFn(item) {
     if (isNaN(cx - cy + rx - ry)) {
       return undefined;
     }
-    const pathData =
-      `M ${cx} ${cy - ry} A ${rx} ${ry} 0 1 0 ${cx} ${cy + ry} A ${rx} ${ry} 0 1 0 ${cx} ${cy - ry} Z`
+    const pathData = `M ${cx} ${cy - ry} A ${rx} ${ry} 0 1 0 ${cx} ${cy +
+      ry} A ${rx} ${ry} 0 1 0 ${cx} ${cy - ry} Z`;
     item.addAttr({
       name: 'd',
       value: pathData,
@@ -162,4 +156,4 @@ function convertShapeToPathFn(item) {
   }
 
   return undefined;
-};
+}

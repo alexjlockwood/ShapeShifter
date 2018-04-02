@@ -1,6 +1,7 @@
 /* tslint:disable */
 
 import * as EXTEND from 'whet.extend';
+
 import * as tools from './_tools';
 import * as transforms from './_transforms';
 
@@ -20,7 +21,7 @@ export const convertTransforms = {
     removeUseless: true,
     collapseIntoOne: true,
     leadingZero: true,
-    negativeExtraSpace: false
+    negativeExtraSpace: false,
   },
 };
 
@@ -45,9 +46,7 @@ var cleanupOutData = tools.cleanupOutData,
  * @return {Boolean} if false, item will be filtered out
  */
 function convertTransformsFn(item, params) {
-
   if (item.elem) {
-
     // transform
     if (item.hasAttr('transform')) {
       convertTransform(item, 'transform', params);
@@ -62,10 +61,8 @@ function convertTransformsFn(item, params) {
     if (item.hasAttr('patternTransform')) {
       convertTransform(item, 'patternTransform', params);
     }
-
   }
-
-};
+}
 
 /**
  * Main function.
@@ -120,27 +117,35 @@ function definePrecision(data, params) {
 
   // Limit transform precision with matrix one. Calculating with larger precision doesn't add any value.
   if (matrixData.length) {
-    params.transformPrecision = Math.min(params.transformPrecision,
-      Math.max.apply(Math, matrixData.map(floatDigits)) || params.transformPrecision);
+    params.transformPrecision = Math.min(
+      params.transformPrecision,
+      Math.max.apply(Math, matrixData.map(floatDigits)) || params.transformPrecision,
+    );
 
-    significantDigits = Math.max.apply(Math, matrixData.map(function (n) {
-      return String(n).replace(/\D+/g, '').length; // Number of digits in a number. 123.45 → 5
-    }));
+    significantDigits = Math.max.apply(
+      Math,
+      matrixData.map(function(n) {
+        return String(n).replace(/\D+/g, '').length; // Number of digits in a number. 123.45 → 5
+      }),
+    );
   }
   // No sense in angle precision more then number of significant digits in matrix.
   if (!('degPrecision' in params)) {
     params.degPrecision = Math.max(0, Math.min(params.floatPrecision, significantDigits - 2));
   }
 
-  floatRound = params.floatPrecision >= 1 && params.floatPrecision < 20 ?
-    smartRound.bind(this, params.floatPrecision) :
-    round;
-  degRound = params.degPrecision >= 1 && params.floatPrecision < 20 ?
-    smartRound.bind(this, params.degPrecision) :
-    round;
-  transformRound = params.transformPrecision >= 1 && params.floatPrecision < 20 ?
-    smartRound.bind(this, params.transformPrecision) :
-    round;
+  floatRound =
+    params.floatPrecision >= 1 && params.floatPrecision < 20
+      ? smartRound.bind(this, params.floatPrecision)
+      : round;
+  degRound =
+    params.degPrecision >= 1 && params.floatPrecision < 20
+      ? smartRound.bind(this, params.degPrecision)
+      : round;
+  transformRound =
+    params.transformPrecision >= 1 && params.floatPrecision < 20
+      ? smartRound.bind(this, params.transformPrecision)
+      : round;
 
   return params;
 }
@@ -171,20 +176,16 @@ function floatDigits(n) {
  * @return {Array} output array
  */
 function convertToShorts(transforms, params) {
-
   for (var i = 0; i < transforms.length; i++) {
-
     var transform = transforms[i];
 
     // convert matrix to the short aliases
-    if (
-      params.matrixToTransform &&
-      transform.name === 'matrix'
-    ) {
+    if (params.matrixToTransform && transform.name === 'matrix') {
       var decomposed = matrixToTransform(transform, params);
-      if (decomposed != transform &&
-        js2transform(decomposed, params).length <= js2transform([transform], params).length) {
-
+      if (
+        decomposed != transform &&
+        js2transform(decomposed, params).length <= js2transform([transform], params).length
+      ) {
         transforms.splice.apply(transforms, [i, 1].concat(decomposed));
       }
       transform = transforms[i];
@@ -229,11 +230,7 @@ function convertToShorts(transforms, params) {
     ) {
       transforms.splice(i - 2, 3, {
         name: 'rotate',
-        data: [
-          transforms[i - 1].data[0],
-          transforms[i - 2].data[0],
-          transforms[i - 2].data[1]
-        ]
+        data: [transforms[i - 1].data[0], transforms[i - 2].data[0], transforms[i - 2].data[1]],
       });
 
       // splice compensation
@@ -241,11 +238,9 @@ function convertToShorts(transforms, params) {
 
       transform = transforms[i];
     }
-
   }
 
   return transforms;
-
 }
 
 /**
@@ -255,38 +250,29 @@ function convertToShorts(transforms, params) {
  * @return {Array} output array
  */
 function removeUseless(transforms) {
-
-  return transforms.filter(function (transform) {
-
+  return transforms.filter(function(transform) {
     // translate(0), rotate(0[, cx, cy]), skewX(0), skewY(0)
     if (
-      ['translate', 'rotate', 'skewX', 'skewY'].indexOf(transform.name) > -1 &&
-      (transform.data.length == 1 || transform.name == 'rotate') &&
-      !transform.data[0] ||
-
+      (['translate', 'rotate', 'skewX', 'skewY'].indexOf(transform.name) > -1 &&
+        (transform.data.length == 1 || transform.name == 'rotate') &&
+        !transform.data[0]) ||
       // translate(0, 0)
-      transform.name == 'translate' &&
-      !transform.data[0] &&
-      !transform.data[1] ||
-
+      (transform.name == 'translate' && !transform.data[0] && !transform.data[1]) ||
       // scale(1)
-      transform.name == 'scale' &&
-      transform.data[0] == 1 &&
-      (transform.data.length < 2 || transform.data[1] == 1) ||
-
+      (transform.name == 'scale' &&
+        transform.data[0] == 1 &&
+        (transform.data.length < 2 || transform.data[1] == 1)) ||
       // matrix(1 0 0 1 0 0)
-      transform.name == 'matrix' &&
-      transform.data[0] == 1 &&
-      transform.data[3] == 1 &&
-      !(transform.data[1] || transform.data[2] || transform.data[4] || transform.data[5])
+      (transform.name == 'matrix' &&
+        transform.data[0] == 1 &&
+        transform.data[3] == 1 &&
+        !(transform.data[1] || transform.data[2] || transform.data[4] || transform.data[5]))
     ) {
       return false;
     }
 
     return true;
-
   });
-
 }
 
 /**
@@ -297,17 +283,20 @@ function removeUseless(transforms) {
  * @return {String} output string
  */
 function js2transform(transformJS, params) {
-
   var transformString = '';
 
   // collect output value string
-  transformJS.forEach(function (transform) {
+  transformJS.forEach(function(transform) {
     roundTransform(transform);
-    transformString += (transformString && ' ') + transform.name + '(' + cleanupOutData(transform.data, params) + ')';
+    transformString +=
+      (transformString && ' ') +
+      transform.name +
+      '(' +
+      cleanupOutData(transform.data, params) +
+      ')';
   });
 
   return transformString;
-
 }
 
 function roundTransform(transform) {
@@ -316,7 +305,9 @@ function roundTransform(transform) {
       transform.data = floatRound(transform.data);
       break;
     case 'rotate':
-      transform.data = degRound(transform.data.slice(0, 1)).concat(floatRound(transform.data.slice(1)));
+      transform.data = degRound(transform.data.slice(0, 1)).concat(
+        floatRound(transform.data.slice(1)),
+      );
       break;
     case 'skewX':
     case 'skewY':
@@ -326,7 +317,9 @@ function roundTransform(transform) {
       transform.data = transformRound(transform.data);
       break;
     case 'matrix':
-      transform.data = transformRound(transform.data.slice(0, 4)).concat(floatRound(transform.data.slice(4)));
+      transform.data = transformRound(transform.data.slice(0, 4)).concat(
+        floatRound(transform.data.slice(4)),
+      );
       break;
   }
   return transform;
@@ -352,12 +345,13 @@ function round(data) {
  * @return {Array} output data array
  */
 function smartRound(precision, data) {
-  for (var i = data.length, tolerance = +Math.pow(.1, precision).toFixed(precision); i--;) {
+  for (var i = data.length, tolerance = +Math.pow(0.1, precision).toFixed(precision); i--; ) {
     if (data[i].toFixed(precision) != data[i]) {
       var rounded = +data[i].toFixed(precision - 1);
-      data[i] = +Math.abs(rounded - data[i]).toFixed(precision + 1) >= tolerance ?
-        +data[i].toFixed(precision) :
-        rounded;
+      data[i] =
+        +Math.abs(rounded - data[i]).toFixed(precision + 1) >= tolerance
+          ? +data[i].toFixed(precision)
+          : rounded;
     }
   }
   return data;

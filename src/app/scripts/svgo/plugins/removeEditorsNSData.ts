@@ -30,7 +30,7 @@ function removeEditorsNSDataFn(item, params) {
   }
   if (item.elem) {
     if (item.isElem('svg')) {
-      item.eachAttr(function (attr) {
+      item.eachAttr(function(attr) {
         if (attr.prefix === 'xmlns' && editorNamespaces.indexOf(attr.value) > -1) {
           prefixes.push(attr.local);
           // <svg xmlns:sodipodi="">
@@ -40,7 +40,7 @@ function removeEditorsNSDataFn(item, params) {
     }
 
     // <* sodipodi:*="">
-    item.eachAttr(function (attr) {
+    item.eachAttr(function(attr) {
       if (prefixes.indexOf(attr.prefix) > -1) {
         item.removeAttr(attr.name);
       }

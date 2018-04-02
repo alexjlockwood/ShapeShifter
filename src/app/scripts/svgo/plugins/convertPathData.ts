@@ -27,7 +27,7 @@ export const convertPathData = {
     collapseRepeated: true,
     utilizeAbsolute: true,
     leadingZero: true,
-    negativeExtraSpace: true
+    negativeExtraSpace: true,
   },
 };
 
@@ -55,7 +55,7 @@ let hasMarkerMid;
 function convertPathDataFn(item, params) {
   if (item.isElem(pathElems) && item.hasAttr('d')) {
     precision = params.floatPrecision;
-    error = precision !== false ? +Math.pow(.1, precision).toFixed(precision) : 1e-2;
+    error = precision !== false ? +Math.pow(0.1, precision).toFixed(precision) : 1e-2;
     roundData = precision > 0 && precision < 20 ? strongRound : round;
     if (params.makeArcs) {
       arcThreshold = params.makeArcs.threshold;
@@ -88,23 +88,19 @@ function convertPathDataFn(item, params) {
  * @return {Array} output path data
  */
 function convertToRelative(path) {
-
   var point = [0, 0],
     subpathPoint = [0, 0],
     baseItem;
 
-  path.forEach(function (item, index) {
-
+  path.forEach(function(item, index) {
     var instruction = item.instruction,
       data = item.data;
 
     // data !== !z
     if (data) {
-
       // already relative
       // recalculate current point
       if ('mcslqta'.indexOf(instruction) > -1) {
-
         point[0] += data[data.length - 2];
         point[1] += data[data.length - 1];
 
@@ -113,22 +109,16 @@ function convertToRelative(path) {
           subpathPoint[1] = point[1];
           baseItem = item;
         }
-
       } else if (instruction === 'h') {
-
         point[0] += data[0];
-
       } else if (instruction === 'v') {
-
         point[1] += data[0];
-
       }
 
       // convert absolute path data coordinates to relative
       // if "M" was not transformed from "m"
       // M → m
       if (instruction === 'M') {
-
         if (index > 0) instruction = 'm';
 
         data[0] -= point[0];
@@ -138,13 +128,9 @@ function convertToRelative(path) {
         subpathPoint[1] = point[1] += data[1];
 
         baseItem = item;
-
-      }
-
-      // L → l
-      // T → t
-      else if ('LT'.indexOf(instruction) > -1) {
-
+      } else if ('LT'.indexOf(instruction) > -1) {
+        // L → l
+        // T → t
         instruction = instruction.toLowerCase();
 
         // x y
@@ -157,7 +143,6 @@ function convertToRelative(path) {
 
         // C → c
       } else if (instruction === 'C') {
-
         instruction = 'c';
 
         // x1 y1 x2 y2 x y
@@ -175,7 +160,6 @@ function convertToRelative(path) {
         // S → s
         // Q → q
       } else if ('SQ'.indexOf(instruction) > -1) {
-
         instruction = instruction.toLowerCase();
 
         // x1 y1 x y
@@ -190,7 +174,6 @@ function convertToRelative(path) {
 
         // A → a
       } else if (instruction === 'A') {
-
         instruction = 'a';
 
         // rx ry x-axis-rotation large-arc-flag sweep-flag x y
@@ -203,7 +186,6 @@ function convertToRelative(path) {
 
         // H → h
       } else if (instruction === 'H') {
-
         instruction = 'h';
 
         data[0] -= point[0];
@@ -212,13 +194,11 @@ function convertToRelative(path) {
 
         // V → v
       } else if (instruction === 'V') {
-
         instruction = 'v';
 
         data[0] -= point[1];
 
         point[1] += data[0];
-
       }
 
       item.instruction = instruction;
@@ -226,11 +206,8 @@ function convertToRelative(path) {
 
       // store absolute coordinates for later use
       item.coords = point.slice(-2);
-
-    }
-
-    // !data === z, reset current point
-    else if (instruction == 'z') {
+    } else if (instruction == 'z') {
+      // !data === z, reset current point
       if (baseItem) {
         item.coords = baseItem.coords;
       }
@@ -239,11 +216,9 @@ function convertToRelative(path) {
     }
 
     item.base = index > 0 ? path[index - 1].coords : [0, 0];
-
   });
 
   return path;
-
 }
 
 /**
@@ -254,20 +229,17 @@ function convertToRelative(path) {
  * @return {Array} output path data
  */
 function filters(path, params) {
-
   var stringify = data2Path.bind(null, params),
     relSubpoint = [0, 0],
     pathBase = [0, 0],
     prev: any = {};
 
-  path = path.filter(function (item, index, path) {
-
+  path = path.filter(function(item, index, path) {
     var instruction = item.instruction,
       data = item.data,
       next = path[index + 1];
 
     if (data) {
-
       var sdata = data,
         circle;
 
@@ -282,7 +254,6 @@ function filters(path, params) {
           sdata[0] = pdata[n - 2] - pdata[n - 4];
           sdata[1] = pdata[n - 1] - pdata[n - 3];
         }
-
       }
 
       // convert curves to arcs if possible
@@ -299,7 +270,7 @@ function filters(path, params) {
             instruction: 'a',
             data: [r, r, 0, 0, sweep, sdata[4], sdata[5]],
             coords: item.coords.slice(),
-            base: item.base
+            base: item.base,
           },
           output = [arc],
           // relative coordinates to adjust the found circle
@@ -311,30 +282,30 @@ function filters(path, params) {
           nextLonghand;
 
         if (
-          prev.instruction == 'c' && isConvex(prev.data) && isArcPrev(prev.data, circle) ||
-          prev.instruction == 'a' && prev.sdata && isArcPrev(prev.sdata, circle)
+          (prev.instruction == 'c' && isConvex(prev.data) && isArcPrev(prev.data, circle)) ||
+          (prev.instruction == 'a' && prev.sdata && isArcPrev(prev.sdata, circle))
         ) {
           arcCurves.unshift(prev);
           arc.base = prev.base;
           arc.data[5] = arc.coords[0] - arc.base[0];
           arc.data[6] = arc.coords[1] - arc.base[1];
           var prevData = prev.instruction == 'a' ? prev.sdata : prev.data;
-          angle += findArcAngle(prevData,
-            {
-              center: [prevData[4] + relCenter[0], prevData[5] + relCenter[1]],
-              radius: circle.radius
-            }
-          );
+          angle += findArcAngle(prevData, {
+            center: [prevData[4] + relCenter[0], prevData[5] + relCenter[1]],
+            radius: circle.radius,
+          });
           if (angle > Math.PI) arc.data[3] = 1;
           hasPrev = 1;
         }
 
         // check if next curves are fitting the arc
-        for (var j = index; (next = path[++j]) && ~'cs'.indexOf(next.instruction);) {
+        for (var j = index; (next = path[++j]) && ~'cs'.indexOf(next.instruction); ) {
           var nextData = next.data;
           if (next.instruction == 's') {
-            nextLonghand = makeLonghand({ instruction: 's', data: next.data.slice() },
-              path[j - 1].data);
+            nextLonghand = makeLonghand(
+              { instruction: 's', data: next.data.slice() },
+              path[j - 1].data,
+            );
             nextData = nextLonghand.data;
             nextLonghand.data = nextData.slice(0, 2);
             suffix = stringify([nextLonghand]);
@@ -344,7 +315,8 @@ function filters(path, params) {
             if (angle - 2 * Math.PI > 1e-3) break; // more than 360°
             if (angle > Math.PI) arc.data[3] = 1;
             arcCurves.push(next);
-            if (2 * Math.PI - angle > 1e-3) { // less than 360°
+            if (2 * Math.PI - angle > 1e-3) {
+              // less than 360°
               arc.coords = next.coords;
               arc.data[5] = arc.coords[0] - arc.base[0];
               arc.data[6] = arc.coords[1] - arc.base[1];
@@ -355,10 +327,17 @@ function filters(path, params) {
               arc.coords = [arc.base[0] + arc.data[5], arc.base[1] + arc.data[6]];
               arc = {
                 instruction: 'a',
-                data: [r, r, 0, 0, sweep,
-                  next.coords[0] - arc.coords[0], next.coords[1] - arc.coords[1]],
+                data: [
+                  r,
+                  r,
+                  0,
+                  0,
+                  sweep,
+                  next.coords[0] - arc.coords[0],
+                  next.coords[1] - arc.coords[1],
+                ],
                 coords: next.coords,
-                base: arc.coords
+                base: arc.coords,
               };
               output.push(arc);
               j++;
@@ -401,7 +380,7 @@ function filters(path, params) {
       // l .25 3 .25 2 .25 3 .25 2 -> l .3 3 .2 2 .3 3 .2 2
       if (precision !== false) {
         if ('mltqsc'.indexOf(instruction) > -1) {
-          for (var i = data.length; i--;) {
+          for (var i = data.length; i--; ) {
             data[i] += item.base[i % 2] - relSubpoint[i % 2];
           }
         } else if (instruction == 'h') {
@@ -430,42 +409,21 @@ function filters(path, params) {
 
       // convert straight curves into lines segments
       if (params.straightCurves) {
-
         if (
-          instruction === 'c' &&
-          isCurveStraightLine(data) ||
-          instruction === 's' &&
-          isCurveStraightLine(sdata)
+          (instruction === 'c' && isCurveStraightLine(data)) ||
+          (instruction === 's' && isCurveStraightLine(sdata))
         ) {
-          if (next && next.instruction == 's')
-            makeLonghand(next, data); // fix up next curve
+          if (next && next.instruction == 's') makeLonghand(next, data); // fix up next curve
           instruction = 'l';
           data = data.slice(-2);
-        }
-
-        else if (
-          instruction === 'q' &&
-          isCurveStraightLine(data)
-        ) {
-          if (next && next.instruction == 't')
-            makeLonghand(next, data); // fix up next curve
+        } else if (instruction === 'q' && isCurveStraightLine(data)) {
+          if (next && next.instruction == 't') makeLonghand(next, data); // fix up next curve
           instruction = 'l';
           data = data.slice(-2);
-        }
-
-        else if (
-          instruction === 't' &&
-          prev.instruction !== 'q' &&
-          prev.instruction !== 't'
-        ) {
+        } else if (instruction === 't' && prev.instruction !== 'q' && prev.instruction !== 't') {
           instruction = 'l';
           data = data.slice(-2);
-        }
-
-        else if (
-          instruction === 'a' &&
-          (data[0] === 0 || data[1] === 0)
-        ) {
+        } else if (instruction === 'a' && (data[0] === 0 || data[1] === 0)) {
           instruction = 'l';
           data = data.slice(-2);
         }
@@ -474,10 +432,7 @@ function filters(path, params) {
       // horizontal and vertical line shorthands
       // l 50 0 → h 50
       // l 0 50 → v 50
-      if (
-        params.lineShorthands &&
-        instruction === 'l'
-      ) {
+      if (params.lineShorthands && instruction === 'l') {
         if (data[1] === 0) {
           instruction = 'h';
           data.pop();
@@ -492,13 +447,11 @@ function filters(path, params) {
       if (
         params.collapseRepeated &&
         !hasMarkerMid &&
-        ('mhv'.indexOf(instruction) > -1) &&
+        'mhv'.indexOf(instruction) > -1 &&
         prev.instruction &&
         instruction == prev.instruction.toLowerCase() &&
-        (
-          (instruction != 'h' && instruction != 'v') ||
-          (prev.data[0] >= 0) == (item.data[0] >= 0)
-        )) {
+        ((instruction != 'h' && instruction != 'v') || prev.data[0] >= 0 == item.data[0] >= 0)
+      ) {
         prev.data[0] += data[0];
         if (instruction != 'h' && instruction != 'v') {
           prev.data[1] += data[1];
@@ -510,10 +463,8 @@ function filters(path, params) {
 
       // convert curves into smooth shorthands
       if (params.curveSmoothShorthands && prev.instruction) {
-
         // curveto
         if (instruction === 'c') {
-
           // c + c → c + s
           if (
             prev.instruction === 'c' &&
@@ -522,104 +473,77 @@ function filters(path, params) {
           ) {
             instruction = 's';
             data = data.slice(2);
-          }
-
-          // s + c → s + s
-          else if (
+          } else if (
             prev.instruction === 's' &&
             data[0] === -(prev.data[0] - prev.data[2]) &&
             data[1] === -(prev.data[1] - prev.data[3])
           ) {
+            // s + c → s + s
+            instruction = 's';
+            data = data.slice(2);
+          } else if ('cs'.indexOf(prev.instruction) === -1 && data[0] === 0 && data[1] === 0) {
+            // [^cs] + c → [^cs] + s
             instruction = 's';
             data = data.slice(2);
           }
-
-          // [^cs] + c → [^cs] + s
-          else if (
-            'cs'.indexOf(prev.instruction) === -1 &&
-            data[0] === 0 &&
-            data[1] === 0
-          ) {
-            instruction = 's';
-            data = data.slice(2);
-          }
-
-        }
-
-        // quadratic Bézier curveto
-        else if (instruction === 'q') {
-
+        } else if (instruction === 'q') {
+          // quadratic Bézier curveto
           // q + q → q + t
           if (
             prev.instruction === 'q' &&
-            data[0] === (prev.data[2] - prev.data[0]) &&
-            data[1] === (prev.data[3] - prev.data[1])
+            data[0] === prev.data[2] - prev.data[0] &&
+            data[1] === prev.data[3] - prev.data[1]
           ) {
             instruction = 't';
             data = data.slice(2);
-          }
-
-          // t + q → t + t
-          else if (
+          } else if (
             prev.instruction === 't' &&
             data[2] === prev.data[0] &&
             data[3] === prev.data[1]
           ) {
+            // t + q → t + t
             instruction = 't';
             data = data.slice(2);
           }
-
         }
-
       }
 
       // remove useless non-first path segments
       if (params.removeUseless) {
-
         // l 0,0 / h 0 / v 0 / q 0,0 0,0 / t 0,0 / c 0,0 0,0 0,0 / s 0,0 0,0
         if (
-          (
-            'lhvqtcs'.indexOf(instruction) > -1
-          ) &&
-          data.every(function (i) { return i === 0; })
+          'lhvqtcs'.indexOf(instruction) > -1 &&
+          data.every(function(i) {
+            return i === 0;
+          })
         ) {
           path[index] = prev;
           return false;
         }
 
         // a 25,25 -30 0,1 0,0
-        if (
-          instruction === 'a' &&
-          data[5] === 0 &&
-          data[6] === 0
-        ) {
+        if (instruction === 'a' && data[5] === 0 && data[6] === 0) {
           path[index] = prev;
           return false;
         }
-
       }
 
       item.instruction = instruction;
       item.data = data;
 
       prev = item;
-
     } else {
-
       // z resets coordinates
       relSubpoint[0] = pathBase[0];
       relSubpoint[1] = pathBase[1];
       if (prev.instruction == 'z') return false;
       prev = item;
-
     }
 
     return true;
-
   });
 
   return path;
-
 }
 
 /**
@@ -629,11 +553,9 @@ function filters(path, params) {
  * @return {Boolean} output
  */
 function convertToMixed(path, params) {
-
   var prev = path[0];
 
-  path = path.filter(function (item, index) {
-
+  path = path.filter(function(item, index) {
     if (index == 0) return true;
     if (!item.data) {
       prev = item;
@@ -645,7 +567,7 @@ function convertToMixed(path, params) {
       adata = data && data.slice(0);
 
     if ('mltqsc'.indexOf(instruction) > -1) {
-      for (var i = adata.length; i--;) {
+      for (var i = adata.length; i--; ) {
         adata[i] += item.base[i % 2];
       }
     } else if (instruction == 'h') {
@@ -673,7 +595,7 @@ function convertToMixed(path, params) {
         instruction == prev.instruction &&
         prev.instruction.charCodeAt(0) > 96 &&
         absoluteDataStr.length == relativeDataStr.length - 1 &&
-        (data[0] < 0 || /^0\./.test(data[0]) && prev.data[prev.data.length - 1] % 1)
+        (data[0] < 0 || (/^0\./.test(data[0]) && prev.data[prev.data.length - 1] % 1))
       )
     ) {
       item.instruction = instruction.toUpperCase();
@@ -683,11 +605,9 @@ function convertToMixed(path, params) {
     prev = item;
 
     return true;
-
   });
 
   return path;
-
 }
 
 /**
@@ -698,15 +618,15 @@ function convertToMixed(path, params) {
  * @return {Boolean} output
  */
 function isConvex(data) {
-
   var center = getIntersection([0, 0, data[2], data[3], data[0], data[1], data[4], data[5]]);
 
-  return center &&
-    (data[2] < center[0] == center[0] < 0) &&
-    (data[3] < center[1] == center[1] < 0) &&
-    (data[4] < center[0] == center[0] < data[0]) &&
-    (data[5] < center[1] == center[1] < data[1]);
-
+  return (
+    center &&
+    data[2] < center[0] == center[0] < 0 &&
+    data[3] < center[1] == center[1] < 0 &&
+    data[4] < center[0] == center[0] < data[0] &&
+    data[5] < center[1] == center[1] < data[1]
+  );
 }
 
 /**
@@ -716,28 +636,20 @@ function isConvex(data) {
  * @return {Array|undefined} output coordinate of lines' crosspoint
  */
 function getIntersection(coords) {
-
   // Prev line equation parameters.
   var a1 = coords[1] - coords[3], // y1 - y2
     b1 = coords[2] - coords[0], // x2 - x1
     c1 = coords[0] * coords[3] - coords[2] * coords[1], // x1 * y2 - x2 * y1
-
     // Next line equation parameters
     a2 = coords[5] - coords[7], // y1 - y2
     b2 = coords[6] - coords[4], // x2 - x1
     c2 = coords[4] * coords[7] - coords[5] * coords[6], // x1 * y2 - x2 * y1
-    denom = (a1 * b2 - a2 * b1);
+    denom = a1 * b2 - a2 * b1;
 
   if (!denom) return undefined; // parallel lines havn't an intersection
 
-  var cross = [
-    (b1 * c2 - b2 * c1) / denom,
-    (a1 * c2 - a2 * c1) / -denom
-  ];
-  if (
-    !isNaN(cross[0]) && !isNaN(cross[1]) &&
-    isFinite(cross[0]) && isFinite(cross[1])
-  ) {
+  var cross = [(b1 * c2 - b2 * c1) / denom, (a1 * c2 - a2 * c1) / -denom];
+  if (!isNaN(cross[0]) && !isNaN(cross[1]) && isFinite(cross[0]) && isFinite(cross[1])) {
     return cross;
   }
 
@@ -754,12 +666,13 @@ function getIntersection(coords) {
  * @return {Array} output data array
  */
 function strongRound(data) {
-  for (var i = data.length; i-- > 0;) {
+  for (var i = data.length; i-- > 0; ) {
     if (data[i].toFixed(precision) != data[i]) {
       var rounded = +data[i].toFixed(precision - 1);
-      data[i] = +Math.abs(rounded - data[i]).toFixed(precision + 1) >= error ?
-        +data[i].toFixed(precision) :
-        rounded;
+      data[i] =
+        +Math.abs(rounded - data[i]).toFixed(precision + 1) >= error
+          ? +data[i].toFixed(precision)
+          : rounded;
     }
   }
   return data;
@@ -772,7 +685,7 @@ function strongRound(data) {
  * @return {Array} output data array
  */
 function round(data) {
-  for (var i = data.length; i-- > 0;) {
+  for (var i = data.length; i-- > 0; ) {
     data[i] = Math.round(data[i]);
   }
   return data;
@@ -788,23 +701,20 @@ function round(data) {
  */
 
 function isCurveStraightLine(data) {
-
   // Get line equation a·x + b·y + c = 0 coefficients a, b (c = 0) by start and end points.
   var i = data.length - 2,
     a = -data[i + 1], // y1 − y2 (y1 = 0)
-    b = data[i],      // x2 − x1 (x1 = 0)
+    b = data[i], // x2 − x1 (x1 = 0)
     d = 1 / (a * a + b * b); // same part for all points
 
   if (i <= 1 || !isFinite(d)) return false; // curve that ends at start point isn't the case
 
   // Distance from point (x0, y0) to the line is sqrt((c − a·x0 − b·y0)² / (a² + b²))
   while ((i -= 2) >= 0) {
-    if (Math.sqrt(Math.pow(a * data[i] + b * data[i + 1], 2) * d) > error)
-      return false;
+    if (Math.sqrt(Math.pow(a * data[i] + b * data[i + 1], 2) * d) > error) return false;
   }
 
   return true;
-
 }
 
 /**
@@ -816,10 +726,17 @@ function isCurveStraightLine(data) {
 
 function makeLonghand(item, data) {
   switch (item.instruction) {
-    case 's': item.instruction = 'c'; break;
-    case 't': item.instruction = 'q'; break;
+    case 's':
+      item.instruction = 'c';
+      break;
+    case 't':
+      item.instruction = 'q';
+      break;
   }
-  item.data.unshift(data[data.length - 2] - data[data.length - 4], data[data.length - 1] - data[data.length - 3]);
+  item.data.unshift(
+    data[data.length - 2] - data[data.length - 4],
+    data[data.length - 1] - data[data.length - 3],
+  );
   return item;
 }
 
@@ -853,7 +770,7 @@ function getCubicBezierPoint(curve, t) {
 
   return [
     3 * sqrMt * t * curve[0] + 3 * mt * sqrT * curve[2] + cubT * curve[4],
-    3 * sqrMt * t * curve[1] + 3 * mt * sqrT * curve[3] + cubT * curve[5]
+    3 * sqrMt * t * curve[1] + 3 * mt * sqrT * curve[3] + cubT * curve[5],
   ];
 }
 
@@ -869,17 +786,24 @@ function findCircle(curve) {
     m1 = [midPoint[0] / 2, midPoint[1] / 2],
     m2 = [(midPoint[0] + curve[4]) / 2, (midPoint[1] + curve[5]) / 2],
     center = getIntersection([
-      m1[0], m1[1],
-      m1[0] + m1[1], m1[1] - m1[0],
-      m2[0], m2[1],
-      m2[0] + (m2[1] - midPoint[1]), m2[1] - (m2[0] - midPoint[0])
+      m1[0],
+      m1[1],
+      m1[0] + m1[1],
+      m1[1] - m1[0],
+      m2[0],
+      m2[1],
+      m2[0] + (m2[1] - midPoint[1]),
+      m2[1] - (m2[0] - midPoint[0]),
     ]),
     radius = center && getDistance([0, 0], center),
     tolerance = Math.min(arcThreshold * error, arcTolerance * radius / 100);
 
-  if (center && [1 / 4, 3 / 4].every(function (point) {
-    return Math.abs(getDistance(getCubicBezierPoint(curve, point), center) - radius) <= tolerance;
-  }))
+  if (
+    center &&
+    [1 / 4, 3 / 4].every(function(point) {
+      return Math.abs(getDistance(getCubicBezierPoint(curve, point), center) - radius) <= tolerance;
+    })
+  )
     return { center: center, radius: radius };
   return undefined;
 }
@@ -895,8 +819,11 @@ function findCircle(curve) {
 function isArc(curve, circle) {
   var tolerance = Math.min(arcThreshold * error, arcTolerance * circle.radius / 100);
 
-  return [0, 1 / 4, 1 / 2, 3 / 4, 1].every(function (point) {
-    return Math.abs(getDistance(getCubicBezierPoint(curve, point), circle.center) - circle.radius) <= tolerance;
+  return [0, 1 / 4, 1 / 2, 3 / 4, 1].every(function(point) {
+    return (
+      Math.abs(getDistance(getCubicBezierPoint(curve, point), circle.center) - circle.radius) <=
+      tolerance
+    );
   });
 }
 
@@ -911,7 +838,7 @@ function isArc(curve, circle) {
 function isArcPrev(curve, circle) {
   return isArc(curve, {
     center: [circle.center[0] + curve[4], circle.center[1] + curve[5]],
-    radius: circle.radius
+    radius: circle.radius,
   });
 }
 
@@ -928,10 +855,7 @@ function findArcAngle(curve, relCircle) {
     x2 = curve[4] - relCircle.center[0],
     y2 = curve[5] - relCircle.center[1];
 
-  return Math.acos(
-    (x1 * x2 + y1 * y2) /
-    Math.sqrt((x1 * x1 + y1 * y1) * (x2 * x2 + y2 * y2))
-  );
+  return Math.acos((x1 * x2 + y1 * y2) / Math.sqrt((x1 * x1 + y1 * y1) * (x2 * x2 + y2 * y2)));
 }
 
 /**
@@ -943,7 +867,8 @@ function findArcAngle(curve, relCircle) {
  */
 
 function data2Path(params, pathData) {
-  return pathData.reduce(function (pathString, item) {
-    return pathString += item.instruction + (item.data ? cleanupOutData(roundData(item.data.slice()), params) : '');
+  return pathData.reduce(function(pathString, item) {
+    return (pathString +=
+      item.instruction + (item.data ? cleanupOutData(roundData(item.data.slice()), params) : ''));
   }, '');
 }
