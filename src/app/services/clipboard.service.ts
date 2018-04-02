@@ -45,21 +45,21 @@ export class ClipboardService {
       }
 
       const clipboardData = (event.originalEvent as ClipboardEvent).clipboardData;
-      const str = clipboardData.getData('text/plain');
+      const str = clipboardData.getData('text');
       const existingVl = this.layerTimelineService.getVectorLayer();
 
       if (str.match(/<\/svg>\s*$/)) {
         // Paste SVG.
         ga('send', 'event', 'paste', 'svg');
-        let importedVl: VectorLayer;
         SvgLoader.loadVectorLayerFromSvgStringWithCallback(
           str,
-          vl => (importedVl = vl),
+          vl => {
+            if (vl) {
+              this.layerTimelineService.importLayers([vl]);
+            }
+          },
           name => !!existingVl.findLayerByName(name),
         );
-        if (importedVl) {
-          this.layerTimelineService.importLayers([importedVl]);
-        }
       } else if (str.match(/<\/vector>\s*$/)) {
         // Paste VD.
         ga('send', 'event', 'paste', 'vd');
@@ -118,20 +118,16 @@ export class ClipboardService {
     const copyHandler = (event: JQuery.Event) => cutCopyHandlerFn(event, false);
     const pasteHandler = pasteHandlerFn;
 
-    if (IS_DEV_BUILD) {
-      $(window)
-        .on('cut', cutHandler)
-        .on('copy', copyHandler)
-        .on('paste', pasteHandler);
-    }
+    $(window)
+      .on('cut', cutHandler)
+      .on('copy', copyHandler)
+      .on('paste', pasteHandler);
   }
 
   destroy() {
-    if (IS_DEV_BUILD) {
-      $(window)
-        .unbind('cut')
-        .unbind('copy')
-        .unbind('paste');
-    }
+    $(window)
+      .unbind('cut')
+      .unbind('copy')
+      .unbind('paste');
   }
 }
