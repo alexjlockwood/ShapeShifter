@@ -8,6 +8,7 @@ import * as js2svg from 'svgo/lib/svgo/js2svg';
 import * as executePlugins from 'svgo/lib/svgo/plugins';
 import * as svg2js from 'svgo/lib/svgo/svg2js';
 import * as cleanupAttrs from 'svgo/plugins/cleanupAttrs';
+import * as cleanupIDs from 'svgo/plugins/cleanupIDs';
 import * as cleanupNumericValues from 'svgo/plugins/cleanupNumericValues';
 import * as collapseGroups from 'svgo/plugins/collapseGroups';
 import * as convertPathData from 'svgo/plugins/convertPathData';
@@ -54,7 +55,7 @@ const pluginsData = {
   inlineStyles,
   minifyStyles,
   convertStyleToAttrs,
-  // cleanupIDs,
+  cleanupIDs,
   // prefixIds,
   removeRasterImages,
   removeUselessDefs,
@@ -101,6 +102,7 @@ for (const plugin of Object.values(pluginsData)) {
 }
 
 // Tweak plugin params.
+cleanupIDs.params.minify = false;
 convertPathData.params.makeArcs = undefined;
 convertPathData.params.transformPrecision = floatPrecision;
 convertShapeToPath.params.convertArcs = true;

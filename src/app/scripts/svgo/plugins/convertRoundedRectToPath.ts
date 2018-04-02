@@ -6,7 +6,6 @@ export const convertRoundedRectToPath = {
 };
 
 const none = { value: 0 };
-const regNumber = /[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g;
 
 /**
  * Converts a rounded rect to a more compact path.
