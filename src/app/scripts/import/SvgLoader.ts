@@ -12,7 +12,7 @@ import {
 import { Path } from 'app/model/paths';
 import { NameProperty } from 'app/model/properties';
 import { ColorUtil, MathUtil, Matrix } from 'app/scripts/common';
-import { Svgo } from 'app/scripts/svgo';
+import { optimizeSvg } from 'app/scripts/svgo';
 import * as _ from 'lodash';
 
 // TODO: trim ids/strings?
@@ -28,7 +28,7 @@ export function loadVectorLayerFromSvgStringWithCallback(
   callbackFn: (vl: VectorLayer) => void,
   doesNameExistFn: (name: string) => boolean,
 ) {
-  Svgo.optimize(svgString)
+  optimizeSvg(svgString)
     .then((optimizedSvgString: string) => {
       if (!optimizedSvgString) {
         callbackFn(undefined);

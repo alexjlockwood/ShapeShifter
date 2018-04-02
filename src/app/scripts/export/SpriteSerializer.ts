@@ -1,7 +1,7 @@
 import { VectorLayer } from 'app/model/layers';
 import { Animation } from 'app/model/timeline';
 import { AnimationRenderer } from 'app/scripts/animator';
-import { Svgo } from 'app/scripts/svgo';
+import { optimizeSvg } from 'app/scripts/svgo';
 
 import * as SvgSerializer from './SvgSerializer';
 
@@ -73,7 +73,7 @@ export function createSvgSprite(vectorLayer: VectorLayer, animation: Animation, 
 ${svgs.join('\n')}
 </svg>
 `;
-  Svgo.optimize(svg)
+  optimizeSvg(svg)
     .then(optimizedSvgText => (svg = optimizedSvgText))
     .catch(() => (svg = undefined));
   return svg;
