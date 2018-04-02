@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { VectorLayer } from 'app/model/layers';
 import { AnimationBlock } from 'app/model/timeline';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
 import { environment } from 'environments/environment';
@@ -7,8 +6,6 @@ import * as $ from 'jquery';
 
 import { LayerTimelineService } from './layertimeline.service';
 import { PlaybackService } from './playback.service';
-
-const IS_DEV_BUILD = !environment.production;
 
 declare const ga: Function;
 
