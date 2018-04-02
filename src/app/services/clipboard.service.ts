@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AnimationBlock } from 'app/model/timeline';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
-import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 
 import { LayerTimelineService } from './layertimeline.service';
