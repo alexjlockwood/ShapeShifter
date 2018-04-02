@@ -2,7 +2,6 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 export interface Action<T = any> {
   type: string;
-  payload?: T;
 }
 
 export class Dispatcher extends BehaviorSubject<Action> {
