@@ -1,6 +1,6 @@
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
-export interface Action<T = any> {
+export interface Action {
   type: string;
 }
 

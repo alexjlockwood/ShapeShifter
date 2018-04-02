@@ -6,7 +6,7 @@ describe('SvgLoader', () => {
   it(`can import simple SVG`, () => {
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <path id="test_path" fill="#000" d="M 0 0 L 10 10 L 20 20 L 30 30"/>
+  <path id="path" fill="#000" d="M 0 0 L 10 10 L 20 20 L 30 30"/>
 </svg>
 `;
     SvgLoader.loadVectorLayerFromSvgStringWithCallback(
@@ -16,7 +16,7 @@ describe('SvgLoader', () => {
         expect(vl.height).toBe(24);
         expect(vl.children.length).toBe(1);
         const pathLayer = vl.children[0] as PathLayer;
-        expect(pathLayer.name).toBe('test_path');
+        expect(pathLayer.name).toBe('path');
         expect(pathLayer.fillColor).toBe('#000');
         expect(pathLayer.pathData.getPathString()).toBe('M 0 0 L 10 10 L 20 20 L 30 30');
       },
@@ -27,7 +27,7 @@ describe('SvgLoader', () => {
   it(`can import simple SVG with viewBox translation`, () => {
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="5 -10 24 24">
-  <path id="test_path" fill="#000" d="M 0 0 L 10 10 L 20 20 L 30 30"/>
+  <path id="path" fill="#000" d="M 0 0 L 10 10 L 20 20 L 30 30"/>
 </svg>
 `;
     SvgLoader.loadVectorLayerFromSvgStringWithCallback(
@@ -37,7 +37,7 @@ describe('SvgLoader', () => {
         expect(vl.height).toBe(24);
         expect(vl.children.length).toBe(1);
         const pathLayer = vl.children[0] as PathLayer;
-        expect(pathLayer.name).toBe('test_path');
+        expect(pathLayer.name).toBe('path');
         expect(pathLayer.fillColor).toBe('#000');
         expect(pathLayer.pathData.getPathString()).toBe('M -5 10 L 5 20 L 15 30 L 25 40');
       },

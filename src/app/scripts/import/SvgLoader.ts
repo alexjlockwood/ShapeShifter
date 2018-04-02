@@ -12,7 +12,7 @@ import {
 import { Path } from 'app/model/paths';
 import { NameProperty } from 'app/model/properties';
 import { ColorUtil, MathUtil, Matrix } from 'app/scripts/common';
-import { Svgo } from 'app/scripts/svgo';
+import { optimizeSvg } from 'app/scripts/svgo';
 import * as _ from 'lodash';
 
 // TODO: trim ids/strings?
@@ -22,24 +22,29 @@ import * as _ from 'lodash';
  * Utility function that takes an SVG string as input and
  * returns a VectorLayer model object.
  */
+// TODO: make this return a Promise instead
 export function loadVectorLayerFromSvgStringWithCallback(
   svgString: string,
   callbackFn: (vl: VectorLayer) => void,
   doesNameExistFn: (name: string) => boolean,
 ) {
-  Svgo.optimize(svgString, (optimizedSvgString: string) => {
-    if (!optimizedSvgString) {
+  optimizeSvg(svgString)
+    .then((optimizedSvgString: string) => {
+      if (!optimizedSvgString) {
+        callbackFn(undefined);
+        return;
+      }
+      try {
+        callbackFn(loadVectorLayerFromSvgString(optimizedSvgString, doesNameExistFn));
+      } catch (e) {
+        console.error('Failed to parse the optimized SVG file', e);
+        callbackFn(undefined);
+        throw e;
+      }
+    })
+    .catch(() => {
       callbackFn(undefined);
-      return;
-    }
-    try {
-      callbackFn(loadVectorLayerFromSvgString(optimizedSvgString, doesNameExistFn));
-    } catch (e) {
-      console.error('Failed to parse the optimized SVG file', e);
-      callbackFn(undefined);
-      throw e;
-    }
-  });
+    });
 }
 
 // TODO: give better error message when user attempts to import SVG w/o a namespace declaration
@@ -93,7 +98,13 @@ function loadVectorLayerFromSvgString(
         return layer;
       }
       const paths = (clipPathMap[refClipPathId] || []).map(p => {
-        return new Path(p.mutate().transform(flattenedTransforms).build().getPathString());
+        return new Path(
+          p
+            .mutate()
+            .transform(flattenedTransforms)
+            .build()
+            .getPathString(),
+        );
       });
       if (!paths.length) {
         // If the clipPath has no children, then clip the entire layer.
@@ -156,7 +167,11 @@ function loadVectorLayerFromSvgString(
       let pathData = new Path(path);
       if (transforms.length) {
         pathData = new Path(
-          pathData.mutate().transform(flattenedTransforms).build().getPathString(),
+          pathData
+            .mutate()
+            .transform(flattenedTransforms)
+            .build()
+            .getPathString(),
         );
         strokeWidth = MathUtil.round(strokeWidth * flattenedTransforms.getScaleFactor());
       }
