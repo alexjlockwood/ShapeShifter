@@ -34,7 +34,7 @@
             <input id="openFileButton"
               type="file"
               accept=".shapeshifter"
-              (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+              (change)="onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
           </button>
           <button mat-menu-item
             (click)="this.onSaveToFileClick()">
@@ -60,7 +60,7 @@
               id="addPathsFromSvgButton"
               type="file"
               accept=".svg"
-              (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+              (change)="onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
           </button>
           <button mat-menu-item
             (click)="this.onLaunchFilePickerClick('addPathsFromXmlButton')">
@@ -69,7 +69,7 @@
               id="addPathsFromXmlButton"
               type="file"
               accept=".xml"
-              (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+              (change)="onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
           </button>
         </mat-menu>
         <button class="slt-layers-menu-group-button"

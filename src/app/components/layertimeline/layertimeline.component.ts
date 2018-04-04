@@ -1061,11 +1061,12 @@ export class LayerTimelineComponent extends DestroyableMixin()
   onLaunchFilePickerClick(sourceElementId: string) {
     $(`#${sourceElementId}`)
       .val('')
-      .click(event => event.preventDefault());
+      .click();
   }
 
   // Called from the LayerTimelineComponent template.
-  onImportedFilesPicked(fileList: FileList) {
+  onImportedFilesPicked(event: MouseEvent, fileList: FileList) {
+    event.stopPropagation();
     this.fileImportService.import(fileList);
   }
 
