@@ -12,15 +12,15 @@ export const INITIAL_STATE = new InjectionToken<string>('Token ngrx/store/initia
 export const _INITIAL_REDUCER = new InjectionToken<string>('Token _ngrx/store/reducer');
 export const _INITIAL_STATE = new InjectionToken<string>('Token _ngrx/store/initial-state');
 
-export function _initialReducerFactory(reducer) {
+export function _initialReducerFactory(reducer: any) {
   return typeof reducer === 'function' ? reducer : combineReducers(reducer);
 }
 
-export function _initialStateFactory(initialState, reducer) {
+export function _initialStateFactory(initialState: any, reducer: any) {
   return initialState || reducer(undefined, { type: Dispatcher.INIT });
 }
 
-export function _storeFactory(dispatcher, reducer, state$) {
+export function _storeFactory(dispatcher: any, reducer: any, state$: any) {
   return new Store(dispatcher, reducer, state$);
 }
 
@@ -28,7 +28,7 @@ export function _stateFactory(initialState: any, dispatcher: Dispatcher, reducer
   return new State(initialState, dispatcher, reducer);
 }
 
-export function _reducerFactory(dispatcher, reducer) {
+export function _reducerFactory(dispatcher: any, reducer: any) {
   return new Reducer(dispatcher, reducer);
 }
 
