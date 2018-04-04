@@ -1,11 +1,11 @@
-import { INIT_ACTION } from 'app/store/ngrx';
+import { Action, INIT_ACTION } from 'app/store/ngrx';
 
-declare var console;
 const logger = console;
 
-const repeat = (str, times) => new Array(times + 1).join(str);
-const pad = (num, maxLength) => repeat(`0`, maxLength - num.toString().length) + num;
-const formatTime = time =>
+const repeat = (str: string, times: number) => new Array(times + 1).join(str);
+const pad = (num: number, maxLength: number) =>
+  repeat(`0`, maxLength - num.toString().length) + num;
+const formatTime = (time: Date) =>
   `@ ${pad(time.getHours(), 2)}:${pad(time.getMinutes(), 2)}:${pad(time.getSeconds(), 2)}.${pad(
     time.getMilliseconds(),
     3,
@@ -13,7 +13,12 @@ const formatTime = time =>
 const timer =
   typeof performance !== `undefined` && typeof performance.now === `function` ? performance : Date;
 
-const getLogLevel = (level, action, payload, type) => {
+const getLogLevel = (
+  level: any,
+  action: any,
+  payload: any,
+  type: any,
+): 'log' | 'warn' | 'error' | 'info' => {
   switch (typeof level) {
     case `object`:
       return typeof level[type] === `function` ? level[type](...payload) : level[type];
@@ -24,27 +29,26 @@ const getLogLevel = (level, action, payload, type) => {
   }
 };
 
-const printBuffer = options => logBuffer => {
+const printBuffer = (options: LoggerOptions) => (logBuffer: any[]) => {
   const { actionTransformer, collapsed, colors, timestamp, duration, level } = options;
-  logBuffer.forEach((logEntry, key) => {
+  logBuffer.forEach((logEntry: any, i: number) => {
     const { started, startedTime, action, error } = logEntry;
     const prevState = logEntry.prevState.nextState ? logEntry.prevState.nextState : '(Empty)';
     let { took, nextState } = logEntry;
-    const nextEntry = logBuffer[key + 1];
+    const nextEntry = logBuffer[i + 1];
     if (nextEntry) {
       nextState = nextEntry.prevState;
       took = nextEntry.started - started;
     }
 
     const formattedAction = actionTransformer(action);
-    const isCollapsed =
-      typeof collapsed === `function` ? collapsed(() => nextState, action) : collapsed;
+    const isCollapsed = !!collapsed;
 
     const formattedTime = formatTime(startedTime);
     const titleCSS = colors.title ? `color: ${colors.title(formattedAction)};` : undefined;
-    const title = `action ${timestamp ? formattedTime : ``} ${formattedAction.type} ${duration
-      ? `(in ${took.toFixed(2)} ms)`
-      : ``}`;
+    const title = `action ${timestamp ? formattedTime : ``} ${formattedAction.type} ${
+      duration ? `(in ${took.toFixed(2)} ms)` : ``
+    }`;
 
     try {
       if (isCollapsed) {
@@ -126,7 +130,7 @@ const printBuffer = options => logBuffer => {
   logBuffer.length = 0;
 };
 
-const isAllowed = (action, filter) => {
+const isAllowed = (action: Action, filter: LoggerFilterOption) => {
   if (!filter) {
     return true;
   }
@@ -187,7 +191,7 @@ export const metaReducer = (opts: LoggerOptions = {}) => (reducer: Function) => 
   const { stateTransformer } = options;
   const buffer = printBuffer(options);
 
-  return function(state, action) {
+  return (state: Object, action: Action) => {
     const preLog = {
       started: timer.now(),
       startedTime: new Date(),
@@ -211,9 +215,9 @@ export const metaReducer = (opts: LoggerOptions = {}) => (reducer: Function) => 
 
 export interface LoggerOptions {
   /**
-   * 'log' | 'console' | 'warn' | 'error' | 'info'. Default: 'log'
+   * 'log' | 'warn' | 'error' | 'info'. Default: 'log'
    */
-  level?: any;
+  level?: 'log' | 'console' | 'warn' | 'error' | 'info';
   /**
    * Should log group be collapsed? default: false
    */
@@ -234,7 +238,7 @@ export interface LoggerOptions {
   /**
    * Transform action before print default: actn => actn
    */
-  actionTransformer?: (actn: Object) => Object;
+  actionTransformer?: (actn: Action) => Action;
   colors?: LoggerColorsOption;
 }
 

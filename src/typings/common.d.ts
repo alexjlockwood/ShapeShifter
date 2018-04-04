@@ -1,7 +1,3 @@
-declare module 'bezier-js';
-declare module 'element-resize-detector';
-
-// An object that maps string keys to generic type T.
 interface Dictionary<T> {
   [index: string]: T;
 }
