@@ -1058,10 +1058,10 @@ export class LayerTimelineComponent extends DestroyableMixin()
   // Proxies a button click to the <input> tag that opens the file picker.
   // We clear the element's value to make it possible to import the same file
   // more than once.
-  onLaunchFilePickerClick(sourceElementId: string) {
+  onLaunchFilePickerClick(event: MouseEvent, sourceElementId: string) {
     $(`#${sourceElementId}`)
       .val('')
-      .click();
+      .click(e => e.stopPropagation());
   }
 
   // Called from the LayerTimelineComponent template.
