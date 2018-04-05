@@ -207,8 +207,8 @@ export class VectorLayer extends Layer {
       children: this.children.map(child => child.toJSON()),
     });
     Object.entries(VECTOR_DEFAULTS).forEach(([key, value]) => {
-      if (obj[key] === value) {
-        delete obj[key];
+      if ((obj as any)[key] === value) {
+        delete (obj as any)[key];
       }
     });
     return obj;
@@ -329,8 +329,8 @@ export class GroupLayer extends Layer {
       children: this.children.map(child => child.toJSON()),
     });
     Object.entries(GROUP_DEFAULTS).forEach(([key, value]) => {
-      if (obj[key] === value) {
-        delete obj[key];
+      if ((obj as any)[key] === value) {
+        delete (obj as any)[key];
       }
     });
     return obj;
@@ -507,8 +507,8 @@ export class PathLayer extends Layer implements MorphableLayer {
       fillType: this.fillType,
     });
     Object.entries(PATH_DEFAULTS).forEach(([key, value]) => {
-      if (obj[key] === value) {
-        delete obj[key];
+      if ((obj as any)[key] === value) {
+        delete (obj as any)[key];
       }
     });
     return obj;

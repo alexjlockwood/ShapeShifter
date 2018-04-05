@@ -215,7 +215,7 @@ function loadVectorLayerFromSvgString(
     return undefined;
   };
 
-  const toNumberFn = num => (num === undefined ? undefined : Number(num));
+  const toNumberFn = (num: any) => (num === undefined ? undefined : Number(num));
   let width = toNumberFn(svgLengthToPx(documentElement.width) || undefined);
   let height = toNumberFn(svgLengthToPx(documentElement.height) || undefined);
   const alpha = toNumberFn(documentElement.getAttribute('opacity') || undefined);
@@ -240,7 +240,7 @@ function loadVectorLayerFromSvgString(
   });
 }
 
-function svgLengthToPx(svgLength) {
+function svgLengthToPx(svgLength: any) {
   if (!svgLength) {
     return 0;
   }

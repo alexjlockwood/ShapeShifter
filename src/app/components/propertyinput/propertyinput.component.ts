@@ -124,7 +124,7 @@ export class PropertyInputComponent implements OnInit {
   onAnimateLayerClick(layer: Layer, propertyName: string) {
     const clonedValue = layer.inspectableProperties
       .get(propertyName)
-      .cloneValue(layer[propertyName]);
+      .cloneValue((layer as any)[propertyName]);
     const currentTime = this.playbackService.getCurrentTime();
     this.layerTimelineService.addBlocks([
       {
@@ -217,7 +217,7 @@ export class PropertyInputComponent implements OnInit {
           enteredValueMap,
           value => {
             // TODO: avoid dispatching the action if the properties are equal
-            const clonedLayer = layer.clone();
+            const clonedLayer: any = layer.clone();
             clonedLayer[propertyName] = value;
             this.layerTimelineService.updateLayer(clonedLayer);
           },
@@ -277,7 +277,7 @@ export class PropertyInputComponent implements OnInit {
       inspectedProperties.push(
         new InspectedProperty<any>(block, property, propertyName, enteredValueMap, value => {
           // TODO: avoid dispatching the action if the properties are equal
-          const clonedBlock = block.clone();
+          const clonedBlock: any = block.clone();
           clonedBlock[propertyName] = value;
           this.layerTimelineService.updateBlocks([clonedBlock]);
         }),
@@ -309,7 +309,7 @@ export class PropertyInputComponent implements OnInit {
           enteredValueMap,
           value => {
             // TODO: avoid dispatching the action if the properties are equal
-            const clonedAnimation = animation.clone();
+            const clonedAnimation: any = animation.clone();
             clonedAnimation[propertyName] = value;
             store.dispatch(new SetAnimation(clonedAnimation));
           },

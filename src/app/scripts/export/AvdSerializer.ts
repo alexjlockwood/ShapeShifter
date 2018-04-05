@@ -98,7 +98,12 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
  * Helper method that serializes an VectorLayer to a destinationNode in an xmlDoc.
  * The destinationNode should be a <vector> node.
  */
-function vectorLayerToXmlNode(vl: VectorLayer, destinationNode, xmlDoc, withAndroidNs = true) {
+function vectorLayerToXmlNode(
+  vl: VectorLayer,
+  destinationNode: any,
+  xmlDoc: any,
+  withAndroidNs = true,
+) {
   if (withAndroidNs) {
     destinationNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
   }
@@ -111,7 +116,7 @@ function vectorLayerToXmlNode(vl: VectorLayer, destinationNode, xmlDoc, withAndr
 
   walk(
     vl,
-    (layer, parentNode) => {
+    (layer: any, parentNode: any) => {
       if (layer instanceof VectorLayer) {
         return parentNode;
       } else if (layer instanceof PathLayer) {
@@ -158,18 +163,18 @@ function vectorLayerToXmlNode(vl: VectorLayer, destinationNode, xmlDoc, withAndr
   );
 }
 
-function conditionalAttrFn(node, attr, value, skipValue?) {
+function conditionalAttrFn(node: any, attr: any, value: any, skipValue?: any) {
   if (!_.isNil(value) && (skipValue === undefined || value !== skipValue)) {
     node.setAttributeNS(ANDROID_NS, attr, value);
   }
 }
 
-function serializeXmlNode(xmlNode) {
+function serializeXmlNode(xmlNode: any) {
   return XmlSerializer.serializeToString(xmlNode, { indent: 4, multiAttributeIndent: 4 });
 }
 
-function walk(layer: VectorLayer, fn, context) {
-  const visitFn = (l: Layer, ctx) => {
+function walk(layer: VectorLayer, fn: any, context: any) {
+  const visitFn = (l: Layer, ctx: any) => {
     const childCtx = fn(l, ctx);
     if (l.children) {
       l.children.forEach(child => visitFn(child, childCtx));

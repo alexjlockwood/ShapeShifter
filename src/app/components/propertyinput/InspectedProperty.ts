@@ -64,7 +64,7 @@ export class InspectedProperty<V> {
     return undefined;
   }
 
-  private setEnteredValue(value) {
+  private setEnteredValue(value: any) {
     if (value === undefined) {
       this.enteredValueMap.delete(this.propertyName);
     } else {

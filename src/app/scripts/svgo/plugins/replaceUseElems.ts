@@ -2,7 +2,7 @@ export const replaceUseElems = {
   active: true,
   type: 'full',
   fn: replaceUseElemsFn,
-  params: undefined,
+  params: undefined as any,
 };
 
 /**
@@ -11,7 +11,7 @@ export const replaceUseElems = {
  * @param {Object} document the root document
  * @param {Object} params plugin params
  */
-function replaceUseElemsFn(document, params) {
+function replaceUseElemsFn(document: any, params: any): any {
   const defsElems = document.querySelectorAll('defs') || [];
 
   const queryReferencedElementFn = (selector: string) => {
@@ -44,7 +44,7 @@ function replaceUseElemsFn(document, params) {
       continue;
     }
 
-    const addAttrFn = function(elem, attrName: string, attrValue: string) {
+    const addAttrFn = function(elem: any, attrName: string, attrValue: string) {
       elem.addAttr({
         name: attrName,
         value: attrValue,
