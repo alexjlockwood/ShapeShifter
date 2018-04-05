@@ -42,7 +42,12 @@ const isTransformPathsEnabled = createSelector(getSingleSelectedChildlessLayer, 
 const isTransformPathsChecked = createSelector(getTransformPathsInfo, tpi => !!tpi);
 const isSelectionChecked = createSelector(
   [getToolMode, isEditPathChecked, isRotateItemsChecked, isTransformPathsChecked],
-  (toolMode, editPathChecked, rotateItemsChecked, transformPathChecked) => {
+  (
+    toolMode: ToolMode,
+    editPathChecked: boolean,
+    rotateItemsChecked: boolean,
+    transformPathChecked: boolean,
+  ) => {
     return (
       toolMode === ToolMode.Default &&
       !editPathChecked &&

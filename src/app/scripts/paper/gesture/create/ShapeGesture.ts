@@ -73,5 +73,5 @@ export abstract class ShapeGesture extends Gesture {
   }
 
   /** Factory method that creates a new path given its bounding box. */
-  protected abstract newPath(vpBounds: paper.Rectangle);
+  protected abstract newPath(vpBounds: paper.Rectangle): paper.Path;
 }

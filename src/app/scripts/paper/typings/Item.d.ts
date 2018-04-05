@@ -474,7 +474,7 @@ declare module 'paper' {
      * Extended matching is possible by providing a compare function or regular expression. Matching points, colors only work as a comparison of the full object, not partial matching (e.g. only providing the x- coordinate to match all points with that x-value). Partial matching does work for item.data.
      * @param match - the criteria to match against
      */
-    getItem(matchFn?: (item: Item) => boolean);
+    getItem(matchFn?: (item: Item) => boolean): Item;
     getItem<T extends Partial<ItemProps>>(object?: { [P in keyof T]: T[P] }): Item;
 
     /**

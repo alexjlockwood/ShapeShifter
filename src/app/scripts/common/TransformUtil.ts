@@ -32,7 +32,7 @@ export function distort(sourcePoints: [number, number][], targetPoints: [number,
   // [ m1 m5 m9  m13 ] * [ v1 ] = [ y ]
   // [ m2 m6 m10 m14 ]   [ v2 ]   [ z ]
   // [ m3 m7 m11 m15 ]   [ v3 ]   [ w ]
-  function multiply(m, v) {
+  function multiply(m: number[], v: [number, number, number, number]) {
     // prettier-ignore
     return [
     m[0] * v[0] + m[4] * v[1] + m[8 ] * v[2] + m[12] * v[3],
@@ -47,7 +47,7 @@ export function distort(sourcePoints: [number, number][], targetPoints: [number,
 
 const abs = Math.abs;
 
-function _foreach2(x, s, k, f) {
+function _foreach2(x: any, s: any, k: any, f: any) {
   if (k === s.length - 1) {
     return f(x);
   }
@@ -60,7 +60,7 @@ function _foreach2(x, s, k, f) {
   return ret;
 }
 
-function _dim(x) {
+function _dim(x: any) {
   const ret = [];
   while (typeof x === 'object') {
     ret.push(x.length), (x = x[0]);
@@ -68,7 +68,7 @@ function _dim(x) {
   return ret;
 }
 
-function dim(x) {
+function dim(x: any) {
   let y, z;
   if (typeof x === 'object') {
     y = x[0];
@@ -84,7 +84,7 @@ function dim(x) {
   return [];
 }
 
-function cloneV(x) {
+function cloneV(x: any) {
   const _n = x.length;
   let i;
   const ret = Array(_n);
@@ -94,11 +94,11 @@ function cloneV(x) {
   return ret;
 }
 
-function clone(x) {
+function clone(x: any) {
   return typeof x !== 'object' ? x : _foreach2(x, dim(x), 0, cloneV);
 }
 
-function LU(A, fast) {
+function LU(A: any, fast: any) {
   fast = fast || false;
 
   let i, j, k, absAjk, Akk, Ak, Pk, Ai, max;
@@ -154,7 +154,7 @@ function LU(A, fast) {
   };
 }
 
-function LUsolve(LUP, b) {
+function LUsolve(LUP: any, b: any) {
   let i;
   let j;
   const lu = LUP.LU;
@@ -190,6 +190,6 @@ function LUsolve(LUP, b) {
   return x;
 }
 
-function solve(A, b, fast) {
+function solve(A: any, b: any, fast: any) {
   return LUsolve(LU(A, fast), b);
 }

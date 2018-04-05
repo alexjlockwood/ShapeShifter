@@ -55,8 +55,8 @@ export function selectCurves(path: paper.Path, selectedSegments: ReadonlySet<num
     selectedSegments,
     visibleHandleIns,
     visibleHandleOuts,
-    selectedHandleIn: undefined,
-    selectedHandleOut: undefined,
+    selectedHandleIn: undefined as number,
+    selectedHandleOut: undefined as number,
   };
 }
 
