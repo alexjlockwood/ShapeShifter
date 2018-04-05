@@ -126,14 +126,14 @@ const optimizedPluginsData = (function() {
 
 export function optimizeSvg(svgText: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const callbackFn = svgjs => {
+    const callbackFn = (svgjs: any) => {
       if (svgjs.error) {
         reject(svgjs.error);
         return;
       }
       resolve(svgjs.data);
     };
-    svg2js(svgText, svgjs => {
+    svg2js(svgText, (svgjs: any) => {
       if (svgjs.error) {
         callbackFn(svgjs);
         return;

@@ -50,7 +50,7 @@ export class AnimationRenderer {
 
         // Compute the rendered value at the given time.
         const property = animData.originalLayer.animatableProperties.get(propertyName);
-        let value = animData.originalLayer[propertyName];
+        let value = (animData.originalLayer as any)[propertyName];
         for (const block of blocks) {
           if (timeMillis < block.startTime) {
             break;
@@ -69,11 +69,12 @@ export class AnimationRenderer {
           _ar.activeBlock = block;
         }
 
-        animData.renderedLayer[propertyName] = value;
+        (animData.renderedLayer as any)[propertyName] = value;
 
         // Cached data.
-        animData.cachedState[propertyName] = animData.cachedState[propertyName] || {};
-        animData.cachedState[propertyName] = _ar;
+        (animData.cachedState as any)[propertyName] =
+          (animData.cachedState as any)[propertyName] || {};
+        (animData.cachedState as any)[propertyName] = _ar;
       });
     });
     return this.renderedVectorLayer;

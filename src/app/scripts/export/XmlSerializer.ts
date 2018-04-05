@@ -1,4 +1,4 @@
-export function serializeToString(node, options): string {
+export function serializeToString(node: any, options: any): string {
   options = options || {};
   options.rootNode = true;
   return removeInvalidCharacters(nodeTreeToXHTML(node, options));
@@ -19,10 +19,13 @@ function serializeAttributeValue(value: string) {
 }
 
 function serializeTextContent(content: string) {
-  return content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
-function serializeAttribute(attr) {
+function serializeAttribute(attr: any) {
   const value = attr.value;
   return attr.name + '="' + serializeAttributeValue(value) + '"';
 }
@@ -37,10 +40,10 @@ function getTagName(node: Element) {
   return tagName;
 }
 
-function serializeNamespace(node, options) {
+function serializeNamespace(node: any, options: any) {
   const nodeHasXmlnsAttr =
     Array.prototype.map
-      .call(node.attributes || node.attrs, attr => {
+      .call(node.attributes || node.attrs, (attr: any) => {
         return attr.name;
       })
       .indexOf('xmlns') >= 0;
@@ -59,15 +62,15 @@ function serializeNamespace(node, options) {
   return '';
 }
 
-function serializeChildren(node: Element, options) {
+function serializeChildren(node: Element, options: any) {
   return Array.prototype.map
-    .call(node.childNodes, childNode => {
+    .call(node.childNodes, (childNode: any) => {
       return nodeTreeToXHTML(childNode, options);
     })
     .join('');
 }
 
-function serializeTag(node, options) {
+function serializeTag(node: any, options: any) {
   let output = '';
   if (options.indent && options._indentLevel) {
     output += Array(options._indentLevel * options.indent + 1).join(' ');
@@ -76,7 +79,7 @@ function serializeTag(node, options) {
   output += serializeNamespace(node, options.isRootNode);
 
   const attributes = node.attributes || node.attrs;
-  Array.prototype.forEach.call(attributes, attr => {
+  Array.prototype.forEach.call(attributes, (attr: any) => {
     if (options.multiAttributeIndent && attributes.length > 1) {
       output += '\n';
       output += Array(
@@ -110,12 +113,12 @@ function serializeTag(node, options) {
   return output;
 }
 
-function serializeText(node) {
+function serializeText(node: any) {
   const text = node.nodeValue || node.value || '';
   return serializeTextContent(text);
 }
 
-function serializeComment(node) {
+function serializeComment(node: any) {
   return '<!--' + node.data.replace(/-/g, '&#45;') + '-->';
 }
 
@@ -123,7 +126,7 @@ function serializeCDATA(node: Element) {
   return '<![CDATA[' + node.nodeValue + ']]>';
 }
 
-function nodeTreeToXHTML(node: Element, options) {
+function nodeTreeToXHTML(node: Element, options: any) {
   if (node.nodeName === '#document' || node.nodeName === '#document-fragment') {
     return serializeChildren(node, options);
   } else {

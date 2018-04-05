@@ -2,7 +2,7 @@ export const convertRoundedRectToPath = {
   active: true,
   type: 'perItem',
   fn: convertRoundedRectToPathFn,
-  params: undefined,
+  params: undefined as any,
 };
 
 const none = { value: 0 };
@@ -18,7 +18,7 @@ const none = { value: 0 };
  * @param {Object} params plugin params
  * @return {Boolean} if false, item will be filtered out
  */
-function convertRoundedRectToPathFn(item, params) {
+function convertRoundedRectToPathFn(item: any, params: any): any {
   if (
     !item.isElem('rect') ||
     !item.hasAttr('width') ||
@@ -86,6 +86,6 @@ function convertRoundedRectToPathFn(item, params) {
   item.renameElem('path').removeAttr(['x', 'y', 'width', 'height', 'rx', 'ry']);
 }
 
-function isValidCornerRadius(val) {
+function isValidCornerRadius(val: any) {
   return !(typeof val !== 'number' || val === Infinity || val < 0);
 }

@@ -753,7 +753,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
     const clonedValue = layer.inspectableProperties
       .get(propertyName)
-      .cloneValue(layer[propertyName]);
+      .cloneValue((layer as any)[propertyName]);
     this.layerTimelineService.addBlocks([
       {
         layerId: layer.id,

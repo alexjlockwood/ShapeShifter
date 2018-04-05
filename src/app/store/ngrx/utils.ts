@@ -2,7 +2,7 @@ import { ActionReducer } from './reducer';
 
 export function combineReducers(reducers: any): ActionReducer<any> {
   const reducerKeys = Object.keys(reducers);
-  const finalReducers = {};
+  const finalReducers: any = {};
   for (const key of reducerKeys) {
     if (typeof reducers[key] === 'function') {
       finalReducers[key] = reducers[key];
@@ -11,7 +11,7 @@ export function combineReducers(reducers: any): ActionReducer<any> {
   const finalReducerKeys = Object.keys(finalReducers);
   return function combination(state = {}, action) {
     let hasChanged = false;
-    const nextState = {};
+    const nextState: any = {};
     for (const key of finalReducerKeys) {
       const reducer = finalReducers[key];
       const previousStateForKey = state[key];
@@ -39,8 +39,8 @@ export interface ComposeSignature {
   (...fns: any[]): (input: any) => any;
 }
 
-export const compose: ComposeSignature = (...functions) => {
-  return function(arg) {
+export const compose: ComposeSignature = (...functions: Function[]) => {
+  return (arg: any) => {
     if (functions.length === 0) {
       return arg;
     }

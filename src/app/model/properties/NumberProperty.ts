@@ -52,11 +52,12 @@ export class NumberProperty extends Property<number> {
   }
 
   // @Override
-  displayValueForValue(value) {
+  displayValueForValue(value: any) {
     if (typeof value === 'number') {
       return (Number.isInteger(value)
         ? value.toString()
-        : Number(value.toFixed(3)).toString()).replace(/-/g, '\u2212');
+        : Number(value.toFixed(3)).toString()
+      ).replace(/-/g, '\u2212');
     }
     return value;
   }

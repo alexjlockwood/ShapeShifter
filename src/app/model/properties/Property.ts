@@ -64,7 +64,7 @@ export abstract class Property<T> {
     return model[propertyName];
   }
 
-  setEditableValue(model: any, propertyName: string, value) {
+  setEditableValue(model: any, propertyName: string, value: any) {
     model[propertyName] = value;
   }
 
@@ -72,11 +72,11 @@ export abstract class Property<T> {
     return model[`${propertyName}_`];
   }
 
-  protected setter(model: any, propertyName: string, value) {
+  protected setter(model: any, propertyName: string, value: any) {
     model[`${propertyName}_`] = value;
   }
 
-  displayValueForValue(value) {
+  displayValueForValue(value: any) {
     return value;
   }
 
