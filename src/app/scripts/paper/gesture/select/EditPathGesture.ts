@@ -25,5 +25,7 @@ export class EditPathGesture extends Gesture {
       layerId: this.editPathId,
       ...PaperUtil.selectCurves(editPath, new Set([editPath.segments.length - 1])),
     });
+    this.ps.setRotateItemsInfo(undefined);
+    this.ps.setTransformPathsInfo(undefined);
   }
 }

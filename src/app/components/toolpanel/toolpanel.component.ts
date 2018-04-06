@@ -26,6 +26,8 @@ export class ToolPanelComponent implements OnInit {
   onSelectionClick() {
     this.ps.setToolMode(ToolMode.Default);
     this.ps.setEditPathInfo(undefined);
+    this.ps.setRotateItemsInfo(undefined);
+    this.ps.setTransformPathsInfo(undefined);
     event.stopPropagation();
   }
 

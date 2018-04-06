@@ -41,6 +41,8 @@ export class BatchSelectItemsGesture extends Gesture {
   onMouseUp(event: paper.ToolEvent) {
     this.selectItemsInSelectionBox(!event.modifiers.alt);
     this.ps.setSelectionBox(undefined);
+    this.ps.setRotateItemsInfo(undefined);
+    this.ps.setTransformPathsInfo(undefined);
   }
 
   // @Override

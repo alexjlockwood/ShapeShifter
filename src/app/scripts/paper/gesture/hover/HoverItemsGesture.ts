@@ -48,7 +48,6 @@ export class HoverItemsGesture extends Gesture {
     if (selectedLayers.size) {
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
-        // const toolMode = this.ps.getToolMode();
         const rii = this.ps.getRotateItemsInfo();
         const tpi = this.ps.getTransformPathsInfo();
         const cursorMap = rii ? ROTATE_CURSOR_MAP : tpi ? TRANSFORM_CURSOR_MAP : RESIZE_CURSOR_MAP;
@@ -63,6 +62,17 @@ export class HoverItemsGesture extends Gesture {
       this.ps.setHoveredLayerId(hitResult.hitItem.data.id);
     } else {
       this.ps.setHoveredLayerId(undefined);
+    }
+  }
+
+  // @Override
+  onKeyDown(event: paper.KeyEvent) {
+    // TODO: also do this in any other hover/pen/pencil related gestures?
+    if (event.key === 'escape') {
+      this.ps.setCursorType(CursorType.Default);
+      this.ps.setSnapGuideInfo(undefined);
+      this.ps.setRotateItemsInfo(undefined);
+      this.ps.setTransformPathsInfo(undefined);
     }
   }
 }

@@ -131,7 +131,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
 
   // @Override
   onKeyDown(event: paper.KeyEvent) {
-    // TODO: also do this in any other pen/pencil related gestures?
+    // TODO: also do this in any other hover/pen/pencil related gestures?
     if (event.key === 'escape') {
       this.ps.setCursorType(CursorType.Default);
       this.ps.setSnapGuideInfo(undefined);

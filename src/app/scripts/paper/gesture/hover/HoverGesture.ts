@@ -19,15 +19,31 @@ export class HoverGesture extends Gesture {
 
   // @Override
   onMouseMove(event: paper.ToolEvent) {
+    const gesture = this.getCurrentGesture();
+    if (gesture) {
+      gesture.onMouseMove(event);
+    }
+  }
+
+  // @Override
+  onKeyDown(event: paper.KeyEvent) {
+    const gesture = this.getCurrentGesture();
+    if (gesture) {
+      gesture.onKeyDown(event);
+    }
+  }
+
+  private getCurrentGesture() {
     if (this.ps.getToolMode() === ToolMode.Default) {
       const fpi = this.ps.getEditPathInfo();
       if (fpi) {
         if (fpi.layerId) {
-          this.hoverSegmentsCurvesGesture.onMouseMove(event);
+          return this.hoverSegmentsCurvesGesture;
         }
       } else {
-        this.hoverItemsGesture.onMouseMove(event);
+        return this.hoverItemsGesture;
       }
     }
+    return undefined;
   }
 }

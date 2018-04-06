@@ -74,18 +74,24 @@ export class PaperService {
       selectedHandleIn: undefined,
       selectedHandleOut: undefined,
     });
+    this.setRotateItemsInfo(undefined);
+    this.setTransformPathsInfo(undefined);
     this.setCursorType(CursorType.PenAdd);
   }
 
   enterRotateItemsMode() {
     this.setToolMode(ToolMode.Default);
+    this.setEditPathInfo(undefined);
     this.setRotateItemsInfo({
       layerIds: this.getSelectedLayerIds(),
     });
+    this.setTransformPathsInfo(undefined);
   }
 
   enterTransformPathsMode() {
     this.setToolMode(ToolMode.Default);
+    this.setEditPathInfo(undefined);
+    this.setRotateItemsInfo(undefined);
     this.setTransformPathsInfo({
       layerIds: this.getSelectedLayerIds(),
     });
