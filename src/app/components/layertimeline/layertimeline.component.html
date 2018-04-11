@@ -29,12 +29,12 @@
             New
           </button>
           <button mat-menu-item
-            (click)="this.onLaunchFilePickerClick('openFileButton')">
+            (click)="this.onLaunchFilePickerClick($event, 'openFileButton')">
             Open
             <input id="openFileButton"
               type="file"
               accept=".shapeshifter"
-              (change)="onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
+              (change)="this.onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
           </button>
           <button mat-menu-item
             (click)="this.onSaveToFileClick()">
@@ -54,22 +54,22 @@
         <!-- Import menu. -->
         <mat-menu #importMenu="matMenu">
           <button mat-menu-item
-            (click)="this.onLaunchFilePickerClick('addPathsFromSvgButton')">
+            (click)="this.onLaunchFilePickerClick($event, 'addPathsFromSvgButton')">
             SVG
             <input multiple
               id="addPathsFromSvgButton"
               type="file"
               accept=".svg"
-              (change)="onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
+              (change)="this.onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
           </button>
           <button mat-menu-item
-            (click)="this.onLaunchFilePickerClick('addPathsFromXmlButton')">
+            (click)="this.onLaunchFilePickerClick($event, 'addPathsFromXmlButton')">
             Vector Drawable
             <input multiple
               id="addPathsFromXmlButton"
               type="file"
               accept=".xml"
-              (change)="onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
+              (change)="this.onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
           </button>
         </mat-menu>
         <button class="slt-layers-menu-group-button"
