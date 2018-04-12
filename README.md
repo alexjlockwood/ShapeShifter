@@ -22,9 +22,9 @@ file a [feature request][report-feature-request]!
 
 ## Backers
 
-Support us with a monthly donation and help us continue our activities. 
-Funds will go towards hiring new developers to work on awesome features! 
-We'll display your logo below with a link to your site. 
+Support us with either a one time donation or a monthly donation and help us 
+continue our activities. Funds will go towards hiring new developers to work
+on awesome features! We'll display your logo below with a link to your site. 
 
 <a href="https://opencollective.com/shapeshifter#backers" target="_blank"><img src="https://opencollective.com/shapeshifter/backers.svg?width=890"></a>
 

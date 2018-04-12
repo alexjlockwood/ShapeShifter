@@ -472,8 +472,8 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       if (currUnpair) {
         // Draw the current unpaired subpath in orange, if it exists.
         const { source, subIdx } = currUnpair;
-        const subPath = activePath.getSubPath(subIdx);
         if (source === this.actionSource) {
+          const subPath = activePath.getSubPath(subIdx);
           CanvasUtil.executeCommands(ctx, subPath.getCommands(), flattenedTransform);
           executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
         }
