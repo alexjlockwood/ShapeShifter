@@ -1,3 +1,7 @@
+import * as CSSClassList from 'svgo/lib/svgo/css-class-list';
+import * as CSSStyleDeclaration from 'svgo/lib/svgo/css-style-declaration';
+import * as JSAPI from 'svgo/lib/svgo/jsAPI';
+
 export const replaceUseElems = {
   active: true,
   type: 'full',
@@ -18,9 +22,7 @@ function replaceUseElemsFn(document: any, params: any): any {
     for (const defs of defsElems) {
       const referencedElem = defs.querySelector(selector);
       if (referencedElem) {
-        // Remove the style to avoid circular reference during clone.
-        delete referencedElem.style;
-        return referencedElem.clone();
+        return cloneParsedSvg(referencedElem);
       }
     }
     return undefined;
@@ -90,4 +92,67 @@ function replaceUseElemsFn(document: any, params: any): any {
   }
 
   return document;
+}
+
+// Clone is currently broken. Hack it:
+function cloneParsedSvg(svg: any): any {
+  const clones = new Map();
+
+  function cloneKeys(target: any, obj: any) {
+    for (const key of Object.keys(obj)) {
+      target[key] = clone(obj[key]);
+    }
+    return target;
+  }
+
+  function clone(obj: any) {
+    if (typeof obj !== 'object' || obj === null) {
+      return obj;
+    }
+
+    if (clones.has(obj)) {
+      return clones.get(obj);
+    }
+
+    let objClone;
+
+    if (obj.constructor === JSAPI) {
+      objClone = new JSAPI({}, obj.parentNode);
+      clones.set(obj, objClone);
+
+      if (obj.parentNode) {
+        objClone.parentNode = clone(obj.parentNode);
+      }
+      cloneKeys(objClone, obj);
+    } else if (
+      obj.constructor === CSSClassList ||
+      obj.constructor === CSSStyleDeclaration ||
+      obj.constructor === Object ||
+      obj.constructor === Array
+    ) {
+      objClone = new obj.constructor();
+      clones.set(obj, objClone);
+      cloneKeys(objClone, obj);
+    } else if (obj.constructor === Map) {
+      objClone = new Map();
+      clones.set(obj, objClone);
+
+      for (const [key, val] of obj) {
+        objClone.set(clone(key), clone(val));
+      }
+    } else if (obj.constructor === Set) {
+      objClone = new Set();
+      clones.set(obj, objClone);
+
+      for (const val of obj) {
+        objClone.add(clone(val));
+      }
+    } else {
+      throw Error('unexpected type');
+    }
+
+    return objClone;
+  }
+
+  return clone(svg);
 }
