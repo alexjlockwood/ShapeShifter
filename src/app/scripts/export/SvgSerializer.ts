@@ -16,32 +16,37 @@ const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
- * Serializes an VectorLayer to a vector drawable XML file.
+ * Serializes an VectorLayer to a SVG string.
  */
 export function toSvgString(
-  vectorLayer: VectorLayer,
+  vl: VectorLayer,
   width?: number,
   height?: number,
-  x?: number,
-  y?: number,
-  withIdsAndNS = true,
-  frameNumber = '',
 ) {
   const xmlDoc = document.implementation.createDocument(undefined, 'svg', undefined);
   const rootNode = xmlDoc.documentElement;
-  vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, withIdsAndNS, frameNumber);
+  rootNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
+  rootNode.setAttributeNS(undefined, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
+  vectorLayerToSvgNode(vl, rootNode, xmlDoc);
   if (width !== undefined) {
     rootNode.setAttributeNS(undefined, 'width', width.toString() + 'px');
   }
   if (height !== undefined) {
     rootNode.setAttributeNS(undefined, 'height', height.toString() + 'px');
   }
-  if (x !== undefined) {
-    rootNode.setAttributeNS(undefined, 'x', x.toString() + 'px');
-  }
-  if (y !== undefined) {
-    rootNode.setAttributeNS(undefined, 'y', y.toString() + 'px');
-  }
+  return serializeXmlNode(rootNode);
+}
+
+export function toSvgSpriteFrameString(
+  vectorLayer: VectorLayer,
+  translateX = 0,
+  translateY = 0,
+  frameNumber = '',
+) {
+  const xmlDoc = document.implementation.createDocument(undefined, 'g', undefined);
+  const rootNode = xmlDoc.documentElement;
+  vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, false, frameNumber);
+  rootNode.setAttributeNS(undefined, 'transform', `translate(${translateX}, ${translateY})`);
   return serializeXmlNode(rootNode);
 }
 
@@ -53,14 +58,9 @@ function vectorLayerToSvgNode(
   vl: VectorLayer,
   destinationNode: HTMLElement,
   xmlDoc: Document,
-  withIdsAndNS = true,
+  withIds = true,
   frameNumber = '',
 ) {
-  if (withIdsAndNS) {
-    destinationNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
-  }
-  destinationNode.setAttributeNS(undefined, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
-
   // TODO: would be better to have clip-paths reference other clip paths in order to reduce file size
 
   // Create a map where the keys are all of the clip paths in the tree, and
@@ -136,7 +136,7 @@ function vectorLayerToSvgNode(
     vl,
     (layer: VectorLayer | GroupLayer | PathLayer, parentNode: Node) => {
       if (layer instanceof VectorLayer) {
-        if (withIdsAndNS) {
+        if (withIds) {
           conditionalAttr(destinationNode, 'id', vl.name, '');
         }
         conditionalAttr(destinationNode, 'opacity', vl.alpha, 1);
@@ -144,7 +144,7 @@ function vectorLayerToSvgNode(
       }
       if (layer instanceof PathLayer) {
         const node = xmlDoc.createElement('path');
-        if (withIdsAndNS) {
+        if (withIds) {
           conditionalAttr(node, 'id', layer.name);
         }
         maybeSetClipPathForLayerFn(layer, node);
@@ -205,7 +205,7 @@ function vectorLayerToSvgNode(
       if (layer instanceof GroupLayer) {
         // TODO: create one node per group property being animated
         const node = xmlDoc.createElement('g');
-        if (withIdsAndNS) {
+        if (withIds) {
           conditionalAttr(node, 'id', layer.name);
         }
         const transformValues: string[] = [];
