@@ -1,376 +1,618 @@
-import { Matrix, Point } from 'app/scripts/common';
-
 import { Command } from './Command';
 import { SvgChar } from './SvgChar';
-import * as SvgUtil from './SvgUtil';
-
-enum Token {
-  AbsoluteCommand = 1,
-  RelativeCommand,
-  Value,
-  EOF,
-}
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
- * list of DrawCommands that represent the SVG path's individual sequence of instructions.
+ * list of Commands that represent the SVG path's individual sequence of instructions.
  * Arcs are converted to bezier curves because they make life too complicated. :D
  */
-export function parseCommands(pathString: string, matrices?: Matrix[]): Command[] {
-  // Trim surrounding whitespace.
-  pathString = pathString.trim();
+export function parseCommands(pathData: string) {
+  if (!pathData) {
+    pathData = '';
+  }
+  pathData = pathData.trim();
+  let start = 0;
+  let end = 1;
 
-  let index = 0;
-  let currentToken: Token;
-
-  const advanceToNextTokenFn: (() => Token) = () => {
-    while (index < pathString.length) {
-      const c = pathString.charAt(index);
-      if ('a' <= c && c <= 'z') {
-        return (currentToken = Token.RelativeCommand);
-      } else if ('A' <= c && c <= 'Z') {
-        return (currentToken = Token.AbsoluteCommand);
-      } else if (('0' <= c && c <= '9') || c === '.' || c === '-') {
-        return (currentToken = Token.Value);
-      }
-      // Skip unrecognized character.
-      index++;
+  const nodes: Array<{ readonly type: string; readonly params: number[] }> = [];
+  while (end < pathData.length) {
+    end = nextStart(pathData, end);
+    const s = pathData.substring(start, end).trim();
+    if (s.length > 0) {
+      const val = getFloats(s);
+      nodes.push({ type: s.charAt(0), params: val });
     }
-    return (currentToken = Token.EOF);
-  };
+    start = end;
+    end++;
+  }
+  if (end - start === 1 && start < pathData.length) {
+    nodes.push({ type: pathData.charAt(start), params: [] });
+  }
+  const current: [number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0];
+  let previousCommand = 'm';
+  const builder = new CommandsBuilder();
+  for (const n of nodes) {
+    addCommand(builder, current, previousCommand, n.type, n.params);
+    previousCommand = n.type;
+  }
+  return builder.toCommands();
+}
 
-  const consumeCommandFn = () => {
-    advanceToNextTokenFn();
-    if (currentToken !== Token.RelativeCommand && currentToken !== Token.AbsoluteCommand) {
-      throw new Error('Expected command');
+function nextStart(s: string, end: number) {
+  while (end < s.length) {
+    const c = s.charAt(end);
+    // Note that 'e' or 'E' are not valid path commands, but could be used for floating
+    // point numbers' scientific notation. Therefore, when searching for the next command,
+    // we should ignore 'e' and 'E'.
+    if ((('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')) && c !== 'E' && c !== 'e') {
+      return end;
     }
-    return pathString.charAt(index++);
-  };
+    end++;
+  }
+  return end;
+}
 
-  const consumeValueFn = () => {
-    advanceToNextTokenFn();
-    if (currentToken !== Token.Value) {
-      throw new Error('Expected value');
+class ExtractFloatResult {
+  mEndPosition = 0;
+  mEndWithNegOrDot = false;
+}
+
+function getFloats(s: string) {
+  if (s.charAt(0) === 'z' || s.charAt(0) === 'Z') {
+    return [];
+  }
+  const results: number[] = [];
+  let startPosition = 1;
+  let endPosition: number;
+  const result = new ExtractFloatResult();
+  const totalLength = s.length;
+  while (startPosition < totalLength) {
+    extract(s, startPosition, result);
+    endPosition = result.mEndPosition;
+    if (startPosition < endPosition) {
+      results.push(parseFloat(s.substring(startPosition, endPosition)));
     }
-
-    let start = true;
-    let seenDot = false;
-    let tempIndex = index;
-    while (tempIndex < pathString.length) {
-      const c = pathString.charAt(tempIndex);
-
-      if (!('0' <= c && c <= '9') && (c !== '.' || seenDot) && (c !== '-' || !start) && c !== 'e') {
-        // End of value.
-        break;
-      }
-
-      if (c === '.') {
-        seenDot = true;
-      }
-
-      start = false;
-      if (c === 'e') {
-        start = true;
-      }
-      tempIndex++;
-    }
-
-    if (tempIndex === index) {
-      throw new Error('Expected value');
-    }
-
-    const str = pathString.substring(index, tempIndex);
-    index = tempIndex;
-    return parseFloat(str);
-  };
-
-  let currentPoint: Point;
-
-  const consumePointFn = (isRelative: boolean): Point => {
-    let x = consumeValueFn();
-    let y = consumeValueFn();
-    if (isRelative) {
-      x += currentPoint.x;
-      y += currentPoint.y;
-    }
-    return { x, y };
-  };
-
-  const commands: Command[] = [];
-  let currentControlPoint: Point;
-  let lastMovePoint: Point;
-
-  while (index < pathString.length) {
-    const commandChar = consumeCommandFn();
-    const isRelative = currentToken === Token.RelativeCommand;
-
-    switch (commandChar) {
-      case 'M':
-      case 'm': {
-        let isFirstPoint = true;
-        while (advanceToNextTokenFn() === Token.Value) {
-          const nextPoint = consumePointFn(isRelative && !!currentPoint);
-
-          if (isFirstPoint) {
-            isFirstPoint = false;
-            commands.push(newMove(currentPoint, nextPoint));
-            lastMovePoint = nextPoint;
-          } else {
-            commands.push(newLine(currentPoint, nextPoint));
-          }
-
-          currentControlPoint = undefined;
-          currentPoint = nextPoint;
-        }
-        break;
-      }
-      case 'C':
-      case 'c': {
-        if (!currentPoint) {
-          throw new Error('Current point does not exist');
-        }
-
-        while (advanceToNextTokenFn() === Token.Value) {
-          const cp1 = consumePointFn(isRelative);
-          const cp2 = consumePointFn(isRelative);
-          const end = consumePointFn(isRelative);
-          commands.push(newBezierCurve(currentPoint, cp1, cp2, end));
-
-          currentControlPoint = cp2;
-          currentPoint = end;
-        }
-        break;
-      }
-      case 'S':
-      case 's': {
-        if (!currentPoint) {
-          throw new Error('Current point does not exist');
-        }
-
-        while (advanceToNextTokenFn() === Token.Value) {
-          let cp1: Point;
-          const cp2 = consumePointFn(isRelative);
-          const end = consumePointFn(isRelative);
-          if (currentControlPoint) {
-            const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
-            const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
-            cp1 = { x, y };
-          } else {
-            cp1 = cp2;
-          }
-          commands.push(newBezierCurve(currentPoint, cp1, cp2, end));
-
-          currentControlPoint = cp2;
-          currentPoint = end;
-        }
-        break;
-      }
-      case 'Q':
-      case 'q': {
-        if (!currentPoint) {
-          throw new Error('Current point does not exist');
-        }
-
-        while (advanceToNextTokenFn() === Token.Value) {
-          const cp = consumePointFn(isRelative);
-          const end = consumePointFn(isRelative);
-          commands.push(newQuadraticCurve(currentPoint, cp, end));
-
-          currentControlPoint = cp;
-          currentPoint = end;
-        }
-        break;
-      }
-      case 'T':
-      case 't': {
-        if (!currentPoint) {
-          throw new Error('Current point does not exist');
-        }
-
-        while (advanceToNextTokenFn() === Token.Value) {
-          let cp: Point;
-          const end = consumePointFn(isRelative);
-          if (currentControlPoint) {
-            const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
-            const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
-            cp = { x, y };
-          } else {
-            cp = end;
-          }
-          commands.push(newQuadraticCurve(currentPoint, cp, end));
-
-          currentControlPoint = cp;
-          currentPoint = end;
-        }
-        break;
-      }
-      case 'L':
-      case 'l': {
-        if (!currentPoint) {
-          throw new Error('Current point does not exist');
-        }
-
-        while (advanceToNextTokenFn() === Token.Value) {
-          const end = consumePointFn(isRelative);
-          commands.push(newLine(currentPoint, end));
-
-          currentControlPoint = undefined;
-          currentPoint = end;
-        }
-        break;
-      }
-      case 'H':
-      case 'h': {
-        if (!currentPoint) {
-          throw new Error('Current point does not exist');
-        }
-
-        while (advanceToNextTokenFn() === Token.Value) {
-          let x = consumeValueFn();
-          const y = currentPoint.y;
-          if (isRelative) {
-            x += currentPoint.x;
-          }
-          const end = { x, y };
-          commands.push(newLine(currentPoint, end));
-
-          currentControlPoint = undefined;
-          currentPoint = end;
-        }
-        break;
-      }
-      case 'V':
-      case 'v': {
-        if (!currentPoint) {
-          throw new Error('Current point does not exist');
-        }
-
-        while (advanceToNextTokenFn() === Token.Value) {
-          const x = currentPoint.x;
-          let y = consumeValueFn();
-          if (isRelative) {
-            y += currentPoint.y;
-          }
-          const end = { x, y };
-          commands.push(newLine(currentPoint, end));
-
-          currentControlPoint = undefined;
-          currentPoint = end;
-        }
-        break;
-      }
-      case 'A':
-      case 'a': {
-        if (!currentPoint) {
-          throw new Error('Current point does not exist');
-        }
-
-        while (advanceToNextTokenFn() === Token.Value) {
-          const rx = consumeValueFn();
-          const ry = consumeValueFn();
-          const xAxisRotation = consumeValueFn();
-          const largeArcFlag = consumeValueFn();
-          const sweepFlag = consumeValueFn();
-          const tempPoint1 = consumePointFn(isRelative);
-
-          // Approximate the arc as one or more bezier curves.
-          const startX = currentPoint.x;
-          const startY = currentPoint.y;
-          const endX = tempPoint1.x;
-          const endY = tempPoint1.y;
-          const bezierCoords = SvgUtil.arcToBeziers({
-            startX,
-            startY,
-            rx,
-            ry,
-            xAxisRotation,
-            largeArcFlag,
-            sweepFlag,
-            endX,
-            endY,
-          });
-
-          for (let i = 0; i < bezierCoords.length; i += 8) {
-            const endPoint = { x: bezierCoords[i + 6], y: bezierCoords[i + 7] };
-            commands.push(
-              newBezierCurve(
-                currentPoint,
-                { x: bezierCoords[i + 2], y: bezierCoords[i + 3] },
-                { x: bezierCoords[i + 4], y: bezierCoords[i + 5] },
-                endPoint,
-              ),
-            );
-            currentPoint = endPoint;
-          }
-
-          currentControlPoint = undefined;
-          currentPoint = tempPoint1;
-        }
-        break;
-      }
-      case 'Z':
-      case 'z': {
-        if (!currentPoint) {
-          throw new Error('Current point does not exist');
-        }
-        commands.push(newClosePath(currentPoint, lastMovePoint));
-        currentControlPoint = undefined;
-        currentPoint = lastMovePoint;
-        break;
-      }
+    if (result.mEndWithNegOrDot) {
+      startPosition = endPosition;
+    } else {
+      startPosition = endPosition + 1;
     }
   }
-
-  if (!matrices) {
-    return commands;
-  }
-  const flattenedMatrices = Matrix.flatten(matrices);
-  return commands.map(cmd => {
-    return cmd
-      .mutate()
-      .setId(cmd.id)
-      .transform(flattenedMatrices)
-      .build();
-  });
+  return results;
 }
 
 /**
- * Takes an list of DrawCommands and converts them back into a SVG path string.
+ * Calculate the position of the next comma or space or negative sign
+ *
+ * @param {string} s the string to search
+ * @param {number} start the position to start searching
+ * @param {ExtractFloatResult} result the result of the extraction, including the position of the the starting position
+ * of next number, whether it is ending with a '-'.
  */
+function extract(s: string, start: number, result: ExtractFloatResult) {
+  let currentIndex = start;
+  let foundSeparator = false;
+  result.mEndWithNegOrDot = false;
+  let secondDot = false;
+  let isExponential = false;
+  for (; currentIndex < s.length; currentIndex++) {
+    const isPrevExponential = isExponential;
+    isExponential = false;
+    const currentChar = s.charAt(currentIndex);
+    switch (currentChar) {
+      case ' ':
+      case ',':
+        foundSeparator = true;
+        break;
+      case '-':
+        if (currentIndex !== start && !isPrevExponential) {
+          foundSeparator = true;
+          result.mEndWithNegOrDot = true;
+        }
+        break;
+      case '.':
+        if (!secondDot) {
+          secondDot = true;
+        } else {
+          foundSeparator = true;
+          result.mEndWithNegOrDot = true;
+        }
+        break;
+      case 'e':
+      case 'E':
+        isExponential = true;
+        break;
+    }
+    if (foundSeparator) {
+      break;
+    }
+  }
+  result.mEndPosition = currentIndex;
+}
+
+function addCommand(
+  path: CommandsBuilder,
+  current: [number, number, number, number, number, number],
+  prevCmd: string,
+  cmd: string,
+  val: number[],
+) {
+  let increment = 2;
+  let [
+    currentX,
+    currentY,
+    ctrlPointX,
+    ctrlPointY,
+    currentSegmentStartX,
+    currentSegmentStartY,
+  ] = current;
+  let reflectiveCtrlPointX: number;
+  let reflectiveCtrlPointY: number;
+  switch (cmd) {
+    case 'z':
+    case 'Z':
+      path.close();
+      currentX = currentSegmentStartX;
+      currentY = currentSegmentStartY;
+      ctrlPointX = currentSegmentStartX;
+      ctrlPointY = currentSegmentStartY;
+      break;
+    case 'm':
+    case 'M':
+    case 'l':
+    case 'L':
+    case 't':
+    case 'T':
+      increment = 2;
+      break;
+    case 'h':
+    case 'H':
+    case 'v':
+    case 'V':
+      increment = 1;
+      break;
+    case 'c':
+    case 'C':
+      increment = 6;
+      break;
+    case 's':
+    case 'S':
+    case 'q':
+    case 'Q':
+      increment = 4;
+      break;
+    case 'a':
+    case 'A':
+      increment = 7;
+      break;
+  }
+  for (let k = 0; k < val.length; k += increment) {
+    switch (cmd) {
+      case 'm':
+        currentX += val[k];
+        currentY += val[k + 1];
+        if (k > 0) {
+          path.rLineTo(val[k], val[k + 1]);
+        } else {
+          path.rMoveTo(val[k], val[k + 1]);
+          currentSegmentStartX = currentX;
+          currentSegmentStartY = currentY;
+        }
+        break;
+      case 'M':
+        currentX = val[k];
+        currentY = val[k + 1];
+        if (k > 0) {
+          path.lineTo(val[k], val[k + 1]);
+        } else {
+          path.moveTo(val[k], val[k + 1]);
+          currentSegmentStartX = currentX;
+          currentSegmentStartY = currentY;
+        }
+        break;
+      case 'l':
+        path.rLineTo(val[k], val[k + 1]);
+        currentX += val[k];
+        currentY += val[k + 1];
+        break;
+      case 'L':
+        path.lineTo(val[k], val[k + 1]);
+        currentX = val[k];
+        currentY = val[k + 1];
+        break;
+      case 'h':
+        path.rLineTo(val[k], 0);
+        currentX += val[k];
+        break;
+      case 'H':
+        path.lineTo(val[k], currentY);
+        currentX = val[k];
+        break;
+      case 'v':
+        path.rLineTo(0, val[k]);
+        currentY += val[k];
+        break;
+      case 'V':
+        path.lineTo(currentX, val[k]);
+        currentY = val[k];
+        break;
+      case 'c':
+        path.rCubicTo(val[k], val[k + 1], val[k + 2], val[k + 3], val[k + 4], val[k + 5]);
+        ctrlPointX = currentX + val[k + 2];
+        ctrlPointY = currentY + val[k + 3];
+        currentX += val[k + 4];
+        currentY += val[k + 5];
+        break;
+      case 'C':
+        path.cubicTo(val[k], val[k + 1], val[k + 2], val[k + 3], val[k + 4], val[k + 5]);
+        currentX = val[k + 4];
+        currentY = val[k + 5];
+        ctrlPointX = val[k + 2];
+        ctrlPointY = val[k + 3];
+        break;
+      case 's':
+        reflectiveCtrlPointX = 0;
+        reflectiveCtrlPointY = 0;
+        if (prevCmd === 'c' || prevCmd === 's' || prevCmd === 'C' || prevCmd === 'S') {
+          reflectiveCtrlPointX = currentX - ctrlPointX;
+          reflectiveCtrlPointY = currentY - ctrlPointY;
+        }
+        path.rCubicTo(
+          reflectiveCtrlPointX,
+          reflectiveCtrlPointY,
+          val[k],
+          val[k + 1],
+          val[k + 2],
+          val[k + 3],
+        );
+        ctrlPointX = currentX + val[k];
+        ctrlPointY = currentY + val[k + 1];
+        currentX += val[k + 2];
+        currentY += val[k + 3];
+        break;
+      case 'S':
+        reflectiveCtrlPointX = currentX;
+        reflectiveCtrlPointY = currentY;
+        if (prevCmd === 'c' || prevCmd === 's' || prevCmd === 'C' || prevCmd === 'S') {
+          reflectiveCtrlPointX = 2 * currentX - ctrlPointX;
+          reflectiveCtrlPointY = 2 * currentY - ctrlPointY;
+        }
+        path.cubicTo(
+          reflectiveCtrlPointX,
+          reflectiveCtrlPointY,
+          val[k],
+          val[k + 1],
+          val[k + 2],
+          val[k + 3],
+        );
+        ctrlPointX = val[k];
+        ctrlPointY = val[k + 1];
+        currentX = val[k + 2];
+        currentY = val[k + 3];
+        break;
+      case 'q':
+        path.rQuadTo(val[k], val[k + 1], val[k + 2], val[k + 3]);
+        ctrlPointX = currentX + val[k];
+        ctrlPointY = currentY + val[k + 1];
+        currentX += val[k + 2];
+        currentY += val[k + 3];
+        break;
+      case 'Q':
+        path.quadTo(val[k], val[k + 1], val[k + 2], val[k + 3]);
+        ctrlPointX = val[k];
+        ctrlPointY = val[k + 1];
+        currentX = val[k + 2];
+        currentY = val[k + 3];
+        break;
+      case 't':
+        reflectiveCtrlPointX = 0;
+        reflectiveCtrlPointY = 0;
+        if (prevCmd === 'q' || prevCmd === 't' || prevCmd === 'Q' || prevCmd === 'T') {
+          reflectiveCtrlPointX = currentX - ctrlPointX;
+          reflectiveCtrlPointY = currentY - ctrlPointY;
+        }
+        path.rQuadTo(reflectiveCtrlPointX, reflectiveCtrlPointY, val[k], val[k + 1]);
+        ctrlPointX = currentX + reflectiveCtrlPointX;
+        ctrlPointY = currentY + reflectiveCtrlPointY;
+        currentX += val[k];
+        currentY += val[k + 1];
+        break;
+      case 'T':
+        reflectiveCtrlPointX = currentX;
+        reflectiveCtrlPointY = currentY;
+        if (prevCmd === 'q' || prevCmd === 't' || prevCmd === 'Q' || prevCmd === 'T') {
+          reflectiveCtrlPointX = 2 * currentX - ctrlPointX;
+          reflectiveCtrlPointY = 2 * currentY - ctrlPointY;
+        }
+        path.quadTo(reflectiveCtrlPointX, reflectiveCtrlPointY, val[k], val[k + 1]);
+        ctrlPointX = reflectiveCtrlPointX;
+        ctrlPointY = reflectiveCtrlPointY;
+        currentX = val[k];
+        currentY = val[k + 1];
+        break;
+      case 'a':
+        drawArc(
+          path,
+          currentX,
+          currentY,
+          val[k + 5] + currentX,
+          val[k + 6] + currentY,
+          val[k],
+          val[k + 1],
+          val[k + 2],
+          val[k + 3] !== 0,
+          val[k + 4] !== 0,
+        );
+        currentX += val[k + 5];
+        currentY += val[k + 6];
+        ctrlPointX = currentX;
+        ctrlPointY = currentY;
+        break;
+      case 'A':
+        drawArc(
+          path,
+          currentX,
+          currentY,
+          val[k + 5],
+          val[k + 6],
+          val[k],
+          val[k + 1],
+          val[k + 2],
+          val[k + 3] !== 0,
+          val[k + 4] !== 0,
+        );
+        currentX = val[k + 5];
+        currentY = val[k + 6];
+        ctrlPointX = currentX;
+        ctrlPointY = currentY;
+        break;
+    }
+    prevCmd = cmd;
+  }
+  current[0] = currentX;
+  current[1] = currentY;
+  current[2] = ctrlPointX;
+  current[3] = ctrlPointY;
+  current[4] = currentSegmentStartX;
+  current[5] = currentSegmentStartY;
+}
+
+function drawArc(
+  p: CommandsBuilder,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  a: number,
+  b: number,
+  theta: number,
+  isMoreThanHalf: boolean,
+  isPositiveArc: boolean,
+) {
+  const thetaD = theta * Math.PI / 180;
+  const cosTheta = Math.cos(thetaD);
+  const sinTheta = Math.sin(thetaD);
+  const x0p = (x0 * cosTheta + y0 * sinTheta) / a;
+  const y0p = (-x0 * sinTheta + y0 * cosTheta) / b;
+  const x1p = (x1 * cosTheta + y1 * sinTheta) / a;
+  const y1p = (-x1 * sinTheta + y1 * cosTheta) / b;
+  const dx = x0p - x1p;
+  const dy = y0p - y1p;
+  const xm = (x0p + x1p) / 2;
+  const ym = (y0p + y1p) / 2;
+  const dsq = dx * dx + dy * dy;
+  if (dsq === 0.0) {
+    return;
+  }
+  const disc = 1.0 / dsq - 1.0 / 4.0;
+  if (disc < 0.0) {
+    const adjust = Math.fround(Math.sqrt(dsq) / 1.99999);
+    drawArc(
+      p,
+      x0,
+      y0,
+      x1,
+      y1,
+      Math.fround(a * adjust),
+      Math.fround(b * adjust),
+      theta,
+      isMoreThanHalf,
+      isPositiveArc,
+    );
+    return;
+  }
+  const s = Math.sqrt(disc);
+  const sdx = s * dx;
+  const sdy = s * dy;
+  let cx: number;
+  let cy: number;
+  if (isMoreThanHalf === isPositiveArc) {
+    cx = xm - sdy;
+    cy = ym + sdx;
+  } else {
+    cx = xm + sdy;
+    cy = ym - sdx;
+  }
+  const eta0 = Math.atan2(y0p - cy, x0p - cx);
+  const eta1 = Math.atan2(y1p - cy, x1p - cx);
+  let sweep = eta1 - eta0;
+  if (isPositiveArc !== sweep >= 0) {
+    if (sweep > 0) {
+      sweep -= 2 * Math.PI;
+    } else {
+      sweep += 2 * Math.PI;
+    }
+  }
+  cx *= a;
+  cy *= b;
+  const tcx = cx;
+  cx = cx * cosTheta - cy * sinTheta;
+  cy = tcx * sinTheta + cy * cosTheta;
+  arcToBezier(p, cx, cy, a, b, x0, y0, thetaD, eta0, sweep);
+}
+
+/**
+ * Converts an arc to cubic Bezier segments and records them in p.
+ *
+ * @param {CommandsBuilder} p The target for the cubic Bezier segments
+ * @param {number} cx The x coordinate center of the ellipse
+ * @param {number} cy The y coordinate center of the ellipse
+ * @param {number} a The radius of the ellipse in the horizontal direction
+ * @param {number} b The radius of the ellipse in the vertical direction
+ * @param {number} e1x E(eta1) x coordinate of the starting point of the arc
+ * @param {number} e1y E(eta2) y coordinate of the starting point of the arc
+ * @param {number} theta The angle that the ellipse bounding rectangle makes with horizontal plane
+ * @param {number} start The start angle of the arc on the ellipse
+ * @param {number} sweep The angle (positive or negative) of the sweep of the arc on the ellipse
+ */
+function arcToBezier(
+  p: CommandsBuilder,
+  cx: number,
+  cy: number,
+  a: number,
+  b: number,
+  e1x: number,
+  e1y: number,
+  theta: number,
+  start: number,
+  sweep: number,
+) {
+  const numSegments = Math.trunc(Math.ceil(Math.abs(sweep * 4 / Math.PI)));
+  let eta1 = start;
+  const cosTheta = Math.cos(theta);
+  const sinTheta = Math.sin(theta);
+  const cosEta1 = Math.cos(eta1);
+  const sinEta1 = Math.sin(eta1);
+  let ep1x = -a * cosTheta * sinEta1 - b * sinTheta * cosEta1;
+  let ep1y = -a * sinTheta * sinEta1 + b * cosTheta * cosEta1;
+  const anglePerSegment = sweep / numSegments;
+  for (let i = 0; i < numSegments; i++) {
+    const eta2 = eta1 + anglePerSegment;
+    const sinEta2 = Math.sin(eta2);
+    const cosEta2 = Math.cos(eta2);
+    const e2x = cx + a * cosTheta * cosEta2 - b * sinTheta * sinEta2;
+    const e2y = cy + a * sinTheta * cosEta2 + b * cosTheta * sinEta2;
+    const ep2x = -a * cosTheta * sinEta2 - b * sinTheta * cosEta2;
+    const ep2y = -a * sinTheta * sinEta2 + b * cosTheta * cosEta2;
+    const tanDiff2 = Math.tan((eta2 - eta1) / 2);
+    const alpha = Math.sin(eta2 - eta1) * (Math.sqrt(4 + 3 * tanDiff2 * tanDiff2) - 1) / 3;
+    const q1x = e1x + alpha * ep1x;
+    const q1y = e1y + alpha * ep1y;
+    const q2x = e2x - alpha * ep2x;
+    const q2y = e2y - alpha * ep2y;
+    p.cubicTo(
+      Math.fround(q1x),
+      Math.fround(q1y),
+      Math.fround(q2x),
+      Math.fround(q2y),
+      Math.fround(e2x),
+      Math.fround(e2y),
+    );
+    eta1 = eta2;
+    e1x = e2x;
+    e1y = e2y;
+    ep1x = ep2x;
+    ep1y = ep2y;
+  }
+}
+
+class CommandsBuilder {
+  private commands: Command[] = [];
+  private currentSegmentStartX = 0;
+  private currentSegmentStartY = 0;
+  private currentX = 0;
+  private currentY = 0;
+
+  moveTo(i0: number, i1: number) {
+    const start = { x: this.currentX, y: this.currentY };
+    const end = { x: i0, y: i1 };
+    this.commands.push(new Command('M', [start, end]));
+    this.currentSegmentStartX = i0;
+    this.currentSegmentStartY = i1;
+    this.currentX = i0;
+    this.currentY = i1;
+  }
+
+  rMoveTo(ri0: number, ri1: number) {
+    const i0 = this.currentX + ri0;
+    const i1 = this.currentY + ri1;
+    this.moveTo(i0, i1);
+  }
+
+  lineTo(i0: number, i1: number) {
+    const start = { x: this.currentX, y: this.currentY };
+    const end = { x: i0, y: i1 };
+    this.commands.push(new Command('L', [start, end]));
+    this.currentX = i0;
+    this.currentY = i1;
+  }
+
+  rLineTo(ri0: number, ri1: number) {
+    const i0 = this.currentX + ri0;
+    const i1 = this.currentY + ri1;
+    this.lineTo(i0, i1);
+  }
+
+  rQuadTo(ri0: number, ri1: number, ri2: number, ri3: number) {
+    const i0 = this.currentX + ri0;
+    const i1 = this.currentY + ri1;
+    const i2 = this.currentX + ri2;
+    const i3 = this.currentY + ri3;
+    this.quadTo(i0, i1, i2, i3);
+  }
+
+  quadTo(i0: number, i1: number, i2: number, i3: number) {
+    const start = { x: this.currentX, y: this.currentY };
+    const cp = { x: i0, y: i1 };
+    const end = { x: i2, y: i3 };
+    this.commands.push(new Command('Q', [start, cp, end]));
+    this.currentX = i2;
+    this.currentY = i3;
+  }
+
+  rCubicTo(ri0: number, ri1: number, ri2: number, ri3: number, ri4: number, ri5: number) {
+    const i0 = this.currentX + ri0;
+    const i1 = this.currentY + ri1;
+    const i2 = this.currentX + ri2;
+    const i3 = this.currentY + ri3;
+    const i4 = this.currentX + ri4;
+    const i5 = this.currentY + ri5;
+    this.cubicTo(i0, i1, i2, i3, i4, i5);
+  }
+
+  cubicTo(i0: number, i1: number, i2: number, i3: number, i4: number, i5: number) {
+    const start = { x: this.currentX, y: this.currentY };
+    const cp1 = { x: i0, y: i1 };
+    const cp2 = { x: i2, y: i3 };
+    const end = { x: i4, y: i5 };
+    this.commands.push(new Command('C', [start, cp1, cp2, end]));
+    this.currentX = i4;
+    this.currentY = i5;
+  }
+
+  close() {
+    const start = { x: this.currentX, y: this.currentY };
+    const end = { x: this.currentSegmentStartX, y: this.currentSegmentStartY };
+    this.commands.push(new Command('Z', [start, end]));
+    this.currentX = this.currentSegmentStartX;
+    this.currentY = this.currentSegmentStartY;
+  }
+
+  toCommands() {
+    return this.commands;
+  }
+}
+
+/** Takes an list of Commands and converts them back into a SVG path string. */
 export function commandsToString(commands: ReadonlyArray<Command>) {
   const tokens: string[] = [];
   commands.forEach(cmd => {
     tokens.push(cmd.type);
     const isClosePathCommand = cmd.type === 'Z';
-    const pointsToNumberListFunc = (...points: Point[]) =>
+    const pointsToNumberListFunc = (...points: { x: number; y: number }[]) =>
       points.reduce((list, p) => [...list, p.x, p.y], [] as number[]);
     const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.points.slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
   return tokens.join(' ');
 }
-
-function newMove(start: Point, end: Point) {
-  return new Command('M', [start, end]);
-}
-
-function newLine(start: Point, end: Point) {
-  return new Command('L', [start, end]);
-}
-
-function newQuadraticCurve(start: Point, cp: Point, end: Point) {
-  return new Command('Q', [start, cp, end]);
-}
-
-function newBezierCurve(start: Point, cp1: Point, cp2: Point, end: Point) {
-  return new Command('C', [start, cp1, cp2, end]);
-}
-
-function newClosePath(start: Point, end: Point) {
-  return new Command('Z', [start, end]);
-}
-
-const cmds = parseCommands(
-  'M54,9.422c-6.555,6.043-13.558,13.787-17.812,22.27C31.93,23.209,24.926,15.465,18.372,9.422a101.486,101.486,0,0,0,17.811,1.564A101.5,101.5,0,0,0,54,9.422M72.367,0A96.572,96.572,0,0,1,36.183,6.986,96.567,96.567,0,0,1,0,0S36.183,23.482,36.183,46.964C36.183,23.482,72.367,0,72.367,0Z',
-);
-console.log(commandsToString(cmds));
