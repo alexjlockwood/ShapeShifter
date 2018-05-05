@@ -338,7 +338,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
  * Takes an list of DrawCommands and converts them back into a SVG path string.
  */
 export function commandsToString(commands: ReadonlyArray<Command>) {
-  const tokens: SvgChar[] = [];
+  const tokens: string[] = [];
   commands.forEach(cmd => {
     tokens.push(cmd.type);
     const isClosePathCommand = cmd.type === 'Z';
@@ -369,3 +369,8 @@ function newBezierCurve(start: Point, cp1: Point, cp2: Point, end: Point) {
 function newClosePath(start: Point, end: Point) {
   return new Command('Z', [start, end]);
 }
+
+const cmds = parseCommands(
+  'M54,9.422c-6.555,6.043-13.558,13.787-17.812,22.27C31.93,23.209,24.926,15.465,18.372,9.422a101.486,101.486,0,0,0,17.811,1.564A101.5,101.5,0,0,0,54,9.422M72.367,0A96.572,96.572,0,0,1,36.183,6.986,96.567,96.567,0,0,1,0,0S36.183,23.482,36.183,46.964C36.183,23.482,72.367,0,72.367,0Z',
+);
+console.log(commandsToString(cmds));
