@@ -67,7 +67,7 @@ export function createSvgSprite(vectorLayer: VectorLayer, animation: Animation, 
     svgs.push(SvgSerializer.toSvgSpriteFrameString(vl, width * i, 0, i.toString()));
   }
   const totalWidth = width * numSteps + width;
-  let svg =
+  const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" ` +
     `viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
 ${svgs.join('\n')}
