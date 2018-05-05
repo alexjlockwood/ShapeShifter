@@ -1,3 +1,5 @@
+import { Point } from 'app/scripts/common';
+
 import { Command } from './Command';
 import { SvgChar } from './SvgChar';
 
@@ -523,26 +525,18 @@ class CommandsBuilder {
   private currentX = 0;
   private currentY = 0;
 
-  moveTo(i0: number, i1: number) {
-    const start = { x: this.currentX, y: this.currentY };
-    const end = { x: i0, y: i1 };
-    this.commands.push(new Command('M', [start, end]));
-    this.currentSegmentStartX = i0;
-    this.currentSegmentStartY = i1;
-    this.currentX = i0;
-    this.currentY = i1;
-  }
-
   rMoveTo(ri0: number, ri1: number) {
     const i0 = this.currentX + ri0;
     const i1 = this.currentY + ri1;
     this.moveTo(i0, i1);
   }
 
-  lineTo(i0: number, i1: number) {
-    const start = { x: this.currentX, y: this.currentY };
+  moveTo(i0: number, i1: number) {
+    const start = this.commands.length ? { x: this.currentX, y: this.currentY } : undefined;
     const end = { x: i0, y: i1 };
-    this.commands.push(new Command('L', [start, end]));
+    this.commands.push(newMove(start, end));
+    this.currentSegmentStartX = i0;
+    this.currentSegmentStartY = i1;
     this.currentX = i0;
     this.currentY = i1;
   }
@@ -551,6 +545,14 @@ class CommandsBuilder {
     const i0 = this.currentX + ri0;
     const i1 = this.currentY + ri1;
     this.lineTo(i0, i1);
+  }
+
+  lineTo(i0: number, i1: number) {
+    const start = { x: this.currentX, y: this.currentY };
+    const end = { x: i0, y: i1 };
+    this.commands.push(newLine(start, end));
+    this.currentX = i0;
+    this.currentY = i1;
   }
 
   rQuadTo(ri0: number, ri1: number, ri2: number, ri3: number) {
@@ -565,7 +567,7 @@ class CommandsBuilder {
     const start = { x: this.currentX, y: this.currentY };
     const cp = { x: i0, y: i1 };
     const end = { x: i2, y: i3 };
-    this.commands.push(new Command('Q', [start, cp, end]));
+    this.commands.push(newQuadraticCurve(start, cp, end));
     this.currentX = i2;
     this.currentY = i3;
   }
@@ -585,7 +587,7 @@ class CommandsBuilder {
     const cp1 = { x: i0, y: i1 };
     const cp2 = { x: i2, y: i3 };
     const end = { x: i4, y: i5 };
-    this.commands.push(new Command('C', [start, cp1, cp2, end]));
+    this.commands.push(newBezierCurve(start, cp1, cp2, end));
     this.currentX = i4;
     this.currentY = i5;
   }
@@ -593,7 +595,7 @@ class CommandsBuilder {
   close() {
     const start = { x: this.currentX, y: this.currentY };
     const end = { x: this.currentSegmentStartX, y: this.currentSegmentStartY };
-    this.commands.push(new Command('Z', [start, end]));
+    this.commands.push(newClosePath(start, end));
     this.currentX = this.currentSegmentStartX;
     this.currentY = this.currentSegmentStartY;
   }
@@ -615,4 +617,24 @@ export function commandsToString(commands: ReadonlyArray<Command>) {
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
   return tokens.join(' ');
+}
+
+function newMove(start: Point, end: Point) {
+  return new Command('M', [start, end]);
+}
+
+function newLine(start: Point, end: Point) {
+  return new Command('L', [start, end]);
+}
+
+function newQuadraticCurve(start: Point, cp: Point, end: Point) {
+  return new Command('Q', [start, cp, end]);
+}
+
+function newBezierCurve(start: Point, cp1: Point, cp2: Point, end: Point) {
+  return new Command('C', [start, cp1, cp2, end]);
+}
+
+function newClosePath(start: Point, end: Point) {
+  return new Command('Z', [start, end]);
 }
