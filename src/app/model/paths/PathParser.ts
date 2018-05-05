@@ -408,19 +408,8 @@ function drawArc(
   }
   const disc = 1.0 / dsq - 1.0 / 4.0;
   if (disc < 0.0) {
-    const adjust = Math.fround(Math.sqrt(dsq) / 1.99999);
-    drawArc(
-      p,
-      x0,
-      y0,
-      x1,
-      y1,
-      Math.fround(a * adjust),
-      Math.fround(b * adjust),
-      theta,
-      isMoreThanHalf,
-      isPositiveArc,
-    );
+    const adjust = Math.sqrt(dsq) / 1.99999;
+    drawArc(p, x0, y0, x1, y1, a * adjust, b * adjust, theta, isMoreThanHalf, isPositiveArc);
     return;
   }
   const s = Math.sqrt(disc);
@@ -502,14 +491,7 @@ function arcToBezier(
     const q1y = e1y + alpha * ep1y;
     const q2x = e2x - alpha * ep2x;
     const q2y = e2y - alpha * ep2y;
-    p.cubicTo(
-      Math.fround(q1x),
-      Math.fround(q1y),
-      Math.fround(q2x),
-      Math.fround(q2y),
-      Math.fround(e2x),
-      Math.fround(e2y),
-    );
+    p.cubicTo(q1x, q1y, q2x, q2y, e2x, e2y);
     eta1 = eta2;
     e1x = e2x;
     e1y = e2y;

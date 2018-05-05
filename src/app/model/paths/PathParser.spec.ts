@@ -17,6 +17,11 @@ class Spec {
 
 const specs = [
   new Spec(
+    `paths with shorthand lineto commands`,
+    new Test(`M 0 0 10 10 20 20 30 30`, `M 0 0 L 10 10 L 20 20 L 30 30`),
+    new Test(`M 0 0 h 10 v 10 h -10 v -10`, `M 0 0 L 10 0 L 10 10 L 0 10 L 0 0`),
+  ),
+  new Spec(
     `sub paths begin with lowercase 'm'`,
     new Test(`m 9 7 -1 1 -8 -8 L 10 10 Z`, `M 9 7 L 8 8 L 0 0 L 10 10 Z`),
     new Test(`m -1 1 -15 0 0 -2 15 0 Z`, `M -1 1 L -16 1 L -16 -1 L -1 -1 Z`),
@@ -53,7 +58,7 @@ const specs = [
   ),
 ];
 
-describe('PathParser', () => {
+describe('PathParserOld', () => {
   for (const { description, tests } of specs) {
     it(description, () => {
       for (const { before, after, blacklist } of tests) {
@@ -66,7 +71,7 @@ describe('PathParser', () => {
   }
 });
 
-describe('PathParser2', () => {
+describe('PathParser', () => {
   for (const { description, tests } of specs) {
     it(description, () => {
       for (const { before, after } of tests) {
