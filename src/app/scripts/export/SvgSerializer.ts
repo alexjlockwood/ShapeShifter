@@ -3,7 +3,6 @@ import {
   GroupLayer,
   Layer,
   LayerUtil,
-  MorphableLayer,
   PathLayer,
   VectorLayer,
 } from 'app/model/layers';
