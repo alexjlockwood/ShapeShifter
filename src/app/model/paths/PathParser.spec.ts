@@ -1,6 +1,5 @@
 /* tslint:disable:max-line-length */
 
-import { Command } from './Command';
 import * as PathParser from './PathParser';
 
 class Test {
