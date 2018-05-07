@@ -2,6 +2,7 @@ import { PathLayer } from 'app/model/layers';
 
 import { SvgLoader } from '.';
 
+// TODO: fix these tests... they aren't running due to the async callbacks
 describe('SvgLoader', () => {
   it(`can import simple SVG`, () => {
     const svg = `
@@ -103,7 +104,7 @@ describe('SvgLoader', () => {
       svg,
       vl => {
         // TODO: test stuff
-        // console.info(vl);
+        expect(true).toBe(true);
       },
       () => false,
     );
