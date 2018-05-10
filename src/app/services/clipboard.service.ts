@@ -23,7 +23,7 @@ export class ClipboardService {
 
       const blocks = this.layerTimelineService.getSelectedBlocks().map(b => b.toJSON());
       if (!blocks.length) {
-        return true;
+        return false;
       }
       const clipboardData = (event.originalEvent as ClipboardEvent).clipboardData;
       clipboardData.setData('text/plain', JSON.stringify({ blocks }, undefined, 2));
@@ -107,7 +107,7 @@ export class ClipboardService {
         return false;
       }
 
-      return true;
+      return false;
     };
 
     const cutHandler = (event: JQuery.Event) => cutCopyHandlerFn(event, true);
