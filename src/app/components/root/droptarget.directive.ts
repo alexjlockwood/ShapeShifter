@@ -25,30 +25,30 @@ export class DropTargetDirective implements OnInit {
   }
 
   @HostListener('dragenter', ['$event'])
-  onDragEnter(event: DragEvent) {
+  onDragEnter(event: Event) {
     event.preventDefault();
     this.setDragging(true);
     return false;
   }
 
   @HostListener('dragover', ['$event'])
-  onDragOver(event: DragEvent) {
+  onDragOver(event: Event) {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'copy';
+    (event as DragEvent).dataTransfer.dropEffect = 'copy';
     return false;
   }
 
   @HostListener('dragleave', ['$event'])
-  onDragLeave(event: DragEvent) {
+  onDragLeave(event: Event) {
     event.preventDefault();
     this.setDragging(false);
     return false;
   }
 
   @HostListener('drop', ['$event'])
-  onDrop(event: DragEvent) {
+  onDrop(event: Event) {
     this.setDragState(DragState.None);
-    this.onDropFiles.emit(event.dataTransfer.files);
+    this.onDropFiles.emit((event as DragEvent).dataTransfer.files);
     return false;
   }
 
