@@ -34,6 +34,7 @@
             <input id="openFileButton"
               type="file"
               accept=".shapeshifter"
+              (click)="$event.stopPropagation()"
               (change)="this.onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
           </button>
           <button mat-menu-item
@@ -60,6 +61,7 @@
               id="addPathsFromSvgButton"
               type="file"
               accept=".svg"
+              (click)="$event.stopPropagation()"
               (change)="this.onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
           </button>
           <button mat-menu-item
@@ -69,6 +71,7 @@
               id="addPathsFromXmlButton"
               type="file"
               accept=".xml"
+              (click)="$event.stopPropagation()"
               (change)="this.onImportedFilesPicked($event, ($event.target || $event.srcElement).files)">
           </button>
         </mat-menu>
