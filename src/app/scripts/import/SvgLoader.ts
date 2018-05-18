@@ -22,33 +22,23 @@ import * as _ from 'lodash';
  * Utility function that takes an SVG string as input and
  * returns a VectorLayer model object.
  */
-// TODO: make this return a Promise instead
-export function loadVectorLayerFromSvgStringWithCallback(
+export function loadVectorLayerFromSvgString(
   svgString: string,
-  callbackFn: (vl: VectorLayer) => void,
   doesNameExistFn: (name: string) => boolean,
 ) {
-  optimizeSvg(svgString)
-    .then((optimizedSvgString: string) => {
+  return optimizeSvg(svgString).then(optimizedSvgString => {
+    return new Promise<VectorLayer>((resolve, reject) => {
       if (!optimizedSvgString) {
-        callbackFn(undefined);
+        reject();
         return;
       }
-      try {
-        callbackFn(loadVectorLayerFromSvgString(optimizedSvgString, doesNameExistFn));
-      } catch (e) {
-        console.error('Failed to parse the optimized SVG file', e);
-        callbackFn(undefined);
-        throw e;
-      }
-    })
-    .catch(() => {
-      callbackFn(undefined);
+      resolve(loadVectorLayerFromSvgStringInternal(optimizedSvgString, doesNameExistFn));
     });
+  });
 }
 
 // TODO: give better error message when user attempts to import SVG w/o a namespace declaration
-function loadVectorLayerFromSvgString(
+function loadVectorLayerFromSvgStringInternal(
   svgString: string,
   doesNameExistFn: (name: string) => boolean,
 ): VectorLayer {

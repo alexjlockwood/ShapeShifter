@@ -85,7 +85,9 @@ export class FileImportService {
         };
         if (file.type.includes('svg')) {
           importType = ImportType.Svg;
-          SvgLoader.loadVectorLayerFromSvgStringWithCallback(text, callbackFn, doesNameExistFn);
+          SvgLoader.loadVectorLayerFromSvgString(text, doesNameExistFn)
+            .then(vl => callbackFn(vl))
+            .catch(() => console.warn('failed to import SVG'));
         } else if (file.type.includes('xml')) {
           importType = ImportType.VectorDrawable;
           let vl: VectorLayer;

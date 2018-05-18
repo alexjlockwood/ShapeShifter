@@ -47,15 +47,9 @@ export class ClipboardService {
       if (str.match(/<\/svg>\s*$/)) {
         // Paste SVG.
         ga('send', 'event', 'paste', 'svg');
-        SvgLoader.loadVectorLayerFromSvgStringWithCallback(
-          str,
-          vl => {
-            if (vl) {
-              this.layerTimelineService.importLayers([vl]);
-            }
-          },
-          name => !!existingVl.findLayerByName(name),
-        );
+        SvgLoader.loadVectorLayerFromSvgString(str, name => !!existingVl.findLayerByName(name))
+          .then(vl => this.layerTimelineService.importLayers([vl]))
+          .catch(() => console.warn('failed to import SVG'));
       } else if (str.match(/<\/vector>\s*$/)) {
         // Paste VD.
         ga('send', 'event', 'paste', 'vd');
