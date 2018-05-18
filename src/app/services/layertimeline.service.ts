@@ -565,7 +565,7 @@ export class LayerTimelineService {
       end: animation.duration,
     });
     gaps = gaps
-      .filter(gap => gap.end - gap.start > newBlockDuration)
+      .filter(gap => gap.end - gap.start >= newBlockDuration)
       .map(gap => {
         const dist = Math.min(Math.abs(gap.end - currentTime), Math.abs(gap.start - currentTime));
         return { ...gap, dist };
