@@ -279,17 +279,20 @@ export class SelectionHelper {
   }
 
   /**
-  * Calculates the projection onto the path with the specified path ID.
-  * The resulting projection is our way of determining the on-curve point
-  * closest to the specified off-curve mouse point.
-  */
+   * Calculates the projection onto the path with the specified path ID.
+   * The resulting projection is our way of determining the on-curve point
+   * closest to the specified off-curve mouse point.
+   */
   private calculateProjectionOntoPath(mousePoint: Point, restrictToSubIdx?: number) {
-    const canvasTransforms = LayerUtil.getCanvasTransformsForLayer(
+    const canvasToLayerMatrix = LayerUtil.getCanvasTransformForLayer(
       this.component.vectorLayer,
       this.component.activePathLayer.id,
-    ).reverse();
-    const flattenedTransform = Matrix.flatten(canvasTransforms);
-    const transformedMousePoint = MathUtil.transformPoint(mousePoint, flattenedTransform);
+    ).invert();
+    if (!canvasToLayerMatrix) {
+      // Do nothing if matrix is non-invertible.
+      return undefined;
+    }
+    const transformedMousePoint = MathUtil.transformPoint(mousePoint, canvasToLayerMatrix);
     const projInfo = this.component.activePath.project(transformedMousePoint, restrictToSubIdx);
     if (!projInfo) {
       return undefined;

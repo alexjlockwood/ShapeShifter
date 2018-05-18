@@ -163,14 +163,17 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     if (!layer.pathData || !layer.pathData.getCommands().length) {
       return;
     }
+    const layerToCanvasMatrix = LayerUtil.getCanvasTransformForLayer(vl, layer.id);
+    const canvasToLayerMatrix = layerToCanvasMatrix.invert();
+    if (!canvasToLayerMatrix) {
+      // Do nothing if matrix is non-invertible.
+      return;
+    }
+
     ctx.save();
+    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), layerToCanvasMatrix);
 
-    const canvasTransforms = LayerUtil.getCanvasTransformsForLayer(vl, layer.id);
-    const canvasTransform = Matrix.flatten(canvasTransforms);
-    const flattenedTransform = Matrix.flatten(canvasTransforms.slice().reverse());
-    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), canvasTransform);
-
-    const strokeWidthMultiplier = flattenedTransform.getScaleFactor();
+    const strokeWidthMultiplier = canvasToLayerMatrix.getScaleFactor();
     ctx.strokeStyle = ColorUtil.androidToCssRgbaColor(layer.strokeColor, layer.strokeAlpha);
     ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
     ctx.fillStyle = ColorUtil.androidToCssRgbaColor(layer.fillColor, layer.fillAlpha);
@@ -179,7 +182,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     ctx.miterLimit = layer.strokeMiterLimit;
 
     if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
-      const { a, d } = flattenedTransform;
+      const { a, d } = canvasToLayerMatrix;
       // Note that we only return the length of the first sub path due to
       // https://code.google.com/p/android/issues/detail?id=172547
       let pathLength: number;
@@ -187,7 +190,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
         // Then recompute the scaled path length.
         pathLength = layer.pathData
           .mutate()
-          .transform(flattenedTransform)
+          .transform(canvasToLayerMatrix)
           .build()
           .getSubPathLength(0);
       } else {

@@ -22,7 +22,7 @@ export function getCanvasTransformForLayer(root: Layer, layerId: string) {
  * are returned in top-down order (i.e. the transform for the layer's
  * immediate parent will be the very last matrix in the returned list).
  */
-export function getCanvasTransformsForLayer(root: Layer, layerId: string) {
+function getCanvasTransformsForLayer(root: Layer, layerId: string) {
   return (function recurseFn(parents: Layer[], current: Layer): Matrix[] {
     if (current.id === layerId) {
       return _.flatMap(parents, l => {
