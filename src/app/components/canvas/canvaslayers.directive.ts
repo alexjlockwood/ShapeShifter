@@ -1,7 +1,6 @@
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
 import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
-import { PathUtil } from 'app/model/paths';
 import { ColorUtil } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { PlaybackService } from 'app/services';
