@@ -110,7 +110,7 @@ convertTransform.params.transformPrecision = floatPrecision;
 inlineStyles.params.onlyMatchedOnce = false;
 removeUselessStrokeAndFill.params.removeNone = true;
 
-const optimizedPluginsData = (function() {
+const optimizedPluginsData = (function () {
   return Object.values(pluginsData)
     .map(item => [item])
     .reduce((arr, item) => {
@@ -124,7 +124,7 @@ const optimizedPluginsData = (function() {
     }, []);
 })();
 
-export function optimizeSvg(svgText: string): Promise<string> {
+export function optimizeSvg(svgText: string, pretty = true): Promise<string> {
   return new Promise((resolve, reject) => {
     const callbackFn = (svgjs: any) => {
       if (svgjs.error) {
@@ -142,7 +142,7 @@ export function optimizeSvg(svgText: string): Promise<string> {
       callbackFn(
         js2svg(svgjs, {
           indent: '  ',
-          pretty: true,
+          pretty,
         }),
       );
     });

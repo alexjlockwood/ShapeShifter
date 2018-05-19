@@ -551,7 +551,9 @@ export class LayerTimelineComponent extends DestroyableMixin()
                 return isOverlappingBlockFn(info, low, end);
               })
               .flatMap(info => {
-                const { block: { id, layerId, propertyName } } = info;
+                const {
+                  block: { id, layerId, propertyName },
+                } = info;
                 const neighbors = blocksByPropertyByLayer[layerId][propertyName].filter(
                   ngh => id !== ngh.id,
                 );
@@ -1061,11 +1063,12 @@ export class LayerTimelineComponent extends DestroyableMixin()
   onLaunchFilePickerClick(event: MouseEvent, sourceElementId: string) {
     $(`#${sourceElementId}`)
       .val('')
-      .click(e => e.stopPropagation());
+      .trigger('click');
   }
 
   // Called from the LayerTimelineComponent template.
   onImportedFilesPicked(event: MouseEvent, fileList: FileList) {
+    // TODO: determine if calling stopPropogation() is needed?
     event.stopPropagation();
     this.fileImportService.import(fileList);
   }

@@ -15,32 +15,33 @@ const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
- * Serializes an VectorLayer to a vector drawable XML file.
+ * Serializes an VectorLayer to a SVG string.
  */
-export function toSvgString(
-  vectorLayer: VectorLayer,
-  width?: number,
-  height?: number,
-  x?: number,
-  y?: number,
-  withIdsAndNS = true,
-  frameNumber = '',
-) {
+export function toSvgString(vl: VectorLayer, width?: number, height?: number) {
   const xmlDoc = document.implementation.createDocument(undefined, 'svg', undefined);
   const rootNode = xmlDoc.documentElement;
-  vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, withIdsAndNS, frameNumber);
+  rootNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
+  rootNode.setAttributeNS(undefined, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
+  vectorLayerToSvgNode(vl, rootNode, xmlDoc);
   if (width !== undefined) {
     rootNode.setAttributeNS(undefined, 'width', width.toString() + 'px');
   }
   if (height !== undefined) {
     rootNode.setAttributeNS(undefined, 'height', height.toString() + 'px');
   }
-  if (x !== undefined) {
-    rootNode.setAttributeNS(undefined, 'x', x.toString() + 'px');
-  }
-  if (y !== undefined) {
-    rootNode.setAttributeNS(undefined, 'y', y.toString() + 'px');
-  }
+  return serializeXmlNode(rootNode);
+}
+
+export function toSvgSpriteFrameString(
+  vectorLayer: VectorLayer,
+  translateX = 0,
+  translateY = 0,
+  frameNumber = '',
+) {
+  const xmlDoc = document.implementation.createDocument(undefined, 'g', undefined);
+  const rootNode = xmlDoc.documentElement;
+  vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, false, frameNumber);
+  rootNode.setAttributeNS(undefined, 'transform', `translate(${translateX}, ${translateY})`);
   return serializeXmlNode(rootNode);
 }
 
@@ -52,103 +53,108 @@ function vectorLayerToSvgNode(
   vl: VectorLayer,
   destinationNode: HTMLElement,
   xmlDoc: Document,
-  withIdsAndNS = true,
+  withIds = true,
   frameNumber = '',
 ) {
-  if (withIdsAndNS) {
-    destinationNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
-  }
-  destinationNode.setAttributeNS(undefined, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
-
-  // TODO: would be better to have clip-paths reference other clip paths in order to reduce file size
-
-  // Create a map where the keys are all of the clip paths in the tree, and
-  // their corresponding values are any affected clipped siblings.
-  const clipPathToClippedSiblingsMap = new Map<string, Set<string>>();
-  (function recurseFn(layers: ReadonlyArray<Layer>) {
-    for (let i = 0; i < layers.length; i++) {
-      const layer = layers[i];
-      if (layer instanceof ClipPathLayer) {
-        const clippedSiblings = layers
-          .slice(i + 1)
-          .filter(l => !(l instanceof ClipPathLayer))
-          .map(l => l.id);
-        if (clippedSiblings.length) {
-          clipPathToClippedSiblingsMap.set(layer.id, new Set(clippedSiblings));
-        }
-      }
+  // Create a map where the keys are ClipPathLayer IDs and the values
+  // are their associated path data strings.
+  const clipPathToPathDataMap = new Map<string, string>();
+  // Create a map where the keys are non-ClipPathLayer IDs and the values are
+  // the in-order list of ClipPathLayers that are clipping the layer (nearest
+  // ClipPathLayer appears in the list last).
+  const clippedLayerToSeenClipPathsMap = new Map<string, ReadonlyArray<string>>();
+  (function recurseFn(layer: Layer) {
+    interface Entry {
+      readonly layer: Layer;
+      readonly seenClipPaths: ReadonlyArray<ClipPathLayer>;
     }
-    layers.forEach(l => recurseFn(l.children));
-  })(vl.children);
-
-  // Create a map where the keys are clipped siblings, and their values
-  // are the list of clip paths that clipped them.
-  const clippedSiblingToClipPathsMap = new Map<string, Set<string>>();
-  clipPathToClippedSiblingsMap.forEach((clippedSiblingIds, clipPathId) => {
-    clippedSiblingIds.forEach(clippedSiblingId => {
-      const clipPathIds = clippedSiblingToClipPathsMap.has(clippedSiblingId)
-        ? clippedSiblingToClipPathsMap.get(clippedSiblingId)
-        : new Set<string>();
-      clipPathIds.add(clipPathId);
-      clippedSiblingToClipPathsMap.set(clippedSiblingId, clipPathIds);
-    });
-  });
-
-  // Create a map of sibling IDs to the clip path name they should use when
-  // referencing the clip-path.
-  const clippedSiblingToClipPathReferencedIdMap = new Map<string, string>();
-  clippedSiblingToClipPathsMap.forEach((clipPaths, siblingId) => {
-    const siblingName = vl.findLayerById(siblingId).name;
-    clippedSiblingToClipPathReferencedIdMap.set(siblingId, `clip_${siblingName}${frameNumber}`);
-  });
-
-  if (clippedSiblingToClipPathsMap.size) {
-    const defsNode = xmlDoc.createElement('defs');
-    clippedSiblingToClipPathsMap.forEach((clipPathIds, clippedSiblingId) => {
-      const clipPathNode = xmlDoc.createElement('clipPath');
-      const clipPathName = clippedSiblingToClipPathReferencedIdMap.get(clippedSiblingId);
-      conditionalAttr(clipPathNode, 'id', clipPathName);
-      clipPathIds.forEach(clipPathId => {
-        const clipPathData = (vl.findLayerById(clipPathId) as ClipPathLayer).pathData;
-        if (clipPathData && clipPathData.getPathString()) {
-          const pathNode = xmlDoc.createElement('path');
-          conditionalAttr(pathNode, 'd', clipPathData.getPathString());
-          clipPathNode.appendChild(pathNode);
-        }
+    layer.children
+      .reduce(
+        (acc: ReadonlyArray<Entry>, curr) => {
+          const seenClipPaths = acc.length ? [..._.last(acc).seenClipPaths] : [];
+          // Ignore clip paths with empty path data strings.
+          if (curr instanceof ClipPathLayer && !!curr.pathData.getPathString()) {
+            clipPathToPathDataMap.set(curr.id, curr.pathData.getPathString());
+            seenClipPaths.push(curr);
+          }
+          return [...acc, { layer: curr, seenClipPaths }];
+        },
+        [] as ReadonlyArray<Entry>,
+      )
+      .filter(({ layer: l, seenClipPaths }) => {
+        // Keep the entry if the key isn't a ClipPathLayer and its
+        // associated list of seen clip paths isn't empty.
+        return !(l instanceof ClipPathLayer) && seenClipPaths.length > 0;
+      })
+      .map(({ layer: l, seenClipPaths }) => {
+        return { layerId: l.id, seenClipPaths: seenClipPaths.map(({ id }) => id) };
+      })
+      .forEach(({ layerId, seenClipPaths }) => {
+        clippedLayerToSeenClipPathsMap.set(layerId, seenClipPaths);
       });
-      defsNode.appendChild(clipPathNode);
+    layer.children.forEach(recurseFn);
+  })(vl);
+
+  // Create a map where the keys are non-ClipPathLayer IDs and the values are the
+  // clip path names they should use when referencing the clip-path.
+  const clippedLayerToClipPathNameMap = new Map<string, string>();
+  clippedLayerToSeenClipPathsMap.forEach((seenClipPaths, layerId) => {
+    const frameInfo = frameNumber ? `_frame${frameNumber}` : '';
+    const layerInfo = `_${vl.findLayerById(layerId).name}`;
+    const clipPathName = `clip${frameInfo}${layerInfo}`;
+    clippedLayerToClipPathNameMap.set(layerId, clipPathName);
+  });
+
+  const shouldCreateDefs = clippedLayerToSeenClipPathsMap.size > 0;
+  if (shouldCreateDefs) {
+    const defsNode = xmlDoc.createElement('defs');
+    clippedLayerToSeenClipPathsMap.forEach((seenClipPaths, layerId) => {
+      const clipPathName = clippedLayerToClipPathNameMap.get(layerId);
+      seenClipPaths.forEach((id, i) => {
+        const clipPathNode = xmlDoc.createElement('clipPath');
+        conditionalAttr(clipPathNode, 'id', clipPathName + (i ? '_' + i : ''));
+        const pathNode = xmlDoc.createElement('path');
+        conditionalAttr(pathNode, 'd', clipPathToPathDataMap.get(id));
+        if (i + 1 < seenClipPaths.length) {
+          // Build the intersection of all seen clip paths.
+          const nextClipPathName = clipPathName + '_' + (i + 1);
+          conditionalAttr(pathNode, 'clip-path', `url(#${nextClipPathName})`);
+        }
+        clipPathNode.appendChild(pathNode);
+        defsNode.appendChild(clipPathNode);
+      });
     });
     destinationNode.appendChild(defsNode);
   }
 
-  const shouldSetClipPathForLayerFn = (layer: Layer) => clippedSiblingToClipPathsMap.has(layer.id);
-
-  const maybeSetClipPathForLayerFn = (layer: Layer, layerNode: HTMLElement) => {
-    if (!shouldSetClipPathForLayerFn(layer)) {
-      return;
+  const isLayerBeingClippedFn = (layerId: string) => clippedLayerToClipPathNameMap.has(layerId);
+  const maybeSetClipPathForLayerFn = (node: HTMLElement, layerId: string) => {
+    if (isLayerBeingClippedFn(layerId)) {
+      conditionalAttr(node, 'clip-path', `url(#${clippedLayerToClipPathNameMap.get(layerId)})`);
     }
-    const clipPathAttrValue = `url(#${clippedSiblingToClipPathReferencedIdMap.get(layer.id)})`;
-    conditionalAttr(layerNode, 'clip-path', clipPathAttrValue);
   };
 
   walk(
     vl,
     (layer: VectorLayer | GroupLayer | PathLayer, parentNode: Node) => {
       if (layer instanceof VectorLayer) {
-        if (withIdsAndNS) {
+        if (withIds) {
           conditionalAttr(destinationNode, 'id', vl.name, '');
         }
         conditionalAttr(destinationNode, 'opacity', vl.alpha, 1);
         return parentNode;
       }
       if (layer instanceof PathLayer) {
+        const { pathData } = layer;
+        if (!pathData.getPathString()) {
+          return undefined;
+        }
         const node = xmlDoc.createElement('path');
-        if (withIdsAndNS) {
+        if (withIds) {
           conditionalAttr(node, 'id', layer.name);
         }
-        maybeSetClipPathForLayerFn(layer, node);
-        const path = layer.pathData;
-        conditionalAttr(node, 'd', path ? path.getPathString() : '');
+        maybeSetClipPathForLayerFn(node, layer.id);
+        conditionalAttr(node, 'd', pathData.getPathString());
         if (layer.fillColor) {
           conditionalAttr(node, 'fill', ColorUtil.androidToCssHexColor(layer.fillColor), '');
         } else {
@@ -169,13 +175,13 @@ function vectorLayerToSvgNode(
           let pathLength: number;
           if (Math.abs(a) !== 1 || Math.abs(d) !== 1) {
             // Then recompute the scaled path length.
-            pathLength = layer.pathData
+            pathLength = pathData
               .mutate()
               .transform(flattenedTransform)
               .build()
               .getSubPathLength(0);
           } else {
-            pathLength = layer.pathData.getSubPathLength(0);
+            pathLength = pathData.getSubPathLength(0);
           }
           const strokeDashArray = LayerUtil.toStrokeDashArray(
             layer.trimPathStart,
@@ -202,9 +208,8 @@ function vectorLayerToSvgNode(
         return parentNode;
       }
       if (layer instanceof GroupLayer) {
-        // TODO: create one node per group property being animated
         const node = xmlDoc.createElement('g');
-        if (withIdsAndNS) {
+        if (withIds) {
           conditionalAttr(node, 'id', layer.name);
         }
         const transformValues: string[] = [];
@@ -226,14 +231,14 @@ function vectorLayerToSvgNode(
         let nodeToAttachToParent = node;
         if (transformValues.length) {
           node.setAttributeNS(undefined, 'transform', transformValues.join(' '));
-          if (shouldSetClipPathForLayerFn(layer)) {
+          if (isLayerBeingClippedFn(layer.id)) {
             // Create a wrapper node so that the clip-path is applied before the transformations.
             const wrapperNode = xmlDoc.createElement('g');
             wrapperNode.appendChild(node);
             nodeToAttachToParent = wrapperNode;
           }
         }
-        maybeSetClipPathForLayerFn(layer, nodeToAttachToParent);
+        maybeSetClipPathForLayerFn(nodeToAttachToParent, layer.id);
         parentNode.appendChild(nodeToAttachToParent);
         return node;
       }

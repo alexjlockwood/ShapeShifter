@@ -28,7 +28,7 @@ export class FileExportService {
     return { vectorLayer, hiddenLayerIds, animation };
   }
 
-  constructor(private readonly store: Store<State>) {}
+  constructor(private readonly store: Store<State>) { }
 
   exportJSON() {
     const vl = this.getVectorLayer();
@@ -96,20 +96,22 @@ export class FileExportService {
     const vl = this.getVectorLayerWithoutHiddenLayers();
     const anim = this.getAnimationWithoutHiddenBlocks();
     const zip = new JSZip();
-    EXPORTED_FPS.forEach(fps => {
-      const numSteps = Math.ceil(anim.duration / 1000 * fps);
-      const svgSprite = SpriteSerializer.createSvgSprite(vl, anim, numSteps);
-      const cssSprite = SpriteSerializer.createCss(vl.width, vl.height, anim.duration, numSteps);
-      const fileName = `sprite_${fps}fps`;
-      const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
-      const spriteFolder = zip.folder(`${fps}fps`);
-      spriteFolder.file(`${fileName}.html`, htmlSprite);
-      spriteFolder.file(`${fileName}.css`, cssSprite);
-      spriteFolder.file(`${fileName}.svg`, svgSprite);
-    });
-    zip.generateAsync({ type: 'blob' }).then(content => {
-      downloadFile(content, `spritesheet_${vl.name}.zip`);
-    });
+    (async () => {
+      await asyncForEach(EXPORTED_FPS, async (fps) => {
+        const numSteps = Math.ceil(anim.duration / 1000 * fps);
+        const svgSprite = await SpriteSerializer.createSvgSprite(vl, anim, numSteps);
+        const cssSprite = SpriteSerializer.createCss(vl.width, vl.height, anim.duration, numSteps);
+        const fileName = `sprite_${fps}fps`;
+        const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
+        const spriteFolder = zip.folder(`${fps}fps`);
+        spriteFolder.file(`${fileName}.html`, htmlSprite);
+        spriteFolder.file(`${fileName}.css`, cssSprite);
+        spriteFolder.file(`${fileName}.svg`, svgSprite);
+      });
+      zip.generateAsync({ type: 'blob' }).then(content => {
+        downloadFile(content, `spritesheet_${vl.name}.zip`);
+      });
+    })();
   }
 
   exportCssKeyframes() {
@@ -164,4 +166,10 @@ function downloadFile(content: string | Blob, fileName: string) {
   anchor.attr({ href: url, download: fileName });
   anchor.get(0).click();
   window.URL.revokeObjectURL(url);
+}
+
+async function asyncForEach(array: number[], callback: (value: number, index: number, array: number[]) => void) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
 }

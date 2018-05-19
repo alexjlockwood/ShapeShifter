@@ -23,7 +23,7 @@ export class ClipboardService {
 
       const blocks = this.layerTimelineService.getSelectedBlocks().map(b => b.toJSON());
       if (!blocks.length) {
-        return true;
+        return false;
       }
       const clipboardData = (event.originalEvent as ClipboardEvent).clipboardData;
       clipboardData.setData('text/plain', JSON.stringify({ blocks }, undefined, 2));
@@ -47,15 +47,9 @@ export class ClipboardService {
       if (str.match(/<\/svg>\s*$/)) {
         // Paste SVG.
         ga('send', 'event', 'paste', 'svg');
-        SvgLoader.loadVectorLayerFromSvgStringWithCallback(
-          str,
-          vl => {
-            if (vl) {
-              this.layerTimelineService.importLayers([vl]);
-            }
-          },
-          name => !!existingVl.findLayerByName(name),
-        );
+        SvgLoader.loadVectorLayerFromSvgString(str, name => !!existingVl.findLayerByName(name))
+          .then(vl => this.layerTimelineService.importLayers([vl]))
+          .catch(() => console.warn('failed to import SVG'));
       } else if (str.match(/<\/vector>\s*$/)) {
         // Paste VD.
         ga('send', 'event', 'paste', 'vd');
@@ -107,7 +101,7 @@ export class ClipboardService {
         return false;
       }
 
-      return true;
+      return false;
     };
 
     const cutHandler = (event: JQuery.Event) => cutCopyHandlerFn(event, true);

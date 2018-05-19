@@ -9,7 +9,7 @@ import {
   VectorLayer,
 } from 'app/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/model/timeline';
-import { Matrix, ModelUtil } from 'app/scripts/common';
+import { MathUtil, Matrix, ModelUtil } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import { BatchAction } from 'app/store/batch/actions';
 import {
@@ -273,26 +273,31 @@ export class LayerTimelineService {
         const { sx, sy } = flattenedTransform.getScaling();
         const degrees = flattenedTransform.getRotation();
         const { tx, ty } = flattenedTransform.getTranslation();
-        const newLayer = l.clone();
-        newLayer.pivotX = 0;
-        newLayer.pivotY = 0;
-        newLayer.translateX = tx;
-        newLayer.translateY = ty;
-        newLayer.rotation = degrees;
-        newLayer.scaleX = sx;
-        newLayer.scaleY = sy;
-        return newLayer;
+        l = l.clone();
+        l.pivotX = 0;
+        l.pivotY = 0;
+        l.translateX = tx;
+        l.translateY = ty;
+        l.rotation = degrees;
+        l.scaleX = sx;
+        l.scaleY = sy;
+        return l;
+      }
+      l = l.clone();
+      if (l instanceof PathLayer && l.strokeWidth) {
+        const scaleFactor = layerTransform.getScaleFactor();
+        const newStrokeWidth = l.strokeWidth * scaleFactor ? 1 / scaleFactor : 0;
+        l.strokeWidth = MathUtil.round(newStrokeWidth);
       }
       const path = l.pathData;
       if (!path || !l.pathData.getPathString()) {
         return l;
       }
-      const clonedLayer = l.clone();
-      clonedLayer.pathData = path
+      l.pathData = path
         .mutate()
         .transform(layerTransform)
         .build();
-      return clonedLayer;
+      return l;
     });
     const layerChildrenIds = new Set(layerChildren.map(l => l.id));
     const parent = LayerUtil.findParent(vl, layerId).clone();
@@ -569,7 +574,7 @@ export class LayerTimelineService {
       end: animation.duration,
     });
     gaps = gaps
-      .filter(gap => gap.end - gap.start > newBlockDuration)
+      .filter(gap => gap.end - gap.start >= newBlockDuration)
       .map(gap => {
         const dist = Math.min(Math.abs(gap.end - currentTime), Math.abs(gap.start - currentTime));
         return { ...gap, dist };

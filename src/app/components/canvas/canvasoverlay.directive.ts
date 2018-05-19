@@ -447,7 +447,11 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       }
     } else if (this.segmentSplitter && this.segmentSplitter.getProjectionOntoPath()) {
       // Highlight the segment as the user hovers over it.
-      const { subIdx, cmdIdx, projection: { d } } = this.segmentSplitter.getProjectionOntoPath();
+      const {
+        subIdx,
+        cmdIdx,
+        projection: { d },
+      } = this.segmentSplitter.getProjectionOntoPath();
       if (d < this.minSnapThreshold) {
         CanvasUtil.executeCommands(
           ctx,
@@ -928,10 +932,12 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       }
       // TODO: use a user-defined type check to confirm this layer is an instance of MorphableLayer
       if ((layer instanceof PathLayer || layer instanceof ClipPathLayer) && layer.pathData) {
-        const flattenedTransform = Matrix.flatten(
-          LayerUtil.getCanvasTransformsForLayer(root, layer.id).reverse(),
-        );
-        const transformedPoint = MathUtil.transformPoint(point, flattenedTransform);
+        const canvasToLayerMatrix = LayerUtil.getCanvasTransformForLayer(root, layer.id).invert();
+        if (!canvasToLayerMatrix) {
+          // Do nothing if matrix is non-invertible.
+          return undefined;
+        }
+        const transformedPoint = MathUtil.transformPoint(point, canvasToLayerMatrix);
         let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
         isSegmentInRangeFn = distance => {
           let maxDistance = 0;
@@ -955,11 +961,10 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
 
   // NOTE: this should only be used in action mode
   performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
-    const canvasTransforms = LayerUtil.getCanvasTransformsForLayer(
+    const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
       this.vectorLayer,
       this.blockLayerId,
-    ).reverse();
-    const flattenedTransform = Matrix.flatten(canvasTransforms);
+    ).invert();
     const transformedMousePoint = MathUtil.transformPoint(mousePoint, flattenedTransform);
     let isPointInRangeFn: (distance: number, cmd: Command) => boolean;
     if (!opts.noPoints) {

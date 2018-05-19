@@ -64,17 +64,14 @@ export function createSvgSprite(vectorLayer: VectorLayer, animation: Animation, 
   for (let i = 0; i <= numSteps; i++) {
     const time = i / numSteps * animation.duration;
     const vl = renderer.setCurrentTime(time);
-    svgs.push(SvgSerializer.toSvgString(vl, width, height, width * i, 0, false, i.toString()));
+    svgs.push(SvgSerializer.toSvgSpriteFrameString(vl, width * i, 0, i.toString()));
   }
   const totalWidth = width * numSteps + width;
-  let svg =
+  const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" ` +
     `viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
 ${svgs.join('\n')}
 </svg>
 `;
-  optimizeSvg(svg)
-    .then(optimizedSvgText => (svg = optimizedSvgText))
-    .catch(() => (svg = undefined));
-  return svg;
+  return optimizeSvg(svg, false);
 }
