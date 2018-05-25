@@ -8,4 +8,4 @@ git clone -b gh-pages --single-branch https://github.com/alexjlockwood/ShapeShif
 mv .remote-dist/next dist/next
 rm -rf .remote-dist
 cp CNAME dist/CNAME
-ngh
+ngh --dry-run
