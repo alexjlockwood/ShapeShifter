@@ -13,7 +13,8 @@
     "test-once": "ng test --browser ChromeHeadless --single-run --code-coverage",
     "lint": "ng lint --type-check",
     "e2e": "ng e2e",
-    "deploy": "ng build --prod && cp ./CNAME ./dist/CNAME && ./node_modules/.bin/ngh",
+    "deploy-master": "./scripts/deploy-master.sh",
+    "deploy-next": "./scripts/deploy-next.sh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "bundle-report": "ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json"
   },
