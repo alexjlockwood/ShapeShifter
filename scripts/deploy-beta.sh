@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-git checkout next
+git checkout beta
 npm i
 ng build --prod
 ngh --repo git@github.com:alexjlockwood/ShapeShifterBeta.git
