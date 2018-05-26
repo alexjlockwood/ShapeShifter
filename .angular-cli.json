@@ -7,12 +7,8 @@
     {
       "root": "src",
       "outDir": "dist",
-      "assets": [
-        "assets",
-        "demos",
-        "manifest.json",
-        "favicon.ico"
-      ],
+      "assets": ["assets", "demos", "manifest.json", "favicon.ico"],
+      "baseHref": "/",
       "index": "index.html",
       "main": "main.ts",
       "polyfills": "polyfills.ts",
@@ -21,9 +17,7 @@
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "app",
       "serviceWorker": true,
-      "styles": [
-        "styles.scss"
-      ],
+      "styles": ["styles.scss"],
       "scripts": [],
       "environmentSource": "environments/environment.ts",
       "environments": {
