@@ -14,7 +14,7 @@
     "lint": "ng lint --type-check",
     "e2e": "ng e2e",
     "deploy": "./scripts/deploy.sh",
-    "deploy-next": "./scripts/deploy-next.sh",
+    "deploy-beta": "./scripts/deploy-beta.sh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "bundle-report": "ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json"
   },
