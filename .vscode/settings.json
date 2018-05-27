@@ -1,0 +1,13 @@
+{
+  "files.exclude": {
+    "node_modules/**": true,
+    "**/*~": true,
+    "**/*.js": {
+      "when": "$(basename).ts"
+    },
+    "**/*.js.map": {
+      "when": "$(basename)"
+    }
+  },
+  "html.format.wrapAttributes": "force"
+}
