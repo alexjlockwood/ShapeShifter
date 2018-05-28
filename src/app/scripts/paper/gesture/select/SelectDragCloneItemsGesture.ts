@@ -112,19 +112,24 @@ export class SelectDragCloneItemsGesture extends Gesture {
       return undefined;
     }
     const siblingItems = parent.children.filter(i => !draggedItems.includes(i));
-    if (!siblingItems.length) {
+    const isParentVectorLayer = parent.data.id === this.initialVectorLayer.id;
+    if (!siblingItems.length && !isParentVectorLayer) {
       return undefined;
     }
 
     // Perform the snap test.
-    const toSnapPointsFn = (items: ReadonlyArray<paper.Item>) => {
-      const { topLeft, center, bottomRight } = PaperUtil.computeBounds(items);
-      return [topLeft, center, bottomRight];
-    };
-    return SnapUtil.computeSnapInfo(
-      toSnapPointsFn(draggedItems),
-      siblingItems.map(siblingItem => toSnapPointsFn([siblingItem])),
-    );
+    const siblingSnapPointsTable = siblingItems.map(item => toSnapPoints([item]));
+    if (isParentVectorLayer) {
+      const { width, height } = this.initialVectorLayer;
+      siblingSnapPointsTable.push(
+        [
+          new paper.Point(0, 0),
+          new paper.Point(width / 2, height / 2),
+          new paper.Point(width, height),
+        ].map(p => parent.localToGlobal(p)),
+      );
+    }
+    return SnapUtil.computeSnapInfo(toSnapPoints(draggedItems), siblingSnapPointsTable);
   }
 
   // @Override
@@ -156,4 +161,9 @@ function dragItem(newVl: VectorLayer, layerId: string, localDelta: paper.Point) 
     newVl = LayerUtil.replaceLayer(newVl, layerId, replacementLayer);
   }
   return newVl;
+}
+
+function toSnapPoints(items: ReadonlyArray<paper.Item>) {
+  const { topLeft, center, bottomRight } = PaperUtil.computeBounds(items);
+  return [topLeft, center, bottomRight];
 }
