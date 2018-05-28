@@ -3,43 +3,67 @@
   fxLayout="column"
   fxFlex>
   <button class="tool-button"
+    matTooltip="Select"
+    matTooltipPosition="right"
+    matTooltipShowDelay="500"
     [class.is-checked]="model.isSelectionChecked"
     (click)="onSelectionClick()">
     <mat-icon svgIcon="tool_select"></mat-icon>
   </button>
   <button class="tool-button"
+    matTooltip="Rotate"
+    matTooltipPosition="right"
+    matTooltipShowDelay="500"
     [class.is-checked]="model.isRotateItemsChecked"
     [disabled]="!model.isRotateItemsEnabled"
     (click)="onRotateItemsClick()">
     <mat-icon>crop_rotate</mat-icon>
   </button>
   <button class="tool-button"
+    matTooltip="Transform"
+    matTooltipPosition="right"
+    matTooltipShowDelay="500"
     [class.is-checked]="model.isTransformPathsChecked"
     [disabled]="!model.isTransformPathsEnabled"
     (click)="onTransformPathsClick()">
     <mat-icon>transform</mat-icon>
   </button>
   <button class="tool-button"
+    matTooltip="Pencil"
+    matTooltipPosition="right"
+    matTooltipShowDelay="500"
     [class.is-checked]="model.toolMode === this.TOOL_MODE_PENCIL"
     (click)="onPencilClick()">
     <mat-icon svgIcon="tool_pencil"></mat-icon>
   </button>
   <button class="tool-button"
+    matTooltip="Vector"
+    matTooltipPosition="right"
+    matTooltipShowDelay="500"
     [class.is-checked]="model.isEditPathChecked"
     (click)="onEditPathClick()">
     <mat-icon svgIcon="tool_vector"></mat-icon>
   </button>
   <button class="tool-button"
+    matTooltip="Oval"
+    matTooltipPosition="right"
+    matTooltipShowDelay="500"
     [class.is-checked]="model.toolMode === this.TOOL_MODE_ELLIPSE"
     (click)="onEllipseClick()">
     <mat-icon svgIcon="tool_ellipse"></mat-icon>
   </button>
   <button class="tool-button"
+    matTooltip="Rectangle"
+    matTooltipPosition="right"
+    matTooltipShowDelay="500"
     [class.is-checked]="model.toolMode === this.TOOL_MODE_RECTANGLE"
     (click)="onRectangleClick()">
     <mat-icon svgIcon="tool_rectangle"></mat-icon>
   </button>
   <button class="tool-button"
+    matTooltip="Zoom"
+    matTooltipPosition="right"
+    matTooltipShowDelay="500"
     [class.is-checked]="model.toolMode === this.TOOL_MODE_ZOOMPAN"
     (click)="onZoomPanClick()">
     <mat-icon>zoom_in</mat-icon>
