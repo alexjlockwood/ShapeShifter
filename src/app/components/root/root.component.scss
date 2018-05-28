@@ -98,56 +98,54 @@ app-toolpanel {
   cursor: grabbing;
 }
 
-// TODO: adjust the positioning of the custom cursors below.
-
 .cursor-point-select {
-  cursor: url(/assets/cursor/point-select.png) 0 0, default;
+  cursor: url(/assets/cursor/point-select.png) 3 3, auto;
 }
 
 .cursor-crosshair {
-  cursor: url(/assets/cursor/crosshair.png) 0 0, auto;
+  cursor: url(/assets/cursor/crosshair.png) 10 10, auto;
 }
 
 .cursor-pen {
-  cursor: url(/assets/cursor/pen.png) 5 0, auto;
+  cursor: url(/assets/cursor/pen.png) 6 0, auto;
 }
 
 .cursor-pen-add {
-  cursor: url(/assets/cursor/pen-add.png) 5 0, auto;
+  cursor: url(/assets/cursor/pen-add.png) 6 0, auto;
 }
 
 .cursor-pen-close {
-  cursor: url(/assets/cursor/pen-close.png) 5 0, default;
+  cursor: url(/assets/cursor/pen-close.png) 6 0, auto;
 }
 
 .cursor-rotate0 {
-  cursor: url(/assets/cursor/rotate-top.png) 0 0, default;
+  cursor: url(/assets/cursor/rotate-top.png) 11 11, auto;
 }
 
 .cursor-rotate45 {
-  cursor: url(/assets/cursor/rotate-top-right.png) 0 0, default;
+  cursor: url(/assets/cursor/rotate-top-right.png) 10 11, auto;
 }
 
 .cursor-rotate90 {
-  cursor: url(/assets/cursor/rotate-right.png) 0 0, default;
+  cursor: url(/assets/cursor/rotate-right.png) 10 12, auto;
 }
 
 .cursor-rotate135 {
-  cursor: url(/assets/cursor/rotate-bottom-right.png) 0 0, default;
+  cursor: url(/assets/cursor/rotate-bottom-right.png) 11 11, auto;
 }
 
 .cursor-rotate180 {
-  cursor: url(/assets/cursor/rotate-bottom.png) 0 0, default;
+  cursor: url(/assets/cursor/rotate-bottom.png) 11 10, auto;
 }
 
 .cursor-rotate225 {
-  cursor: url(/assets/cursor/rotate-bottom-left.png) 0 0, default;
+  cursor: url(/assets/cursor/rotate-bottom-left.png) 11 10, auto;
 }
 
 .cursor-rotate270 {
-  cursor: url(/assets/cursor/rotate-left.png) 0 0, default;
+  cursor: url(/assets/cursor/rotate-left.png) 11 12, auto;
 }
 
 .cursor-rotate315 {
-  cursor: url(/assets/cursor/rotate-top-left.png) 0 0, default;
+  cursor: url(/assets/cursor/rotate-top-left.png) 10 10, auto;
 }
