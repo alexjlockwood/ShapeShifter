@@ -227,6 +227,7 @@ export class ScaleItemsGesture extends Gesture {
       const { topLeft, center, bottomRight } = PaperUtil.computeBounds(items);
       return [topLeft, center, bottomRight];
     };
+    // TODO: also snap-to-VectorLayer bounds (similar to the dragging gesture)
     return SnapUtil.computeSnapInfo(
       toSnapPointsFn(draggedItems),
       siblingItems.map(siblingItem => toSnapPointsFn([siblingItem])),

@@ -121,13 +121,10 @@ export class SelectDragCloneItemsGesture extends Gesture {
     const siblingSnapPointsTable = siblingItems.map(item => toSnapPoints([item]));
     if (isParentVectorLayer) {
       const { width, height } = this.initialVectorLayer;
-      siblingSnapPointsTable.push(
-        [
-          new paper.Point(0, 0),
-          new paper.Point(width / 2, height / 2),
-          new paper.Point(width, height),
-        ].map(p => parent.localToGlobal(p)),
-      );
+      const topLeft = new paper.Point(0, 0);
+      const bottomRight = parent.localToGlobal(new paper.Point(width, height));
+      const center = bottomRight.divide(2);
+      siblingSnapPointsTable.push([topLeft, center, bottomRight]);
     }
     return SnapUtil.computeSnapInfo(toSnapPoints(draggedItems), siblingSnapPointsTable);
   }

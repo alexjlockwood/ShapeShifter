@@ -170,6 +170,7 @@ export class PaperLayer extends paper.Layer {
       this.tooltipItem = undefined;
     }
     if (info) {
+      // TODO: re-enable tooltip when ready
       // this.tooltipItem = newTooltipItem(info, this.cssScaling);
       this.updateChildren();
     }
@@ -602,18 +603,20 @@ function newSplitCurveItem(info: SplitCurveInfo, cssScaling: number) {
   return group;
 }
 
-// function newTooltipItem(info: TooltipInfo, cssScaling: number) {
-//   // TODO: use a better font (roboto?)
-//   return new paper.PointText({
-//     point: info.point,
-//     content: info.label,
-//     fillColor: 'red',
-//     justification: 'left',
-//     // TODO: text doesn't display when using font size of only 12?
-//     fontSize: 20 / paper.view.zoom / cssScaling,
-//     guide: true,
-//   });
-// }
+// TODO: add rounded rect background for tooltip
+// TODO: ensure tooltip is justified correctly w/ respect to the active item
+function newTooltipItem(info: TooltipInfo, cssScaling: number) {
+  return new paper.PointText({
+    point: info.point,
+    content: info.label,
+    fillColor: 'red',
+    justification: 'left',
+    // TODO: text doesn't display when using font size of only 12?
+    fontSize: 14 / paper.view.zoom / cssScaling,
+    fontFamily: 'Roboto, Helvetica Neue, sans-serif',
+    guide: true,
+  });
+}
 
 function newSnapGuideItem(info: SnapGuideInfo, cssScaling: number) {
   const group = new paper.Group({ guide: true });
