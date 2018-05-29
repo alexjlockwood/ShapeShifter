@@ -145,12 +145,14 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
   }
 
   ngAfterViewInit() {
-    this.$displayContainer = $(this.displayContainerRef.nativeElement);
-    ELEMENT_RESIZE_DETECTOR.listenTo(this.$displayContainer.get(0), () => {
-      const w = this.$displayContainer.width();
-      const h = this.$displayContainer.height();
-      this.displayBoundsSubject.next({ w, h });
-    });
+    if (!this.isMobile()) {
+      this.$displayContainer = $(this.displayContainerRef.nativeElement);
+      ELEMENT_RESIZE_DETECTOR.listenTo(this.$displayContainer.get(0), () => {
+        const w = this.$displayContainer.width();
+        const h = this.$displayContainer.height();
+        this.displayBoundsSubject.next({ w, h });
+      });
+    }
 
     if ('serviceWorker' in navigator) {
       const isFirstTimeUser = window.localStorage.getItem(STORAGE_KEY_FIRST_TIME_USER);
@@ -173,7 +175,9 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
 
   ngOnDestroy() {
     super.ngOnDestroy();
-    ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.$displayContainer.get(0));
+    if (!this.isMobile()) {
+      ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.$displayContainer.get(0));
+    }
     this.shortcutService.destroy();
     this.clipboardService.destroy();
     $(window).unbind('beforeunload');
