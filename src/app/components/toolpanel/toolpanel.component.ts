@@ -23,7 +23,7 @@ export class ToolPanelComponent implements OnInit {
     this.model$ = this.ps.observeToolPanelState();
   }
 
-  onSelectionClick() {
+  onSelectionClick(event: Event) {
     this.ps.setToolMode(ToolMode.Default);
     this.ps.setEditPathInfo(undefined);
     this.ps.setRotateItemsInfo(undefined);
@@ -31,37 +31,37 @@ export class ToolPanelComponent implements OnInit {
     event.stopPropagation();
   }
 
-  onRotateItemsClick() {
+  onRotateItemsClick(event: Event) {
     this.ps.enterRotateItemsMode();
     event.stopPropagation();
   }
 
-  onTransformPathsClick() {
+  onTransformPathsClick(event: Event) {
     this.ps.enterTransformPathsMode();
     event.stopPropagation();
   }
 
-  onPencilClick() {
+  onPencilClick(event: Event) {
     this.ps.setToolMode(ToolMode.Pencil);
     event.stopPropagation();
   }
 
-  onEditPathClick() {
+  onEditPathClick(event: Event) {
     this.ps.enterEditPathMode();
     event.stopPropagation();
   }
 
-  onEllipseClick() {
+  onEllipseClick(event: Event) {
     this.ps.enterCreateEllipseMode();
     event.stopPropagation();
   }
 
-  onRectangleClick() {
+  onRectangleClick(event: Event) {
     this.ps.enterCreateRectangleMode();
     event.stopPropagation();
   }
 
-  onZoomPanClick() {
+  onZoomPanClick(event: Event) {
     this.ps.setToolMode(ToolMode.ZoomPan);
     event.stopPropagation();
   }

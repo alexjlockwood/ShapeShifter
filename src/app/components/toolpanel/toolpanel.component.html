@@ -7,7 +7,7 @@
     matTooltipPosition="right"
     matTooltipShowDelay="500"
     [class.is-checked]="model.isSelectionChecked"
-    (click)="onSelectionClick()">
+    (click)="onSelectionClick($event)">
     <mat-icon svgIcon="tool_select"></mat-icon>
   </button>
   <button class="tool-button"
@@ -16,7 +16,7 @@
     matTooltipShowDelay="500"
     [class.is-checked]="model.isRotateItemsChecked"
     [disabled]="!model.isRotateItemsEnabled"
-    (click)="onRotateItemsClick()">
+    (click)="onRotateItemsClick($event)">
     <mat-icon>crop_rotate</mat-icon>
   </button>
   <button class="tool-button"
@@ -25,7 +25,7 @@
     matTooltipShowDelay="500"
     [class.is-checked]="model.isTransformPathsChecked"
     [disabled]="!model.isTransformPathsEnabled"
-    (click)="onTransformPathsClick()">
+    (click)="onTransformPathsClick($event)">
     <mat-icon>transform</mat-icon>
   </button>
   <button class="tool-button"
@@ -33,7 +33,7 @@
     matTooltipPosition="right"
     matTooltipShowDelay="500"
     [class.is-checked]="model.toolMode === this.TOOL_MODE_PENCIL"
-    (click)="onPencilClick()">
+    (click)="onPencilClick($event)">
     <mat-icon svgIcon="tool_pencil"></mat-icon>
   </button>
   <button class="tool-button"
@@ -41,7 +41,7 @@
     matTooltipPosition="right"
     matTooltipShowDelay="500"
     [class.is-checked]="model.isEditPathChecked"
-    (click)="onEditPathClick()">
+    (click)="onEditPathClick($event)">
     <mat-icon svgIcon="tool_vector"></mat-icon>
   </button>
   <button class="tool-button"
@@ -49,7 +49,7 @@
     matTooltipPosition="right"
     matTooltipShowDelay="500"
     [class.is-checked]="model.toolMode === this.TOOL_MODE_ELLIPSE"
-    (click)="onEllipseClick()">
+    (click)="onEllipseClick($event)">
     <mat-icon svgIcon="tool_ellipse"></mat-icon>
   </button>
   <button class="tool-button"
@@ -57,7 +57,7 @@
     matTooltipPosition="right"
     matTooltipShowDelay="500"
     [class.is-checked]="model.toolMode === this.TOOL_MODE_RECTANGLE"
-    (click)="onRectangleClick()">
+    (click)="onRectangleClick($event)">
     <mat-icon svgIcon="tool_rectangle"></mat-icon>
   </button>
   <button class="tool-button"
@@ -65,7 +65,7 @@
     matTooltipPosition="right"
     matTooltipShowDelay="500"
     [class.is-checked]="model.toolMode === this.TOOL_MODE_ZOOMPAN"
-    (click)="onZoomPanClick()">
+    (click)="onZoomPanClick($event)">
     <mat-icon>zoom_in</mat-icon>
   </button>
 </div>
