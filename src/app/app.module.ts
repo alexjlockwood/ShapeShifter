@@ -1,7 +1,7 @@
 import 'hammerjs';
 
 import { HttpClientModule } from '@angular/common/http';
-import { NgModule } from '@angular/core';
+import { ErrorHandler, NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import {
@@ -21,6 +21,7 @@ import {
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
+import { errorHandlerFactory } from 'app/scripts/bugsnag';
 import { StoreModule } from 'app/store/ngrx';
 import { environment } from 'environments/environment';
 
@@ -125,6 +126,7 @@ import { reducer } from './store';
     ShortcutService,
     SnackBarService,
     ThemeService,
+    { provide: ErrorHandler, useFactory: errorHandlerFactory },
   ],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],
