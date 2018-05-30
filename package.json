@@ -13,7 +13,7 @@
     "test-once": "ng test --browser ChromeHeadless --single-run --code-coverage",
     "lint": "ng lint --type-check",
     "e2e": "ng e2e",
-    "deploy-all": "./scripts/deploy-all.sh",
+    "deploy-all": "npm run deploy-master && npm run deploy-beta",
     "deploy-master": "./scripts/deploy-master.sh",
     "deploy-beta": "./scripts/deploy-beta.sh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
