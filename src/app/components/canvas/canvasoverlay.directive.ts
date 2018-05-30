@@ -835,7 +835,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       this.segmentSplitter.onMouseDown(mouseDown);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
       const pathLayer = this.activePathLayer;
-      if (pathLayer.isStroked()) {
+      if (!pathLayer.isFilled() && pathLayer.isStroked()) {
         this.segmentSplitter.onMouseDown(mouseDown);
       } else {
         this.shapeSplitter.onMouseDown(mouseDown);
@@ -857,7 +857,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       this.segmentSplitter.onMouseMove(mouseMove);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
       const pathLayer = this.activePathLayer;
-      if (pathLayer.isStroked()) {
+      if (!pathLayer.isFilled() && pathLayer.isStroked()) {
         this.segmentSplitter.onMouseMove(mouseMove);
       } else {
         this.shapeSplitter.onMouseMove(mouseMove);
@@ -882,7 +882,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       this.segmentSplitter.onMouseUp(mouseUp);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
       const pathLayer = this.activePathLayer;
-      if (pathLayer.isStroked()) {
+      if (!pathLayer.isFilled() && pathLayer.isStroked()) {
         this.segmentSplitter.onMouseUp(mouseUp);
       } else {
         this.shapeSplitter.onMouseUp(mouseUp);
@@ -905,7 +905,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       this.segmentSplitter.onMouseLeave(mouseLeave);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
       const pathLayer = this.activePathLayer;
-      if (pathLayer.isStroked()) {
+      if (!pathLayer.isFilled() && pathLayer.isStroked()) {
         this.segmentSplitter.onMouseLeave(mouseLeave);
       } else {
         this.shapeSplitter.onMouseLeave(mouseLeave);
