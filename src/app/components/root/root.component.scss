@@ -30,19 +30,19 @@ div.toolbar-container {
     right: 0;
     bottom: 0;
     z-index: 9999;
-    animation: pulsate-color .66s ease 0s infinite;
+    animation: pulsate-color 0.66s ease 0s infinite;
     pointer-events: none;
     transform: translateZ(0);
   }
   @keyframes pulsate-color {
     0% {
-      opacity: .5;
+      opacity: 0.5;
     }
     50% {
       opacity: 1;
     }
     100% {
-      opacity: .5;
+      opacity: 0.5;
     }
   }
 }
