@@ -22,9 +22,9 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { CanvasRulerDirective } from './canvasruler.directive';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 
 // Canvas margin in css pixels.
 const CANVAS_MARGIN = 36;
@@ -70,7 +70,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   // @Override
-  onDimensionsChanged(bounds: Size, viewport: Size) {
+  protected onDimensionsChanged(bounds: Size, viewport: Size) {
     const directives = [
       this.canvasContainer,
       this.canvasLayers,
