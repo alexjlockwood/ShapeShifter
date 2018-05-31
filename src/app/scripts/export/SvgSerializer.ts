@@ -6,7 +6,6 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/model/layers';
-import { PathUtil } from 'app/model/paths';
 import { ColorUtil } from 'app/scripts/common';
 import * as _ from 'lodash';
 
@@ -184,13 +183,13 @@ function vectorLayerToSvgNode(
           } else {
             pathLength = pathData.getSubPathLength(0);
           }
-          const strokeDashArray = PathUtil.toStrokeDashArray(
+          const strokeDashArray = LayerUtil.toStrokeDashArray(
             layer.trimPathStart,
             layer.trimPathEnd,
             layer.trimPathOffset,
             pathLength,
           ).join(',');
-          const strokeDashOffset = PathUtil.toStrokeDashOffset(
+          const strokeDashOffset = LayerUtil.toStrokeDashOffset(
             layer.trimPathStart,
             layer.trimPathEnd,
             layer.trimPathOffset,

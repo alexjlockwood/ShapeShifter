@@ -317,7 +317,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
   }
 
   // @Override
-  onDimensionsChanged() {
+  protected onDimensionsChanged() {
     const { w, h } = this.getViewport();
     this.$canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
     this.$canvas.css({ width: w * this.cssScale, height: h * this.cssScale });

@@ -43,7 +43,7 @@ export function CanvasLayoutMixin<T extends Constructor>(Base = class {} as T) {
       }
     }
 
-    onDimensionsChanged(bounds: Size, viewport: Size) {}
+    protected onDimensionsChanged(bounds: Size, viewport: Size) {}
   };
 }
 

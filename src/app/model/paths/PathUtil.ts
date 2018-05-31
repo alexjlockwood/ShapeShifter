@@ -45,35 +45,3 @@ export function sortPathOps(ops: Array<{ subIdx: number; cmdIdx: number }>) {
     return s1 !== s2 ? s2 - s1 : c2 - c1;
   });
 }
-
-export function toStrokeDashArray(
-  trimPathStart: number,
-  trimPathEnd: number,
-  trimPathOffset: number,
-  pathLength: number,
-) {
-  // Calculate the visible fraction of the trimmed path. If trimPathStart
-  // is greater than trimPathEnd, then the result should be the combined
-  // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
-  let shownFraction = trimPathEnd - trimPathStart;
-  if (trimPathStart > trimPathEnd) {
-    shownFraction += 1;
-  }
-  // Calculate the dash array. The first array element is the length of
-  // the trimmed path and the second element is the gap, which is the
-  // difference in length between the total path length and the visible
-  // trimmed path length.
-  return [shownFraction * pathLength, (1 - shownFraction + 0.001) * pathLength];
-}
-
-export function toStrokeDashOffset(
-  trimPathStart: number,
-  trimPathEnd: number,
-  trimPathOffset: number,
-  pathLength: number,
-) {
-  // The amount to offset the path is equal to the trimPathStart plus
-  // trimPathOffset. We mod the result because the trimmed path
-  // should wrap around once it reaches 1.
-  return pathLength * (1 - (trimPathStart + trimPathOffset) % 1);
-}

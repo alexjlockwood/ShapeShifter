@@ -1,7 +1,6 @@
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
 import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
-import { PathUtil } from 'app/model/paths';
 import { ColorUtil } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { PlaybackService } from 'app/services';
@@ -81,7 +80,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   // @Override
-  onDimensionsChanged(bounds: Size, viewport: Size) {
+  protected onDimensionsChanged(bounds: Size, viewport: Size) {
     const { w, h } = this.getViewport();
     [this.$renderingCanvas, this.$offscreenCanvas].forEach(canvas => {
       canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
@@ -197,13 +196,14 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
         pathLength = layer.pathData.getSubPathLength(0);
       }
 
-      const strokeDashArray = PathUtil.toStrokeDashArray(
+      const strokeDashArray = LayerUtil.toStrokeDashArray(
         layer.trimPathStart,
         layer.trimPathEnd,
         layer.trimPathOffset,
         pathLength,
+        0.001,
       );
-      const strokeDashOffset = PathUtil.toStrokeDashOffset(
+      const strokeDashOffset = LayerUtil.toStrokeDashOffset(
         layer.trimPathStart,
         layer.trimPathEnd,
         layer.trimPathOffset,

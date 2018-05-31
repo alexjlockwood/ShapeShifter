@@ -29,7 +29,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   }
 
   // @Override
-  onDimensionsChanged() {
+  protected onDimensionsChanged() {
     this.draw();
   }
 
