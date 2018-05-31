@@ -605,18 +605,18 @@ function newSplitCurveItem(info: SplitCurveInfo, cssScaling: number) {
 
 // TODO: add rounded rect background for tooltip
 // TODO: ensure tooltip is justified correctly w/ respect to the active item
-function newTooltipItem(info: TooltipInfo, cssScaling: number) {
-  return new paper.PointText({
-    point: info.point,
-    content: info.label,
-    fillColor: 'red',
-    justification: 'left',
-    // TODO: text doesn't display when using font size of only 12?
-    fontSize: 14 / paper.view.zoom / cssScaling,
-    fontFamily: 'Roboto, Helvetica Neue, sans-serif',
-    guide: true,
-  });
-}
+// function newTooltipItem(info: TooltipInfo, cssScaling: number) {
+//   return new paper.PointText({
+//     point: info.point,
+//     content: info.label,
+//     fillColor: 'red',
+//     justification: 'left',
+//     // TODO: text doesn't display when using font size of only 12?
+//     fontSize: 14 / paper.view.zoom / cssScaling,
+//     fontFamily: 'Roboto, Helvetica Neue, sans-serif',
+//     guide: true,
+//   });
+// }
 
 function newSnapGuideItem(info: SnapGuideInfo, cssScaling: number) {
   const group = new paper.Group({ guide: true });
