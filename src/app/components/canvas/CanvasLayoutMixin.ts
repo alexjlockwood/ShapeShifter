@@ -1,7 +1,6 @@
-import { Constructor } from 'app/scripts/mixins';
 import * as _ from 'lodash';
 
-export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class {} as T) {
+export function CanvasLayoutMixin<T extends Constructor>(Base = class {} as T) {
   return class extends Base {
     private bounds = { w: 1, h: 1 };
     private viewport = { w: 1, h: 1 };
