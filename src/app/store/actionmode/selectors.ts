@@ -103,7 +103,7 @@ function getHighlightedSubIdxWithError(actionSource: ActionSource) {
       }
       const { areCompatible, errorPath, errorSubIdx } = result;
       if (mode !== ActionMode.Selection || selections.length) {
-        // Don't show any highlights if we're not in default mode, or
+        // Don't show any highlights if we're not in selection mode, or
         // if there are any existing selections.
         return undefined;
       }

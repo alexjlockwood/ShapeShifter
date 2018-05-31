@@ -10,9 +10,10 @@ export const getIsPlaying = createSelector(getPlaybackState, p => p.isPlaying);
 export const getIsRepeating = createSelector(getPlaybackState, p => p.isRepeating);
 export const getCurrentTime = createSelector(getPlaybackState, p => p.currentTime);
 
-const getAnimationRenderer = createSelector([getVectorLayer, getAnimation], (vl, anim) => {
-  return new AnimationRenderer(vl, anim);
-});
+const getAnimationRenderer = createSelector(
+  [getVectorLayer, getAnimation],
+  (vl, anim) => new AnimationRenderer(vl, anim),
+);
 
 export const getAnimatedVectorLayer = createSelector(
   [getAnimationRenderer, getCurrentTime],
