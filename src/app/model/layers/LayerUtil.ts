@@ -293,6 +293,8 @@ export function toStrokeDashArray(
   trimPathEnd: number,
   trimPathOffset: number,
   pathLength: number,
+  // TODO: remove this eventually... it is used to fix a canvas bug (that I am probably not handling correctly)
+  marginOfError = 0,
 ) {
   // Calculate the visible fraction of the trimmed path. If trimPathStart
   // is greater than trimPathEnd, then the result should be the combined
@@ -305,7 +307,7 @@ export function toStrokeDashArray(
   // the trimmed path and the second element is the gap, which is the
   // difference in length between the total path length and the visible
   // trimmed path length.
-  return [shownFraction * pathLength, (1 - shownFraction) * pathLength];
+  return [shownFraction * pathLength, (1 - shownFraction + marginOfError) * pathLength];
 }
 
 export function toStrokeDashOffset(
