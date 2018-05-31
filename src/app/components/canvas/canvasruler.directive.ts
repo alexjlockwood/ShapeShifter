@@ -28,14 +28,11 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
 
   // @Override
   protected onDimensionsChanged() {
-<<<<<<< HEAD
     this.draw();
   }
 
   // @Override
   protected onZoomPanChanged() {
-=======
->>>>>>> master
     this.draw();
   }
 
