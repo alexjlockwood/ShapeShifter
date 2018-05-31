@@ -14,6 +14,7 @@ import { MathUtil, Matrix } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
+import { isActionMode } from 'app/store/actionmode/selectors';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { getZoomPanInfo } from 'app/store/paper/selectors';
 import * as $ from 'jquery';
@@ -22,7 +23,6 @@ import { Observable } from 'rxjs/Observable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
-import { isActionMode } from '../../store/actionmode/selectors';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
