@@ -74,7 +74,7 @@ function vectorLayerToSvgNode(
         (acc: ReadonlyArray<Entry>, curr) => {
           const seenClipPaths = acc.length ? [..._.last(acc).seenClipPaths] : [];
           // Ignore clip paths with empty path data strings.
-          if (curr instanceof ClipPathLayer && !!curr.pathData.getPathString()) {
+          if (curr instanceof ClipPathLayer && curr.pathData && curr.pathData.getPathString()) {
             clipPathToPathDataMap.set(curr.id, curr.pathData.getPathString());
             seenClipPaths.push(curr);
           }
@@ -147,7 +147,7 @@ function vectorLayerToSvgNode(
       }
       if (layer instanceof PathLayer) {
         const { pathData } = layer;
-        if (!pathData.getPathString()) {
+        if (!pathData || !pathData.getPathString()) {
           return undefined;
         }
         const node = xmlDoc.createElement('path');
