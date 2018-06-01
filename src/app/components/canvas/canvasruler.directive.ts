@@ -7,23 +7,19 @@ import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 
 // All dimensions are in CSS pixels.
 const RULER_SIZE = 32;
-// TODO: rename to 'EXTRA_RULER_PADDING'
-const EXTRA_PADDING = 12;
+const EXTRA_RULER_PADDING = 12;
 const GRID_INTERVALS_PX: ReadonlyArray<number> = [1, 2, 4, 8, 16, 24, 48, 100, 100, 250];
 const LABEL_OFFSET = 12;
 const TICK_SIZE = 6;
 
-@Directive({
-  selector: '[appCanvasRuler]',
-})
+@Directive({ selector: '[appCanvasRuler]' })
 export class CanvasRulerDirective extends CanvasLayoutMixin() {
   @Input() orientation: Orientation;
 
   private readonly $canvas: JQuery<HTMLCanvasElement>;
 
-  // TODO: rename to 'vpMousePoint'
   // The current mouse point in viewport coordinates.
-  private mousePoint: Point;
+  private vpMousePoint: Point;
 
   constructor(elementRef: ElementRef, private readonly themeService: ThemeService) {
     super();
@@ -41,58 +37,60 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   }
 
   hideMouse() {
-    if (this.mousePoint) {
-      this.mousePoint = undefined;
+    if (this.vpMousePoint) {
+      this.vpMousePoint = undefined;
       this.draw();
     }
   }
 
   // TODO: need to transform mouse point to account for zoom and translation
   showMouse(mousePoint: Point) {
-    if (!this.mousePoint || !MathUtil.arePointsEqual(this.mousePoint, mousePoint)) {
-      this.mousePoint = mousePoint;
+    if (!this.vpMousePoint || !MathUtil.arePointsEqual(this.vpMousePoint, mousePoint)) {
+      this.vpMousePoint = mousePoint;
       this.draw();
     }
   }
 
   private draw() {
-    const { w: vlWidth, h: vlHeight } = this.getViewport();
     const isHorizontal = this.orientation === 'horizontal';
-    const z = this.getZoom();
-    const width = isHorizontal ? vlWidth * this.cssScale * z + EXTRA_PADDING * 2 : RULER_SIZE;
-    const height = isHorizontal ? RULER_SIZE : vlHeight * this.cssScale * z + EXTRA_PADDING * 2;
+
+    const viewport = this.getViewport();
+    const zoom = this.getZoom();
+    const { cssScale } = this;
+    const width = isHorizontal
+      ? viewport.w * cssScale * zoom + EXTRA_RULER_PADDING * 2
+      : RULER_SIZE;
+    const height = isHorizontal
+      ? RULER_SIZE
+      : viewport.h * cssScale * zoom + EXTRA_RULER_PADDING * 2;
     this.$canvas.css({ width, height });
-    this.$canvas.attr({
-      width: width * devicePixelRatio,
-      height: height * devicePixelRatio,
-    });
+    this.$canvas.attr({ width: width * devicePixelRatio, height: height * devicePixelRatio });
 
     const ctx = this.$canvas.get(0).getContext('2d');
     ctx.scale(devicePixelRatio, devicePixelRatio);
     const { tx, ty } = this.getTranslation();
-    ctx.translate(isHorizontal ? tx + EXTRA_PADDING : 0, isHorizontal ? 0 : ty + EXTRA_PADDING);
+    ctx.translate(
+      isHorizontal ? tx + EXTRA_RULER_PADDING : 0,
+      isHorizontal ? 0 : ty + EXTRA_RULER_PADDING,
+    );
 
-    const widthMinusPadding = width - EXTRA_PADDING * 2;
-    const heightMinusPadding = height - EXTRA_PADDING * 2;
-    // TODO: rename 'rulerZoom'
-    const zoom = Math.max(
+    const widthMinusPadding = width - EXTRA_RULER_PADDING * 2;
+    const heightMinusPadding = height - EXTRA_RULER_PADDING * 2;
+    const rulerZoom = Math.max(
       1,
-      isHorizontal ? widthMinusPadding / vlWidth : heightMinusPadding / vlHeight,
+      isHorizontal ? widthMinusPadding / viewport.w : heightMinusPadding / viewport.h,
     );
 
     // TODO: change the grid spacing depending on the current zoom?
     // Compute grid spacing (40 = minimum grid spacing in pixels).
     let interval = 0;
-    // TODO: rename to 'spacingViewportPx'
-    let spacingArtPx = GRID_INTERVALS_PX[interval];
-    while (spacingArtPx * zoom < 40 || interval >= GRID_INTERVALS_PX.length) {
+    let spacingViewportPx = GRID_INTERVALS_PX[interval];
+    while (spacingViewportPx * rulerZoom < 40 || interval >= GRID_INTERVALS_PX.length) {
       interval++;
-      spacingArtPx = GRID_INTERVALS_PX[interval];
+      spacingViewportPx = GRID_INTERVALS_PX[interval];
     }
 
-    const spacingRulerPx = spacingArtPx * zoom;
-
-    const roundFn = (n: number) => MathUtil.round(n);
+    const spacingRulerPx = spacingViewportPx * rulerZoom;
 
     // Text labels.
     ctx.fillStyle = this.themeService.getDisabledTextColor();
@@ -104,8 +102,8 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
       const maxX = minX + widthMinusPadding / zoom;
       for (
         let x = 0, t = 0;
-        roundFn(x) <= roundFn(width - EXTRA_PADDING * 2);
-        x += spacingRulerPx, t += spacingArtPx
+        MathUtil.round(x) <= MathUtil.round(width - EXTRA_RULER_PADDING * 2);
+        x += spacingRulerPx, t += spacingViewportPx
       ) {
         if (minX <= x && x <= maxX) {
           ctx.fillText(t.toString(), x, height - LABEL_OFFSET);
@@ -119,8 +117,8 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
       const maxY = minY + heightMinusPadding / zoom;
       for (
         let y = 0, t = 0;
-        roundFn(y) <= roundFn(height - EXTRA_PADDING * 2);
-        y += spacingRulerPx, t += spacingArtPx
+        MathUtil.round(y) <= MathUtil.round(height - EXTRA_RULER_PADDING * 2);
+        y += spacingRulerPx, t += spacingViewportPx
       ) {
         if (minY <= y && y <= maxY) {
           ctx.fillText(t.toString(), width - LABEL_OFFSET, y);
@@ -129,13 +127,13 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
       }
     }
 
-    if (this.mousePoint) {
-      const { x, y } = this.mousePoint;
+    if (this.vpMousePoint) {
+      const { x, y } = this.vpMousePoint;
       ctx.fillStyle = this.themeService.getSecondaryTextColor();
       if (isHorizontal) {
-        ctx.fillText(x.toString(), x * zoom, height - LABEL_OFFSET);
+        ctx.fillText(x.toString(), x * rulerZoom, height - LABEL_OFFSET);
       } else {
-        ctx.fillText(y.toString(), width - LABEL_OFFSET, y * zoom);
+        ctx.fillText(y.toString(), width - LABEL_OFFSET, y * rulerZoom);
       }
     }
   }
