@@ -45,7 +45,6 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
     private readonly actionModeService: ActionModeService,
   ) {}
 
-  // @Override
   ngOnInit() {
     this.layerModel$ = this.store.select(getLayerListTreeState).pipe(
       map(
