@@ -4,8 +4,8 @@
     fxLayoutAlign="start center"
     [ngClass]="{
       'is-selected': model.isSelected,
-      'is-disabled': model.isActionMode,
-      'is-hovered': model.isHovered
+      'is-hovered': model.isHovered,
+      'is-disabled': model.isActionMode
     }"
     (click)="this.onLayerClick($event, this.layer)"
     (dblclick)="this.onLayerToggleExpanded($event, this.layer)"
