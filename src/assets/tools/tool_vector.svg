@@ -1,11 +1,1 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="32px" height="32px" viewBox="96.5 256.5 32 32" enable-background="new 96.5 256.5 32 32" xml:space="preserve">
-<polygon points="116.763,272.208 111.634,267.078 116.043,260.895 122.946,267.797 "/>
-<polygon fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" points="103.099,282.143 115.632,277.455 117.057,268.906 
-	114.492,266.342 106.513,269.191 102.379,281.461 "/>
-<line fill="none" stroke="#000000" stroke-width="0.8" stroke-miterlimit="10" x1="111.371" y1="273.021" x2="102.662" y2="281.729"/>
-<circle cx="111.371" cy="273.021" r="1.574"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="96.5 256.5 32 32"><path d="M116.763 272.208l-5.129-5.13 4.409-6.183 6.903 6.902z"/><path fill="#FFF" stroke="#000" stroke-miterlimit="10" d="M103.099 282.143l12.533-4.688 1.425-8.549-2.565-2.564-7.979 2.849-4.134 12.27z"/><path fill="none" stroke="#000" stroke-width=".8" stroke-miterlimit="10" d="M111.371 273.021l-8.709 8.708"/><circle cx="111.371" cy="273.021" r="1.574"/></svg>
