@@ -47,45 +47,53 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
 
   ngOnInit() {
     this.layerModel$ = this.store.select(getLayerListTreeState).pipe(
-      map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds, isActionMode }) => {
-        const isExpandable = this.isLayerExpandable();
-        const availablePropertyNames = Array.from(
-          ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animation),
-        );
-        const getExistingPropertyNamesFn = (layerId: string) => {
-          return _.keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layerId]);
-        };
-        const existingPropertyNames = getExistingPropertyNamesFn(this.layer.id);
-        const isClipPathLayer = this.layer instanceof ClipPathLayer;
-        const isPathLayer = this.layer instanceof PathLayer;
-        const isMergeable =
-          this.layer instanceof GroupLayer &&
-          this.layer.children.length > 0 &&
-          // TODO: allow merging groups w/ existing blocks in some cases?
-          existingPropertyNames.length === 0 &&
-          this.layer.children.every(l => {
-            return (
-              l instanceof PathLayer ||
-              l instanceof ClipPathLayer ||
-              // TODO: allow merging groups into groups w/ existing blocks in some cases?
-              getExistingPropertyNamesFn(l.id).length === 0
-            );
-          });
-        return {
-          animation,
-          isSelected: selectedLayerIds.has(this.layer.id),
-          isExpandable,
-          isExpanded: !collapsedLayerIds.has(this.layer.id),
-          isVisible: !hiddenLayerIds.has(this.layer.id),
-          availablePropertyNames,
-          existingPropertyNames,
+      map(
+        ({
+          animation: animation,
+          selectedLayerIds,
+          collapsedLayerIds,
+          hiddenLayerIds,
           isActionMode,
-          isClipPathLayer,
-          isPathLayer,
-          isMorphableLayer: isClipPathLayer || isPathLayer,
-          isMergeable,
-        };
-      }),
+        }) => {
+          const isExpandable = this.isLayerExpandable();
+          const availablePropertyNames = Array.from(
+            ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animation),
+          );
+          const getExistingPropertyNamesFn = (layerId: string) => {
+            return _.keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layerId]);
+          };
+          const existingPropertyNames = getExistingPropertyNamesFn(this.layer.id);
+          const isClipPathLayer = this.layer instanceof ClipPathLayer;
+          const isPathLayer = this.layer instanceof PathLayer;
+          const isMergeable =
+            this.layer instanceof GroupLayer &&
+            this.layer.children.length > 0 &&
+            // TODO: allow merging groups w/ existing blocks in some cases?
+            existingPropertyNames.length === 0 &&
+            this.layer.children.every(l => {
+              return (
+                l instanceof PathLayer ||
+                l instanceof ClipPathLayer ||
+                // TODO: allow merging groups into groups w/ existing blocks in some cases?
+                getExistingPropertyNamesFn(l.id).length === 0
+              );
+            });
+          return {
+            animation,
+            isSelected: selectedLayerIds.has(this.layer.id),
+            isExpandable,
+            isExpanded: !collapsedLayerIds.has(this.layer.id),
+            isVisible: !hiddenLayerIds.has(this.layer.id),
+            availablePropertyNames,
+            existingPropertyNames,
+            isActionMode,
+            isClipPathLayer,
+            isPathLayer,
+            isMorphableLayer: isClipPathLayer || isPathLayer,
+            isMergeable,
+          };
+        },
+      ),
     );
   }
 
