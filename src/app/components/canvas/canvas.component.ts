@@ -17,6 +17,7 @@ import { State, Store } from 'app/store';
 import { isActionMode } from 'app/store/actionmode/selectors';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { getZoomPanInfo } from 'app/store/paper/selectors';
+import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -41,6 +42,8 @@ const CANVAS_MARGIN = 36;
 })
 export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   implements OnInit, AfterViewInit {
+  readonly IS_BETA = environment.beta;
+
   @ViewChildren(CanvasContainerDirective) canvasContainer: QueryList<CanvasContainerDirective>;
   @ViewChildren(CanvasLayersDirective) canvasLayers: QueryList<CanvasLayersDirective>;
   @ViewChildren(CanvasOverlayDirective) canvasOverlay: QueryList<CanvasOverlayDirective>;
