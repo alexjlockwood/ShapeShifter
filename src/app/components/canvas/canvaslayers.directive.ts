@@ -8,8 +8,7 @@ import { State, Store } from 'app/store';
 import { getActionModeEndState, getActionModeStartState } from 'app/store/actionmode/selectors';
 import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
-import { combineLatest } from 'rxjs/observable/combineLatest';
-import { merge } from 'rxjs/observable/merge';
+import { combineLatest ,  merge } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';

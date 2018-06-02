@@ -7,7 +7,7 @@ import {
   DropFilesDialogComponent,
 } from 'app/components/dialogs';
 import { DemoInfo } from 'app/scripts/demos';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class DialogService {

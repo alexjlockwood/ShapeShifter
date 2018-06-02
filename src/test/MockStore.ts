@@ -2,9 +2,7 @@ import { State, prodReducer } from 'app/store';
 import { State as LayerState } from 'app/store/layers/reducer';
 import { Action, ActionReducer, Store } from 'app/store/ngrx';
 import { State as PlaybackState } from 'app/store/playback/reducer';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
-import { Observer } from 'rxjs/Observer';
+import { BehaviorSubject ,  Observable ,  Observer } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 const INIT_ACTION: Action = { type: '__test123__' };

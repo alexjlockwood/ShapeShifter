@@ -3,7 +3,7 @@ import { State, Store } from 'app/store';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 
 import { ActionModeService } from './actionmode.service';
 import { LayerTimelineService } from './layertimeline.service';

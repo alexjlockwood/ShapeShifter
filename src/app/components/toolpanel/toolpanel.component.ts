@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ToolMode } from 'app/model/paper';
 import { PaperService } from 'app/services';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-toolpanel',

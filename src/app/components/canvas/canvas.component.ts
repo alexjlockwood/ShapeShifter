@@ -20,8 +20,7 @@ import { getZoomPanInfo } from 'app/store/paper/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
-import { Observable } from 'rxjs/Observable';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { Observable ,  combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { CanvasContainerDirective } from './canvascontainer.directive';

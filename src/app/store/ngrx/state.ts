@@ -1,4 +1,4 @@
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 import { observeOn, scan, withLatestFrom } from 'rxjs/operators';
 import { queue } from 'rxjs/scheduler/queue';
 

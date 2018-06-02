@@ -1,6 +1,4 @@
-import { Observable } from 'rxjs/Observable';
-import { Observer } from 'rxjs/Observer';
-import { Operator } from 'rxjs/Operator';
+import { Observable, Observer, Operator } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { Action } from './dispatcher';

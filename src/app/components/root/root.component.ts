@@ -32,9 +32,7 @@ import { ResetWorkspace } from 'app/store/reset/actions';
 import * as erd from 'element-resize-detector';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { BehaviorSubject ,  Observable ,  combineLatest } from 'rxjs';
 import { distinctUntilChanged, first, map } from 'rxjs/operators';
 
 const SHOULD_AUTO_LOAD_DEMO = false;

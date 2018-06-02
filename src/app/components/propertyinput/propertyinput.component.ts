@@ -24,8 +24,7 @@ import { ThemeType } from 'app/store/theme/reducer';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
-import { Observable } from 'rxjs/Observable';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { Observable ,  combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { InspectedProperty } from './InspectedProperty';

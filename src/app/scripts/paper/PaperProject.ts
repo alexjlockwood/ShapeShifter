@@ -16,7 +16,7 @@ import {
 } from 'app/store/paper/selectors';
 import { getAnimatedVectorLayer } from 'app/store/playback/selectors';
 import * as paper from 'paper';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 export class PaperProject extends paper.Project {
   private readonly paperLayer: PaperLayer;

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { PlaybackService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getPlaybackState } from 'app/store/playback/selectors';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-playback',
