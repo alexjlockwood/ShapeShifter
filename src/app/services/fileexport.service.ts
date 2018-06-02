@@ -28,7 +28,7 @@ export class FileExportService {
     return { vectorLayer, hiddenLayerIds, animation };
   }
 
-  constructor(private readonly store: Store<State>) { }
+  constructor(private readonly store: Store<State>) {}
 
   exportJSON() {
     const vl = this.getVectorLayer();
@@ -60,6 +60,7 @@ export class FileExportService {
       downloadFile(svg, `${vl.name}.svg`);
       return;
     }
+    // TODO: figure out how to add better jszip typings
     const zip = new JSZip();
     EXPORTED_FPS.forEach(fps => {
       const numSteps = Math.ceil(anim.duration / 1000 * fps);
@@ -70,7 +71,7 @@ export class FileExportService {
         fpsFolder.file(`frame${_.padStart(i.toString(), length, '0')}.svg`, s);
       });
     });
-    zip.generateAsync({ type: 'blob' }).then(content => {
+    zip.generateAsync({ type: 'blob' }).then((content: Blob) => {
       downloadFile(content, `frames_${vl.name}.zip`);
     });
   }
@@ -95,9 +96,10 @@ export class FileExportService {
     // Create an svg sprite animation.
     const vl = this.getVectorLayerWithoutHiddenLayers();
     const anim = this.getAnimationWithoutHiddenBlocks();
+    // TODO: figure out how to add better jszip typings
     const zip = new JSZip();
     (async () => {
-      await asyncForEach(EXPORTED_FPS, async (fps) => {
+      await asyncForEach(EXPORTED_FPS, async fps => {
         const numSteps = Math.ceil(anim.duration / 1000 * fps);
         const svgSprite = await SpriteSerializer.createSvgSprite(vl, anim, numSteps);
         const cssSprite = SpriteSerializer.createCss(vl.width, vl.height, anim.duration, numSteps);
@@ -108,7 +110,7 @@ export class FileExportService {
         spriteFolder.file(`${fileName}.css`, cssSprite);
         spriteFolder.file(`${fileName}.svg`, svgSprite);
       });
-      zip.generateAsync({ type: 'blob' }).then(content => {
+      zip.generateAsync({ type: 'blob' }).then((content: Blob) => {
         downloadFile(content, `spritesheet_${vl.name}.zip`);
       });
     })();
@@ -168,7 +170,10 @@ function downloadFile(content: string | Blob, fileName: string) {
   window.URL.revokeObjectURL(url);
 }
 
-async function asyncForEach(array: number[], callback: (value: number, index: number, array: number[]) => void) {
+async function asyncForEach(
+  array: number[],
+  callback: (value: number, index: number, array: number[]) => void,
+) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
   }

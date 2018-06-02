@@ -2,9 +2,13 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "../out-tsc/app",
+    "paths": {
+      "src/*": ["../src/*"],
+      "jszip": ["../node_modules/jszip/dist/jszip.min.js"]
+    },
     "baseUrl": "./",
     "module": "es2015",
-    "types": []
+    "types": ["node"]
   },
   "exclude": ["test.ts", "**/*.spec.ts"]
 }
