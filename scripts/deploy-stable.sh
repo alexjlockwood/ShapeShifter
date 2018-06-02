@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
 npm i
-ng build --prod --sourcemaps --app stable
+npm run build
 echo "shapeshifter.design" > dist/CNAME
 ngh

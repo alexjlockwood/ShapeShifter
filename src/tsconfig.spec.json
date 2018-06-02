@@ -7,6 +7,6 @@
     "target": "es5",
     "types": ["jasmine", "node"]
   },
-  "files": ["test.ts"],
+  "files": ["test.ts", "polyfills.ts"],
   "include": ["**/*.spec.ts", "**/*.d.ts"]
 }

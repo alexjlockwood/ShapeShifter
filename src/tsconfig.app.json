@@ -4,6 +4,8 @@
     "outDir": "../out-tsc/app",
     "paths": {
       "src/*": ["../src/*"],
+      "os": ["../node_modules/os-browserify/browser.js"],
+      "stream": ["../node_modules/stream-browserify/index.js"],
       "jszip": ["../node_modules/jszip/dist/jszip.min.js"]
     },
     "baseUrl": "./",
