@@ -17,7 +17,7 @@
     "e2e": "ng e2e",
     "deploy": "./scripts/deploy-stable.sh",
     "deploy-beta": "./scripts/deploy-beta.sh",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "dependencies": {
     "@angular/animations": "^5.2.9",
