@@ -30,6 +30,7 @@ import { SelectionBoundsRaster } from './SelectionBoundsRaster';
  * TODO: scaling rasters down causes their hit tolerances remain the same
  * TODO: when multiple items selected, show lightly outlined bounds for individual items?
  * TODO: explicitly set paths with no Z to closed? (i.e. M 1 1 h 6 v 6 h -6 v -6)
+ * TODO: figure out if we can reduce stable bundle sizes (tree shake paper.js?)
  */
 export class PaperLayer extends paper.Layer {
   private canvasColorRect: paper.Path.Rectangle;

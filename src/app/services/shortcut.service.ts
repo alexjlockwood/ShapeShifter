@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { State, Store } from 'app/store';
+import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
 import { Subject } from 'rxjs/Subject';
@@ -86,12 +87,12 @@ export class ShortcutService {
         this.actionModeService.closeActionMode();
         return false;
       }
-      // TODO: uncomment this!
-      // if (event.keyCode === 32) {
-      //   // Spacebar.
-      //   this.playbackService.toggleIsPlaying();
-      //   return false;
-      // }
+      // TODO: figure out how to re-enable this keyboard shortcut in beta
+      if (!environment.beta && event.keyCode === 32) {
+        // Spacebar.
+        this.playbackService.toggleIsPlaying();
+        return false;
+      }
       if (event.keyCode === 37) {
         // Left arrow.
         this.playbackService.rewind();
