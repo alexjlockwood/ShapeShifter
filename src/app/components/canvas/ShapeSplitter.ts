@@ -2,7 +2,6 @@ import { ActionMode } from 'app/model/actionmode';
 import { HitResult, ProjectionOntoPath } from 'app/model/paths';
 import { Point } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
-import { State, Store } from 'app/store';
 import * as _ from 'lodash';
 
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
@@ -19,16 +18,13 @@ interface ProjInfo {
  * Helper class that can be used to split a filled subpath.
  */
 export class ShapeSplitter {
-  private readonly store: Store<State>;
   private readonly actionModeService: ActionModeService;
   private initProjInfos: ProjInfo[] = [];
-  private currProjInfos: ProjInfo[] = [];
   private finalProjInfos: ProjInfo[] = [];
   private hitResult: HitResult;
   private lastKnownMouseLocation: Point;
 
   constructor(private readonly component: CanvasOverlayDirective) {
-    this.store = component.store;
     this.actionModeService = component.actionModeService;
   }
 
@@ -104,8 +100,12 @@ export class ShapeSplitter {
     let finalProjInfo: ProjInfo;
     for (const p1 of this.initProjInfos) {
       for (const p2 of this.finalProjInfos) {
-        const { proj: { subIdx: subIdx1, cmdIdx: cmdIdx1 } } = p1;
-        const { proj: { subIdx: subIdx2, cmdIdx: cmdIdx2 } } = p2;
+        const {
+          proj: { subIdx: subIdx1, cmdIdx: cmdIdx1 },
+        } = p1;
+        const {
+          proj: { subIdx: subIdx2, cmdIdx: cmdIdx2 },
+        } = p2;
         if (subIdx1 === subIdx2) {
           if (cmdIdx1 === cmdIdx2) {
             continue;
@@ -213,7 +213,6 @@ export class ShapeSplitter {
 
   private reset() {
     this.initProjInfos = [];
-    this.currProjInfos = [];
     this.finalProjInfos = [];
     this.hitResult = undefined;
     this.lastKnownMouseLocation = undefined;

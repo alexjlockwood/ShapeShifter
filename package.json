@@ -13,7 +13,7 @@
     "build-beta": "ng build --source-map -c production-beta",
     "test": "ng test --browser ChromeHeadless",
     "test-once": "ng test --browser ChromeHeadless --single-run --code-coverage",
-    "lint": "ng lint --type-check",
+    "lint": "ng lint --type-check --project ShapeShifter",
     "e2e": "ng e2e",
     "deploy": "./scripts/deploy-stable.sh",
     "deploy-beta": "./scripts/deploy-beta.sh",

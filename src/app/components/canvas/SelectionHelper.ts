@@ -3,7 +3,6 @@ import { LayerUtil } from 'app/model/layers';
 import { ProjectionOntoPath } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
-import { State, Store } from 'app/store';
 import * as _ from 'lodash';
 
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
@@ -17,7 +16,6 @@ import { CanvasOverlayDirective } from './canvasoverlay.directive';
  */
 export class SelectionHelper {
   private readonly actionSource: ActionSource;
-  private readonly store: Store<State>;
   private readonly actionModeService: ActionModeService;
 
   // Holds a reference to the currently selected split point, which
@@ -31,7 +29,6 @@ export class SelectionHelper {
   constructor(private readonly component: CanvasOverlayDirective) {
     this.actionSource = component.actionSource;
     this.actionModeService = component.actionModeService;
-    this.store = component.store;
   }
 
   onMouseDown(mouseDown: Point, isShiftOrMetaPressed: boolean) {

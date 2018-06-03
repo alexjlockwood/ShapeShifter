@@ -1,7 +1,6 @@
 import { ActionMode, ActionSource, HoverType } from 'app/model/actionmode';
 import { Point } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
-import { State, Store } from 'app/store';
 import * as _ from 'lodash';
 
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
@@ -13,12 +12,10 @@ import { CanvasOverlayDirective } from './canvasoverlay.directive';
  */
 export class PairSubPathHelper {
   private readonly actionSource: ActionSource;
-  private readonly store: Store<State>;
   private readonly actionModeService: ActionModeService;
 
   constructor(private readonly component: CanvasOverlayDirective) {
     this.actionSource = component.actionSource;
-    this.store = component.store;
     this.actionModeService = component.actionModeService;
   }
 

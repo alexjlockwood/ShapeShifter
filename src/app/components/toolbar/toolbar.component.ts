@@ -8,7 +8,7 @@ import { State, Store } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
 import { ThemeType } from 'app/store/theme/reducer';
 import * as _ from 'lodash';
-import { Observable ,  combineLatest } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 declare const ga: Function;
@@ -178,7 +178,6 @@ class ToolbarData {
   private readonly showSplitInHalf: boolean;
   private readonly unpairedSubPathSource: ActionSource;
   private readonly showPairSubPaths: boolean;
-  private readonly morphableLayerName: string;
 
   constructor(
     readonly mode: ActionMode,
@@ -198,7 +197,6 @@ class ToolbarData {
     if (!morphableLayer) {
       return;
     }
-    this.morphableLayerName = morphableLayer.name;
     const activePath = morphableLayer.pathData;
     this.isFilled = morphableLayer.isFilled();
     this.isStroked = morphableLayer.isStroked();

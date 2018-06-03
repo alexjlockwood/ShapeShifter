@@ -11,7 +11,7 @@ import * as paper from 'paper';
  */
 export class BatchSelectItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
-  private initialSelectedLayers: ReadonlySet<string>;
+  // private initialSelectedLayers: ReadonlySet<string>;
 
   constructor(private readonly ps: PaperService) {
     super();
@@ -25,7 +25,7 @@ export class BatchSelectItemsGesture extends Gesture {
       this.ps.setSelectedLayerIds(new Set());
     }
     // TODO: make use of this information (i.e. toggle the layers when shift is pressed)
-    this.initialSelectedLayers = this.ps.getSelectedLayerIds();
+    // this.initialSelectedLayers = this.ps.getSelectedLayerIds();
   }
 
   // @Override

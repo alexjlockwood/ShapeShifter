@@ -56,10 +56,7 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
     targetNode.appendChild(animationNode);
 
     let blockContainerNode = animationNode;
-    let multiBlock = false;
     if (blocksForLayer.length > 1) {
-      multiBlock = true;
-
       // <set> for multiple property animations on a single layer.
       blockContainerNode = xmlDoc.createElement('set');
       animationNode.appendChild(blockContainerNode);

@@ -35,7 +35,6 @@ export class SplitterComponent implements OnInit {
   private orientation: Orientation;
   private sizeGetterFn: () => number;
   private sizeSetterFn: (size: number) => void;
-  private clientXY: string;
 
   private isHovering = false;
   private isDragging = false;
@@ -61,14 +60,12 @@ export class SplitterComponent implements OnInit {
         getParentFn().width(size);
         this.split.emit(size);
       };
-      this.clientXY = 'clientX';
     } else {
       this.sizeGetterFn = () => getParentFn().height();
       this.sizeSetterFn = size => {
         getParentFn().height(size);
         this.split.emit(size);
       };
-      this.clientXY = 'clientY';
     }
     if (this.persistKey in localStorage) {
       this.setSize(Number(localStorage[this.persistKey]));

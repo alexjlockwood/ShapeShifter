@@ -2,7 +2,6 @@ import { ActionMode, ActionSource } from 'app/model/actionmode';
 import { ProjectionOntoPath } from 'app/model/paths';
 import { Point } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
-import { State, Store } from 'app/store';
 
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 
@@ -19,14 +18,12 @@ interface ProjInfo {
  */
 export class SegmentSplitter {
   private readonly actionSource: ActionSource;
-  private readonly store: Store<State>;
   private readonly actionModeService: ActionModeService;
   private currProjInfo: ProjInfo;
   private lastKnownMouseLocation: Point;
 
   constructor(private readonly component: CanvasOverlayDirective) {
     this.actionSource = component.actionSource;
-    this.store = component.store;
     this.actionModeService = component.actionModeService;
   }
 
@@ -35,7 +32,10 @@ export class SegmentSplitter {
     this.currProjInfo = this.findProjInfo(mouseDown);
     const activePathLayer = this.component.activePathLayer;
     if (this.currProjInfo) {
-      const { proj: { subIdx, cmdIdx, projection }, isEndPt } = this.currProjInfo;
+      const {
+        proj: { subIdx, cmdIdx, projection },
+        isEndPt,
+      } = this.currProjInfo;
       const mode = this.component.actionMode;
       const pathMutator = activePathLayer.pathData.mutate();
       if (mode === ActionMode.SplitCommands) {
