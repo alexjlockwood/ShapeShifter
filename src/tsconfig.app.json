@@ -10,8 +10,7 @@
       "paper": ["../node_modules/paper/dist/paper-core.min.js"]
     },
     "baseUrl": "./",
-    "module": "es2015",
-    "types": ["node"]
+    "module": "es2015"
   },
   "exclude": ["test.ts", "**/*.spec.ts"]
 }
