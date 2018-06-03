@@ -112,48 +112,40 @@ export class PaperService {
     this.setCursorType(CursorType.Crosshair);
   }
 
-  /** Sets the current vector layer. */
   setVectorLayer(vl: VectorLayer) {
     // TODO: avoid running in angular zone whenever possible?
     this.ngZone.run(() => this.layerTimelineService.setVectorLayer(vl));
   }
 
-  /** Gets the current vector layer. */
   getVectorLayer() {
     // TODO: return the non-animated vector layer here (using layer timeline service) instead?
     return this.queryStore(getAnimatedVectorLayer).vl;
   }
 
-  /** Sets the set of selected layer IDs. */
   setSelectedLayerIds(layerIds: Set<string>) {
     if (!_.isEqual(this.queryStore(getSelectedLayerIds), layerIds)) {
       this.ngZone.run(() => this.layerTimelineService.setSelectedLayers(layerIds));
     }
   }
 
-  /** Gets the set of selected layer IDs. */
   getSelectedLayerIds() {
     return this.queryStore(getSelectedLayerIds);
   }
 
-  /** Sets or clears the currently hovered layer ID. */
   setHoveredLayerId(layerId: string | undefined) {
     if (this.queryStore(getHoveredLayerId) !== layerId) {
       this.ngZone.run(() => this.store.dispatch(new SetHoveredLayerId(layerId)));
     }
   }
 
-  /** Gets the current hover layer ID. */
   getHoveredLayerId() {
     return this.queryStore(getHoveredLayerId);
   }
 
-  /** Gets the current set of hidden layer IDs. */
   getHiddenLayerIds() {
     return this.queryStore(getHiddenLayerIds);
   }
 
-  /** Sets the current selection box. */
   setSelectionBox(box: { from: Point; to: Point } | undefined) {
     if (!_.isEqual(this.queryStore(getSelectionBox), box)) {
       // TODO: run this outside angular zone instead?
@@ -161,38 +153,32 @@ export class PaperService {
     }
   }
 
-  /** Gets the current selection box. */
   getSelectionBox() {
     return this.queryStore(getSelectionBox);
   }
 
-  /** Sets the current create path info. */
   setCreatePathInfo(info: CreatePathInfo | undefined) {
     if (!_.isEqual(this.queryStore(getCreatePathInfo), info)) {
       this.dispatchStore(new SetCreatePathInfo(info));
     }
   }
 
-  /** Gets the current create path info. */
   getCreatePathInfo() {
     return this.queryStore(getCreatePathInfo);
   }
 
-  /** Sets the current split curve info. */
   setSplitCurveInfo(info: SplitCurveInfo | undefined) {
     if (!_.isEqual(this.queryStore(getSplitCurveInfo), info)) {
       this.dispatchStore(new SetSplitCurveInfo(info));
     }
   }
 
-  /** Sets the current tool mode. */
   setToolMode(toolMode: ToolMode) {
     if (!_.isEqual(this.queryStore(getToolMode), toolMode)) {
       this.dispatchStore(new SetToolMode(toolMode));
     }
   }
 
-  /** Gets the current tool mode. */
   getToolMode() {
     return this.queryStore(getToolMode);
   }
@@ -233,21 +219,18 @@ export class PaperService {
     }
   }
 
-  /** Sets the current snap guide info. */
   setSnapGuideInfo(info: SnapGuideInfo | undefined) {
     if (!_.isEqual(this.queryStore(getSnapGuideInfo), info)) {
       this.dispatchStore(new SetSnapGuideInfo(info));
     }
   }
 
-  /** Sets the current zoom/pan info. */
   setZoomPanInfo(info: ZoomPanInfo) {
     if (!_.isEqual(this.queryStore(getZoomPanInfo), info)) {
       this.dispatchStore(new SetZoomPanInfo(info));
     }
   }
 
-  /** Sets the current tooltip info. */
   setTooltipInfo(info: TooltipInfo | undefined) {
     if (!_.isEqual(this.queryStore(getTooltipInfo), info)) {
       this.dispatchStore(new SetTooltipInfo(info));
