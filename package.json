@@ -65,7 +65,7 @@
     "@types/jasmine": "^2.8.8",
     "@types/jquery": "^3.3.2",
     "@types/lodash": "^4.14.108",
-    "@types/node": "^10.3.0",
+    "@types/node": "10.1.1",
     "@types/polylabel": "^1.0.5",
     "@types/tinycolor2": "^1.4.0",
     "angular-cli-ghpages": "^0.5.2",
