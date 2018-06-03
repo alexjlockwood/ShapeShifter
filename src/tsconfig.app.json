@@ -6,7 +6,8 @@
       "src/*": ["../src/*"],
       "os": ["../node_modules/os-browserify/browser.js"],
       "stream": ["../node_modules/stream-browserify/index.js"],
-      "jszip": ["../node_modules/jszip/dist/jszip.min.js"]
+      "jszip": ["../node_modules/jszip/dist/jszip.min.js"],
+      "paper": ["../node_modules/paper/dist/paper-core.min.js"]
     },
     "baseUrl": "./",
     "module": "es2015",
