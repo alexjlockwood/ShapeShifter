@@ -7,6 +7,7 @@ export enum CursorType {
   Pen = 'pen',
   PenAdd = 'pen-add',
   PenClose = 'pen-close',
+  Pencil = 'pencil',
   Resize0 = 'resize0',
   Resize45 = 'resize45',
   Resize90 = 'resize90',

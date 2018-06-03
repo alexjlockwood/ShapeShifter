@@ -42,7 +42,7 @@ export class ToolPanelComponent implements OnInit {
   }
 
   onPencilClick(event: Event) {
-    this.ps.setToolMode(ToolMode.Pencil);
+    this.ps.enterPencilMode();
     event.stopPropagation();
   }
 

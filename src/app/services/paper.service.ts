@@ -97,6 +97,11 @@ export class PaperService {
     });
   }
 
+  enterPencilMode() {
+    this.setToolMode(ToolMode.Pencil);
+    this.setCursorType(CursorType.Pencil);
+  }
+
   enterCreateRectangleMode() {
     this.setToolMode(ToolMode.Rectangle);
     this.setCursorType(CursorType.Crosshair);
