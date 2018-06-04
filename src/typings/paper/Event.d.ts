@@ -14,10 +14,32 @@ declare module 'paper' {
     };
 
     readonly timeStamp: number;
+
+    /**
+     * Cancels the event if it is cancelable, without stopping further
+     * propagation of the event.
+     */
+    preventDefault(): void;
+
+    /**
+     * Cancels the event if it is cancelable, and stops stopping further
+     * propagation of the event. This is has the same effect as calling both
+     * stopPropagation() and preventDefault().
+     *
+     * Any handler can also return false to indicate that stop() should be
+     * called right after.
+     */
+    stop(): void;
+
+    /** Prevents further propagation of the current event. */
+    stopPropagation(): void;
   }
 
   /**
-   * ToolEvent The ToolEvent object is received by the Tool's mouse event handlers tool.onMouseDown, tool.onMouseDrag, tool.onMouseMove and tool.onMouseUp. The ToolEvent object is the only parameter passed to these functions and contains information about the mouse event.
+   * ToolEvent The ToolEvent object is received by the Tool's mouse event handlers
+   * tool.onMouseDown, tool.onMouseDrag, tool.onMouseMove and tool.onMouseUp.
+   * The ToolEvent object is the only parameter passed to these functions and
+   * contains information about the mouse event.
    */
   export class ToolEvent extends Event {
     /**
