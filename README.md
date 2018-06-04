@@ -22,9 +22,9 @@ file a [feature request][report-feature-request]!
 
 ## Backers
 
-Support us with either a one time donation or a monthly donation and help us 
+Support us with either a one time donation or a monthly donation and help us
 continue our activities. Funds will go towards hiring new developers to work
-on awesome features! We'll display your logo below with a link to your site. 
+on awesome features! We'll display your logo below with a link to your site.
 
 <a href="https://opencollective.com/shapeshifter#backers" target="_blank"><img src="https://opencollective.com/shapeshifter/backers.svg?width=890"></a>
 
@@ -32,8 +32,8 @@ on awesome features! We'll display your logo below with a link to your site.
 
 ## Sponsors
 
-Is your company using Shape Shifter? Ask your manager to support us! 
-We'll display your logo below with a link to your site. 
+Is your company using Shape Shifter? Ask your manager to support us!
+We'll display your logo below with a link to your site.
 
 🙏 [Become a sponsor](https://opencollective.com/shapeshifter#sponsor) 🙏
 
@@ -130,8 +130,6 @@ If you want to contribute, you can build and serve the web app locally as follow
      ```
      npm start
      ```
-
-If you're having issues with the build, make sure your `Node.js` version is up-to-date before reporting issues.
 
 ## Special thanks
 

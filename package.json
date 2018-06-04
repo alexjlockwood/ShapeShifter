@@ -4,6 +4,9 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/alexjlockwood/ShapeShifter",
   "author": "Alex Lockwood <alexjlockwood@gmail.com>",
+  "engines": {
+    "node": ">=9"
+  },
   "private": true,
   "scripts": {
     "ng": "ng",
@@ -17,7 +20,8 @@
     "e2e": "ng e2e",
     "deploy": "./scripts/deploy-stable.sh",
     "deploy-beta": "./scripts/deploy-beta.sh",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "preinstall": "node ./scripts/check-node-version.js"
   },
   "dependencies": {
     "@angular/animations": "^6.0.3",
@@ -85,6 +89,7 @@
     "prettier": "^1.13.4",
     "protractor": "^5.3.2",
     "redux": "^4.0.0",
+    "semver": "^5.5.0",
     "ts-node": "^6.1.0",
     "tslint": "^5.10.0",
     "typescript": "~2.7.2",
