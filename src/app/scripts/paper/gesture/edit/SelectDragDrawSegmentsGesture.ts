@@ -142,6 +142,8 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       ...PaperUtil.selectCurves(editPath, afterSelectedSegmentIndices),
     });
     this.ps.setCursorType(CursorType.PointSelect);
+    this.ps.setCreatePathInfo(undefined);
+    this.ps.setSplitCurveInfo(undefined);
   }
 
   // @Override

@@ -33,6 +33,16 @@ export class MasterToolPicker {
       if (event instanceof paper.ToolEvent) {
         currentTool.onToolEvent(event);
       } else {
+        // TODO: do a better job at clearing focus in the property input component
+        // (i.e. clear focus when the user selects something in the canvas or timeline).
+        if (document.activeElement.matches('input')) {
+          // Ignore key events when an input element has focus.
+          return;
+        }
+        if (event.key === 'backspace' || event.key === 'delete') {
+          // In case there's a JS error, never navigate away.
+          event.preventDefault();
+        }
         currentTool.onKeyEvent(event);
       }
     };

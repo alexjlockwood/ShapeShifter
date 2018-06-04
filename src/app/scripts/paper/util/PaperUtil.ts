@@ -1,6 +1,7 @@
 import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { PaperService } from 'app/services';
+import { SetVectorLayer } from 'app/store/layers/actions';
 import * as paper from 'paper';
 
 /** Adds a new path to the first level of the vector layer tree. */
@@ -11,7 +12,7 @@ export function addPathToStore(ps: PaperService, pathData: string) {
     children: [] as Layer[],
     pathData: new Path(pathData),
     // TODO: make this customizable
-    fillColor: '#d8d8d8',
+    fillColor: '#D8D8D8',
     strokeColor: '#979797',
     strokeWidth: 0.1,
   });
@@ -29,11 +30,18 @@ export function getPathFromStore(ps: PaperService, layerId: string) {
 
 /** Replaces an existing path in the vector layer tree. */
 export function replacePathInStore(ps: PaperService, layerId: string, pathData: string) {
+  ps.setVectorLayer(getReplacePathInStoreVectorLayer(ps, layerId, pathData));
+}
+
+export function getReplacePathInStoreVectorLayer(
+  ps: PaperService,
+  layerId: string,
+  pathData: string,
+) {
   const vl = ps.getVectorLayer();
   const pl = vl.findLayerById(layerId).clone() as PathLayer;
   pl.pathData = new Path(pathData);
-  const newVl = LayerUtil.replaceLayer(vl, layerId, pl);
-  ps.setVectorLayer(newVl);
+  return LayerUtil.replaceLayer(vl, layerId, pl);
 }
 
 /** Computes the selected curves associated with the given selected segment indices. */

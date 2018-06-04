@@ -33,7 +33,7 @@ const TRANSFORM_CURSOR_MAP: ReadonlyMap<PivotType, CursorType> = new Map([
  * A gesture that performs hover operations on items.
  *
  * Preconditions:
- * - The user is in default mode.
+ * - The user is in default, rotate items, or transform paths mode.
  */
 export class HoverItemsGesture extends Gesture {
   constructor(private readonly ps: PaperService) {
@@ -77,8 +77,6 @@ export class HoverItemsGesture extends Gesture {
         break;
       case 'backspace':
       case 'delete':
-        // In case there's a JS error, never navigate away.
-        event.preventDefault();
         this.ps.deleteSelectedModels();
         break;
     }

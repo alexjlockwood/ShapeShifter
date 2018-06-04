@@ -1,8 +1,14 @@
 import { CursorType } from 'app/model/paper';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
+import { Action } from 'app/store/ngrx';
 import * as paper from 'paper';
+
+import { BatchAction } from '../../../../store/batch/actions';
+import { SetVectorLayer } from '../../../../store/layers/actions';
+import { SetEditPathInfo } from '../../../../store/paper/actions';
 
 /**
  * A gesture that performs hover operations over segments and curves.
@@ -134,18 +140,66 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     switch (event.key) {
       case 'escape':
         // TODO: also do this in any other hover/pen/pencil related gestures?
-        this.ps.setCursorType(CursorType.Default);
-        this.ps.setSnapGuideInfo(undefined);
-        this.ps.setEditPathInfo(undefined);
-        this.ps.setCreatePathInfo(undefined);
-        this.ps.setSplitCurveInfo(undefined);
+        this.ps.exitEditPathMode();
         break;
-      // case 'backspace':
-      // case 'delete':
-      //   // In case there's a JS error, never navigate away.
-      //   event.preventDefault();
-      //   // TODO: handle delete for segments
-      //   break;
+      case 'backspace':
+      case 'delete':
+        this.deleteSelectedSegmentsAndHandles();
+        break;
     }
+  }
+
+  private deleteSelectedSegmentsAndHandles() {
+    const {
+      layerId,
+      selectedHandleIn,
+      selectedHandleOut,
+      selectedSegments,
+    } = this.ps.getEditPathInfo();
+    if (
+      selectedHandleIn === undefined &&
+      selectedHandleOut === undefined &&
+      selectedSegments.size === 0
+    ) {
+      // Do nothing if there are no selected segments/handles.
+      // TODO: should we delete the layer in this case?
+      return;
+    }
+    const editPath = this.pl.findItemByLayerId(layerId) as paper.Path;
+    for (let i = editPath.segments.length - 1; i >= 0; i--) {
+      const segment = editPath.segments[i];
+      if (selectedSegments.has(i)) {
+        segment.remove();
+        continue;
+      }
+      if (selectedHandleIn === i) {
+        segment.handleIn = undefined;
+      }
+      if (selectedHandleOut === i) {
+        segment.handleOut = undefined;
+      }
+    }
+    const actions: Action[] = [];
+    if (editPath.segments.length === 0) {
+      // Delete the layer and exit edit path mode if there are no segments remaining.
+      actions.push(...this.ps.getDeleteSelectedModelsActions());
+      actions.push(...this.ps.getExitEditPathModeActions());
+    } else {
+      const newVl = actions.push(
+        new SetVectorLayer(
+          PaperUtil.getReplacePathInStoreVectorLayer(this.ps, layerId, editPath.pathData),
+        ),
+        new SetEditPathInfo({
+          layerId,
+          selectedHandleIn: undefined,
+          selectedHandleOut: undefined,
+          selectedSegments: new Set(),
+          visibleHandleIns: new Set(),
+          visibleHandleOuts: new Set(),
+        }),
+        ...this.ps.getClearEditPathModeStateActions(),
+      );
+    }
+    this.ps.dispatchStore(new BatchAction(...actions));
   }
 }

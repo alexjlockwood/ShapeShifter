@@ -439,6 +439,10 @@ export class LayerTimelineService {
   }
 
   deleteSelectedModels() {
+    return this.store.dispatch(new BatchAction(...this.getDeleteSelectedModelsActions()));
+  }
+
+  getDeleteSelectedModelsActions(): ReadonlyArray<Action> {
     const collapsedLayerIds = this.getCollapsedLayerIds();
     const hiddenLayerIds = this.getHiddenLayerIds();
     const selectedLayerIds = this.getSelectedLayerIds();
@@ -474,17 +478,15 @@ export class LayerTimelineService {
       animation.blocks = filteredBlocks;
     }
 
-    this.store.dispatch(
-      new BatchAction(
-        new SetVectorLayer(vl),
-        new SetCollapsedLayers(collapsedLayerIds),
-        new SetHiddenLayers(hiddenLayerIds),
-        new SetSelectedLayers(new Set()),
-        new SelectAnimation(false),
-        new SetAnimation(animation),
-        new SetSelectedBlocks(new Set()),
-      ),
-    );
+    return [
+      new SetVectorLayer(vl),
+      new SetCollapsedLayers(collapsedLayerIds),
+      new SetHiddenLayers(hiddenLayerIds),
+      new SetSelectedLayers(new Set()),
+      new SelectAnimation(false),
+      new SetAnimation(animation),
+      new SetSelectedBlocks(new Set()),
+    ];
   }
 
   updateBlocks(blocks: ReadonlyArray<AnimationBlock>) {

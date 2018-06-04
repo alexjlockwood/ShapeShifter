@@ -47,6 +47,7 @@ import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
 
+import { BatchAction } from '../store/batch/actions';
 import { LayerTimelineService } from './layertimeline.service';
 
 /** A simple service that provides an interface for making paper.js changes to the store. */
@@ -77,6 +78,26 @@ export class PaperService {
     this.setRotateItemsInfo(undefined);
     this.setTransformPathsInfo(undefined);
     this.setCursorType(CursorType.PenAdd);
+  }
+
+  /** Exits edit path mode. */
+  exitEditPathMode() {
+    this.dispatchStore(new BatchAction(...this.getExitEditPathModeActions()));
+  }
+
+  /** Returns a list of actions that will exit edit path mode. */
+  getExitEditPathModeActions(): ReadonlyArray<Action> {
+    return [new SetEditPathInfo(undefined), ...this.getClearEditPathModeStateActions()];
+  }
+
+  /** Returns a list of actions that will clear any state associated with edit path mode. */
+  getClearEditPathModeStateActions(): ReadonlyArray<Action> {
+    return [
+      new SetCreatePathInfo(undefined),
+      new SetSplitCurveInfo(undefined),
+      new SetSnapGuideInfo(undefined),
+      new SetCursorType(CursorType.Default),
+    ];
   }
 
   enterRotateItemsMode() {
@@ -238,10 +259,18 @@ export class PaperService {
   }
 
   deleteSelectedModels() {
+    if (this.getRotateItemsInfo() || this.getTransformPathsInfo()) {
+      // Do not delete layers when in rotate items or transform paths mode.
+      return;
+    }
     this.layerTimelineService.deleteSelectedModels();
   }
 
-  private dispatchStore(action: Action) {
+  getDeleteSelectedModelsActions() {
+    return this.layerTimelineService.getDeleteSelectedModelsActions();
+  }
+
+  dispatchStore(action: Action) {
     if (NgZone.isInAngularZone()) {
       this.store.dispatch(action);
     } else {
