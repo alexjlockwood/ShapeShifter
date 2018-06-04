@@ -29,27 +29,25 @@
         fxLayout="column"
         fxFlex>
         <!-- Canvas -->
-        <ng-container>
-          <div #displayContainer
-            fxLayout="row"
-            fxLayoutAlign="center center"
-            fxFlex
-            [ngClass]="this.cursorClassName$ | async">
-            <app-canvas class="start"
-              *ngIf="this.isActionMode$ | async"
-              [actionSource]="ACTION_SOURCE_FROM"
-              [canvasBounds$]="this.canvasBounds$">
-            </app-canvas>
-            <app-canvas [canvasBounds$]="this.canvasBounds$"
-              [actionSource]="ACTION_SOURCE_ANIMATED">
-            </app-canvas>
-            <app-canvas class="end"
-              *ngIf="this.isActionMode$ | async"
-              [actionSource]="ACTION_SOURCE_TO"
-              [canvasBounds$]="this.canvasBounds$">
-            </app-canvas>
-          </div>
-        </ng-container>
+        <div #displayContainer
+          fxLayout="row"
+          fxLayoutAlign="center center"
+          fxFlex
+          [ngClass]="this.cursorClassName$ | async">
+          <app-canvas class="start"
+            *ngIf="this.isActionMode$ | async"
+            [actionSource]="ACTION_SOURCE_FROM"
+            [canvasBounds$]="this.canvasBounds$">
+          </app-canvas>
+          <app-canvas [canvasBounds$]="this.canvasBounds$"
+            [actionSource]="ACTION_SOURCE_ANIMATED">
+          </app-canvas>
+          <app-canvas class="end"
+            *ngIf="this.isActionMode$ | async"
+            [actionSource]="ACTION_SOURCE_TO"
+            [canvasBounds$]="this.canvasBounds$">
+          </app-canvas>
+        </div>
         <!-- Playback controls. -->
         <app-playback></app-playback>
       </div>
