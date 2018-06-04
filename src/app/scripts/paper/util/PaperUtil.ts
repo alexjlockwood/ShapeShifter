@@ -1,7 +1,6 @@
 import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { PaperService } from 'app/services';
-import { SetVectorLayer } from 'app/store/layers/actions';
 import * as paper from 'paper';
 
 /** Adds a new path to the first level of the vector layer tree. */

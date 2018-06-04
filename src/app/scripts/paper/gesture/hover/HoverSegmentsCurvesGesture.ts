@@ -185,7 +185,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       actions.push(...this.ps.getDeleteSelectedModelsActions());
       actions.push(...this.ps.getExitEditPathModeActions());
     } else {
-      const newVl = actions.push(
+      actions.push(
         new SetVectorLayer(
           PaperUtil.getReplacePathInStoreVectorLayer(this.ps, layerId, editPath.pathData),
         ),

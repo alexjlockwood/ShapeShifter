@@ -16,7 +16,7 @@
     "build-beta": "ng build --source-map -c production-beta",
     "test": "ng test",
     "test-once": "ng test --single-run --code-coverage",
-    "lint": "ng lint --type-check --project ShapeShifter",
+    "lint": "ng lint",
     "e2e": "ng e2e",
     "deploy": "./scripts/deploy-stable.sh",
     "deploy-beta": "./scripts/deploy-beta.sh",
