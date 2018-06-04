@@ -589,7 +589,7 @@ function newSplitCurveItem(info: SplitCurveInfo, cssScaling: number) {
     new paper.Segment(point2, handleIn2, handleOut2),
   ]);
   highlightedCurve.guide = true;
-  highlightedCurve.strokeColor = 'red';
+  highlightedCurve.strokeColor = '#3466A9';
   highlightedCurve.strokeScaling = false;
   highlightedCurve.strokeWidth = 2 / paper.view.zoom;
   group.addChild(highlightedCurve);
@@ -599,7 +599,7 @@ function newSplitCurveItem(info: SplitCurveInfo, cssScaling: number) {
     4 / paper.view.zoom / cssScaling,
   );
   highlightedPoint.guide = true;
-  highlightedPoint.fillColor = 'green';
+  highlightedPoint.fillColor = '#3466A9';
   group.addChild(highlightedPoint);
 
   return group;
