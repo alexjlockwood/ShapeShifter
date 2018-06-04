@@ -67,12 +67,20 @@ export class HoverItemsGesture extends Gesture {
 
   // @Override
   onKeyDown(event: paper.KeyEvent) {
-    // TODO: also do this in any other hover/pen/pencil related gestures?
-    if (event.key === 'escape') {
-      this.ps.setCursorType(CursorType.Default);
-      this.ps.setSnapGuideInfo(undefined);
-      this.ps.setRotateItemsInfo(undefined);
-      this.ps.setTransformPathsInfo(undefined);
+    switch (event.key) {
+      case 'escape':
+        // TODO: also do this in any other hover/pen/pencil related gestures?
+        this.ps.setCursorType(CursorType.Default);
+        this.ps.setSnapGuideInfo(undefined);
+        this.ps.setRotateItemsInfo(undefined);
+        this.ps.setTransformPathsInfo(undefined);
+        break;
+      case 'backspace':
+      case 'delete':
+        // In case there's a JS error, never navigate away.
+        event.preventDefault();
+        this.ps.deleteSelectedModels();
+        break;
     }
   }
 }

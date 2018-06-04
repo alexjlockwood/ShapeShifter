@@ -237,6 +237,10 @@ export class PaperService {
     }
   }
 
+  deleteSelectedModels() {
+    this.layerTimelineService.deleteSelectedModels();
+  }
+
   private dispatchStore(action: Action) {
     if (NgZone.isInAngularZone()) {
       this.store.dispatch(action);

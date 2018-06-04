@@ -131,13 +131,21 @@ export class HoverSegmentsCurvesGesture extends Gesture {
 
   // @Override
   onKeyDown(event: paper.KeyEvent) {
-    // TODO: also do this in any other hover/pen/pencil related gestures?
-    if (event.key === 'escape') {
-      this.ps.setCursorType(CursorType.Default);
-      this.ps.setSnapGuideInfo(undefined);
-      this.ps.setEditPathInfo(undefined);
-      this.ps.setCreatePathInfo(undefined);
-      this.ps.setSplitCurveInfo(undefined);
+    switch (event.key) {
+      case 'escape':
+        // TODO: also do this in any other hover/pen/pencil related gestures?
+        this.ps.setCursorType(CursorType.Default);
+        this.ps.setSnapGuideInfo(undefined);
+        this.ps.setEditPathInfo(undefined);
+        this.ps.setCreatePathInfo(undefined);
+        this.ps.setSplitCurveInfo(undefined);
+        break;
+      // case 'backspace':
+      // case 'delete':
+      //   // In case there's a JS error, never navigate away.
+      //   event.preventDefault();
+      //   // TODO: handle delete for segments
+      //   break;
     }
   }
 }

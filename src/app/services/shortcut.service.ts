@@ -73,14 +73,21 @@ export class ShortcutService {
         return true;
       }
       if (event.keyCode === 8 || event.keyCode === 46) {
-        // In case there's a JS error, never navigate away.
-        event.preventDefault();
-        if (this.actionModeService.isActionMode()) {
-          this.actionModeService.deleteSelectedActionModeModels();
-        } else {
-          this.layerTimelineService.deleteSelectedModels();
+        // Backspace or delete.
+        const isActionMode = this.actionModeService.isActionMode();
+        // If we aren't in beta or it is action mode, handle the backspace/delete
+        // event here. Otherwise we will handle it in the gesture tool (which is
+        // where we will likely want to move all of the shortcut logic in the future).
+        if (!environment.beta || isActionMode) {
+          // In case there's a JS error, never navigate away.
+          event.preventDefault();
+          if (isActionMode) {
+            this.actionModeService.deleteSelectedActionModeModels();
+          } else {
+            this.layerTimelineService.deleteSelectedModels();
+          }
+          return false;
         }
-        return false;
       }
       if (event.keyCode === 27) {
         // Escape.
