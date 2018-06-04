@@ -137,6 +137,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       this.ps.setSnapGuideInfo(undefined);
       this.ps.setEditPathInfo(undefined);
       this.ps.setCreatePathInfo(undefined);
+      this.ps.setSplitCurveInfo(undefined);
     }
   }
 }
