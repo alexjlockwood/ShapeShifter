@@ -9,15 +9,14 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { DropFilesAction } from 'app/components/dialogs';
+import { DemoService } from 'app/components/demos';
+import { DialogService, DropFilesAction } from 'app/components/dialogs';
 import { ActionMode, ActionSource } from 'app/model/actionmode';
 import { CursorType } from 'app/model/paper';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
   ClipboardService,
-  DemoService,
-  DialogService,
   FileImportService,
   LayerTimelineService,
   ShortcutService,
@@ -32,7 +31,7 @@ import { ResetWorkspace } from 'app/store/reset/actions';
 import * as erd from 'element-resize-detector';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
-import { BehaviorSubject ,  Observable ,  combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { distinctUntilChanged, first, map } from 'rxjs/operators';
 
 const SHOULD_AUTO_LOAD_DEMO = false;

@@ -29,9 +29,11 @@ import {
   CanvasPaperDirective,
   CanvasRulerDirective,
 } from 'app/components/canvas';
+import { DemoService } from 'app/components/demos';
 import {
   ConfirmDialogComponent,
   DemoDialogComponent,
+  DialogService,
   DropFilesDialogComponent,
 } from 'app/components/dialogs';
 import {
@@ -52,8 +54,6 @@ import { ToolPanelComponent } from 'app/components/toolpanel/toolpanel.component
 import {
   ActionModeService,
   ClipboardService,
-  DemoService,
-  DialogService,
   FileExportService,
   FileImportService,
   LayerTimelineService,
@@ -70,92 +70,88 @@ describe('RootComponent', () => {
   let component: RootComponent;
   let fixture: ComponentFixture<RootComponent>;
 
-  beforeEach(
-    async(() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          CanvasComponent,
-          CanvasContainerDirective,
-          CanvasLayersDirective,
-          CanvasOverlayDirective,
-          CanvasPaperDirective,
-          CanvasRulerDirective,
-          ConfirmDialogComponent,
-          DemoDialogComponent,
-          DropFilesDialogComponent,
-          DropTargetDirective,
-          LayerListTreeComponent,
-          LayerTimelineComponent,
-          LayerTimelineGridDirective,
-          PlaybackComponent,
-          PropertyInputComponent,
-          RootComponent,
-          ScrollGroupDirective,
-          SplashScreenComponent,
-          SplitterComponent,
-          TimelineAnimationRowComponent,
-          ToolbarComponent,
-          ToolPanelComponent,
-        ],
-        imports: [
-          BrowserModule,
-          FlexLayoutModule,
-          FormsModule,
-          HttpClientModule,
-          NoopAnimationsModule,
-          // Angular material components.
-          MatButtonModule,
-          MatDialogModule,
-          MatIconModule,
-          MatInputModule,
-          MatMenuModule,
-          MatOptionModule,
-          MatRadioModule,
-          MatSlideToggleModule,
-          MatSnackBarModule,
-          MatToolbarModule,
-          MatTooltipModule,
-        ],
-        providers: [
-          { provide: Store, useValue: new MockStore() },
-          ActionModeService,
-          ClipboardService,
-          DemoService,
-          DialogService,
-          FileExportService,
-          FileImportService,
-          LayerTimelineService,
-          PaperService,
-          PlaybackService,
-          ShortcutService,
-          SnackBarService,
-          ThemeService,
-        ],
-      }).compileComponents();
-      loadSvgIcons([
-        { name: 'addlayer', path: 'assets/icons/addlayer.svg' },
-        { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
-        { name: 'contribute', path: 'assets/icons/contribute.svg' },
-        { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
-        { name: 'vector', path: 'assets/icons/vectorlayer.svg' },
-        { name: 'tool_ellipse', path: 'assets/tools/tool_ellipse.svg' },
-        { name: 'tool_pencil', path: 'assets/tools/tool_pencil.svg' },
-        { name: 'tool_rectangle', path: 'assets/tools/tool_rectangle.svg' },
-        { name: 'tool_select', path: 'assets/tools/tool_select.svg' },
-        { name: 'tool_vector', path: 'assets/tools/tool_vector.svg' },
-        { name: 'tool_zoompan', path: 'assets/tools/tool_zoompan.svg' },
-      ]);
-    }),
-  );
+  beforeEach(async(() => {
+    TestBed.configureTestingModule({
+      declarations: [
+        CanvasComponent,
+        CanvasContainerDirective,
+        CanvasLayersDirective,
+        CanvasOverlayDirective,
+        CanvasPaperDirective,
+        CanvasRulerDirective,
+        ConfirmDialogComponent,
+        DemoDialogComponent,
+        DropFilesDialogComponent,
+        DropTargetDirective,
+        LayerListTreeComponent,
+        LayerTimelineComponent,
+        LayerTimelineGridDirective,
+        PlaybackComponent,
+        PropertyInputComponent,
+        RootComponent,
+        ScrollGroupDirective,
+        SplashScreenComponent,
+        SplitterComponent,
+        TimelineAnimationRowComponent,
+        ToolbarComponent,
+        ToolPanelComponent,
+      ],
+      imports: [
+        BrowserModule,
+        FlexLayoutModule,
+        FormsModule,
+        HttpClientModule,
+        NoopAnimationsModule,
+        // Angular material components.
+        MatButtonModule,
+        MatDialogModule,
+        MatIconModule,
+        MatInputModule,
+        MatMenuModule,
+        MatOptionModule,
+        MatRadioModule,
+        MatSlideToggleModule,
+        MatSnackBarModule,
+        MatToolbarModule,
+        MatTooltipModule,
+      ],
+      providers: [
+        { provide: Store, useValue: new MockStore() },
+        ActionModeService,
+        ClipboardService,
+        DemoService,
+        DialogService,
+        FileExportService,
+        FileImportService,
+        LayerTimelineService,
+        PaperService,
+        PlaybackService,
+        ShortcutService,
+        SnackBarService,
+        ThemeService,
+      ],
+    }).compileComponents();
+    loadSvgIcons([
+      { name: 'addlayer', path: 'assets/icons/addlayer.svg' },
+      { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
+      { name: 'contribute', path: 'assets/icons/contribute.svg' },
+      { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
+      { name: 'vector', path: 'assets/icons/vectorlayer.svg' },
+      { name: 'tool_ellipse', path: 'assets/tools/tool_ellipse.svg' },
+      { name: 'tool_pencil', path: 'assets/tools/tool_pencil.svg' },
+      { name: 'tool_rectangle', path: 'assets/tools/tool_rectangle.svg' },
+      { name: 'tool_select', path: 'assets/tools/tool_select.svg' },
+      { name: 'tool_vector', path: 'assets/tools/tool_vector.svg' },
+      { name: 'tool_zoompan', path: 'assets/tools/tool_zoompan.svg' },
+    ]);
+  }));
 
-  beforeEach(
-    inject([Store], (store: MockStore) => {
-      fixture = TestBed.createComponent(RootComponent);
-      component = fixture.componentInstance;
-      component.ngOnInit();
-      fixture.detectChanges();
-    }),
-  );
+  beforeEach(inject([Store], (store: MockStore) => {
+    fixture = TestBed.createComponent(RootComponent);
+    component = fixture.componentInstance;
+    component.ngOnInit();
+    fixture.detectChanges();
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();

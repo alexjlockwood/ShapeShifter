@@ -8,6 +8,8 @@ import {
   ViewChild,
   ViewChildren,
 } from '@angular/core';
+import { DemoService } from 'app/components/demos';
+import { DialogService } from 'app/components/dialogs';
 import { ActionMode } from 'app/model/actionmode';
 import {
   ClipPathLayer,
@@ -24,8 +26,6 @@ import { IntervalTree } from 'app/scripts/intervals';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
-  DemoService,
-  DialogService,
   FileExportService,
   FileImportService,
   LayerTimelineService,
@@ -42,7 +42,7 @@ import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
-import { BehaviorSubject ,  Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { filter, first, map } from 'rxjs/operators';
 
 import * as TimelineConsts from './constants';
@@ -361,7 +361,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
       .parents('.slt-property')
       .get(0)
       .getBoundingClientRect();
-    const xToTimeFn = (x: number) => (x - animRect.left) / animRect.width * animation.duration;
+    const xToTimeFn = (x: number) => ((x - animRect.left) / animRect.width) * animation.duration;
     const downTime = xToTimeFn(mouseDownEvent.clientX);
 
     // Determine the action based on where the user clicked and the modifier keys.

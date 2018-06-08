@@ -55,8 +55,6 @@ import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ToolPanelComponent } from './components/toolpanel/toolpanel.component';
 import { ActionModeService } from './services/actionmode.service';
 import { ClipboardService } from './services/clipboard.service';
-import { DemoService } from './services/demo.service';
-import { DialogService } from './services/dialog.service';
 import { FileExportService } from './services/fileexport.service';
 import { FileImportService } from './services/fileimport.service';
 import { LayerTimelineService } from './services/layertimeline.service';
@@ -116,8 +114,6 @@ import { reducer } from './store';
   providers: [
     ActionModeService,
     ClipboardService,
-    DemoService,
-    DialogService,
     FileExportService,
     FileImportService,
     LayerTimelineService,

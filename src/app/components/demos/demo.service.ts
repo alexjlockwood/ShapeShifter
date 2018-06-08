@@ -12,7 +12,7 @@ interface Demo {
   readonly hiddenLayerIds: ReadonlySet<string>;
 }
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class DemoService {
   constructor(private readonly http: HttpClient) {}
 

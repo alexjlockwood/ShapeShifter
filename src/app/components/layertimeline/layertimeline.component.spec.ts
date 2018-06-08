@@ -14,12 +14,12 @@ import {
   MatTooltipModule,
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
+import { DemoService } from 'app/components/demos';
+import { DialogService } from 'app/components/dialogs';
 import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.directive';
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import {
   ActionModeService,
-  DemoService,
-  DialogService,
   FileExportService,
   FileImportService,
   LayerTimelineService,
@@ -40,57 +40,53 @@ describe('LayerTimelineComponent', () => {
   let component: LayerTimelineComponent;
   let fixture: ComponentFixture<LayerTimelineComponent>;
 
-  beforeEach(
-    async(() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          LayerListTreeComponent,
-          LayerTimelineComponent,
-          LayerTimelineGridDirective,
-          ScrollGroupDirective,
-          SplitterComponent,
-          TimelineAnimationRowComponent,
-        ],
-        imports: [
-          HttpClientModule,
-          FlexLayoutModule,
-          MatButtonModule,
-          MatIconModule,
-          MatMenuModule,
-          MatTooltipModule,
-          MatSnackBarModule,
-          MatDialogModule,
-        ],
-        providers: [
-          { provide: Store, useValue: new MockStore() },
-          ActionModeService,
-          DemoService,
-          DialogService,
-          FileExportService,
-          FileImportService,
-          LayerTimelineService,
-          PlaybackService,
-          ShortcutService,
-          SnackBarService,
-          ThemeService,
-        ],
-      }).compileComponents();
-      loadSvgIcons([
-        { name: 'addlayer', path: 'assets/icons/addlayer.svg' },
-        { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
-        { name: 'vector', path: 'assets/icons/vectorlayer.svg' },
-      ]);
-    }),
-  );
+  beforeEach(async(() => {
+    TestBed.configureTestingModule({
+      declarations: [
+        LayerListTreeComponent,
+        LayerTimelineComponent,
+        LayerTimelineGridDirective,
+        ScrollGroupDirective,
+        SplitterComponent,
+        TimelineAnimationRowComponent,
+      ],
+      imports: [
+        HttpClientModule,
+        FlexLayoutModule,
+        MatButtonModule,
+        MatIconModule,
+        MatMenuModule,
+        MatTooltipModule,
+        MatSnackBarModule,
+        MatDialogModule,
+      ],
+      providers: [
+        { provide: Store, useValue: new MockStore() },
+        ActionModeService,
+        DemoService,
+        DialogService,
+        FileExportService,
+        FileImportService,
+        LayerTimelineService,
+        PlaybackService,
+        ShortcutService,
+        SnackBarService,
+        ThemeService,
+      ],
+    }).compileComponents();
+    loadSvgIcons([
+      { name: 'addlayer', path: 'assets/icons/addlayer.svg' },
+      { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
+      { name: 'vector', path: 'assets/icons/vectorlayer.svg' },
+    ]);
+  }));
 
-  beforeEach(
-    inject([Store], (store: MockStore) => {
-      fixture = TestBed.createComponent(LayerTimelineComponent);
-      component = fixture.componentInstance;
-      component.ngOnInit();
-      fixture.detectChanges();
-    }),
-  );
+  beforeEach(inject([Store], (store: MockStore) => {
+    fixture = TestBed.createComponent(LayerTimelineComponent);
+    component = fixture.componentInstance;
+    component.ngOnInit();
+    fixture.detectChanges();
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();

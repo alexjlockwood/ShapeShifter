@@ -15,7 +15,7 @@
     "build": "ng build --source-map --c production",
     "build-beta": "ng build --source-map -c production-beta",
     "test": "ng test",
-    "test-once": "ng test --single-run --code-coverage",
+    "test-once": "ng test --watch=false --code-coverage --browsers ChromeHeadless",
     "lint": "ng lint",
     "e2e": "ng e2e",
     "deploy": "./scripts/deploy-stable.sh",

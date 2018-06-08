@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { MatDialog, MatDialogConfig } from '@angular/material';
+import { ConfirmDialogComponent } from 'app/components/dialogs/confirmdialog.component';
+import { DemoDialogComponent } from 'app/components/dialogs/demodialog.component';
 import {
-  ConfirmDialogComponent,
-  DemoDialogComponent,
   DropFilesAction,
   DropFilesDialogComponent,
-} from 'app/components/dialogs';
+} from 'app/components/dialogs/dropfilesdialog.component';
 import { DemoInfo } from 'app/scripts/demos';
 import { Observable } from 'rxjs';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class DialogService {
   constructor(private readonly dialog: MatDialog) {}
 
