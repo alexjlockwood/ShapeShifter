@@ -25,7 +25,7 @@ export const INTERPOLATORS: ReadonlyArray<Interpolator> = [
     label: 'Fast out, linear in',
     androidRef: '@android:interpolator/fast_out_linear_in',
     interpolateFn: f => FAST_OUT_LINEAR_IN_EASING(f),
-    webRef: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    webRef: 'cubic-bezier(0.4, 0, 1, 1)',
   },
   {
     value: 'LINEAR_OUT_SLOW_IN',
