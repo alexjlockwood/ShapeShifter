@@ -1,8 +1,8 @@
+import { ToolMode } from 'app/model/paper';
 import { Gesture } from 'app/scripts/paper/gesture';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
-import { ToolMode } from '../../../../model/paper';
 import { HoverItemsGesture } from './HoverItemsGesture';
 import { HoverSegmentsCurvesGesture } from './HoverSegmentsCurvesGesture';
 
