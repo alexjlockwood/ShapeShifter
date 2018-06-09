@@ -18,7 +18,7 @@ const EXPORTED_FPS = [30, 60];
 /**
  * A simple service that exports vectors and animations.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class FileExportService {
   static fromJSON(jsonObj: any) {
     const { layers, timeline } = jsonObj;
@@ -63,7 +63,7 @@ export class FileExportService {
     // TODO: figure out how to add better jszip typings
     const zip = new JSZip();
     EXPORTED_FPS.forEach(fps => {
-      const numSteps = Math.ceil(anim.duration / 1000 * fps);
+      const numSteps = Math.ceil((anim.duration / 1000) * fps);
       const svgs = SpriteSerializer.createSvgFrames(vl, anim, numSteps);
       const length = (numSteps - 1).toString().length;
       const fpsFolder = zip.folder(`${fps}fps`);
@@ -100,7 +100,7 @@ export class FileExportService {
     const zip = new JSZip();
     (async () => {
       await asyncForEach(EXPORTED_FPS, async fps => {
-        const numSteps = Math.ceil(anim.duration / 1000 * fps);
+        const numSteps = Math.ceil((anim.duration / 1000) * fps);
         const svgSprite = await SpriteSerializer.createSvgSprite(vl, anim, numSteps);
         const cssSprite = SpriteSerializer.createCss(vl.width, vl.height, anim.duration, numSteps);
         const fileName = `sprite_${fps}fps`;

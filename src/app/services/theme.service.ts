@@ -19,7 +19,7 @@ const DARK_DIVIDER_TEXT = 'rgba(255, 255, 255, 0.12)';
 /**
  * A simple service that provides an interface for making theme changes.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class ThemeService {
   constructor(private readonly store: Store<State>) {}
 

@@ -38,7 +38,7 @@ import { LayerTimelineService } from './layertimeline.service';
 /**
  * A simple service that provides an interface for making action mode changes.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class ActionModeService {
   constructor(
     private readonly store: Store<State>,

@@ -8,7 +8,7 @@ import { PlaybackService } from './playback.service';
 
 declare const ga: Function;
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class ClipboardService {
   constructor(
     private readonly layerTimelineService: LayerTimelineService,

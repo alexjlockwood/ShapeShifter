@@ -38,7 +38,7 @@ import { first } from 'rxjs/operators';
 /**
  * A simple service that provides an interface for making layer/timeline changes.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class LayerTimelineService {
   constructor(private readonly store: Store<State>) {}
 
@@ -264,41 +264,43 @@ export class LayerTimelineService {
       return;
     }
     const layerTransform = Matrix.flatten(LayerUtil.getCanvasTransformsForGroupLayer(layer));
-    const layerChildren = layer.children.map((l: GroupLayer | PathLayer | ClipPathLayer): Layer => {
-      if (l instanceof GroupLayer) {
-        const flattenedTransform = Matrix.flatten([
-          layerTransform,
-          ...LayerUtil.getCanvasTransformsForGroupLayer(l),
-        ]);
-        const { sx, sy } = flattenedTransform.getScaling();
-        const degrees = flattenedTransform.getRotation();
-        const { tx, ty } = flattenedTransform.getTranslation();
+    const layerChildren = layer.children.map(
+      (l: GroupLayer | PathLayer | ClipPathLayer): Layer => {
+        if (l instanceof GroupLayer) {
+          const flattenedTransform = Matrix.flatten([
+            layerTransform,
+            ...LayerUtil.getCanvasTransformsForGroupLayer(l),
+          ]);
+          const { sx, sy } = flattenedTransform.getScaling();
+          const degrees = flattenedTransform.getRotation();
+          const { tx, ty } = flattenedTransform.getTranslation();
+          l = l.clone();
+          l.pivotX = 0;
+          l.pivotY = 0;
+          l.translateX = tx;
+          l.translateY = ty;
+          l.rotation = degrees;
+          l.scaleX = sx;
+          l.scaleY = sy;
+          return l;
+        }
         l = l.clone();
-        l.pivotX = 0;
-        l.pivotY = 0;
-        l.translateX = tx;
-        l.translateY = ty;
-        l.rotation = degrees;
-        l.scaleX = sx;
-        l.scaleY = sy;
+        if (l instanceof PathLayer && l.strokeWidth) {
+          const scaleFactor = layerTransform.getScaleFactor();
+          const newStrokeWidth = l.strokeWidth * scaleFactor ? 1 / scaleFactor : 0;
+          l.strokeWidth = MathUtil.round(newStrokeWidth);
+        }
+        const path = l.pathData;
+        if (!path || !l.pathData.getPathString()) {
+          return l;
+        }
+        l.pathData = path
+          .mutate()
+          .transform(layerTransform)
+          .build();
         return l;
-      }
-      l = l.clone();
-      if (l instanceof PathLayer && l.strokeWidth) {
-        const scaleFactor = layerTransform.getScaleFactor();
-        const newStrokeWidth = l.strokeWidth * scaleFactor ? 1 / scaleFactor : 0;
-        l.strokeWidth = MathUtil.round(newStrokeWidth);
-      }
-      const path = l.pathData;
-      if (!path || !l.pathData.getPathString()) {
-        return l;
-      }
-      l.pathData = path
-        .mutate()
-        .transform(layerTransform)
-        .build();
-      return l;
-    });
+      },
+    );
     const layerChildrenIds = new Set(layerChildren.map(l => l.id));
     const parent = LayerUtil.findParent(vl, layerId).clone();
     const children = [...parent.children];

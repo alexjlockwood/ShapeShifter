@@ -21,10 +21,6 @@ import {
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { errorHandlerFactory } from 'app/scripts/bugsnag';
-import { StoreModule } from 'app/store/ngrx';
-import { environment } from 'environments/environment';
-
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -32,38 +28,31 @@ import {
   CanvasOverlayDirective,
   CanvasPaperDirective,
   CanvasRulerDirective,
-} from './components/canvas';
+} from 'app/components/canvas';
 import {
   ConfirmDialogComponent,
   DemoDialogComponent,
   DropFilesDialogComponent,
-} from './components/dialogs';
+} from 'app/components/dialogs';
 import {
   LayerListTreeComponent,
   LayerTimelineComponent,
   LayerTimelineGridDirective,
   TimelineAnimationRowComponent,
-} from './components/layertimeline';
-import { PlaybackComponent } from './components/playback/playback.component';
-import { PropertyInputComponent } from './components/propertyinput/propertyinput.component';
-import { DropTargetDirective } from './components/root/droptarget.directive';
-import { RootComponent } from './components/root/root.component';
-import { ScrollGroupDirective } from './components/scrollgroup/scrollgroup.directive';
-import { SplashScreenComponent } from './components/splashscreen/splashscreen.component';
-import { SplitterComponent } from './components/splitter/splitter.component';
-import { ToolbarComponent } from './components/toolbar/toolbar.component';
-import { ToolPanelComponent } from './components/toolpanel/toolpanel.component';
-import { ActionModeService } from './services/actionmode.service';
-import { ClipboardService } from './services/clipboard.service';
-import { FileExportService } from './services/fileexport.service';
-import { FileImportService } from './services/fileimport.service';
-import { LayerTimelineService } from './services/layertimeline.service';
-import { PaperService } from './services/paper.service';
-import { PlaybackService } from './services/playback.service';
-import { ShortcutService } from './services/shortcut.service';
-import { SnackBarService } from './services/snackbar.service';
-import { ThemeService } from './services/theme.service';
-import { reducer } from './store';
+} from 'app/components/layertimeline';
+import { PlaybackComponent } from 'app/components/playback';
+import { PropertyInputComponent } from 'app/components/propertyinput';
+import { DropTargetDirective } from 'app/components/root/droptarget.directive';
+import { RootComponent } from 'app/components/root/root.component';
+import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.directive';
+import { SplashScreenComponent } from 'app/components/splashscreen/splashscreen.component';
+import { SplitterComponent } from 'app/components/splitter/splitter.component';
+import { ToolbarComponent } from 'app/components/toolbar/toolbar.component';
+import { ToolPanelComponent } from 'app/components/toolpanel/toolpanel.component';
+import { errorHandlerFactory } from 'app/scripts/bugsnag';
+import { reducer } from 'app/store';
+import { StoreModule } from 'app/store/ngrx';
+import { environment } from 'environments/environment';
 
 @NgModule({
   declarations: [
@@ -111,19 +100,7 @@ import { reducer } from './store';
     MatToolbarModule,
     MatTooltipModule,
   ],
-  providers: [
-    ActionModeService,
-    ClipboardService,
-    FileExportService,
-    FileImportService,
-    LayerTimelineService,
-    PaperService,
-    PlaybackService,
-    ShortcutService,
-    SnackBarService,
-    ThemeService,
-    { provide: ErrorHandler, useFactory: errorHandlerFactory },
-  ],
+  providers: [{ provide: ErrorHandler, useFactory: errorHandlerFactory }],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],
 })

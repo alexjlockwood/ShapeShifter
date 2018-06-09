@@ -51,7 +51,7 @@ import { BatchAction } from '../store/batch/actions';
 import { LayerTimelineService } from './layertimeline.service';
 
 /** A simple service that provides an interface for making paper.js changes to the store. */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class PaperService {
   constructor(
     private readonly layerTimelineService: LayerTimelineService,

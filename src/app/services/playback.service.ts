@@ -21,7 +21,7 @@ import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
 
 /** A simple service that provides an interface for making playback changes. */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class PlaybackService {
   private readonly animator: Animator;
 

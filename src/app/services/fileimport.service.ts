@@ -23,7 +23,7 @@ enum ImportType {
 /**
  * A simple service that imports vector layers from files.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class FileImportService {
   constructor(
     private readonly store: Store<State>,

@@ -18,7 +18,7 @@ interface ModifierKeyEvent {
   readonly ctrlKey?: boolean;
 }
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class ShortcutService {
   private isInit = false;
   private readonly shortcutSubject = new Subject<Shortcut>();

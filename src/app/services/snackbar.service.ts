@@ -6,7 +6,7 @@ export enum Duration {
   Long = 5000,
 }
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class SnackBarService {
   constructor(private readonly snackBar: MatSnackBar) {}
 
