@@ -3,6 +3,7 @@ import { VectorLayer } from 'app/model/layers';
 import { CursorType, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
+import { BatchAction } from 'app/store/batch/actions';
 import { getHiddenLayerIds, getSelectedLayerIds } from 'app/store/layers/selectors';
 import { Action } from 'app/store/ngrx';
 import {
@@ -47,7 +48,6 @@ import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
 
-import { BatchAction } from '../store/batch/actions';
 import { LayerTimelineService } from './layertimeline.service';
 
 /** A simple service that provides an interface for making paper.js changes to the store. */
