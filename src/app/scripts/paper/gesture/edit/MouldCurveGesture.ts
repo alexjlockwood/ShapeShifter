@@ -23,7 +23,7 @@ export class MouldCurveGesture extends Gesture {
   private t: number;
 
   // TODO: update HoverSegmentsCurvesGesture to *not* display a split path dot when command is held down
-  // TODO: handle cases where t === 0 and t === 1
+  // TODO: handle cases where t === 0 and t === 1?
   constructor(
     private readonly ps: PaperService,
     private readonly editPathId: string,
@@ -43,7 +43,7 @@ export class MouldCurveGesture extends Gesture {
     const points: CubicPoints = [start, cp1, cp2, end];
 
     const t = this.hitCurveInfo.time;
-    const [, , , , , A] = hull(points, t);
+    const A = hull(points, t)[5];
     const B = curve.getPointAtTime(t);
     const C = lli(A, B, start, end);
     const bottom = t ** 3 + (1 - t) ** 3;
@@ -68,7 +68,9 @@ export class MouldCurveGesture extends Gesture {
     const newB = B.add(localDragPoint.subtract(localDownPoint));
 
     // Preserve struts for B when repositioning.
-    const [, , , , , , , Bl, Br] = hull(this.points, t);
+    const hullPoints = hull(this.points, t);
+    const Bl = hullPoints[7];
+    const Br = hullPoints[8];
     const dbl = Bl.subtract(B);
     const dbr = Br.subtract(B);
     // Now that we know A, B, C and the AB:BC ratio, we can compute the new A' based on the desired B'.
