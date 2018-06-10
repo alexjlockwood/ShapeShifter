@@ -57,7 +57,8 @@ export class Command {
   }
 
   /**
-   * Returns the command's starting point.
+   * Returns the command's starting point. The starting point for the first
+   * command of the first subpath will be undefined.
    */
   get start() {
     return _.first(this._points);
