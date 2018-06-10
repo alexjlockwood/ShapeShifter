@@ -269,11 +269,12 @@ export class PaperLayer extends paper.Layer {
       this.editPathItem.remove();
       this.editPathItem = undefined;
     }
-    const fpi = this.editPathInfo;
-    if (fpi && fpi.layerId) {
+    const epi = this.editPathInfo;
+    const selectedLayerIds = this.selectedLayerIds;
+    if (epi && selectedLayerIds.size) {
       // TODO: is it possible for pathData to be undefined?
-      const path = this.findItemByLayerId(fpi.layerId) as paper.Path;
-      this.editPathItem = newEditPathItem(path, fpi, this.cssScaling);
+      const path = this.findItemByLayerId(selectedLayerIds.values().next().value) as paper.Path;
+      this.editPathItem = newEditPathItem(path, epi, this.cssScaling);
       this.updateChildren();
     }
   }
@@ -338,7 +339,7 @@ export class PaperLayer extends paper.Layer {
 function parseAndroidColor(androidColor: string, alpha = 1) {
   const color = ColorUtil.parseAndroidColor(androidColor);
   return color
-    ? new paper.Color(color.r / 255, color.g / 255, color.b / 255, color.a / 255 * alpha)
+    ? new paper.Color(color.r / 255, color.g / 255, color.b / 255, (color.a / 255) * alpha)
     : undefined;
 }
 
@@ -396,8 +397,8 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
     const { pivotX, pivotY, scaleX, scaleY, rotation, translateX, translateY } = layer;
     const pivot = new paper.Matrix(1, 0, 0, 1, pivotX, pivotY);
     const scale = new paper.Matrix(scaleX, 0, 0, scaleY, 0, 0);
-    const cosr = Math.cos(rotation * Math.PI / 180);
-    const sinr = Math.sin(rotation * Math.PI / 180);
+    const cosr = Math.cos((rotation * Math.PI) / 180);
+    const sinr = Math.sin((rotation * Math.PI) / 180);
     const rotate = new paper.Matrix(cosr, sinr, -sinr, cosr, 0, 0);
     const translate = new paper.Matrix(1, 0, 0, 1, translateX, translateY);
     const matrix = new paper.Matrix()

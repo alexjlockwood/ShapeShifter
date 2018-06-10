@@ -110,7 +110,6 @@ export interface SplitCurveInfo {
 }
 
 export interface EditPathInfo {
-  readonly layerId: string;
   // TODO: suffix these variables with 'index'
   readonly selectedSegments: ReadonlySet<number>;
   readonly visibleHandleIns: ReadonlySet<number>;
@@ -120,12 +119,11 @@ export interface EditPathInfo {
 }
 
 export interface RotateItemsInfo {
-  readonly layerIds: ReadonlySet<string>;
-  // readonly pivot: Point;
+  // TODO: add a pivot point
 }
 
 export interface TransformPathsInfo {
-  readonly layerIds: ReadonlySet<string>;
+  // TODO: add selected segment info? (similar to sketch)
 }
 
 export type Line = Readonly<{ from: Point; to: Point }>;

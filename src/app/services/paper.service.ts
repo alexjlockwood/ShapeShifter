@@ -65,10 +65,16 @@ export class PaperService {
     return this.store.select(getToolPanelState);
   }
 
+  enterDefaultMode() {
+    this.setToolMode(ToolMode.Default);
+    this.setEditPathInfo(undefined);
+    this.setRotateItemsInfo(undefined);
+    this.setTransformPathsInfo(undefined);
+  }
+
   enterEditPathMode() {
     this.setToolMode(ToolMode.Default);
     this.setEditPathInfo({
-      layerId: '',
       selectedSegments: new Set<number>(),
       visibleHandleIns: new Set<number>(),
       visibleHandleOuts: new Set<number>(),
@@ -100,19 +106,10 @@ export class PaperService {
     ];
   }
 
-  enterDefaultMode() {
-    this.setToolMode(ToolMode.Default);
-    this.setEditPathInfo(undefined);
-    this.setRotateItemsInfo(undefined);
-    this.setTransformPathsInfo(undefined);
-  }
-
   enterRotateItemsMode() {
     this.setToolMode(ToolMode.Default);
     this.setEditPathInfo(undefined);
-    this.setRotateItemsInfo({
-      layerIds: this.getSelectedLayerIds(),
-    });
+    this.setRotateItemsInfo({});
     this.setTransformPathsInfo(undefined);
   }
 
@@ -120,9 +117,7 @@ export class PaperService {
     this.setToolMode(ToolMode.Default);
     this.setEditPathInfo(undefined);
     this.setRotateItemsInfo(undefined);
-    this.setTransformPathsInfo({
-      layerIds: this.getSelectedLayerIds(),
-    });
+    this.setTransformPathsInfo({});
   }
 
   enterPencilMode() {

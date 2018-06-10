@@ -22,7 +22,6 @@ export class EditPathGesture extends Gesture {
     const editPath = this.pl.findItemByLayerId(this.editPathId) as paper.Path;
     this.ps.setSelectedLayerIds(new Set([this.editPathId]));
     this.ps.setEditPathInfo({
-      layerId: this.editPathId,
       ...PaperUtil.selectCurves(editPath, new Set([editPath.segments.length - 1])),
     });
     this.ps.setRotateItemsInfo(undefined);

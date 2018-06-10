@@ -96,9 +96,6 @@ export class BatchSelectSegmentsGesture extends Gesture {
       });
     }
     const editPath = this.pl.findItemByLayerId(this.editPathId) as paper.Path;
-    this.ps.setEditPathInfo({
-      layerId: this.editPathId,
-      ...PaperUtil.selectCurves(editPath, selectedSegments),
-    });
+    this.ps.setEditPathInfo({ ...PaperUtil.selectCurves(editPath, selectedSegments) });
   }
 }

@@ -150,14 +150,15 @@ export class GestureTool extends Tool {
   }
 
   private createEditPathModeGesture(event: paper.ToolEvent) {
-    let fpi = this.ps.getEditPathInfo();
-    if (!fpi.layerId) {
+    const selectedLayerIds = this.ps.getSelectedLayerIds();
+    let layerId = selectedLayerIds.size ? selectedLayerIds.values().next().value : '';
+    let epi = this.ps.getEditPathInfo();
+    if (!layerId) {
       // Then the user has created the first segment of a new path, in which
       // case we must create a new dummy path and bring it into focus.
       const newPathLayer = PaperUtil.addPathToStore(this.ps, '');
-      const layerId = newPathLayer.id;
-      fpi = {
-        layerId,
+      layerId = newPathLayer.id;
+      epi = {
         selectedSegments: new Set<number>(),
         visibleHandleIns: new Set<number>(),
         visibleHandleOuts: new Set<number>(),
@@ -165,11 +166,11 @@ export class GestureTool extends Tool {
         selectedHandleOut: undefined,
       };
       this.ps.setSelectedLayerIds(new Set([layerId]));
-      this.ps.setEditPathInfo(fpi);
+      this.ps.setEditPathInfo(epi);
     }
 
-    const editPathId = fpi.layerId;
-    const editPAth = this.pl.findItemByLayerId(editPathId) as paper.Path;
+    const editPathId = layerId;
+    const editPath = this.pl.findItemByLayerId(editPathId) as paper.Path;
 
     // First, do a hit test on the edit path's segments and handles.
     const segmentsAndHandlesHitResult = HitTests.editPathModeSegmentsAndHandles(event.point);
@@ -190,7 +191,7 @@ export class GestureTool extends Tool {
     }
 
     // Second, do a hit test on the edit path itself.
-    let hitResult = HitTests.editPathMode(event.point, editPAth, {
+    let hitResult = HitTests.editPathMode(event.point, editPath, {
       fill: true,
       stroke: true,
       curves: true,
@@ -198,7 +199,7 @@ export class GestureTool extends Tool {
     if (hitResult) {
       if (hitResult.type !== 'curve') {
         // TODO: is there a way to avoid a second hit test like this?
-        hitResult = HitTests.editPathMode(event.point, editPAth, {
+        hitResult = HitTests.editPathMode(event.point, editPath, {
           curves: true,
         });
       }
@@ -228,14 +229,14 @@ export class GestureTool extends Tool {
       );
     }
 
-    if (!editPAth.segments.length) {
+    if (!editPath.segments.length) {
       // Then we are beginning to build a new path from scratch.
       return SelectDragDrawSegmentsGesture.miss(this.ps, editPathId);
     }
 
-    if (!editPAth.closed && fpi.selectedSegments.size === 1) {
-      const selectedSegmentIndex = fpi.selectedSegments.values().next().value;
-      if (selectedSegmentIndex === 0 || selectedSegmentIndex === editPAth.segments.length - 1) {
+    if (!editPath.closed && epi.selectedSegments.size === 1) {
+      const selectedSegmentIndex = epi.selectedSegments.values().next().value;
+      if (selectedSegmentIndex === 0 || selectedSegmentIndex === editPath.segments.length - 1) {
         // Then we are extending an existing open path with a single selected end point segment.
         return SelectDragDrawSegmentsGesture.miss(this.ps, editPathId);
       }

@@ -13,7 +13,7 @@ import * as paper from 'paper';
  * A gesture that performs hover operations over segments and curves.
  *
  * Preconditions:
- * - The user is in edit path mode for an already existing layer id.
+ * - The user is in edit path mode for a selected layer id.
  */
 export class HoverSegmentsCurvesGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -31,7 +31,10 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // TODO: currently necessary (if the previous gesture was the create/drag/draw segments gesture)
     this.ps.setCreatePathInfo(undefined);
 
-    const editPathId = this.ps.getEditPathInfo().layerId;
+    const editPathId = this.ps
+      .getSelectedLayerIds()
+      .values()
+      .next().value;
     const editPath = this.pl.findItemByLayerId(editPathId) as paper.Path;
     const segmentsAndHandlesHitResult = HitTests.editPathModeSegmentsAndHandles(event.point);
     if (segmentsAndHandlesHitResult) {
@@ -149,12 +152,11 @@ export class HoverSegmentsCurvesGesture extends Gesture {
   }
 
   private deleteSelectedSegmentsAndHandles() {
-    const {
-      layerId,
-      selectedHandleIn,
-      selectedHandleOut,
-      selectedSegments,
-    } = this.ps.getEditPathInfo();
+    const layerId = this.ps
+      .getSelectedLayerIds()
+      .values()
+      .next().value;
+    const { selectedHandleIn, selectedHandleOut, selectedSegments } = this.ps.getEditPathInfo();
     if (
       selectedHandleIn === undefined &&
       selectedHandleOut === undefined &&
@@ -189,7 +191,6 @@ export class HoverSegmentsCurvesGesture extends Gesture {
           PaperUtil.getReplacePathInStoreVectorLayer(this.ps, layerId, editPath.pathData),
         ),
         new SetEditPathInfo({
-          layerId,
           selectedHandleIn: undefined,
           selectedHandleOut: undefined,
           selectedSegments: new Set(),
