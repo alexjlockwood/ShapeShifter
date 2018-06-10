@@ -31,9 +31,12 @@ import {
   getSelectedBlockIds,
   isAnimationSelected,
 } from 'app/store/timeline/selectors';
+import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
+
+import * as StoreUtil from './StoreUtil';
 
 /**
  * A simple service that provides an interface for making layer/timeline changes.
@@ -112,8 +115,15 @@ export class LayerTimelineService {
     if (!_.isEqual(this.getSelectedBlockIds(), selectedBlockIds)) {
       actions.push(new SetSelectedBlocks(selectedBlockIds));
     }
+    const previouslySelectedLayerIds = this.getSelectedLayerIds();
     if (!_.isEqual(this.getSelectedLayerIds(), selectedLayerIds)) {
       actions.push(new SetSelectedLayers(selectedLayerIds));
+      // TODO: improve this design somehow (probably best not to have this service depend on paper ops?)
+      // TODO: figure out which selection-changed cases should force you into default mode
+      // TODO: i.e. should selecting a new layer in edit path mode trigger edit path mode for the new layer?
+      if (environment.beta) {
+        actions.push(...StoreUtil.getEnterDefaultModeActions());
+      }
     }
     if (actions.length) {
       this.store.dispatch(new BatchAction(...actions));
