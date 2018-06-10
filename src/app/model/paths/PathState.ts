@@ -2,11 +2,11 @@ import { MathUtil, Point, Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 import polylabel from 'polylabel';
 
-import { Command, HitOptions, HitResult, Projection, ProjectionOntoPath, SubPath } from '.';
 import { CommandState } from './CommandState';
 import * as PathParser from './PathParser';
 import { createSubPaths } from './SubPath';
 import { SubPathState, findSubPathState } from './SubPathState';
+import { Command, HitOptions, HitResult, Projection, ProjectionOntoPath, SubPath } from '.';
 
 /**
  * Container class that encapsulates a Path's underlying state.
@@ -257,7 +257,12 @@ export class PathState {
   // TODO: approximate bezier curves by splitting them up into line segments
   // TODO: write tests for this stuff
   getPoleOfInaccessibility(subIdx: number) {
-    const cmds = this.subPaths[subIdx].getCommands().slice(1);
+    const subPathCmds = this.subPaths[subIdx].getCommands();
+    if (subPathCmds.length === 1) {
+      const { end } = subPathCmds[0];
+      return { x: end.x, y: end.y };
+    }
+    const cmds = subPathCmds.slice(1);
     const polygon = _.flatMap(cmds, cmd => {
       const { x: p1x, y: p1y } = cmd.start;
       const { x: p2x, y: p2y } = cmd.end;
@@ -385,10 +390,10 @@ function getArea(cmd: Command) {
       let y2: number;
       if (cmd.type === 'Q') {
         const cp = cmd.points[1];
-        x1 = x0 + 2 / 3 * (cp.x - x0);
-        y1 = y0 + 2 / 3 * (cp.y - y0);
-        x2 = x3 + 2 / 3 * (cp.x - x3);
-        y2 = y3 + 2 / 3 * (cp.y - y3);
+        x1 = x0 + (2 / 3) * (cp.x - x0);
+        y1 = y0 + (2 / 3) * (cp.y - y0);
+        x2 = x3 + (2 / 3) * (cp.x - x3);
+        y2 = y3 + (2 / 3) * (cp.y - y3);
       } else {
         x1 = cmd.points[1].x;
         y1 = cmd.points[1].y;
@@ -396,13 +401,13 @@ function getArea(cmd: Command) {
         y2 = cmd.points[2].y;
       }
       area =
-        3 *
-        ((y3 - y0) * (x1 + x2) -
-          (x3 - x0) * (y1 + y2) +
-          y1 * (x0 - x2) -
-          x1 * (y0 - y2) +
-          y3 * (x2 + x0 / 3) -
-          x3 * (y2 + y0 / 3)) /
+        (3 *
+          ((y3 - y0) * (x1 + x2) -
+            (x3 - x0) * (y1 + y2) +
+            y1 * (x0 - x2) -
+            x1 * (y0 - y2) +
+            y3 * (x2 + x0 / 3) -
+            x3 * (y2 + y0 / 3))) /
         20;
       break;
   }
