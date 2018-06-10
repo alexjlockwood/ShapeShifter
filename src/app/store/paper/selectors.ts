@@ -40,7 +40,7 @@ const isRotateItemsEnabled = createSelector(getSelectedLayerIds, layerIds => lay
 const isRotateItemsChecked = createSelector(getRotateItemsInfo, rii => !!rii);
 const isTransformPathsEnabled = createSelector(getSingleSelectedChildlessLayer, layer => !!layer);
 const isTransformPathsChecked = createSelector(getTransformPathsInfo, tpi => !!tpi);
-const isSelectionChecked = createSelector(
+const isDefaultChecked = createSelector(
   [getToolMode, isEditPathChecked, isRotateItemsChecked, isTransformPathsChecked],
   (
     toolMode: ToolMode,
@@ -59,7 +59,7 @@ const isSelectionChecked = createSelector(
 
 export const getToolPanelState = createStructuredSelector({
   toolMode: getToolMode,
-  isSelectionChecked,
+  isDefaultChecked,
   isEditPathChecked,
   isRotateItemsEnabled,
   isRotateItemsChecked,

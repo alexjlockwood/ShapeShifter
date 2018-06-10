@@ -6,8 +6,8 @@
     matTooltip="Select"
     matTooltipPosition="right"
     matTooltipShowDelay="500"
-    [class.is-checked]="model.isSelectionChecked"
-    (click)="onSelectionClick($event)">
+    [class.is-checked]="model.isDefaultClick"
+    (click)="onDefaultClick($event)">
     <mat-icon svgIcon="tool_select"></mat-icon>
   </button>
   <button class="tool-button"

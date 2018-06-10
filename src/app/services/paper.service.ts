@@ -100,6 +100,13 @@ export class PaperService {
     ];
   }
 
+  enterDefaultMode() {
+    this.setToolMode(ToolMode.Default);
+    this.setEditPathInfo(undefined);
+    this.setRotateItemsInfo(undefined);
+    this.setTransformPathsInfo(undefined);
+  }
+
   enterRotateItemsMode() {
     this.setToolMode(ToolMode.Default);
     this.setEditPathInfo(undefined);
