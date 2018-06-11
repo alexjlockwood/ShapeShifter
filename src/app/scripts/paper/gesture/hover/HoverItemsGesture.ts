@@ -46,12 +46,17 @@ export class HoverItemsGesture extends Gesture {
 
     const selectedLayers = this.ps.getSelectedLayerIds();
     if (selectedLayers.size) {
+      const rii = this.ps.getRotateItemsInfo();
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
       if (selectionBoundSegmentsHitResult) {
-        const rii = this.ps.getRotateItemsInfo();
         const tpi = this.ps.getTransformPathsInfo();
         const cursorMap = rii ? ROTATE_CURSOR_MAP : tpi ? TRANSFORM_CURSOR_MAP : RESIZE_CURSOR_MAP;
         this.ps.setCursorType(cursorMap.get(selectionBoundSegmentsHitResult.item.pivotType));
+        this.ps.setHoveredLayerId(undefined);
+        return;
+      }
+      if (rii && HitTests.rotateItemsPivot(event.point)) {
+        this.ps.setCursorType(CursorType.Grab);
         this.ps.setHoveredLayerId(undefined);
         return;
       }
