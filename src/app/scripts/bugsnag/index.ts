@@ -7,6 +7,7 @@ const bugsnagClient = bugsnag({
   apiKey: 'd662c2c8a7e13ac94f67e81e26bf3a4e',
   appVersion: version,
   releaseStage: environment.production ? 'production' : 'development',
+  notifyReleaseStages: ['production'],
 });
 
 export function errorHandlerFactory() {
