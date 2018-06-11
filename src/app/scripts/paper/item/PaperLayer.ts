@@ -20,6 +20,7 @@ import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { EditPathRaster } from './EditPathRaster';
+import { RotateItemsPivotRaster } from './RotateItemsPivotRaster';
 import { SelectionBoundsRaster } from './SelectionBoundsRaster';
 
 /**
@@ -36,6 +37,7 @@ export class PaperLayer extends paper.Layer {
   private canvasColorRect: paper.Path.Rectangle;
   private vectorLayerItem: paper.Item;
   private selectionBoundsItem: paper.Item;
+  private rotateItemsPivotItem: paper.Item;
   private hoverPathItem: paper.Path;
   private selectionBoxItem: paper.Path;
   private createPathItem: paper.Path;
@@ -72,6 +74,10 @@ export class PaperLayer extends paper.Layer {
 
   private get editPathInfo() {
     return this.ps.getEditPathInfo();
+  }
+
+  private get rotateItemsInfo() {
+    return this.ps.getRotateItemsInfo();
   }
 
   hitTestVectorLayer(projPoint: paper.Point) {
@@ -123,11 +129,13 @@ export class PaperLayer extends paper.Layer {
     this.updateVectorLayerItem();
     this.updateEditPathItem();
     this.updateSelectionBoundsItem();
+    this.updateRotateItemsPivotItem();
     this.updateHoverPathItem();
   }
 
   onSelectedLayerIdsChanged() {
     this.updateSelectionBoundsItem();
+    this.updateRotateItemsPivotItem();
   }
 
   onHiddenLayerIdsChanged() {
@@ -142,6 +150,11 @@ export class PaperLayer extends paper.Layer {
   onEditPathInfoChanged() {
     this.updateEditPathItem();
     this.updateSelectionBoundsItem();
+    this.updateRotateItemsPivotItem();
+  }
+
+  onRotateItemsInfoChanged() {
+    this.updateRotateItemsPivotItem();
   }
 
   setCreatePathInfo(info: CreatePathInfo) {
@@ -225,21 +238,47 @@ export class PaperLayer extends paper.Layer {
       this.selectionBoundsItem = undefined;
     }
     if (!this.editPathInfo) {
-      const selectedItems = Array.from(this.selectedLayerIds)
-        .map(id => this.findItemByLayerId(id))
-        // Filter out any selected empty groups.
-        .filter(i => !(i instanceof paper.Group) || i.children.length);
-      if (selectedItems.length > 0) {
-        this.selectionBoundsItem = newSelectionBoundsItem(
-          PaperUtil.transformRectangle(
-            PaperUtil.computeBounds(selectedItems),
-            this.matrix.inverted(),
-          ),
-          this.cssScaling,
-        );
+      const selectedItemBounds = this.getSelectedItemBounds();
+      if (selectedItemBounds) {
+        this.selectionBoundsItem = newSelectionBoundsItem(selectedItemBounds, this.cssScaling);
       }
     }
     this.updateChildren();
+  }
+
+  private updateRotateItemsPivotItem() {
+    if (this.rotateItemsPivotItem) {
+      this.rotateItemsPivotItem.remove();
+      this.rotateItemsPivotItem = undefined;
+    }
+    const rii = this.rotateItemsInfo;
+    if (rii) {
+      const selectedItemBounds = this.getSelectedItemBounds();
+      if (selectedItemBounds) {
+        const vpPivot = rii.pivot ? new paper.Point(rii.pivot) : selectedItemBounds.center;
+        this.rotateItemsPivotItem = newRotationPivotItem(vpPivot, this.cssScaling);
+      }
+    }
+    this.updateChildren();
+  }
+
+  /**
+   * Returns the bounds of the currently selected items in project coordinates.
+   * Empty groups will be filtered out. Returns undefined if there are no selected
+   * items left to compute.
+   */
+  private getSelectedItemBounds() {
+    const selectedItems = Array.from(this.selectedLayerIds)
+      .map(id => this.findItemByLayerId(id))
+      // Filter out any selected empty groups.
+      .filter(i => !(i instanceof paper.Group) || i.children.length);
+    if (selectedItems.length === 0) {
+      return undefined;
+    }
+    return PaperUtil.transformRectangle(
+      PaperUtil.computeBounds(selectedItems),
+      this.matrix.inverted(),
+    );
   }
 
   private updateHiddenLayers() {
@@ -295,6 +334,7 @@ export class PaperLayer extends paper.Layer {
       this.canvasColorRect,
       this.vectorLayerItem,
       this.selectionBoundsItem,
+      this.rotateItemsPivotItem,
       this.hoverPathItem,
       this.createPathItem,
       this.splitCurveItem,
@@ -497,7 +537,7 @@ function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
     // TODO: avoid creating rasters in a loop like this
     const center = bounds[pivotType];
     const handle = SelectionBoundsRaster.of(pivotType, center);
-    const scaleFactor = 1 / (1.8 * cssScaling * paper.view.zoom);
+    const scaleFactor = getRasterScaleFactor(cssScaling);
     handle.scale(scaleFactor, scaleFactor);
     group.addChild(handle);
   });
@@ -506,11 +546,21 @@ function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
 }
 
 /**
+ * Creates a rotation pivot point at the specified position.
+ */
+function newRotationPivotItem(position: paper.Point, cssScaling: number) {
+  const pivot = RotateItemsPivotRaster.of(position);
+  const scaleFactor = getRasterScaleFactor(cssScaling);
+  pivot.scale(scaleFactor, scaleFactor);
+  return pivot;
+}
+
+/**
  * Creates the overlay decorations for the given edit path.
  */
 function newEditPathItem(path: paper.Path, info: EditPathInfo, cssScaling: number) {
   const group = new paper.Group();
-  const scaleFactor = 1 / (1.8 * cssScaling * paper.view.zoom);
+  const scaleFactor = getRasterScaleFactor(cssScaling);
 
   const matrix = path.globalMatrix.prepended(
     new paper.Matrix(1 / cssScaling, 0, 0, 1 / cssScaling, 0, 0),
@@ -563,6 +613,10 @@ function newEditPathItem(path: paper.Path, info: EditPathInfo, cssScaling: numbe
     );
   });
   return group;
+}
+
+function getRasterScaleFactor(cssScaling: number) {
+  return 1 / (1.8 * cssScaling * paper.view.zoom);
 }
 
 function newCreatePathItem(info: CreatePathInfo) {

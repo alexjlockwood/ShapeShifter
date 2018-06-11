@@ -14,6 +14,9 @@ import {
   ZoomPanInfo,
 } from './actions';
 
+// Note that we should only ever store points in their viewport/local coordinates.
+// We should never store points in coordinates that are dependent on the view.
+
 export interface State {
   readonly zoomPanInfo: ZoomPanInfo;
   readonly toolModeInfo: ToolModeInfo;

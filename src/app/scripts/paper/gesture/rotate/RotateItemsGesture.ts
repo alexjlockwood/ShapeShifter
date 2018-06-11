@@ -12,10 +12,12 @@ import * as paper from 'paper';
  * Preconditions:
  * - The user is in default mode.
  * - One or more layers are selected.
+ * - A mouse down event occurred on a selection bounds handle.
  *
  * TODO: make it possible to move the pivot with the mouse
  * TODO: avoid jank at beginning of rotation (when angle is near 0)
  * TODO: don't allow user to rotate empty groups?
+ * TODO: make sure the 'empty group' logic we add also matches what we have in PaperLayer.ts
  * TODO: rotating groups not implemented yet
  * TODO: show a tool tip during rotations
  */
@@ -24,7 +26,7 @@ export class RotateItemsGesture extends Gesture {
   private selectedItems: ReadonlyArray<paper.Item>;
   private localToVpItemMatrices: ReadonlyArray<paper.Matrix>;
   private initialVectorLayer: VectorLayer;
-  private pivot: paper.Point;
+  private vpPivot: paper.Point;
   private vpDownPoint: paper.Point;
   private vpPoint: paper.Point;
 
@@ -35,18 +37,24 @@ export class RotateItemsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setHoveredLayerId(undefined);
-    this.selectedItems = Array.from(this.ps.getSelectedLayerIds()).map(id =>
-      this.pl.findItemByLayerId(id),
-    );
+    // TODO: reuse this code with PaperLayer (filter out empty groups)
+    this.selectedItems = Array.from(this.ps.getSelectedLayerIds())
+      .map(id => this.pl.findItemByLayerId(id))
+      .filter(i => !(i instanceof paper.Group) || i.children.length);
     const invertedPaperLayerMatrix = this.pl.matrix.inverted();
     this.localToVpItemMatrices = this.selectedItems.map(item => {
       // Compute the matrices to directly transform during drag events.
       return item.globalMatrix.prepended(invertedPaperLayerMatrix).inverted();
     });
-    this.pivot = PaperUtil.transformRectangle(
-      PaperUtil.computeBounds(this.selectedItems),
-      this.pl.matrix.inverted(),
-    ).center;
+    const rii = this.ps.getRotateItemsInfo();
+    if (rii.pivot) {
+      this.vpPivot = new paper.Point(rii.pivot);
+    } else {
+      this.vpPivot = PaperUtil.transformRectangle(
+        PaperUtil.computeBounds(this.selectedItems),
+        invertedPaperLayerMatrix,
+      ).center;
+    }
     this.initialVectorLayer = this.ps.getVectorLayer();
     this.vpDownPoint = this.pl.globalToLocal(event.downPoint);
   }
@@ -73,6 +81,7 @@ export class RotateItemsGesture extends Gesture {
     }
   }
 
+  // TODO: determine if we should be baking transforms into the children layers when rotating a group?
   // TODO: this doesn't work yet for paths that are contained in scaled groups
   private processEvent(event: paper.Event) {
     if (!this.vpPoint) {
@@ -86,7 +95,7 @@ export class RotateItemsGesture extends Gesture {
       path.applyMatrix = true;
       const localToViewportMatrix = this.localToVpItemMatrices[index];
       const matrix = localToViewportMatrix.clone();
-      matrix.rotate(rotationAngle, this.pivot);
+      matrix.rotate(rotationAngle, this.vpPivot);
       matrix.append(localToViewportMatrix.inverted());
       path.matrix = matrix;
       const newPl = newVl.findLayerById(item.data.id).clone() as PathLayer;
@@ -97,10 +106,10 @@ export class RotateItemsGesture extends Gesture {
   }
 
   private getRotationAngle(event: paper.Event) {
-    const initialDelta = this.vpDownPoint.subtract(this.pivot);
-    const initialAngle = Math.atan2(initialDelta.y, initialDelta.x) * 180 / Math.PI;
-    const delta = this.vpPoint.subtract(this.pivot);
-    const angle = Math.atan2(delta.y, delta.x) * 180 / Math.PI - initialAngle;
+    const initialDelta = this.vpDownPoint.subtract(this.vpPivot);
+    const initialAngle = (Math.atan2(initialDelta.y, initialDelta.x) * 180) / Math.PI;
+    const delta = this.vpPoint.subtract(this.vpPivot);
+    const angle = (Math.atan2(delta.y, delta.x) * 180) / Math.PI - initialAngle;
     // TODO: this doesn't round properly if the angle was previously changed
     return event.modifiers.shift ? Math.round(angle / 15) * 15 : angle;
   }

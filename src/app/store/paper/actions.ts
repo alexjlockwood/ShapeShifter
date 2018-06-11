@@ -114,12 +114,14 @@ export interface EditPathInfo {
   readonly selectedSegments: ReadonlySet<number>;
   readonly visibleHandleIns: ReadonlySet<number>;
   readonly visibleHandleOuts: ReadonlySet<number>;
-  readonly selectedHandleIn: number;
-  readonly selectedHandleOut: number;
+  readonly selectedHandleIn: number | undefined;
+  readonly selectedHandleOut: number | undefined;
 }
 
 export interface RotateItemsInfo {
-  // TODO: add a pivot point
+  // If a pivot isn't provided, then the center of the selected items' bounding
+  // box will be used instead.
+  readonly pivot?: Point | undefined;
 }
 
 export interface TransformPathsInfo {

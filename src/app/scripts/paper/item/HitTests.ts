@@ -5,6 +5,7 @@ import * as paper from 'paper';
 
 import { EditPathRaster } from './EditPathRaster';
 import { HitResult, PaperLayer } from './PaperLayer';
+import { RotateItemsPivotRaster } from './RotateItemsPivotRaster';
 import { SelectionBoundsRaster } from './SelectionBoundsRaster';
 
 /** Performs the default default mode hit test. */
@@ -58,6 +59,12 @@ export function findFirstHitResult(
 export function selectionModeSegments(projPoint: paper.Point) {
   const pl = paper.project.activeLayer as PaperLayer;
   return pl.hitTest(projPoint, { class: SelectionBoundsRaster });
+}
+
+/** Performs a hit test on the rotate items pivot. */
+export function rotateItemsPivot(projPoint: paper.Point) {
+  const pl = paper.project.activeLayer as PaperLayer;
+  return pl.hitTest(projPoint, { class: RotateItemsPivotRaster });
 }
 
 /** Performs a hit test on the current edit path. */

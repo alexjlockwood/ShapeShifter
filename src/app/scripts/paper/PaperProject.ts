@@ -7,6 +7,7 @@ import {
   getCreatePathInfo,
   getEditPathInfo,
   getHoveredLayerId,
+  getRotateItemsInfo,
   getSelectionBox,
   getSnapGuideInfo,
   getSplitCurveInfo,
@@ -39,6 +40,7 @@ export class PaperProject extends paper.Project {
       store.select(getCreatePathInfo).subscribe(info => pl.setCreatePathInfo(info)),
       store.select(getSplitCurveInfo).subscribe(info => pl.setSplitCurveInfo(info)),
       store.select(getEditPathInfo).subscribe(info => pl.onEditPathInfoChanged()),
+      store.select(getRotateItemsInfo).subscribe(info => pl.onRotateItemsInfoChanged()),
       store.select(getSnapGuideInfo).subscribe(info => pl.setSnapGuideInfo(info)),
       store.select(getTooltipInfo).subscribe(info => pl.setTooltipInfo(info)),
       store.select(getSelectionBox).subscribe(box => {

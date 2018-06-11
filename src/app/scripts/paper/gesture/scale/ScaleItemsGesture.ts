@@ -12,7 +12,13 @@ import * as paper from 'paper';
 /**
  * A gesture that performs scaling operations.
  *
+ * Preconditions:
+ * - The user is in default mode.
+ * - One or more layers are selected.
+ * - A mouse down event occurred on a selection bounds handle.
+ *
  * TODO: should we also scale the stroke width?
+ * TODO: we need to also filter out non-empty groups (see PaperLayer.ts)
  */
 export class ScaleItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;

@@ -10,17 +10,15 @@ import {
   ToggleSegmentHandlesGesture,
 } from 'app/scripts/paper/gesture/edit';
 import { HoverGesture } from 'app/scripts/paper/gesture/hover';
+import { RotateItemsDragPivotGesture, RotateItemsGesture } from 'app/scripts/paper/gesture/rotate';
+import { ScaleItemsGesture } from 'app/scripts/paper/gesture/scale';
 import {
   BatchSelectItemsGesture,
   DeselectItemGesture,
   EditPathGesture,
   SelectDragCloneItemsGesture,
 } from 'app/scripts/paper/gesture/select';
-import {
-  RotateItemsGesture,
-  ScaleItemsGesture,
-  TransformPathsGesture,
-} from 'app/scripts/paper/gesture/transform';
+import { TransformPathsGesture } from 'app/scripts/paper/gesture/transform';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -82,16 +80,24 @@ export class GestureTool extends Tool {
     if (selectedLayerIds.size) {
       // First perform a hit test on the selection bound's segments.
       const selectionBoundSegmentsHitResult = HitTests.selectionModeSegments(event.point);
+      const rii = this.ps.getRotateItemsInfo();
       if (selectionBoundSegmentsHitResult) {
         // If the hit item is a selection bound segment, then perform
         // a scale/rotate/transform gesture.
-        if (this.ps.getRotateItemsInfo()) {
+        if (rii) {
           return new RotateItemsGesture(this.ps);
         }
         if (this.ps.getTransformPathsInfo()) {
           return new TransformPathsGesture(this.ps, selectionBoundSegmentsHitResult.item);
         }
         return new ScaleItemsGesture(this.ps, selectionBoundSegmentsHitResult.item);
+      }
+      if (rii) {
+        // Perform a hit test on the rotate items pivot.
+        const rotateItemsHitResult = HitTests.rotateItemsPivot(event.point);
+        if (rotateItemsHitResult) {
+          return new RotateItemsDragPivotGesture(this.ps);
+        }
       }
     }
 

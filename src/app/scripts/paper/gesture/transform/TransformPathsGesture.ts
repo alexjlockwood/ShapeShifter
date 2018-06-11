@@ -10,13 +10,15 @@ import * as paper from 'paper';
 /**
  * A gesture that performs transform operations.
  *
- * TODO: finish this
- * TODO: fix crash that can occur when 3+ points are on same axis
- * TODO: could this work with generic items (not just paths)?
- *
  * Preconditions:
  * - The user is in default mode.
  * - One or more paths are selected.
+ * - A mouse down event occurred on a selection bounds handle.
+ *
+ * TODO: finish this
+ * TODO: fix crash that can occur when 3+ points are on same axis
+ * TODO: could this work with generic items (not just paths)?
+ * TODO: we need to also filter out non-empty groups (see PaperLayer.ts)
  */
 export class TransformPathsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
