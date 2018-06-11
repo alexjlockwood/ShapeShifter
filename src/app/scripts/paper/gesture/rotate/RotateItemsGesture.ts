@@ -14,11 +14,8 @@ import * as paper from 'paper';
  * - One or more layers are selected.
  * - A mouse down event occurred on a selection bounds handle.
  *
- * TODO: make it possible to move the pivot with the mouse
  * TODO: avoid jank at beginning of rotation (when angle is near 0)
- * TODO: don't allow user to rotate empty groups?
  * TODO: make sure the 'empty group' logic we add also matches what we have in PaperLayer.ts
- * TODO: rotating groups not implemented yet
  * TODO: show a tool tip during rotations
  */
 export class RotateItemsGesture extends Gesture {
@@ -37,10 +34,23 @@ export class RotateItemsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setHoveredLayerId(undefined);
-    // TODO: reuse this code with PaperLayer (filter out empty groups)
-    this.selectedItems = Array.from(this.ps.getSelectedLayerIds())
+
+    const scaleItems: paper.Item[] = [];
+    const scaleItemsSet = new Set<string>();
+    Array.from(this.ps.getSelectedLayerIds())
       .map(id => this.pl.findItemByLayerId(id))
-      .filter(i => !(i instanceof paper.Group) || i.children.length);
+      // TODO: reuse this code with PaperLayer (filter out empty groups)
+      .filter(i => !(i instanceof paper.Group) || i.children.length)
+      .forEach(function recurseFn(i: paper.Item) {
+        if (i instanceof paper.Group) {
+          i.children.forEach(recurseFn);
+        } else if (!scaleItemsSet.has(i.data.id)) {
+          scaleItemsSet.add(i.data.id);
+          scaleItems.push(i);
+        }
+      });
+    this.selectedItems = scaleItems;
+
     const invertedPaperLayerMatrix = this.pl.matrix.inverted();
     this.localToVpItemMatrices = this.selectedItems.map(item => {
       // Compute the matrices to directly transform during drag events.
@@ -82,7 +92,6 @@ export class RotateItemsGesture extends Gesture {
   }
 
   // TODO: determine if we should be baking transforms into the children layers when rotating a group?
-  // TODO: this doesn't work yet for paths that are contained in scaled groups
   private processEvent(event: paper.Event) {
     if (!this.vpPoint) {
       return;
@@ -90,7 +99,6 @@ export class RotateItemsGesture extends Gesture {
     const rotationAngle = this.getRotationAngle(event);
     let newVl = this.initialVectorLayer.clone();
     this.selectedItems.forEach((item, index) => {
-      // TODO: make this stuff works for groups as well
       const path = item.clone() as paper.Path;
       path.applyMatrix = true;
       const localToViewportMatrix = this.localToVpItemMatrices[index];

@@ -18,7 +18,6 @@ import * as paper from 'paper';
  * - A mouse down event occurred on a selection bounds handle.
  *
  * TODO: should we also scale the stroke width?
- * TODO: we need to also filter out non-empty groups (see PaperLayer.ts)
  */
 export class ScaleItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
@@ -43,9 +42,24 @@ export class ScaleItemsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setHoveredLayerId(undefined);
-    this.selectedItems = Array.from(this.ps.getSelectedLayerIds()).map(id =>
-      this.pl.findItemByLayerId(id),
-    );
+
+    // TODO: make searches like this more efficient...
+    const scaleItems: paper.Item[] = [];
+    const scaleItemsSet = new Set<string>();
+    Array.from(this.ps.getSelectedLayerIds())
+      .map(id => this.pl.findItemByLayerId(id))
+      // TODO: reuse this code with PaperLayer (filter out empty groups)
+      .filter(i => !(i instanceof paper.Group) || i.children.length)
+      .forEach(function recurseFn(i: paper.Item) {
+        if (i instanceof paper.Group) {
+          i.children.forEach(recurseFn);
+        } else if (!scaleItemsSet.has(i.data.id)) {
+          scaleItemsSet.add(i.data.id);
+          scaleItems.push(i);
+        }
+      });
+    this.selectedItems = scaleItems;
+
     this.localToVpItemMatrices = this.selectedItems.map(item => {
       // Compute the matrices to directly transform during drag events.
       return item.globalMatrix.prepended(this.pl.matrix.inverted()).inverted();
@@ -181,20 +195,8 @@ export class ScaleItemsGesture extends Gesture {
       sy *= signy;
     }
 
-    // TODO: make searches like this more efficient...
-    const scaleItems: paper.Item[] = [];
-    const scaleItemsSet = new Set<string>();
-    this.selectedItems.forEach(function recurseFn(i: paper.Item) {
-      if (i instanceof paper.Group) {
-        i.children.forEach(recurseFn);
-      } else if (!scaleItemsSet.has(i.data.id)) {
-        scaleItemsSet.add(i.data.id);
-        scaleItems.push(i);
-      }
-    });
-
-    scaleItems.forEach((item, index) => {
-      // TODO: confirm that scaling a selected group should bake transforms into the children
+    // TODO: determine if we should be baking transforms into the children layers when scaling a group?
+    this.selectedItems.forEach((item, index) => {
       const path = item.clone() as paper.Path;
       path.applyMatrix = true;
       const localToVpMatrix = this.localToVpItemMatrices[index];
@@ -202,6 +204,7 @@ export class ScaleItemsGesture extends Gesture {
       matrix.scale(sx, sy, vpFixedPivot);
       matrix.append(localToVpMatrix.inverted());
       path.matrix = matrix;
+      console.log(item.data.id);
       const newPl = newVl.findLayerById(item.data.id).clone() as MorphableLayer;
       newPl.pathData = new Path(path.pathData);
       newVl = LayerUtil.replaceLayer(newVl, item.data.id, newPl);
