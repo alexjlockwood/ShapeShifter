@@ -7,7 +7,7 @@ import {
   Output,
 } from '@angular/core';
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from 'app/model/layers';
-import { Animation } from 'app/model/timeline';
+import { Animation, PathAnimationBlock } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
@@ -64,9 +64,13 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
             return _.keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layerId]);
           };
           const existingPropertyNames = getExistingPropertyNamesFn(this.layer.id);
-          const isClipPathLayer = this.layer instanceof ClipPathLayer;
-          const isPathLayer = this.layer instanceof PathLayer;
-          const isMergeable =
+          const canBeConvertedToPath = this.layer instanceof ClipPathLayer;
+          // We can't convert a path into a clip path if it has incompatible animation blocks.
+          const canBeConvertedToClipPath =
+            this.layer instanceof PathLayer &&
+            // TODO: comparing the sets of all animatable properties for each layer type would be more robust
+            !animation.blocks.some(b => !(b instanceof PathAnimationBlock));
+          const canBeFlattened =
             this.layer instanceof GroupLayer &&
             this.layer.children.length > 0 &&
             // TODO: allow merging groups w/ existing blocks in some cases?
@@ -89,10 +93,9 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
             availablePropertyNames,
             existingPropertyNames,
             isActionMode,
-            isClipPathLayer,
-            isPathLayer,
-            isMorphableLayer: isClipPathLayer || isPathLayer,
-            isMergeable,
+            canBeConvertedToClipPath,
+            canBeConvertedToPath,
+            canBeFlattened,
           };
         },
       ),
@@ -200,4 +203,7 @@ interface LayerModel {
   readonly availablePropertyNames: ReadonlyArray<string>;
   readonly existingPropertyNames: ReadonlyArray<string>;
   readonly isActionMode: boolean;
+  readonly canBeConvertedToPath: boolean;
+  readonly canBeConvertedToClipPath: boolean;
+  readonly canBeFlattened: boolean;
 }

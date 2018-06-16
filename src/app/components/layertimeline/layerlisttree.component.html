@@ -29,24 +29,24 @@
     </span>
     <!-- Show overflow options. -->
     <mat-menu #showOverflowOptionsMenu="matMenu">
-      <button *ngIf="model.isPathLayer"
+      <button *ngIf="model.canBeConvertedToClipPath"
         (click)="this.onConvertToClipPathClick($event, layer)"
         mat-menu-item>
         Convert to clip path
       </button>
-      <button *ngIf="model.isClipPathLayer"
+      <button *ngIf="model.canBeConvertedToPath"
         (click)="this.onConvertToPathClick($event, layer)"
         mat-menu-item>
         Convert to path
       </button>
-      <button *ngIf="model.isMergeable"
+      <button *ngIf="model.canBeFlattened"
         (click)="this.onFlattenGroupClick($event, layer)"
         mat-menu-item>
         Flatten group
       </button>
     </mat-menu>
     <button mat-icon-button
-      *ngIf="model.isMorphableLayer || model.isMergeable"
+      *ngIf="model.canBeConvertedToClipPath || model.canBeConvertedToPath || model.canBeFlattened"
       class="slt-layer-action-button slt-layer-more-actions"
       (click)="$event.stopPropagation()"
       [disabled]="model.isActionMode"
