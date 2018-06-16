@@ -3,4 +3,4 @@
 npm i
 npm run build
 echo "shapeshifter.design" > dist/CNAME
-ngh
+ngh --repo git@github.com:alexjlockwood/ShapeShifterStable.git
