@@ -151,8 +151,6 @@ function load(obj: Layer | any): Layer {
 
 const VECTOR_DEFAULTS = {
   canvasColor: '',
-  width: 24,
-  height: 24,
   alpha: 1,
 };
 
@@ -173,8 +171,8 @@ export class VectorLayer extends Layer {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
     this.canvasColor = obj.canvasColor || VECTOR_DEFAULTS.canvasColor;
-    this.width = setterFn(obj.width, VECTOR_DEFAULTS.width);
-    this.height = setterFn(obj.height, VECTOR_DEFAULTS.height);
+    this.width = setterFn(obj.width, 24);
+    this.height = setterFn(obj.height, 24);
     this.alpha = setterFn(obj.alpha, VECTOR_DEFAULTS.alpha);
   }
 
