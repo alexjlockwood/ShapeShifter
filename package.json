@@ -18,7 +18,8 @@
     "test-once": "ng test --watch=false --code-coverage --browsers ChromeHeadless",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "deploy": "./scripts/deploy-stable.sh",
+    "deploy": "./scripts/deploy-stable.sh && ./scripts/deploy-beta.sh",
+    "deploy-stable": "./scripts/deploy-stable.sh",
     "deploy-beta": "./scripts/deploy-beta.sh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "postinstall": "node ./scripts/check-node-version.js"
