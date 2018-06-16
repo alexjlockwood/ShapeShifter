@@ -691,10 +691,13 @@ export class LayerTimelineComponent extends DestroyableMixin()
           .pipe(first())
           .subscribe(anim => {
             const blocks = replacementBlocks.filter(replacementBlock => {
+              // Note that existingBlock may not be found if changes were made to the animation
+              // (i.e. a block was deleted during a drag).
               const existingBlock = _.find(anim.blocks, b => replacementBlock.id === b.id);
               return (
-                replacementBlock.startTime !== existingBlock.startTime ||
-                replacementBlock.endTime !== existingBlock.endTime
+                existingBlock &&
+                (replacementBlock.startTime !== existingBlock.startTime ||
+                  replacementBlock.endTime !== existingBlock.endTime)
               );
             });
             this.layerTimelineService.updateBlocks(blocks);
