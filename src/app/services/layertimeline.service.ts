@@ -329,14 +329,18 @@ export class LayerTimelineService {
         return b;
       }
       const block = b.clone();
-      block.fromValue = block.fromValue
-        .mutate()
-        .transform(layerTransform)
-        .build();
-      block.toValue = block.toValue
-        .mutate()
-        .transform(layerTransform)
-        .build();
+      if (block.fromValue) {
+        block.fromValue = block.fromValue
+          .mutate()
+          .transform(layerTransform)
+          .build();
+      }
+      if (block.toValue) {
+        block.toValue = block.toValue
+          .mutate()
+          .transform(layerTransform)
+          .build();
+      }
       return block;
     });
     actions.push(new SetAnimation(newAnimation));
