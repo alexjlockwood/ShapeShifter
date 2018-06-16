@@ -3,7 +3,7 @@ import bugsnag from 'bugsnag-js';
 import { environment } from 'environments/environment';
 import { version } from 'environments/version';
 
-const bugsnagClient = bugsnag({
+export const bugsnagClient = bugsnag({
   apiKey: 'd662c2c8a7e13ac94f67e81e26bf3a4e',
   appVersion: version,
   releaseStage: environment.production ? 'production' : 'development',
