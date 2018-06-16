@@ -17,6 +17,7 @@ import * as paper from 'paper';
  * TODO: avoid jank at beginning of rotation (when angle is near 0)
  * TODO: make sure the 'empty group' logic we add also matches what we have in PaperLayer.ts
  * TODO: show a tool tip during rotations
+ * TODO: make sure the pivot doesn't move during the initial drag
  */
 export class RotateItemsGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
