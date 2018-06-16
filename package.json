@@ -52,7 +52,6 @@
     "redux-undo": "^1.0.0-beta9-9-7",
     "reselect": "^3.0.1",
     "rxjs": "^6.2.0",
-    "rxjs-compat": "^6.0.0-rc.0",
     "stream-browserify": "^2.0.1",
     "svgo": "^1.0.5",
     "tinycolor2": "^1.4.1",
