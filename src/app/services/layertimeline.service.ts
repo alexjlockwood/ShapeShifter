@@ -648,7 +648,7 @@ export class LayerTimelineService {
     return this.queryStore(getVectorLayer);
   }
 
-  private getSelectedLayerIds() {
+  getSelectedLayerIds() {
     return new Set(this.queryStore(getSelectedLayerIds));
   }
 

@@ -152,7 +152,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
 
 export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
   const { vl1: newVl1, vl2: newVl2 } = adjustViewports(vl1, vl2);
-  const vl = <VectorLayer>setLayerChildren(newVl1, [...newVl1.children, ...newVl2.children]);
+  const vl = setLayerChildren(newVl1, [...newVl1.children, ...newVl2.children]);
   if (!newVl1.children.length) {
     // Only replace the vector layer's alpha if there are no children
     // being displayed to the user. This is pretty much the best
@@ -162,11 +162,18 @@ export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
   return vl;
 }
 
-export function addLayer(
+/**
+ * Adds a list of children to a parent layer in a vector layer tree.
+ * @param root the root vector layer
+ * @param addedLayerParentId the parent layer in which to add the given layers
+ * @param startingChildIndex the index to start adding the layers
+ * @param addedLayers the layers to add
+ */
+export function addLayers(
   root: VectorLayer,
   addedLayerParentId: string,
-  addedLayer: Layer,
-  childIndex: number,
+  startingChildIndex: number,
+  ...addedLayers: Layer[]
 ) {
   return (function recurseFn(curr: Layer) {
     if (curr.id === addedLayerParentId) {
@@ -174,7 +181,7 @@ export function addLayer(
       // clone the parent, insert the new layer into its list
       // of children, and return the new parent node.
       const children = [...curr.children];
-      children.splice(childIndex, 0, addedLayer);
+      children.splice(startingChildIndex, 0, ...addedLayers);
       return setLayerChildren(curr, children);
     }
     for (let i = 0; i < curr.children.length; i++) {
@@ -191,15 +198,15 @@ export function addLayer(
   })(root) as VectorLayer;
 }
 
-export function removeLayers(vl: VectorLayer, ...removedLayerIds: string[]) {
+export function removeLayers<L extends Layer>(layer: L, ...removedLayerIds: string[]) {
   const layerIds = new Set(removedLayerIds);
   return (function recurseFn(curr: Layer): Layer {
     if (layerIds.has(curr.id)) {
       return undefined;
     }
-    const children = curr.children.map(l => recurseFn(l)).filter(l => !!l);
+    const children = curr.children.map(recurseFn).filter(l => !!l);
     return setLayerChildren(curr, children);
-  })(vl) as VectorLayer;
+  })(layer) as L;
 }
 
 export function updateLayer(vl: VectorLayer, layer: Layer) {
@@ -282,10 +289,13 @@ export function getUniqueName(prefix = '', objectByNameFn = (s: string) => undef
   return nameFn();
 }
 
-function setLayerChildren<T extends Layer>(layer: T, children: ReadonlyArray<Layer>) {
+/**
+ * Returns a cloned layer with the specified list of children layers.
+ */
+function setLayerChildren<L extends Layer>(layer: L, children: ReadonlyArray<Layer>) {
   const clone = layer.clone();
   clone.children = children;
-  return clone;
+  return clone as L;
 }
 
 export function toStrokeDashArray(
@@ -319,5 +329,5 @@ export function toStrokeDashOffset(
   // The amount to offset the path is equal to the trimPathStart plus
   // trimPathOffset. We mod the result because the trimmed path
   // should wrap around once it reaches 1.
-  return pathLength * (1 - (trimPathStart + trimPathOffset) % 1);
+  return pathLength * (1 - ((trimPathStart + trimPathOffset) % 1));
 }

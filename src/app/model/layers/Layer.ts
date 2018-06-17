@@ -32,7 +32,7 @@ export abstract class Layer implements Inspectable, Animatable {
   name: string;
 
   /**
-   * This layers children layers, or undefined if none exist.
+   * This layers children list of layers.
    */
   children: ReadonlyArray<Layer>;
 

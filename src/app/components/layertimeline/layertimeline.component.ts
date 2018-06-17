@@ -35,8 +35,11 @@ import {
 import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
+import { BatchAction } from 'app/store/batch/actions';
 import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/selectors';
+import { SetSelectedLayers, SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
+import { Action } from 'app/store/ngrx';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
@@ -806,7 +809,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   }
 
   // @Override LayerListTreeComponentCallbacks
-  onLayerMouseDown(mouseDownEvent: MouseEvent, dragLayer: Layer) {
+  onLayerMouseDown(mouseDownEvent: MouseEvent, mouseDownDragLayer: Layer) {
     const $layersList = $(mouseDownEvent.target).parents('.slt-layers-list');
     const $scroller = $(mouseDownEvent.target).parents('.slt-layers-list-scroller');
 
@@ -821,6 +824,26 @@ export class LayerTimelineComponent extends DestroyableMixin()
     let scrollerRect: ClientRect;
     let targetLayerInfo: LayerInfo;
     let targetEdge: string;
+
+    const vectorLayer = this.vectorLayer;
+    const selectedLayerIds: ReadonlySet<string> = this.layerTimelineService.getSelectedLayerIds();
+    const isDragLayerSelected = selectedLayerIds.has(mouseDownDragLayer.id);
+    const dragLayers: ReadonlyArray<Layer> = (function() {
+      if (!isDragLayerSelected) {
+        // Don't drag any other selected layers if the drag layer isn't selected itself.
+        // At the end of the drag, we will select the drag layer and deselect the others.
+        return [mouseDownDragLayer];
+      }
+      // Add the layers as we iterate the tree to ensure they are properly sorted.
+      const layers: Layer[] = [];
+      (function recurseFn(layer: Layer) {
+        if (selectedLayerIds.has(layer.id)) {
+          layers.push(layer);
+        }
+        layer.children.forEach(recurseFn);
+      })(vectorLayer);
+      return layers;
+    })();
 
     // tslint:disable-next-line: no-unused-expression
     new Dragger({
@@ -903,9 +926,9 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
         // Disallow dragging a layer into itself or its children.
         if (targetLayerInfo) {
-          let layer = targetLayerInfo.layer;
+          let { layer } = targetLayerInfo;
           while (layer) {
-            if (layer === dragLayer) {
+            if (_.find(dragLayers, l => l.id === layer.id)) {
               targetLayerInfo = undefined;
               break;
             }
@@ -913,15 +936,13 @@ export class LayerTimelineComponent extends DestroyableMixin()
           }
         }
 
-        if (
-          targetLayerInfo &&
-          targetEdge === 'bottom' &&
-          LayerUtil.findNextSibling(this.vectorLayer, targetLayerInfo.layer.id) === dragLayer
-        ) {
-          targetLayerInfo = undefined;
+        if (targetLayerInfo && targetEdge === 'bottom') {
+          const nextSibling = LayerUtil.findNextSibling(this.vectorLayer, targetLayerInfo.layer.id);
+          if (nextSibling && nextSibling.id === mouseDownDragLayer.id) {
+            targetLayerInfo = undefined;
+          }
         }
 
-        // TODO: make it possible to drag multiple blocks at a time
         const dragIndicatorInfo: DragIndicatorInfo = { isVisible: !!targetLayerInfo };
         if (targetLayerInfo) {
           dragIndicatorInfo.left = targetLayerInfo.localRect.left;
@@ -932,47 +953,52 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
       onDropFn: () => {
         this.updateDragIndicator({ isVisible: false });
+        setTimeout(() => (this.shouldSuppressClick = false));
 
-        if (targetLayerInfo) {
-          let replacementVl: VectorLayer;
-          if (targetLayerInfo.moveIntoEmptyLayerGroup) {
-            // Moving into an empty layer group.
-            const sourceVl = this.vectorLayer;
-            replacementVl = LayerUtil.removeLayers(sourceVl, dragLayer.id);
-            const newParent = targetLayerInfo.layer;
-            replacementVl = LayerUtil.addLayer(
-              replacementVl,
-              newParent.id,
-              dragLayer.clone(),
-              newParent.children.length,
-            );
-          } else {
-            // Moving next to another layer.
-            let newParent = LayerUtil.findParent(this.vectorLayer, targetLayerInfo.layer.id);
-            if (newParent) {
-              const sourceVl = this.vectorLayer;
-              replacementVl = LayerUtil.removeLayers(sourceVl, dragLayer.id);
-              newParent = LayerUtil.findParent(replacementVl, targetLayerInfo.layer.id);
-              let index = newParent.children
-                ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)
-                : -1;
-              if (index >= 0) {
-                index += targetEdge === 'top' ? 0 : 1;
-                replacementVl = LayerUtil.addLayer(
-                  replacementVl,
-                  newParent.id,
-                  dragLayer.clone(),
-                  index,
-                );
-              }
-            }
-          }
-          if (replacementVl) {
-            setTimeout(() => this.layerTimelineService.setVectorLayer(replacementVl));
+        if (!targetLayerInfo) {
+          return;
+        }
+
+        const dragLayerIds: ReadonlyArray<string> = dragLayers.map(l => l.id);
+
+        const addDragLayersFn = (
+          vl: VectorLayer,
+          parent: Layer,
+          startingIndex = parent.children.length,
+        ) => {
+          const layersToAdd = dragLayers.map(l => {
+            const otherDragLayerIds = dragLayerIds.filter(id => id !== l.id);
+            return LayerUtil.removeLayers(l, ...otherDragLayerIds);
+          });
+          return LayerUtil.addLayers(vl, parent.id, startingIndex, ...layersToAdd);
+        };
+
+        const removeDragLayersFn = (vl: VectorLayer) => LayerUtil.removeLayers(vl, ...dragLayerIds);
+
+        const initialVl = this.vectorLayer;
+        let replacementVl: VectorLayer;
+
+        if (targetLayerInfo.moveIntoEmptyLayerGroup) {
+          // Moving into an empty layer group.
+          replacementVl = addDragLayersFn(removeDragLayersFn(initialVl), targetLayerInfo.layer);
+        } else if (LayerUtil.findParent(initialVl, targetLayerInfo.layer.id)) {
+          // Moving next to another layer.
+          const tempVl = removeDragLayersFn(initialVl);
+          const parent = LayerUtil.findParent(tempVl, targetLayerInfo.layer.id);
+          const index = _.findIndex(parent.children, l => l.id === targetLayerInfo.layer.id);
+          if (index >= 0) {
+            replacementVl = addDragLayersFn(tempVl, parent, index + (targetEdge === 'top' ? 0 : 1));
           }
         }
 
-        setTimeout(() => (this.shouldSuppressClick = false), 0);
+        if (replacementVl) {
+          const actions: Action[] = [];
+          actions.push(new SetVectorLayer(replacementVl));
+          if (!isDragLayerSelected) {
+            actions.push(new SetSelectedLayers(new Set(dragLayerIds)));
+          }
+          this.store.dispatch(new BatchAction(...actions));
+        }
       },
     });
   }
