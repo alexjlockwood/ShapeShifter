@@ -792,36 +792,56 @@ export class LayerTimelineComponent extends DestroyableMixin()
   }
 
   // @Override LayerListTreeComponentCallbacks
-  onLayerClick(event: MouseEvent, layer: Layer) {
+  onLayerClick(event: MouseEvent, clickedLayer: Layer) {
     const isModifier = ShortcutService.isOsDependentModifierKey(event);
     const isShift = event.shiftKey;
     if (!isModifier && !isShift) {
       // Clear the existing selections.
-      this.layerTimelineService.selectLayer(layer.id, true);
-    } else if (isModifier) {
+      this.layerTimelineService.selectLayer(clickedLayer.id, true);
+      return;
+    }
+
+    if (isModifier) {
       // Add the single layer to the existing selections.
-      this.layerTimelineService.selectLayer(layer.id, false);
-    } else {
-      // TODO: re-implement this behavior to match the behavior of Sketch (and Mac OS X finder, etc.)?
-      // Batch add layers to the existing selections.
-      const vectorLayer = this.vectorLayer;
-      const topDownSortedLayers = LayerUtil.runPreorderTraversal(vectorLayer);
-      const layerIndex = _.findIndex(topDownSortedLayers, l => l.id === layer.id);
-      const selectedLayerIds = this.layerTimelineService.getSelectedLayerIds();
-      let prevLayerIndex = _.findLastIndex(
+      this.layerTimelineService.selectLayer(clickedLayer.id, false);
+      return;
+    }
+
+    // Batch add layers to the existing selections.
+    const { vectorLayer } = this;
+    const topDownSortedLayers = LayerUtil.runPreorderTraversal(vectorLayer);
+    const clickedLayerIndex = _.findIndex(topDownSortedLayers, l => l.id === clickedLayer.id);
+    const selectedLayerIds = this.layerTimelineService.getSelectedLayerIds();
+    // TODO: re-implement this behavior to match the behavior of Sketch
+    // TODO will need to store most recently selected layer ID in order to implement this behavior
+    const { startIndex, endIndex } = (function() {
+      // Find the first selected layer before clickedLayerIndex.
+      const beforeLayerIndex = _.findLastIndex(
         topDownSortedLayers,
         l => selectedLayerIds.has(l.id),
-        layerIndex,
+        clickedLayerIndex,
       );
-      if (prevLayerIndex < 0) {
-        // If no previous selection was found, then default to the root vector layer.
-        prevLayerIndex = 0;
+      if (beforeLayerIndex >= 0) {
+        // Batch select [beforeLayerIndex, clickedLayerIndex].
+        return { startIndex: beforeLayerIndex, endIndex: clickedLayerIndex };
       }
-      for (let i = prevLayerIndex; i <= layerIndex; i++) {
-        selectedLayerIds.add(topDownSortedLayers[i].id);
+      // Find the first selected layer after clickedLayerIndex.
+      const afterLayerIndex = _.findIndex(
+        topDownSortedLayers,
+        l => selectedLayerIds.has(l.id),
+        clickedLayerIndex,
+      );
+      if (afterLayerIndex >= 0) {
+        // Batch select [clickedLayerIndex, afterLayerIndex].
+        return { startIndex: clickedLayerIndex, endIndex: afterLayerIndex };
       }
-      this.layerTimelineService.setSelectedLayers(selectedLayerIds);
+      // Batch select [0, clickedLayerIndex].
+      return { startIndex: 0, endIndex: clickedLayerIndex };
+    })();
+    for (let i = startIndex; i <= endIndex; i++) {
+      selectedLayerIds.add(topDownSortedLayers[i].id);
     }
+    this.layerTimelineService.setSelectedLayers(selectedLayerIds);
   }
 
   // @Override LayerListTreeComponentCallbacks
