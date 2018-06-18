@@ -224,6 +224,16 @@ export function replaceLayer(vl: VectorLayer, layerId: string, replacement: Laye
   })(vl) as VectorLayer;
 }
 
+export function runPreorderTraversal(layer: Layer) {
+  // Add the layers as we iterate the tree to ensure they are properly sorted.
+  const layers: Layer[] = [];
+  (function recurseFn(l: Layer) {
+    layers.push(l);
+    l.children.forEach(recurseFn);
+  })(layer);
+  return layers;
+}
+
 export function findLayerByName(layers: ReadonlyArray<Layer>, layerName: string) {
   for (const layer of layers) {
     const target = layer.findLayerByName(layerName);

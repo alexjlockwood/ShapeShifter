@@ -793,8 +793,35 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // @Override LayerListTreeComponentCallbacks
   onLayerClick(event: MouseEvent, layer: Layer) {
-    const clearExisting = !ShortcutService.isOsDependentModifierKey(event) && !event.shiftKey;
-    this.layerTimelineService.selectLayer(layer.id, clearExisting);
+    const isModifier = ShortcutService.isOsDependentModifierKey(event);
+    const isShift = event.shiftKey;
+    if (!isModifier && !isShift) {
+      // Clear the existing selections.
+      this.layerTimelineService.selectLayer(layer.id, true);
+    } else if (isModifier) {
+      // Add the single layer to the existing selections.
+      this.layerTimelineService.selectLayer(layer.id, false);
+    } else {
+      // TODO: re-implement this behavior to match the behavior of Sketch (and Mac OS X finder, etc.)?
+      // Batch add layers to the existing selections.
+      const vectorLayer = this.vectorLayer;
+      const topDownSortedLayers = LayerUtil.runPreorderTraversal(vectorLayer);
+      const layerIndex = _.findIndex(topDownSortedLayers, l => l.id === layer.id);
+      const selectedLayerIds = this.layerTimelineService.getSelectedLayerIds();
+      let prevLayerIndex = _.findLastIndex(
+        topDownSortedLayers,
+        l => selectedLayerIds.has(l.id),
+        layerIndex,
+      );
+      if (prevLayerIndex < 0) {
+        // If no previous selection was found, then default to the root vector layer.
+        prevLayerIndex = 0;
+      }
+      for (let i = prevLayerIndex; i <= layerIndex; i++) {
+        selectedLayerIds.add(topDownSortedLayers[i].id);
+      }
+      this.layerTimelineService.setSelectedLayers(selectedLayerIds);
+    }
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -825,25 +852,16 @@ export class LayerTimelineComponent extends DestroyableMixin()
     let targetLayerInfo: LayerInfo;
     let targetEdge: string;
 
-    const vectorLayer = this.vectorLayer;
-    const selectedLayerIds: ReadonlySet<string> = this.layerTimelineService.getSelectedLayerIds();
-    const isDragLayerSelected = selectedLayerIds.has(mouseDownDragLayer.id);
-    const dragLayers: ReadonlyArray<Layer> = (function() {
-      if (!isDragLayerSelected) {
-        // Don't drag any other selected layers if the drag layer isn't selected itself.
-        // At the end of the drag, we will select the drag layer and deselect the others.
-        return [mouseDownDragLayer];
-      }
-      // Add the layers as we iterate the tree to ensure they are properly sorted.
-      const layers: Layer[] = [];
-      (function recurseFn(layer: Layer) {
-        if (selectedLayerIds.has(layer.id)) {
-          layers.push(layer);
-        }
-        layer.children.forEach(recurseFn);
-      })(vectorLayer);
-      return layers;
-    })();
+    const dragLayers: ReadonlyArray<Layer> = (function(lts: LayerTimelineService) {
+      const selectedLayerIds = lts.getSelectedLayerIds();
+      // Don't drag any other selected layers if the drag layer isn't selected itself.
+      // At the end of the drag, we will select the drag layer and deselect the others.
+      const dragLayerIdSet = selectedLayerIds.has(mouseDownDragLayer.id)
+        ? new Set([mouseDownDragLayer.id])
+        : selectedLayerIds;
+      const topDownSortedLayers = LayerUtil.runPreorderTraversal(lts.getVectorLayer());
+      return topDownSortedLayers.filter(l => dragLayerIdSet.has(l.id));
+    })(this.layerTimelineService);
 
     // tslint:disable-next-line: no-unused-expression
     new Dragger({
@@ -992,12 +1010,12 @@ export class LayerTimelineComponent extends DestroyableMixin()
         }
 
         if (replacementVl) {
-          const actions: Action[] = [];
-          actions.push(new SetVectorLayer(replacementVl));
-          if (!isDragLayerSelected) {
-            actions.push(new SetSelectedLayers(new Set(dragLayerIds)));
-          }
-          this.store.dispatch(new BatchAction(...actions));
+          this.store.dispatch(
+            new BatchAction(
+              new SetVectorLayer(replacementVl),
+              new SetSelectedLayers(new Set(dragLayerIds)),
+            ),
+          );
         }
       },
     });
