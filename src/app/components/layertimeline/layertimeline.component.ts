@@ -793,17 +793,26 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // @Override LayerListTreeComponentCallbacks
   onLayerClick(event: MouseEvent, clickedLayer: Layer) {
-    const isModifier = ShortcutService.isOsDependentModifierKey(event);
+    const isMeta = ShortcutService.isOsDependentModifierKey(event);
     const isShift = event.shiftKey;
-    if (!isModifier && !isShift) {
+    if (!isMeta && !isShift) {
       // Clear the existing selections.
       this.layerTimelineService.selectLayer(clickedLayer.id, true);
       return;
     }
 
-    if (isModifier) {
-      // Add the single layer to the existing selections.
+    if (isMeta && !isShift) {
+      // Add the single layer to the existing selections, toggling the
+      // layer if it is already selected.
       this.layerTimelineService.selectLayer(clickedLayer.id, false);
+      return;
+    }
+
+    if (isMeta && isShift) {
+      // Add the single layer to the existing selections.
+      const layerIds = this.layerTimelineService.getSelectedLayerIds();
+      layerIds.add(clickedLayer.id);
+      this.layerTimelineService.setSelectedLayers(layerIds);
       return;
     }
 
