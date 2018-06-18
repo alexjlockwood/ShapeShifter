@@ -1,6 +1,7 @@
 // TODO: test stroked paths
 
 import { Command, Path, PathUtil } from 'app/model/paths';
+import { bugsnagClient } from 'app/scripts/bugsnag';
 import { MathUtil } from 'app/scripts/common';
 import * as _ from 'lodash';
 
@@ -29,26 +30,39 @@ import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
  * compatible with each other.
  */
 export function autoFix(from: Path, to: Path): [Path, Path] {
-  [from, to] = autoUnconvertSubPaths(from, to);
-  [from, to] = autoAddCollapsingSubPaths(from, to);
-  [from, to] = orderSubPaths(from, to);
+  // TODO: remove this once we fix the bug below
+  const origFrom = from.getPathString();
+  const origTo = to.getPathString();
+  try {
+    [from, to] = autoUnconvertSubPaths(from, to);
+    [from, to] = autoAddCollapsingSubPaths(from, to);
+    [from, to] = orderSubPaths(from, to);
 
-  const min = Math.min(from.getSubPaths().length, to.getSubPaths().length);
-  for (let subIdx = 0; subIdx < min; subIdx++) {
-    // Pass the command with the larger subpath as the 'from' command.
-    const numFromCmds = from.getSubPath(subIdx).getCommands().length;
-    const numToCmds = to.getSubPath(subIdx).getCommands().length;
-    const shouldSwap = numFromCmds < numToCmds;
-    if (shouldSwap) {
-      [from, to] = [to, from];
+    const min = Math.min(from.getSubPaths().length, to.getSubPaths().length);
+    for (let subIdx = 0; subIdx < min; subIdx++) {
+      // Pass the command with the larger subpath as the 'from' command.
+      const numFromCmds = from.getSubPath(subIdx).getCommands().length;
+      const numToCmds = to.getSubPath(subIdx).getCommands().length;
+      const shouldSwap = numFromCmds < numToCmds;
+      if (shouldSwap) {
+        [from, to] = [to, from];
+      }
+      [from, to] = alignSubPath(from, to, subIdx);
+      if (shouldSwap) {
+        [from, to] = [to, from];
+      }
     }
-    [from, to] = alignSubPath(from, to, subIdx);
-    if (shouldSwap) {
-      [from, to] = [to, from];
+    for (let subIdx = 0; subIdx < min; subIdx++) {
+      [from, to] = permuteSubPath(from, to, subIdx);
     }
-  }
-  for (let subIdx = 0; subIdx < min; subIdx++) {
-    [from, to] = permuteSubPath(from, to, subIdx);
+  } catch (e) {
+    // TODO: remove this once we determine what is causing this bug...
+    console.error('autofix failed', origFrom, origTo);
+    bugsnagClient.leaveBreadcrumb('autoFix', {
+      from: origFrom,
+      to: origTo,
+    });
+    throw e;
   }
   return [from, to];
 }
