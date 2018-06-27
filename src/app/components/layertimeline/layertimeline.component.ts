@@ -886,8 +886,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
       // Don't drag any other selected layers if the drag layer isn't selected itself.
       // At the end of the drag, we will select the drag layer and deselect the others.
       const dragLayerIdSet = selectedLayerIds.has(mouseDownDragLayer.id)
-        ? new Set([mouseDownDragLayer.id])
-        : selectedLayerIds;
+        ? selectedLayerIds
+        : new Set([mouseDownDragLayer.id]);
       const topDownSortedLayers = LayerUtil.runPreorderTraversal(lts.getVectorLayer());
       return topDownSortedLayers.filter(l => dragLayerIdSet.has(l.id));
     })(this.layerTimelineService);
