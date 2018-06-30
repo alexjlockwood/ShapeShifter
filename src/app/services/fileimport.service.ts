@@ -178,6 +178,6 @@ export class FileImportService {
   }
 
   private onFailure() {
-    this.snackBarService.show(`Couldn't import layers from file.`, 'Dismiss', Duration.Long);
+    this.snackBarService.show(`Couldn't import layers from file`, 'Dismiss', Duration.Long);
   }
 }

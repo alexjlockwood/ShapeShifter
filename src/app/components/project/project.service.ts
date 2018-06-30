@@ -6,28 +6,28 @@ import { ModelUtil } from 'app/scripts/common';
 import { FileExportService } from 'app/services/fileexport.service';
 
 // TODO: store hidden layer IDs and vector layer inside the animations?
-interface Demo {
+interface Project {
   readonly vectorLayer: VectorLayer;
   readonly animation: Animation;
   readonly hiddenLayerIds: ReadonlySet<string>;
 }
 
 @Injectable({ providedIn: 'root' })
-export class DemoService {
+export class ProjectService {
   constructor(private readonly http: HttpClient) {}
 
   /**
-   * Fetches a demo via HTTP.
-   * @param demoName the id of the demo (i.e. 'searchtoclose' or 'visibilitystrike')
+   * Fetches a shape shifter project via HTTP.
+   * @param url the URL of the shape shifter project
    */
-  getDemo(demoId: string): Promise<Demo> {
+  getProject(url: string): Promise<Project> {
     return this.http
-      .get(`demos/${demoId}.shapeshifter`)
+      .get(url)
       .toPromise()
       .then(response => {
         const jsonObj = response;
         const { vectorLayer, animation, hiddenLayerIds } = FileExportService.fromJSON(jsonObj);
-        return ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds) as Demo;
+        return ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds) as Project;
       });
   }
 }

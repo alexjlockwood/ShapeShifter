@@ -29,7 +29,6 @@ import {
   CanvasPaperDirective,
   CanvasRulerDirective,
 } from 'app/components/canvas';
-import { DemoService } from 'app/components/demos';
 import {
   ConfirmDialogComponent,
   DemoDialogComponent,
@@ -43,6 +42,7 @@ import {
   TimelineAnimationRowComponent,
 } from 'app/components/layertimeline';
 import { PlaybackComponent } from 'app/components/playback/playback.component';
+import { ProjectService } from 'app/components/project';
 import { PropertyInputComponent } from 'app/components/propertyinput/propertyinput.component';
 import { DropTargetDirective } from 'app/components/root/droptarget.directive';
 import { RootComponent } from 'app/components/root/root.component';
@@ -119,7 +119,7 @@ describe('RootComponent', () => {
         { provide: Store, useValue: new MockStore() },
         ActionModeService,
         ClipboardService,
-        DemoService,
+        ProjectService,
         DialogService,
         FileExportService,
         FileImportService,

@@ -14,8 +14,8 @@ import {
   MatTooltipModule,
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
-import { DemoService } from 'app/components/demos';
 import { DialogService } from 'app/components/dialogs';
+import { ProjectService } from 'app/components/project';
 import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.directive';
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import {
@@ -63,7 +63,7 @@ describe('LayerTimelineComponent', () => {
       providers: [
         { provide: Store, useValue: new MockStore() },
         ActionModeService,
-        DemoService,
+        ProjectService,
         DialogService,
         FileExportService,
         FileImportService,

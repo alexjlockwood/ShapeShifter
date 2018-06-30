@@ -8,8 +8,8 @@ import {
   ViewChild,
   ViewChildren,
 } from '@angular/core';
-import { DemoService } from 'app/components/demos';
 import { DialogService } from 'app/components/dialogs';
+import { ProjectService } from 'app/components/project';
 import { ActionMode } from 'app/model/actionmode';
 import {
   ClipPathLayer,
@@ -125,7 +125,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     private readonly playbackService: PlaybackService,
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
-    private readonly demoService: DemoService,
+    private readonly projectService: ProjectService,
     private readonly actionModeService: ActionModeService,
     readonly shortcutService: ShortcutService,
     private readonly layerTimelineService: LayerTimelineService,
@@ -244,8 +244,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
       .subscribe(selectedDemoInfo => {
         ga('send', 'event', 'Demos', 'Demo selected', selectedDemoInfo.title);
 
-        this.demoService
-          .getDemo(selectedDemoInfo.id)
+        this.projectService
+          .getProject(`demos/${selectedDemoInfo.id}.shapeshifter`)
           .then(({ vectorLayer, animation, hiddenLayerIds }) => {
             this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
           })

@@ -9,8 +9,8 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { DemoService } from 'app/components/demos';
 import { DialogService, DropFilesAction } from 'app/components/dialogs';
+import { ProjectService } from 'app/components/project';
 import { ActionMode, ActionSource } from 'app/model/actionmode';
 import { CursorType } from 'app/model/paper';
 import { DestroyableMixin } from 'app/scripts/mixins';
@@ -67,7 +67,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     private readonly store: Store<State>,
     private readonly actionModeService: ActionModeService,
     private readonly shortcutService: ShortcutService,
-    private readonly demoService: DemoService,
+    private readonly demoService: ProjectService,
     private readonly dialogService: DialogService,
     private readonly clipboardService: ClipboardService,
     private readonly layerTimelineService: LayerTimelineService,
@@ -157,11 +157,19 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       }
     }
 
-    if (IS_DEV_BUILD && SHOULD_AUTO_LOAD_DEMO) {
+    const projectUrl = getUrlParameter('project');
+    if (projectUrl) {
       this.demoService
-        .getDemo('morphinganimals')
+        .getProject(projectUrl)
         .then(({ vectorLayer, animation, hiddenLayerIds }) => {
           this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
+        })
+        .catch(e => {
+          this.snackBarService.show(
+            `There was a problem loading the Shape Shifter project`,
+            'Dismiss',
+            Duration.Long,
+          );
         });
     }
   }
@@ -225,4 +233,11 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
 interface Size {
   readonly w: number;
   readonly h: number;
+}
+
+function getUrlParameter(name: string) {
+  name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+  const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+  const results = regex.exec(location.search);
+  return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
