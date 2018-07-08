@@ -49,7 +49,7 @@ import 'core-js/es7/reflect';
  * Required to support Web Animations `@angular/platform-browser/animations`.
  * Needed for: All but Chrome, Firefox and Opera. http://caniuse.com/#feat=web-animation
  **/
-import 'web-animations-js';
+// import 'web-animations-js';
 /***************************************************************************************************
  * Zone JS is required by Angular itself.
  */
