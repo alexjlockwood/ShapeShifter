@@ -55,6 +55,12 @@ import 'web-animations-js';
  */
 import 'zone.js/dist/zone';
 
+import storage from 'local-storage-fallback';
+
+if (!('localStorage' in window)) {
+  (window as any).localStorage = storage;
+}
+
 // Included with Angular CLI.
 
 /***************************************************************************************************
