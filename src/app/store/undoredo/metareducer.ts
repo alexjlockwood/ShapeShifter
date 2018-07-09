@@ -1,5 +1,5 @@
+import { Action, ActionReducer } from 'app/store';
 import { ActionModeActionTypes } from 'app/store/actionmode/actions';
-import { Action, ActionReducer } from 'app/store/ngrx';
 import { PlaybackActionTypes } from 'app/store/playback/actions';
 import { AppState } from 'app/store/reducer';
 import undoable, { StateWithHistory, UndoableOptions, excludeAction } from 'redux-undo';

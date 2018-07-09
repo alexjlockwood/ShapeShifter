@@ -1,4 +1,4 @@
-import { Action } from 'app/store/ngrx';
+import { Action } from 'app/store';
 
 export enum PlaybackActionTypes {
   SetIsSlowMotion = '__playback__SET_IS_SLOW_MOTION',

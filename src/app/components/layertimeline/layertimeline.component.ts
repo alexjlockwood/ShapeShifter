@@ -34,12 +34,11 @@ import {
 } from 'app/services';
 import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
-import { State, Store } from 'app/store';
+import { Action, State, Store } from 'app/store';
 import { BatchAction } from 'app/store/batch/actions';
 import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/selectors';
 import { SetSelectedLayers, SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
-import { Action } from 'app/store/ngrx';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';

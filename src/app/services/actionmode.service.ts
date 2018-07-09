@@ -12,6 +12,7 @@ import { Path, PathMutator, PathUtil } from 'app/model/paths';
 import { PathAnimationBlock } from 'app/model/timeline';
 import { AutoAwesome } from 'app/scripts/algorithms';
 import { State, Store } from 'app/store';
+import { Action } from 'app/store';
 import {
   SetActionMode,
   SetActionModeHover,
@@ -27,7 +28,6 @@ import {
   getUnpairedSubPath,
 } from 'app/store/actionmode/selectors';
 import { BatchAction } from 'app/store/batch/actions';
-import { Action } from 'app/store/ngrx';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';

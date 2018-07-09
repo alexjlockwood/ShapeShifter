@@ -1,4 +1,4 @@
-import { ActionReducer } from 'app/store/ngrx';
+import { ActionReducer } from 'app/store';
 import { AppState } from 'app/store/reducer';
 
 import { ResetActionTypes, ResetActions } from './actions';

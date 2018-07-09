@@ -1,4 +1,4 @@
-import { Action, ActionReducer, combineReducers, compose } from 'app/store/ngrx';
+import { Action, ActionReducer, combineReducers, compose } from 'app/store';
 import { environment } from 'environments/environment';
 
 import * as fromActionMode from './actionmode/reducer';

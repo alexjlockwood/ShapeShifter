@@ -50,8 +50,7 @@ import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import { ToolbarComponent } from 'app/components/toolbar/toolbar.component';
 import { ToolPanelComponent } from 'app/components/toolpanel/toolpanel.component';
 import { errorHandlerFactory } from 'app/scripts/bugsnag';
-import { reducer } from 'app/store';
-import { StoreModule } from 'app/store/ngrx';
+import { StoreModule, reducer } from 'app/store';
 import { environment } from 'environments/environment';
 
 @NgModule({

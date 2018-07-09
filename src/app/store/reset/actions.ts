@@ -1,6 +1,6 @@
 import { VectorLayer } from 'app/model/layers';
 import { Animation } from 'app/model/timeline';
-import { Action } from 'app/store/ngrx';
+import { Action } from 'app/store';
 
 export enum ResetActionTypes {
   ResetWorkspace = '__reset__RESET_WORKSPACE',

@@ -1,4 +1,4 @@
-import { Action, INIT_ACTION } from 'app/store/ngrx';
+import { Action, INIT } from 'app/store';
 
 const logger = console;
 
@@ -205,7 +205,7 @@ export const metaReducer = (opts: LoggerOptions = {}) => (reducer: Function) => 
     };
     log = { ...preLog, ...postLog };
     // Ignore init action fired by store and devtools.
-    if (action.type !== INIT_ACTION && isAllowed(action, options.filter)) {
+    if (action.type !== INIT && isAllowed(action, options.filter)) {
       buffer([log]);
     }
 

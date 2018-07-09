@@ -11,6 +11,7 @@ import {
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/model/timeline';
 import { MathUtil, Matrix, ModelUtil } from 'app/scripts/common';
 import { State, Store } from 'app/store';
+import { Action } from 'app/store';
 import { BatchAction } from 'app/store/batch/actions';
 import {
   SetCollapsedLayers,
@@ -24,7 +25,6 @@ import {
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/store/layers/selectors';
-import { Action } from 'app/store/ngrx';
 import { SelectAnimation, SetAnimation, SetSelectedBlocks } from 'app/store/timeline/actions';
 import {
   getAnimation,

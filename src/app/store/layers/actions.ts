@@ -1,5 +1,5 @@
 import { VectorLayer } from 'app/model/layers';
-import { Action } from 'app/store/ngrx';
+import { Action } from 'app/store';
 
 export enum LayerActionTypes {
   SetVectorLayer = '__layers__SET_VECTOR_LAYER',

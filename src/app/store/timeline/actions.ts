@@ -1,5 +1,5 @@
 import { Animation } from 'app/model/timeline';
-import { Action } from 'app/store/ngrx';
+import { Action } from 'app/store';
 
 export enum TimelineActionTypes {
   SetAnimation = '__timeline__SET_ANIMATION',

@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { State, Store } from 'app/store';
+import { Action } from 'app/store';
 import { BatchAction } from 'app/store/batch/actions';
-import { Action } from 'app/store/ngrx';
 import {
   SetCurrentTime,
   SetIsPlaying,

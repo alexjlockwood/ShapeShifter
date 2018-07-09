@@ -3,9 +3,9 @@ import { VectorLayer } from 'app/model/layers';
 import { CursorType, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
+import { Action } from 'app/store';
 import { BatchAction } from 'app/store/batch/actions';
 import { getHiddenLayerIds, getSelectedLayerIds } from 'app/store/layers/selectors';
-import { Action } from 'app/store/ngrx';
 import {
   CreatePathInfo,
   EditPathInfo,

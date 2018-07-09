@@ -3,9 +3,9 @@ import { Gesture } from 'app/scripts/paper/gesture';
 import { HitTests, PaperLayer } from 'app/scripts/paper/item';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
+import { Action } from 'app/store';
 import { BatchAction } from 'app/store/batch/actions';
 import { SetVectorLayer } from 'app/store/layers/actions';
-import { Action } from 'app/store/ngrx';
 import { SetEditPathInfo } from 'app/store/paper/actions';
 import * as paper from 'paper';
 

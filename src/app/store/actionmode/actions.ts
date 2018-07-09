@@ -1,5 +1,5 @@
 import { ActionMode, ActionSource, Hover, Selection } from 'app/model/actionmode';
-import { Action } from 'app/store/ngrx';
+import { Action } from 'app/store';
 
 export enum ActionModeActionTypes {
   SetActionMode = '__actionmode__SET_ACTION_MODE',

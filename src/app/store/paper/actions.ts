@@ -1,6 +1,6 @@
 import { CursorType, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
-import { Action } from 'app/store/ngrx';
+import { Action } from 'app/store';
 
 export enum PaperActionTypes {
   SetToolMode = '__paper__SET_TOOL_MODE',
