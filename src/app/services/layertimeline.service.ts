@@ -100,10 +100,32 @@ export class LayerTimelineService {
    * Clears all animation/block/layer selections.
    */
   clearSelections() {
-    this.updateSelections(false, new Set(), new Set());
+    const actions = this.getClearSelectionsActions();
+    if (actions.length) {
+      this.store.dispatch(new BatchAction(...actions));
+    }
+  }
+
+  private getClearSelectionsActions() {
+    return this.getUpdateSelectionsActions(false, new Set(), new Set());
   }
 
   private updateSelections(
+    isAnimSelected: boolean,
+    selectedBlockIds: ReadonlySet<string>,
+    selectedLayerIds: ReadonlySet<string>,
+  ) {
+    const actions = this.getUpdateSelectionsActions(
+      isAnimSelected,
+      selectedBlockIds,
+      selectedLayerIds,
+    );
+    if (actions.length) {
+      this.store.dispatch(new BatchAction(...actions));
+    }
+  }
+
+  private getUpdateSelectionsActions(
     isAnimSelected: boolean,
     selectedBlockIds: ReadonlySet<string>,
     selectedLayerIds: ReadonlySet<string>,
@@ -125,9 +147,7 @@ export class LayerTimelineService {
         actions.push(...StoreUtil.getEnterDefaultModeActions());
       }
     }
-    if (actions.length) {
-      this.store.dispatch(new BatchAction(...actions));
-    }
+    return actions;
   }
 
   /**
@@ -170,7 +190,6 @@ export class LayerTimelineService {
     if (!vls.length) {
       return;
     }
-    this.clearSelections();
     const importedVls = [...vls];
     const vectorLayer = this.getVectorLayer();
     let vectorLayers = [vectorLayer];
@@ -186,7 +205,9 @@ export class LayerTimelineService {
       newVectorLayers.length === 1
         ? newVectorLayers[0]
         : newVectorLayers.reduce(LayerUtil.mergeVectorLayers);
-    this.setVectorLayer(newVl);
+    this.store.dispatch(
+      new BatchAction(...this.getClearSelectionsActions(), new SetVectorLayer(newVl)),
+    );
   }
 
   /**
