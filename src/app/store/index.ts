@@ -1,11 +1,2 @@
-export {
-  StoreModule,
-  Store,
-  Action,
-  ActionReducer,
-  combineReducers,
-  compose,
-  INIT,
-} from '@ngrx/store';
-export { State, reducer, prodReducer } from './reducer';
-export { reducers, metaReducers } from './reducer';
+export { StoreModule, Store, Action, ActionReducer } from '@ngrx/store';
+export { State, reducers, metaReducers } from './reducer';
