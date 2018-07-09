@@ -192,7 +192,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       bugsnagClient.notify('Attempt to import files while in action mode', {
         severity: 'warning',
       });
-      return false;
+      return;
     }
     if (!fileList || !fileList.length) {
       return;
