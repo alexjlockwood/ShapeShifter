@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { AnimationBlock } from 'app/model/timeline';
+import { bugsnagClient } from 'app/scripts/bugsnag';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
 import * as $ from 'jquery';
 
+import { ActionModeService } from './actionmode.service';
 import { LayerTimelineService } from './layertimeline.service';
 import { PlaybackService } from './playback.service';
 
@@ -13,6 +15,7 @@ export class ClipboardService {
   constructor(
     private readonly layerTimelineService: LayerTimelineService,
     private readonly playbackService: PlaybackService,
+    private readonly actionModeService: ActionModeService,
   ) {}
 
   init() {
@@ -36,6 +39,13 @@ export class ClipboardService {
     };
 
     const pasteHandlerFn = (event: JQuery.Event) => {
+      if (this.actionModeService.isActionMode()) {
+        // TODO: make action mode automatically exit when layers/blocks are added in other parts of the app
+        bugsnagClient.notify('Attempt to import files while in action mode', {
+          severity: 'warning',
+        });
+        return false;
+      }
       if (document.activeElement.matches('input')) {
         return true;
       }

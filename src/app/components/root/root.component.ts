@@ -13,6 +13,7 @@ import { DialogService, DropFilesAction } from 'app/components/dialogs';
 import { ProjectService } from 'app/components/project';
 import { ActionMode, ActionSource } from 'app/model/actionmode';
 import { CursorType } from 'app/model/paper';
+import { bugsnagClient } from 'app/scripts/bugsnag';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
@@ -186,6 +187,13 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
 
   // Called by the DropTargetDirective.
   onDropFiles(fileList: FileList) {
+    if (this.actionModeService.isActionMode()) {
+      // TODO: make action mode automatically exit when layers/blocks are added in other parts of the app
+      bugsnagClient.notify('Attempt to import files while in action mode', {
+        severity: 'warning',
+      });
+      return false;
+    }
     if (!fileList || !fileList.length) {
       return;
     }
