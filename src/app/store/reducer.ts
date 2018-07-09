@@ -1,10 +1,10 @@
 import { Action, ActionReducer, combineReducers, compose } from 'app/store';
 import { environment } from 'environments/environment';
+import { storeLogger } from 'ngrx-store-logger';
 
 import * as fromActionMode from './actionmode/reducer';
 import * as metaBatchAction from './batch/metareducer';
 import * as fromLayers from './layers/reducer';
-import * as metaLogger from './logger/metareducer';
 import * as fromPaper from './paper/reducer';
 import * as fromPlayback from './playback/reducer';
 import * as metaReset from './reset/metareducer';
@@ -44,13 +44,13 @@ const prodMetaReducers = [
   // Meta-reducer that adds the ability to reset the entire state tree.
   metaReset.metaReducer,
   // Meta-reducer that maps our slice reducers to the keys in our state tree.
-  combineReducers,
+  // combineReducers,
 ];
 
 const devMetaReducers = [
   // Meta reducer that logs the before/after state of the store
   // as actions are performed in dev builds.
-  metaLogger.metaReducer({ collapsed: true }),
+  storeLogger({ collapsed: true }),
   // Meta reducer that freezes the state tree to ensure that
   // accidental mutations fail fast in dev builds.
   metaStoreFreeze.metaReducer,
@@ -66,3 +66,8 @@ export function reducer(state: State, action: Action) {
     return devReducer(state, action);
   }
 }
+
+export const reducers = sliceReducers;
+export const metaReducers = environment.production
+  ? prodMetaReducers
+  : [...devMetaReducers, ...prodMetaReducers];

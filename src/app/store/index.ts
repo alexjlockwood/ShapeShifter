@@ -5,6 +5,7 @@ export {
   ActionReducer,
   combineReducers,
   compose,
-} from 'app/store/ngrx';
-export { INIT_ACTION as INIT } from 'app/store/ngrx';
+  INIT,
+} from '@ngrx/store';
 export { State, reducer, prodReducer } from './reducer';
+export { reducers, metaReducers } from './reducer';

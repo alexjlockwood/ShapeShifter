@@ -50,7 +50,7 @@ import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import { ToolbarComponent } from 'app/components/toolbar/toolbar.component';
 import { ToolPanelComponent } from 'app/components/toolpanel/toolpanel.component';
 import { errorHandlerFactory } from 'app/scripts/bugsnag';
-import { StoreModule, reducer } from 'app/store';
+import { StoreModule, metaReducers, reducers } from 'app/store';
 import { environment } from 'environments/environment';
 
 @NgModule({
@@ -85,7 +85,7 @@ import { environment } from 'environments/environment';
     FormsModule,
     HttpClientModule,
     ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),
-    StoreModule.provideStore(reducer),
+    StoreModule.forRoot(reducers, { metaReducers }),
     // Angular material components.
     MatButtonModule,
     MatDialogModule,

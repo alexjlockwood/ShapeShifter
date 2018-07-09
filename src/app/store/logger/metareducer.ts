@@ -205,7 +205,7 @@ export const metaReducer = (opts: LoggerOptions = {}) => (reducer: Function) => 
     };
     log = { ...preLog, ...postLog };
     // Ignore init action fired by store and devtools.
-    if (action.type !== INIT && isAllowed(action, options.filter)) {
+    if (/*action.type !== INIT && */ isAllowed(action, options.filter)) {
       buffer([log]);
     }
 
