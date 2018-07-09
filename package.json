@@ -58,7 +58,6 @@
     "svgo": "^1.0.5",
     "tinycolor2": "^1.4.1",
     "tslib": "^1.9.2",
-    "web-animations-js": "^2.3.1",
     "zone.js": "^0.8.26"
   },
   "devDependencies": {
