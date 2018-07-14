@@ -87,17 +87,20 @@ export class FileImportService {
           importType = ImportType.Svg;
           SvgLoader.loadVectorLayerFromSvgString(text, doesNameExistFn)
             .then(vl => callbackFn(vl))
-            .catch(() => console.warn('failed to import SVG'));
+            .catch(() => {
+              console.warn('failed to import SVG');
+              callbackFn(undefined);
+            });
         } else if (file.type.includes('xml')) {
           importType = ImportType.VectorDrawable;
           let vl: VectorLayer;
           try {
             vl = VectorDrawableLoader.loadVectorLayerFromXmlString(text, doesNameExistFn);
+            callbackFn(vl);
           } catch (e) {
-            console.error('Failed to parse the file', e);
+            console.warn('Failed to parse the file', e);
             callbackFn(undefined);
           }
-          callbackFn(vl);
         } else if (file.type === 'application/json' || file.name.match(/\.shapeshifter$/)) {
           importType = ImportType.Json;
           let vl: VectorLayer;
@@ -114,7 +117,7 @@ export class FileImportService {
             animation = regeneratedModels.animation;
             hiddenLayerIds = regeneratedModels.hiddenLayerIds;
           } catch (e) {
-            console.error('Failed to parse the file', e);
+            console.warn('Failed to parse the file', e);
             this.onFailure();
           }
           this.onSuccess(importType, resetWorkspace, [vl], animation, hiddenLayerIds);
