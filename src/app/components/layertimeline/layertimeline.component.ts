@@ -34,7 +34,7 @@ import {
 } from 'app/services';
 import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
-import { Action, State, Store } from 'app/store';
+import { State, Store } from 'app/store';
 import { BatchAction } from 'app/store/batch/actions';
 import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/selectors';
 import { SetSelectedLayers, SetVectorLayer } from 'app/store/layers/actions';

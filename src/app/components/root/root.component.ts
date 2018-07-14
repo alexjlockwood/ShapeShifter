@@ -35,7 +35,6 @@ import * as $ from 'jquery';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { distinctUntilChanged, first, map } from 'rxjs/operators';
 
-const SHOULD_AUTO_LOAD_DEMO = false;
 const IS_DEV_BUILD = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd({ strategy: 'scroll' });
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';

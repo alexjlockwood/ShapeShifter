@@ -10,8 +10,7 @@ import {
 } from 'app/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/model/timeline';
 import { MathUtil, Matrix, ModelUtil } from 'app/scripts/common';
-import { State, Store } from 'app/store';
-import { Action } from 'app/store';
+import { Action, State, Store } from 'app/store';
 import { BatchAction } from 'app/store/batch/actions';
 import {
   SetCollapsedLayers,
@@ -137,7 +136,6 @@ export class LayerTimelineService {
     if (!_.isEqual(this.getSelectedBlockIds(), selectedBlockIds)) {
       actions.push(new SetSelectedBlocks(selectedBlockIds));
     }
-    const previouslySelectedLayerIds = this.getSelectedLayerIds();
     if (!_.isEqual(this.getSelectedLayerIds(), selectedLayerIds)) {
       actions.push(new SetSelectedLayers(selectedLayerIds));
       // TODO: improve this design somehow (probably best not to have this service depend on paper ops?)

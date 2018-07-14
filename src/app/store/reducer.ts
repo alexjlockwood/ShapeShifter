@@ -1,4 +1,3 @@
-import { Action, ActionReducer } from 'app/store';
 import { environment } from 'environments/environment';
 import { storeLogger } from 'ngrx-store-logger';
 

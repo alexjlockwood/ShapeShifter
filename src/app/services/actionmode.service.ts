@@ -11,8 +11,7 @@ import { MorphableLayer } from 'app/model/layers';
 import { Path, PathMutator, PathUtil } from 'app/model/paths';
 import { PathAnimationBlock } from 'app/model/timeline';
 import { AutoAwesome } from 'app/scripts/algorithms';
-import { State, Store } from 'app/store';
-import { Action } from 'app/store';
+import { Action, State, Store } from 'app/store';
 import {
   SetActionMode,
   SetActionModeHover,
