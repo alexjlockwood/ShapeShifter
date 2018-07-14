@@ -185,6 +185,7 @@ function loadVectorLayerFromSvgStringInternal(
       );
     }
 
+    // TODO: we should *not* iterate over a clip path's children here...
     if (node.childNodes) {
       const children: Layer[] = [];
       for (let i = 0; i < node.childNodes.length; i++) {
