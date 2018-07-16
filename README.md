@@ -4,7 +4,7 @@
 [![Coverage Status][coveralls-badge]][coveralls-badge-url]
 [![GitHub Stats](https://img.shields.io/badge/github-stats-ff5500.svg)](http://githubstats.com/alexjlockwood/ShapeShifter)
 
-**[Go to Live Version](https://shapeshifter.design)**
+**[Go to live version](https://shapeshifter.design)** or **[ask a question on Slack](https://join.slack.com/t/shapeshifterdesign/shared_invite/enQtNDAwODY5NjI2NTE4LTAyZTE3ZmYxNGUxMmViY2UwNDJjZWYyYzhhNTQzYmVkYmVmNTA0NmEyY2MwMmFiOTllODI5YzZmNDQwOTE1MGU)**
 
 -----
 
