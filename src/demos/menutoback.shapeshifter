@@ -1,0 +1,250 @@
+{
+	"version": 1,
+	"layers": {
+		"vectorLayer": {
+			"id": "menu_back",
+			"name": "menutoback",
+			"type": "vector",
+			"width": 24,
+			"height": 24,
+			"alpha": 1,
+			"children": [
+			{
+				"id": "menu",
+				"name": "group",
+				"type": "group",
+				"rotation": 0,
+				"scaleX": 1,
+				"scaleY": 1,
+				"pivotX": 12,
+				"pivotY": 12,
+				"translateX": 0,
+				"translateY": 0,
+				"children": [
+				{
+					"id": "bottom_container",
+					"name": "bottom_container",
+					"type": "group",
+					"rotation": 0,
+					"scaleX": 1,
+					"scaleY": 1,
+					"pivotX": 20,
+					"pivotY": 17,
+					"translateX": 0,
+					"translateY": 0,
+					"children": [
+					{
+						"id": "bottom",
+						"type": "path",
+						"pathData": "M4,17 L20,17",
+						"fillColor": null,
+						"fillAlpha": 1,
+						"strokeColor": "#000",
+						"strokeAlpha": 1,
+						"strokeWidth": 2,
+						"strokeLinecap": "square",
+						"strokeLinejoin": "miter",
+						"strokeMiterLimit": 4,
+						"trimPathStart": 0,
+						"trimPathEnd": 1,
+						"trimPathOffset": 0
+					}
+					]
+				},
+				{
+					"id": "stem_container",
+					"name": "stem_container",
+					"type": "group",
+					"rotation": 0,
+					"scaleX": 1,
+					"scaleY": 1,
+					"pivotX": 12,
+					"pivotY": 12,
+					"translateX": 0,
+					"translateY": 0,
+					"children": [
+					{
+						"id": "stem",
+						"type": "path",
+						"pathData": "M4,12 L20,12",
+						"fillColor": null,
+						"fillAlpha": 1,
+						"strokeColor": "#000",
+						"strokeAlpha": 1,
+						"strokeWidth": 2,
+						"strokeLinecap": "square",
+						"strokeLinejoin": "miter",
+						"strokeMiterLimit": 4,
+						"trimPathStart": 0,
+						"trimPathEnd": 1,
+						"trimPathOffset": 0
+					}
+					]
+				},
+				{
+					"id": "top_container",
+					"name": "top_container",
+					"type": "group",
+					"rotation": 0,
+					"scaleX": 1,
+					"scaleY": 1,
+					"pivotX": 20,
+					"pivotY": 7,
+					"translateX": 0,
+					"translateY": 0,
+					"children": [
+					{
+						"id": "top",
+						"type": "path",
+						"pathData": "M4,7 L20,7",
+						"fillColor": null,
+						"fillAlpha": 1,
+						"strokeColor": "#000",
+						"strokeAlpha": 1,
+						"strokeWidth": 2,
+						"strokeLinecap": "square",
+						"strokeLinejoin": "miter",
+						"strokeMiterLimit": 4,
+						"trimPathStart": 0,
+						"trimPathEnd": 1,
+						"trimPathOffset": 0
+					}
+					]
+				}
+				]
+			}
+			]
+		},
+		"hiddenLayerIds": []
+	},
+	"timeline": {
+		"animation": {
+		  "id": "anim",
+		  "name": "anim",
+		  "duration": 1600,
+		  "blocks": [
+			{
+			  "id": "top_container",
+			  "layerId": "top_container",
+			  "propertyName": "translateX",
+			  "fromValue": 0,
+			  "toValue": -1.41421356,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "top_container",
+			  "layerId": "top_container",
+			  "propertyName": "translateY",
+			  "fromValue": 0,
+			  "toValue": 5,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "top_container",
+			  "layerId": "top_container",
+			  "propertyName": "rotation",
+			  "fromValue": 0,
+			  "toValue": 45,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "bottom_container",
+			  "layerId": "bottom_container",
+			  "propertyName": "translateX",
+			  "fromValue": 0,
+			  "toValue": -1.41421356,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "bottom_container",
+			  "layerId": "bottom_container",
+			  "propertyName": "translateY",
+			  "fromValue": 0,
+			  "toValue": -5,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "bottom_container",
+			  "layerId": "bottom_container",
+			  "propertyName": "rotation",
+			  "fromValue": 0,
+			  "toValue": -45,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "menu",
+			  "layerId": "menu",
+			  "propertyName": "rotation",
+			  "fromValue": 0,
+			  "toValue": 180,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "bottom",
+			  "layerId": "bottom",
+			  "propertyName": "trimPathStart",
+			  "fromValue": 0,
+			  "toValue": 0.5,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "top",
+			  "layerId": "top",
+			  "propertyName": "trimPathStart",
+			  "fromValue": 0,
+			  "toValue": 0.5,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "stem",
+			  "layerId": "stem",
+			  "propertyName": "trimPathEnd",
+			  "fromValue": 1,
+			  "toValue": 0.8,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			},
+			{
+			  "id": "stem_container",
+			  "layerId": "stem_container",
+			  "propertyName": "translateX",
+			  "fromValue": 0,
+			  "toValue": 1,
+			  "startTime": 500,
+			  "endTime": 1200,
+			  "interpolator": "ACCELERATE_DECELERATE",
+			  "type": "number"
+			}
+		  ]
+		}
+	}
+}
