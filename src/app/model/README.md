@@ -127,7 +127,7 @@ An `AnimationBlock` describes a property animation for a particular `Layer`. The
 
 - `layerId` (string) - The `id` of the `Layer` that this `AnimationBlock` is associated with.
 
-- `propertyName` (string) - The name of the `Layer` property this block is animating.=
+- `propertyName` (string) - The name of the `Layer` property this block is animating.
 
 - `startTime` (integer) - An integer greater than or equal to `0` representing the block's starting time in milliseconds. Default value is `0`.
 
