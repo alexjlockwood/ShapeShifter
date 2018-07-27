@@ -78,6 +78,7 @@
     "codelyzer": "^4.3.0",
     "coveralls": "^3.0.1",
     "deep-freeze-strict": "^1.1.1",
+    "firebase-tools": "^4.0.0",
     "jasmine-core": "^3.1.0",
     "jasmine-jquery": "^2.1.1",
     "jasmine-spec-reporter": "^4.2.1",
