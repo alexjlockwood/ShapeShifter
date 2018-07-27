@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireAuthModule } from 'angularfire2/auth';
 import { AngularFirestoreModule } from 'angularfire2/firestore';
+import { AppModule as ProjectEditorModule } from 'app/app.module';
 import { environment } from 'environments/environment';
 
 import { AppComponent } from './app.component';
@@ -26,6 +27,7 @@ import { UserResolver } from './user/user.resolver';
     AngularFireModule.initializeApp(environment.firebase),
     AngularFirestoreModule,
     AngularFireAuthModule,
+    ProjectEditorModule,
   ],
   providers: [AuthService, UserService, UserResolver, AuthGuard],
   bootstrap: [AppComponent],

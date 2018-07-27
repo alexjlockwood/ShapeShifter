@@ -18,7 +18,11 @@ export class LoginComponent {
   loginForm: FormGroup;
   errorMessage = '';
 
-  constructor(public authService: AuthService, private router: Router, private fb: FormBuilder) {
+  constructor(
+    readonly authService: AuthService,
+    private readonly router: Router,
+    private readonly fb: FormBuilder,
+  ) {
     this.createForm();
   }
 
