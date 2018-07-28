@@ -11,8 +11,8 @@ export class AuthGuard implements CanActivate {
     private router: Router,
   ) {}
 
-  canActivate(): Promise<boolean> {
-    return new Promise(resolve => {
+  canActivate() {
+    return new Promise<boolean>(resolve => {
       this.userService.getCurrentUser().then(
         () => {
           this.router.navigate(['/user']);

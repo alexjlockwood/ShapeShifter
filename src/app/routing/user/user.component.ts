@@ -7,7 +7,7 @@ import { FirebaseUserModel } from 'app/routing/core/user.model';
 import { UserService } from 'app/routing/core/user.service';
 
 @Component({
-  selector: 'app-page-user',
+  selector: 'app-user',
   templateUrl: 'user.component.html',
   styleUrls: ['user.component.scss'],
 })

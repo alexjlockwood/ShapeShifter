@@ -13,18 +13,19 @@ import { rootRouterConfig } from './app.routes';
 import { AuthGuard } from './core/auth.guard';
 import { AuthService } from './core/auth.service';
 import { UserService } from './core/user.service';
+import { LandingComponent } from './landing/landing.component';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { UserComponent } from './user/user.component';
 import { UserResolver } from './user/user.resolver';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, UserComponent, RegisterComponent],
+  declarations: [AppComponent, LoginComponent, UserComponent, RegisterComponent, LandingComponent],
   imports: [
     BrowserModule,
     ReactiveFormsModule,
     RouterModule.forRoot(rootRouterConfig, { useHash: false }),
-    AngularFireModule.initializeApp(environment.firebase),
+    AngularFireModule.initializeApp(environment.firebaseOptions),
     AngularFirestoreModule,
     AngularFireAuthModule,
     ProjectEditorModule,

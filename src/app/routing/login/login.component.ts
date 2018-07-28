@@ -5,7 +5,7 @@ import { AuthService } from 'app/routing/core/auth.service';
 import { environment } from 'environments/environment';
 
 @Component({
-  selector: 'app-page-login',
+  selector: 'app-login',
   templateUrl: 'login.component.html',
   styleUrls: ['login.component.scss'],
 })
