@@ -9,8 +9,9 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { DialogService, DropFilesAction } from 'app/components/dialogs';
-import { ProjectService } from 'app/components/project';
+import { Project, ProjectService } from 'app/components/project';
 import { ActionMode, ActionSource } from 'app/model/actionmode';
 import { CursorType } from 'app/model/paper';
 import { bugsnagClient } from 'app/scripts/bugsnag';
@@ -73,6 +74,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     private readonly layerTimelineService: LayerTimelineService,
     readonly themeService: ThemeService,
     private readonly overlayContainer: OverlayContainer,
+    private readonly activatedRoute: ActivatedRoute,
   ) {
     super();
   }
@@ -157,21 +159,12 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       }
     }
 
-    const projectUrl = getUrlParameter('project');
-    if (projectUrl) {
-      this.demoService
-        .getProject(projectUrl)
-        .then(({ vectorLayer, animation, hiddenLayerIds }) => {
-          this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
-        })
-        .catch(e => {
-          this.snackBarService.show(
-            `There was a problem loading the Shape Shifter project`,
-            'Dismiss',
-            Duration.Long,
-          );
-        });
-    }
+    // TODO: fix this hack
+    setTimeout(() => {
+      this.activatedRoute.data.subscribe(({ data: { vectorLayer, animation, hiddenLayerIds } }) => {
+        this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
+      });
+    });
   }
 
   ngOnDestroy() {

@@ -5,8 +5,4 @@ export const environment = {
   beta: false,
   analyticsTrackingId: 'UA-92075411-1',
   firebaseOptions,
-  isEmailPasswordLoginEnabled: false,
-  isGoogleLoginEnabled: true,
-  isFacebookLoginEnabled: false,
-  isTwitterLoginEnabled: false,
 };

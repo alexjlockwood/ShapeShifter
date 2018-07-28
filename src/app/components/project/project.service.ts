@@ -6,7 +6,7 @@ import { ModelUtil } from 'app/scripts/common';
 import { FileExportService } from 'app/services/fileexport.service';
 
 // TODO: store hidden layer IDs and vector layer inside the animations?
-interface Project {
+export interface Project {
   readonly vectorLayer: VectorLayer;
   readonly animation: Animation;
   readonly hiddenLayerIds: ReadonlySet<string>;
