@@ -58,12 +58,15 @@ export class AuthService {
   private updateUserData(user: firebase.User) {
     console.log('updating user data', user);
 
-    return this.angularFirestore.doc<User>(`users/${user.uid}`).set({
-      uid: user.uid,
-      email: user.email,
-      photoURL: user.photoURL,
-      displayName: user.displayName,
-    });
+    return this.angularFirestore.doc<User>(`users/${user.uid}`).set(
+      {
+        uid: user.uid,
+        email: user.email,
+        photoURL: user.photoURL,
+        displayName: user.displayName,
+      },
+      { merge: true },
+    );
   }
 
   signOut() {

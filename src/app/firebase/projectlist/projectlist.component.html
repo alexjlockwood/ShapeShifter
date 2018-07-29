@@ -1,3 +1,7 @@
 <h1>Project List</h1>
 
-<a href="/project/heartbreak">Heartbreak</a>
+<ul>
+    <li *ngFor="let project of projects | async">
+        <a href="/project/{{ project.id }}">{{ project.name }} </a>
+    </li>
+</ul>
