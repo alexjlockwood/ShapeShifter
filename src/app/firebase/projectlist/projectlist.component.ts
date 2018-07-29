@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AngularFirestore, AngularFirestoreCollection } from 'angularfire2/firestore';
+import { AuthService } from 'app/firebase/core/auth.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -19,7 +21,11 @@ export class ProjectListComponent {
   private readonly projectsCollection: AngularFirestoreCollection<Project>;
   readonly projects: Observable<Project[]>;
 
-  constructor(angularFirestore: AngularFirestore) {
+  constructor(
+    angularFirestore: AngularFirestore,
+    private readonly authService: AuthService,
+    private readonly router: Router,
+  ) {
     this.projectsCollection = angularFirestore.collection<Project>('projects');
     this.projects = this.projectsCollection.snapshotChanges().pipe(
       map(actions => {
@@ -30,5 +36,12 @@ export class ProjectListComponent {
         });
       }),
     );
+  }
+
+  signOut() {
+    this.authService
+      .signOut()
+      .then(() => this.router.navigateByUrl('/login'))
+      .catch(() => console.log('Failed to sign out'));
   }
 }
