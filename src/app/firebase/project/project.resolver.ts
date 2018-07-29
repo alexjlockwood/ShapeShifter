@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, Router } from '@angular/router';
+import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { Project } from 'app/components/project';
 import { AuthService } from 'app/firebase/core/auth.service';
 import { ModelUtil } from 'app/scripts/common';
 import { FileExportService } from 'app/services';
 import { combineLatest, from, of } from 'rxjs';
-import { first, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
+import { first, map, switchMap } from 'rxjs/operators';
 
 // TODO: generate this server side instead?
 const defaultProjectContent = JSON.stringify({
@@ -34,7 +34,6 @@ interface FirestoreProject {
 @Injectable()
 export class ProjectResolver implements Resolve<Project> {
   constructor(
-    private readonly router: Router,
     private readonly angularFirestore: AngularFirestore,
     private readonly authService: AuthService,
   ) {}
@@ -61,14 +60,8 @@ export class ProjectResolver implements Resolve<Project> {
                 .collection<FirestoreProject>('projects')
                 .doc(id)
                 .set(firestoreProject)
-                .then(() => {
-                  console.log('success');
-                  return this.fromFirestoreProject(firestoreProject);
-                })
-                .catch(() => {
-                  console.log('error');
-                  return undefined;
-                }),
+                .then(() => this.fromFirestoreProject(firestoreProject))
+                .catch(() => undefined),
             );
           }
           return of(this.fromFirestoreProject(payload.data()));
