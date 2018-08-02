@@ -13,11 +13,10 @@ interface FirestoreProject {
 }
 
 @Component({
-  selector: 'app-projectlist',
-  templateUrl: './projectlist.component.html',
-  styleUrls: ['./projectlist.component.scss'],
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.scss'],
 })
-export class ProjectListComponent {
+export class HomeComponent {
   readonly projects: Observable<FirestoreProject[]>;
 
   constructor(

@@ -8,16 +8,16 @@ import { StoreModule } from '@ngrx/store';
 import { CoreModule } from 'app/core';
 import { errorHandlerFactory } from 'app/editor/scripts/bugsnag';
 import { metaReducers, reducers } from 'app/editor/store';
-import { ProjectListComponent } from 'app/firebase/projectlist/projectlist.component';
 import { environment } from 'environments/environment';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app.routes';
 import { AuthModule } from './auth';
+import { HomeModule } from './home';
 import { MaterialModule } from './shared';
 
 @NgModule({
-  declarations: [AppComponent, ProjectListComponent],
+  declarations: [AppComponent],
   imports: [
     // Angular modules.
     BrowserModule,
@@ -28,6 +28,7 @@ import { MaterialModule } from './shared';
     AppRoutingModule,
     AuthModule,
     CoreModule,
+    HomeModule,
     // TODO: figure out if this is needed once the { providedIn: root } stuff is cleaned up
     MaterialModule,
     // TODO: figure out if additional per-feature configuration is needed for the service worker
