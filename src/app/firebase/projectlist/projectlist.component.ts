@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
-import { AuthService } from 'app/firebase/core/auth.service';
+import { AuthService } from 'app/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 

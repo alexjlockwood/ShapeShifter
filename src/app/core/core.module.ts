@@ -3,11 +3,10 @@ import { NgModule } from '@angular/core';
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireAuthModule } from 'angularfire2/auth';
 import { AngularFirestoreModule } from 'angularfire2/firestore';
-import { LoginGuard } from 'app/firebase/core/login.guard';
 import { environment } from 'environments/environment';
 
-import { AuthGuard } from './auth.guard';
-import { AuthService } from './auth.service';
+import { AuthGuard, LoginGuard } from './guards';
+import { AuthService } from './services';
 
 @NgModule({
   imports: [

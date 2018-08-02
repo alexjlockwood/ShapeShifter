@@ -1,12 +1,13 @@
 import { HttpClientModule } from '@angular/common/http';
-import { NgModule } from '@angular/core';
+import { ErrorHandler, NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { StoreModule } from '@ngrx/store';
+import { CoreModule } from 'app/core';
+import { errorHandlerFactory } from 'app/editor/scripts/bugsnag';
 import { metaReducers, reducers } from 'app/editor/store';
-import { CoreModule } from 'app/firebase/core/core.module';
 import { ProjectListComponent } from 'app/firebase/projectlist/projectlist.component';
 import { environment } from 'environments/environment';
 
@@ -14,8 +15,7 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app.routes';
 import { LandingComponent } from './firebase/landing/landing.component';
 import { LoginComponent } from './firebase/login/login.component';
-import { ProjectResolver } from './firebase/project/project.resolver';
-import { MaterialModule } from './material.module';
+import { MaterialModule } from './shared';
 
 @NgModule({
   declarations: [AppComponent, LoginComponent, LandingComponent, ProjectListComponent],
@@ -35,7 +35,7 @@ import { MaterialModule } from './material.module';
     // TODO: figure out how to split this state up into individual features?
     StoreModule.forRoot(reducers, { metaReducers }),
   ],
-  providers: [ProjectResolver],
+  providers: [{ provide: ErrorHandler, useFactory: errorHandlerFactory }],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

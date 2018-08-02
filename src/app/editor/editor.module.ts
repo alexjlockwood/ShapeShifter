@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { ErrorHandler, NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ServiceWorkerModule } from '@angular/service-worker';
+import { CoreModule } from 'app/core';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -35,9 +35,9 @@ import { SplitterComponent } from 'app/editor/components/splitter/splitter.compo
 import { ToolbarComponent } from 'app/editor/components/toolbar/toolbar.component';
 import { ToolPanelComponent } from 'app/editor/components/toolpanel/toolpanel.component';
 import { EditorRoutingModule } from 'app/editor/editor.routes';
-import { errorHandlerFactory } from 'app/editor/scripts/bugsnag';
-import { MaterialModule } from 'app/material.module';
-import { environment } from 'environments/environment';
+import { MaterialModule } from 'app/shared';
+
+import { ProjectResolver } from './project.resolver';
 
 @NgModule({
   declarations: [
@@ -66,17 +66,19 @@ import { environment } from 'environments/environment';
   ],
   imports: [
     CommonModule,
+    CoreModule,
     EditorRoutingModule,
     FlexLayoutModule,
     FormsModule,
     HttpClientModule,
     MaterialModule,
   ],
-  providers: [{ provide: ErrorHandler, useFactory: errorHandlerFactory }],
+  providers: [ProjectResolver],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],
 })
 export class EditorModule {
+  // TODO: figure out if this stuff should be declared in the root module?
   constructor(matIconRegistry: MatIconRegistry, private readonly sanitizer: DomSanitizer) {
     matIconRegistry
       // Logo.
