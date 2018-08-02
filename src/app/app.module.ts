@@ -13,12 +13,11 @@ import { environment } from 'environments/environment';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app.routes';
-import { LandingComponent } from './firebase/landing/landing.component';
-import { LoginComponent } from './firebase/login/login.component';
+import { AuthModule } from './auth';
 import { MaterialModule } from './shared';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, LandingComponent, ProjectListComponent],
+  declarations: [AppComponent, ProjectListComponent],
   imports: [
     // Angular modules.
     BrowserModule,
@@ -27,6 +26,7 @@ import { MaterialModule } from './shared';
     ReactiveFormsModule,
     // App modules.
     AppRoutingModule,
+    AuthModule,
     CoreModule,
     // TODO: figure out if this is needed once the { providedIn: root } stuff is cleaned up
     MaterialModule,

@@ -3,11 +3,10 @@ import { Router } from '@angular/router';
 import { AuthService } from 'app/core';
 
 @Component({
-  selector: 'app-login',
-  templateUrl: 'login.component.html',
-  styleUrls: ['login.component.scss'],
+  templateUrl: 'auth.component.html',
+  styleUrls: ['auth.component.scss'],
 })
-export class LoginComponent {
+export class AuthComponent {
   constructor(private readonly authService: AuthService, private readonly router: Router) {}
 
   signInWithGoogle() {

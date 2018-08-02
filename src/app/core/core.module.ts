@@ -5,7 +5,7 @@ import { AngularFireAuthModule } from 'angularfire2/auth';
 import { AngularFirestoreModule } from 'angularfire2/firestore';
 import { environment } from 'environments/environment';
 
-import { AuthGuard, LoginGuard } from './guards';
+import { AuthGuard } from './guards';
 import { AuthService } from './services';
 
 @NgModule({
@@ -15,6 +15,6 @@ import { AuthService } from './services';
     AngularFirestoreModule,
     AngularFireAuthModule,
   ],
-  providers: [AuthGuard, AuthService, LoginGuard],
+  providers: [AuthGuard, AuthService],
 })
 export class CoreModule {}
