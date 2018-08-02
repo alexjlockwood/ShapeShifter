@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { RootComponent as ProjectEditorComponent } from 'app/components/root/root.component';
+import { RootComponent as ProjectEditorComponent } from 'app/editor/components/root/root.component';
 import { LoginGuard } from 'app/firebase/core/login.guard';
 import { ProjectListComponent } from 'app/firebase/projectlist/projectlist.component';
 

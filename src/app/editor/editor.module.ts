@@ -101,7 +101,7 @@ import { environment } from 'environments/environment';
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],
 })
-export class AppModule {
+export class EditorModule {
   constructor(matIconRegistry: MatIconRegistry, private readonly sanitizer: DomSanitizer) {
     matIconRegistry
       // Logo.

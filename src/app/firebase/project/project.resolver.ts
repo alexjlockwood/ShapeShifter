@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
-import { Project } from 'app/components/project';
+import { Project } from 'app/editor/components/project';
+import { ModelUtil } from 'app/editor/scripts/common';
+import { FileExportService } from 'app/editor/services';
 import { AuthService } from 'app/firebase/core/auth.service';
-import { ModelUtil } from 'app/scripts/common';
-import { FileExportService } from 'app/services';
 import { combineLatest, from, of } from 'rxjs';
 import { first, map, switchMap } from 'rxjs/operators';
 
