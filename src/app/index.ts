@@ -1,1 +1,1 @@
-export { EditorModule as AppModule } from './editor';
+export { EditorModule } from './editor';

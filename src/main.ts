@@ -2,7 +2,7 @@ import 'hammerjs';
 
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-import { AppModule } from 'app';
+import { EditorModule } from 'app';
 import { environment } from 'environments/environment';
 
 const script = document.createElement('script');
@@ -24,4 +24,4 @@ if (environment.production) {
   enableProdMode();
 }
 
-platformBrowserDynamic().bootstrapModule(AppModule);
+platformBrowserDynamic().bootstrapModule(EditorModule);
