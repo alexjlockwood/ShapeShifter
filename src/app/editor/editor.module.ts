@@ -1,23 +1,10 @@
+import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { ErrorHandler, NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
-import {
-  MatButtonModule,
-  MatDialogModule,
-  MatIconModule,
-  MatIconRegistry,
-  MatInputModule,
-  MatMenuModule,
-  MatOptionModule,
-  MatRadioModule,
-  MatSlideToggleModule,
-  MatSnackBarModule,
-  MatToolbarModule,
-  MatTooltipModule,
-} from '@angular/material';
-import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatIconRegistry } from '@angular/material';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import {
   CanvasComponent,
@@ -47,8 +34,9 @@ import { SplashScreenComponent } from 'app/editor/components/splashscreen/splash
 import { SplitterComponent } from 'app/editor/components/splitter/splitter.component';
 import { ToolbarComponent } from 'app/editor/components/toolbar/toolbar.component';
 import { ToolPanelComponent } from 'app/editor/components/toolpanel/toolpanel.component';
+import { EditorRoutingModule } from 'app/editor/editor.routes';
 import { errorHandlerFactory } from 'app/editor/scripts/bugsnag';
-import { StoreModule, metaReducers, reducers } from 'app/editor/store';
+import { MaterialModule } from 'app/material.module';
 import { environment } from 'environments/environment';
 
 @NgModule({
@@ -77,25 +65,12 @@ import { environment } from 'environments/environment';
     ToolPanelComponent,
   ],
   imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
+    CommonModule,
+    EditorRoutingModule,
     FlexLayoutModule,
     FormsModule,
     HttpClientModule,
-    ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),
-    StoreModule.forRoot(reducers, { metaReducers }),
-    // Angular material components.
-    MatButtonModule,
-    MatDialogModule,
-    MatIconModule,
-    MatInputModule,
-    MatMenuModule,
-    MatOptionModule,
-    MatRadioModule,
-    MatSlideToggleModule,
-    MatSnackBarModule,
-    MatToolbarModule,
-    MatTooltipModule,
+    MaterialModule,
   ],
   providers: [{ provide: ErrorHandler, useFactory: errorHandlerFactory }],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
