@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { AngularFirestore } from 'angularfire2/firestore';
 import * as firebase from 'firebase/app';
@@ -20,7 +19,6 @@ export class AuthService {
   constructor(
     private readonly angularFireAuth: AngularFireAuth,
     private readonly angularFirestore: AngularFirestore,
-    private readonly router: Router,
   ) {
     this.user = this.angularFireAuth.authState.pipe(
       switchMap(user => {
