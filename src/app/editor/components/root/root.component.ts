@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DialogService, DropFilesAction } from 'app/editor/components/dialogs';
-import { ProjectService } from 'app/editor/components/project';
 import { ActionMode, ActionSource } from 'app/editor/model/actionmode';
 import { CursorType } from 'app/editor/model/paper';
 import { bugsnagClient } from 'app/editor/scripts/bugsnag';
@@ -69,7 +68,6 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     private readonly store: Store<State>,
     private readonly actionModeService: ActionModeService,
     private readonly shortcutService: ShortcutService,
-    private readonly demoService: ProjectService,
     private readonly dialogService: DialogService,
     private readonly clipboardService: ClipboardService,
     private readonly layerTimelineService: LayerTimelineService,
@@ -234,11 +232,4 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
 interface Size {
   readonly w: number;
   readonly h: number;
-}
-
-function getUrlParameter(name: string) {
-  name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-  const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-  const results = regex.exec(location.search);
-  return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
