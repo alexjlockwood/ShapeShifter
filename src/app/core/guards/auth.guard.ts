@@ -8,13 +8,12 @@ export class AuthGuard implements CanActivate {
   constructor(private readonly authService: AuthService, private readonly router: Router) {}
 
   canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    return this.authService.observeUser().pipe(
+    return this.authService.observeIsAuthenticated().pipe(
       first(),
-      map(user => !!user),
-      tap(signedIn => {
-        if (!signedIn) {
+      tap(isAuthenticated => {
+        if (!isAuthenticated) {
           console.log('Access denied.');
-          this.router.navigate(['/login']);
+          this.router.navigate(['/']);
         }
       }),
     );

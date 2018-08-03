@@ -3,7 +3,7 @@ import { AngularFireAuth } from 'angularfire2/auth';
 import { AngularFirestore } from 'angularfire2/firestore';
 import * as firebase from 'firebase/app';
 import { Observable, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 
 interface User {
   uid: string;
@@ -34,6 +34,10 @@ export class AuthService {
     return this.user;
   }
 
+  observeIsAuthenticated() {
+    return this.user.pipe(map(user => !!user));
+  }
+
   signInWithGoogle() {
     return this.signInWithOAuth(new firebase.auth.GoogleAuthProvider());
   }
@@ -54,6 +58,7 @@ export class AuthService {
   }
 
   private updateUserData(user: firebase.User) {
+    // TODO: remove this log
     console.log('updating user data', user);
 
     return this.angularFirestore.doc<User>(`users/${user.uid}`).set(

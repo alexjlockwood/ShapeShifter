@@ -12,7 +12,6 @@ import { environment } from 'environments/environment';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app.routes';
-import { AuthModule } from './auth';
 import { HomeModule } from './home';
 import { MaterialModule } from './shared';
 
@@ -26,7 +25,6 @@ import { MaterialModule } from './shared';
     ReactiveFormsModule,
     // App modules.
     AppRoutingModule,
-    AuthModule,
     CoreModule,
     HomeModule,
     // TODO: figure out if this is needed once the { providedIn: root } stuff is cleaned up

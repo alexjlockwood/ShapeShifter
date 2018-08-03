@@ -17,14 +17,15 @@ interface FirestoreProject {
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent {
-  readonly projects: Observable<FirestoreProject[]>;
+  readonly projects$: Observable<FirestoreProject[]>;
+  readonly isAuthenticated$: Observable<boolean>;
 
   constructor(
     private readonly angularFirestore: AngularFirestore,
     private readonly authService: AuthService,
     private readonly router: Router,
   ) {
-    this.projects = angularFirestore
+    this.projects$ = angularFirestore
       .collection<FirestoreProject>('projects')
       .snapshotChanges()
       .pipe(
@@ -36,16 +37,24 @@ export class HomeComponent {
           });
         }),
       );
+    this.isAuthenticated$ = this.authService.observeIsAuthenticated();
   }
 
-  newProject() {
+  createNewProject() {
     this.router.navigateByUrl(`/project/${this.angularFirestore.createId()}`);
+  }
+
+  signIn() {
+    this.authService
+      .signInWithGoogle()
+      .then(() => this.router.navigateByUrl('/'))
+      .catch(() => console.error('Unable to login'));
   }
 
   signOut() {
     this.authService
       .signOut()
-      .then(() => this.router.navigateByUrl('/login'))
+      .then(() => this.router.navigateByUrl('/'))
       .catch(() => console.log('Failed to sign out'));
   }
 }
