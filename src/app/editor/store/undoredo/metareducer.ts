@@ -1,7 +1,7 @@
 import { Action, ActionReducer } from 'app/editor/store';
 import { ActionModeActionTypes } from 'app/editor/store/actionmode/actions';
 import { PlaybackActionTypes } from 'app/editor/store/playback/actions';
-import { AppState } from 'app/editor/store/reducer';
+import { EditorState } from 'app/editor/store/reducer';
 import undoable, { StateWithHistory, UndoableOptions, excludeAction } from 'redux-undo';
 
 const UNDO_HISTORY_SIZE = 30;
@@ -17,18 +17,18 @@ const UNDO_EXCLUDED_ACTIONS = [
 
 let groupCounter = 1;
 
-export interface StateWithHistoryAndTimestamp extends StateWithHistory<AppState> {
+export interface StateWithHistoryAndTimestamp extends StateWithHistory<EditorState> {
   timestamp: number;
 }
 
 type StateReducer = ActionReducer<StateWithHistoryAndTimestamp>;
-type AppStateReducer = ActionReducer<AppState>;
+type EditorStateReducer = ActionReducer<EditorState>;
 
-export function metaReducer(reducer: AppStateReducer): StateReducer {
+export function metaReducer(reducer: EditorStateReducer): StateReducer {
   const undoableReducer = undoable(reducer, {
     limit: UNDO_HISTORY_SIZE,
     filter: excludeAction(UNDO_EXCLUDED_ACTIONS),
-    groupBy: (action: Action, currState: AppState, prevState: StateWithHistoryAndTimestamp) => {
+    groupBy: (action: Action, currState: EditorState, prevState: StateWithHistoryAndTimestamp) => {
       if (Date.now() - prevState.timestamp < UNDO_DEBOUNCE_MILLIS) {
         return groupCounter;
       }

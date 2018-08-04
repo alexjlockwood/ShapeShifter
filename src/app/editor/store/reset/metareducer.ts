@@ -1,10 +1,10 @@
 import { ActionReducer } from 'app/editor/store';
-import { AppState } from 'app/editor/store/reducer';
+import { EditorState } from 'app/editor/store/reducer';
 
 import { ResetActionTypes, ResetActions } from './actions';
 
-export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
-  return (state: AppState, action: ResetActions) => {
+export function metaReducer(reducer: ActionReducer<EditorState>): ActionReducer<EditorState> {
+  return (state: EditorState, action: ResetActions) => {
     if (action.type === ResetActionTypes.ResetWorkspace) {
       state = undefined;
     }
