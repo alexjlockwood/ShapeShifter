@@ -15,7 +15,7 @@ import * as metaUndoRedo from './undoredo/metareducer';
 
 export type State = metaUndoRedo.StateWithHistoryAndTimestamp;
 
-export interface AppState {
+export interface EditorState {
   readonly layers: fromLayers.State;
   readonly timeline: fromTimeline.State;
   readonly playback: fromPlayback.State;
