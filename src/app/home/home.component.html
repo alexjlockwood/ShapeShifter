@@ -1,16 +1,39 @@
-<h1>Home</h1>
+<mat-toolbar color="primary">
+    <mat-toolbar-row>
+        <span fxFlex="1 1 auto"></span>
+        <button mat-button
+            *ngIf="(this.isAuthenticated$ | async) === true"
+            (click)="this.onCreateNewProjectClick()">New project</button>
+        <button mat-button
+            *ngIf="(this.isAuthenticated$ | async) === false"
+            (click)="this.onSignInClick()">Sign in</button>
+        <button mat-button
+            *ngIf="(this.isAuthenticated$ | async) === true"
+            (click)="this.onSignOutClick()">Sign out</button>
+    </mat-toolbar-row>
+</mat-toolbar>
 
-<ul *ngIf="this.isAuthenticated$ | async">
-    <li *ngFor="let project of this.projects$ | async">
-        <a href="/project/{{ project.id }}">{{ project.name }}</a>
-    </li>
-</ul>
-
-<button *ngIf="this.isAuthenticated$ | async"
-    (click)="this.createNewProject()">New project</button>
-
-<button *ngIf="(this.isAuthenticated$ | async) === false"
-    (click)="this.signIn()">Sign in</button>
-
-<button *ngIf="this.isAuthenticated$ | async"
-    (click)="this.signOut()">Sign out</button>
+<div class="home-container">
+    <div class="home-header">
+        <div class="inner">
+            <h1>Shape Shifter</h1>
+            <p class="subtitle">
+                An SVG icon animation tool for Android, iOS, and the web.
+            </p>
+        </div>
+    </div>
+    <div class="home-project-list">
+        <div class="inner">
+            <a *ngFor="let project of this.projects$ | async"
+                href="/project/{{ project.id }}"
+                class="home-project-card mat-elevation-z4">
+                <div class="project-image">
+                    <img class="generator-image"
+                        src="https://romannurik.github.io/AndroidAssetStudio/res/generator-thumbs/icon-animator.svg">
+                </div>
+                <div class="project-title">{{ project.name }}</div>
+                <div class="project-description">{{ project.name }}</div>
+            </a>
+        </div>
+    </div>
+</div>

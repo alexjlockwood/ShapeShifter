@@ -1,0 +1,134 @@
+$colorPrimary: #607d8b;
+$colorAccent: #607d8b;
+
+$colorWhitePrimary: #fff;
+$colorWhiteSecondary: rgba(#fff, 0.7);
+$colorWhiteTertiary: rgba(#fff, 0.5);
+
+$colorBlackPrimary: rgba(#000, 0.87);
+$colorBlackSecondary: rgba(#000, 0.54);
+$colorBlackTertiary: rgba(#000, 0.38);
+
+$opacityBlackHighlight: 0.1;
+$opacityWhiteHighlight: 0.2;
+
+$thinBorderColor: rgba(#000, 0.12);
+
+$homeCardWidth: 296px;
+$homeCardGutter: 24px;
+$homeHeaderOverlap: 48px;
+
+@function home-card-span($numCards) {
+  @return $homeCardWidth * $numCards + $homeCardGutter * ($numCards - 1);
+}
+
+@function home-card-span-outer($numCards) {
+  @return home-card-span($numCards) + $homeCardGutter * 2;
+}
+
+.home-container {
+  font-size: 14px;
+  line-height: 20px;
+  background-color: #eee;
+  min-height: 100%;
+  height: auto;
+  overflow: auto;
+
+  .home-header,
+  .home-project-list,
+  .home-footer {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .inner {
+      box-sizing: border-box;
+      flex: 0 0 auto;
+      padding: 0 24px;
+
+      @for $i from 1 through 3 {
+        @media only screen and (min-width: home-card-span-outer($i)) {
+          width: home-card-span-outer($i);
+        }
+      }
+    }
+  }
+
+  .home-header {
+    background-color: $colorPrimary;
+    color: $colorWhiteSecondary;
+    font-size: 16px;
+    line-height: 24px;
+    margin-bottom: -$homeHeaderOverlap;
+
+    .inner {
+      margin-top: 48px;
+      margin-bottom: $homeHeaderOverlap;
+    }
+
+    h1 {
+      color: $colorWhitePrimary;
+      font-size: 28px;
+      line-height: 36px;
+      font-weight: 400;
+      margin: 0 0 12px 0;
+    }
+
+    .subtitle {
+      margin: 0 0 48px 0;
+      max-width: 360px;
+    }
+  }
+
+  .home-footer {
+    .inner {
+      color: $colorBlackTertiary;
+      margin: 24px 0 64px 0;
+    }
+  }
+
+  .home-project-list {
+    .inner {
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: flex-start;
+      align-items: stretch;
+      padding-right: 0;
+    }
+  }
+
+  .home-project-card {
+    width: $homeCardWidth;
+    margin: 0 24px 24px 0;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border-radius: 2px;
+    text-decoration: none;
+    overflow: hidden;
+    transition: box-shadow 0.1s ease;
+    outline: 0;
+
+    .project-image {
+      width: $homeCardWidth;
+      height: $homeCardWidth / 1.48;
+      color: $colorAccent;
+    }
+
+    .project-title {
+      margin: 16px 16px 0 16px;
+      font-size: 16px;
+      line-height: 24px;
+      font-weight: 500;
+      color: $colorBlackPrimary;
+    }
+
+    .project-description {
+      margin: 4px 16px 16px 16px;
+      font-size: 14px;
+      line-height: 20px;
+      color: $colorBlackSecondary;
+    }
+  }
+}

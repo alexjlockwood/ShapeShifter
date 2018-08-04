@@ -41,18 +41,18 @@ export class HomeComponent {
     this.isAuthenticated$ = this.authService.observeIsAuthenticated();
   }
 
-  createNewProject() {
+  onCreateNewProjectClick() {
     this.router.navigateByUrl(`/project/${this.angularFirestore.createId()}`);
   }
 
-  signIn() {
+  onSignInClick() {
     this.authService
       .signInWithGoogle()
       .then(() => this.router.navigateByUrl('/'))
       .catch(() => console.error('Unable to login'));
   }
 
-  signOut() {
+  onSignOutClick() {
     this.authService
       .signOut()
       .then(() => this.router.navigateByUrl('/'))
