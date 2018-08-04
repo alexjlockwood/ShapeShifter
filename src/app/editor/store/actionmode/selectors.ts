@@ -3,9 +3,13 @@ import { LayerUtil, MorphableLayer, VectorLayer } from 'app/editor/model/layers'
 import { Animation, PathAnimationBlock } from 'app/editor/model/timeline';
 import { ActionModeUtil } from 'app/editor/scripts/actionmode';
 import { AnimationRenderer } from 'app/editor/scripts/animator';
-import { getHiddenLayerIds, getSelectedLayerIds, getVectorLayer } from 'app/editor/store/layers/selectors';
+import {
+  getHiddenLayerIds,
+  getSelectedLayerIds,
+  getVectorLayer,
+} from 'app/editor/store/layers/selectors';
 import { State } from 'app/editor/store/reducer';
-import { createDeepEqualSelector, getAppState } from 'app/editor/store/selectors';
+import { createDeepEqualSelector, getEditorState } from 'app/editor/store/selectors';
 import {
   getAnimation,
   getSingleSelectedBlockLayerId,
@@ -13,7 +17,7 @@ import {
 } from 'app/editor/store/timeline/selectors';
 import { createSelector, createStructuredSelector } from 'reselect';
 
-const getActionModeState = createSelector(getAppState, s => s.actionmode);
+const getActionModeState = createSelector(getEditorState, s => s.actionmode);
 export const getActionMode = createSelector(getActionModeState, s => s.mode);
 export const isActionMode = createSelector(getActionMode, mode => mode !== ActionMode.None);
 export const getActionModeHover = createDeepEqualSelector(getActionModeState, s => s.hover);
