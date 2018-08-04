@@ -1,9 +1,9 @@
 import { PathAnimationBlock } from 'app/editor/model/timeline';
-import { createDeepEqualSelector, getAppState } from 'app/editor/store/selectors';
+import { createDeepEqualSelector, getEditorState } from 'app/editor/store/selectors';
 import * as _ from 'lodash';
 import { createSelector } from 'reselect';
 
-const getTimelineState = createSelector(getAppState, s => s.timeline);
+const getTimelineState = createSelector(getEditorState, s => s.timeline);
 export const getAnimation = createSelector(getTimelineState, t => t.animation);
 export const isAnimationSelected = createSelector(getTimelineState, t => t.isAnimationSelected);
 export const getSelectedBlockIds = createDeepEqualSelector(

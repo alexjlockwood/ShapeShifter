@@ -1,10 +1,10 @@
 import { AnimationRenderer } from 'app/editor/scripts/animator';
 import { getVectorLayer } from 'app/editor/store/layers/selectors';
-import { getAppState } from 'app/editor/store/selectors';
+import { getEditorState } from 'app/editor/store/selectors';
 import { getAnimation } from 'app/editor/store/timeline/selectors';
 import { createSelector } from 'reselect';
 
-export const getPlaybackState = createSelector(getAppState, s => s.playback);
+export const getPlaybackState = createSelector(getEditorState, s => s.playback);
 export const getIsSlowMotion = createSelector(getPlaybackState, p => p.isSlowMotion);
 export const getIsPlaying = createSelector(getPlaybackState, p => p.isPlaying);
 export const getIsRepeating = createSelector(getPlaybackState, p => p.isRepeating);

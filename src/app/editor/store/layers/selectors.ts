@@ -1,7 +1,7 @@
-import { createDeepEqualSelector, getAppState } from 'app/editor/store/selectors';
+import { createDeepEqualSelector, getEditorState } from 'app/editor/store/selectors';
 import { createSelector } from 'reselect';
 
-const getLayerState = createSelector(getAppState, s => s.layers);
+const getLayerState = createSelector(getEditorState, s => s.layers);
 export const getVectorLayer = createSelector(getLayerState, l => l.vectorLayer);
 export const getSelectedLayerIds = createDeepEqualSelector(getLayerState, l => l.selectedLayerIds);
 export const getCollapsedLayerIds = createDeepEqualSelector(

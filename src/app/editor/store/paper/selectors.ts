@@ -1,9 +1,9 @@
 import { ToolMode } from 'app/editor/model/paper';
 import { getSelectedLayerIds, getVectorLayer } from 'app/editor/store/layers/selectors';
-import { createDeepEqualSelector, getAppState } from 'app/editor/store/selectors';
+import { createDeepEqualSelector, getEditorState } from 'app/editor/store/selectors';
 import { createSelector, createStructuredSelector } from 'reselect';
 
-const getPaperState = createSelector(getAppState, s => s.paper);
+const getPaperState = createSelector(getEditorState, s => s.paper);
 export const getZoomPanInfo = createDeepEqualSelector(getPaperState, p => p.zoomPanInfo);
 const getToolModeInfo = createSelector(getPaperState, p => p.toolModeInfo);
 export const getToolMode = createDeepEqualSelector(getToolModeInfo, p => p.toolMode);
