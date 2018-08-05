@@ -4,7 +4,7 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   {
     path: 'project',
-    loadChildren: './editor/editor.module#EditorModule',
+    loadChildren: './modules/editor/editor.module#EditorModule',
   },
 ];
 

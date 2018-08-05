@@ -5,7 +5,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireAuthModule } from 'angularfire2/auth';
 import { AngularFirestoreModule } from 'angularfire2/firestore';
-import { errorHandlerFactory } from 'app/editor/scripts/bugsnag';
+import { errorHandlerFactory } from 'app/modules/editor/scripts/bugsnag';
 import { environment } from 'environments/environment';
 
 import { AuthGuard } from './guards';
