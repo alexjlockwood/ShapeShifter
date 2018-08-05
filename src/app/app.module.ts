@@ -4,10 +4,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { StoreModule } from '@ngrx/store';
 import { CoreModule } from 'app/core';
 import { errorHandlerFactory } from 'app/editor/scripts/bugsnag';
-import { metaReducers, reducers } from 'app/editor/store';
 import { environment } from 'environments/environment';
 
 import { AppComponent } from './app.component';

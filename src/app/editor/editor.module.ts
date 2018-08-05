@@ -36,7 +36,7 @@ import { ToolbarComponent } from 'app/editor/components/toolbar/toolbar.componen
 import { ToolPanelComponent } from 'app/editor/components/toolpanel/toolpanel.component';
 import { EditorRoutingModule } from 'app/editor/editor.routes';
 import { ProjectResolver } from 'app/editor/project.resolver';
-import { metaReducers, reducers } from 'app/editor/store';
+import { reducer } from 'app/editor/store';
 import { MaterialModule } from 'app/shared';
 
 @NgModule({
@@ -71,7 +71,7 @@ import { MaterialModule } from 'app/shared';
     FormsModule,
     HttpClientModule,
     MaterialModule,
-    StoreModule.forFeature('editor', reducers, { metaReducers }),
+    StoreModule.forFeature('editor', reducer),
   ],
   providers: [ProjectResolver],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],

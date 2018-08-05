@@ -1,3 +1,5 @@
+import { ActionReducer, ActionReducerMap, combineReducers, compose } from '@ngrx/store';
+
 import * as fromActionMode from './actionmode/reducer';
 import * as metaBatchAction from './batch/metareducer';
 import * as fromLayers from './layers/reducer';
@@ -21,7 +23,7 @@ export interface EditorState {
   readonly paper: fromPaper.State;
 }
 
-export const reducers = {
+const reducers: ActionReducerMap<EditorState> = {
   layers: fromLayers.reducer,
   timeline: fromTimeline.reducer,
   playback: fromPlayback.reducer,
@@ -31,7 +33,7 @@ export const reducers = {
   paper: fromPaper.reducer,
 };
 
-export const metaReducers = [
+const metaReducers = [
   // Meta-reducer that records past/present/future state.
   metaUndoRedo.metaReducer,
   // Meta-reducer that adds the ability to dispatch multiple actions at a time.
@@ -39,3 +41,8 @@ export const metaReducers = [
   // Meta-reducer that adds the ability to reset the entire state tree.
   metaReset.metaReducer,
 ];
+
+export const reducer: ActionReducer<State> = compose(
+  ...metaReducers,
+  combineReducers,
+)(reducers);
