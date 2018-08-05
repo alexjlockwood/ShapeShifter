@@ -8,6 +8,10 @@ import { environment } from 'environments/environment';
 import { AuthGuard } from './guards';
 import { AuthService } from './services';
 
+/**
+ * The core module contains singleton services that are loaded when the application
+ * first starts. It should only be imported by the root AppModule.
+ */
 @NgModule({
   imports: [
     CommonModule,
