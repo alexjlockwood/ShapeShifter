@@ -47,6 +47,7 @@ const reducerFn: ActionReducer<State> = compose(
   combineReducers,
 )(reducers);
 
+// Wrap the reducer in an exported function to workaround AOT compiler errors.
 export function reducer(state: State, action: Action) {
   return reducerFn(state, action);
 }
