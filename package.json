@@ -22,7 +22,9 @@
     "deploy-stable": "./scripts/deploy-stable.sh",
     "deploy-beta": "./scripts/deploy-beta.sh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "postinstall": "node ./scripts/check-node-version.js"
+    "postinstall": "node ./scripts/check-node-version.js",
+    "precise-commits": "precise-commits",
+    "precommit": "npm run precise-commits"
   },
   "dependencies": {
     "@angular/animations": "^6.1.0",
@@ -98,7 +100,9 @@
     "ts-node": "^6.1.0",
     "tslint": "^5.11.0",
     "typescript": "~2.9.2",
-    "webdriver-manager": "^12.1.0"
+    "webdriver-manager": "^12.1.0",
+    "precise-commits": "^1.0.2",
+    "husky": "^0.14.3"
   },
   "importSort": {
     ".js, .jsx, .es6, .es": {

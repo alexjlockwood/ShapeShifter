@@ -1,11 +1,5 @@
 {
-  //"editor.codeLens": false,
-  // "editor.formatOnPaste": true,
-  // "editor.formatOnType": true,
   "editor.formatOnSave": true,
-  // "editor.tabCompletion": true,
-  // "explorer.openEditors.visible": 0,
-  "files.defaultLanguage": "typescript",
   "files.exclude": {
     "node_modules/**": true,
     "**/*~": true,
