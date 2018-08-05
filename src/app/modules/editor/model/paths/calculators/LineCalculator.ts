@@ -136,7 +136,10 @@ export class LineCalculator implements Calculator {
     // with the line from (p,q) to (r,s).
     const { x: a, y: b } = this.p1;
     const { x: c, y: d } = this.p2;
-    const { p1: { x: p, y: q }, p2: { x: r, y: s } } = line;
+    const {
+      p1: { x: p, y: q },
+      p2: { x: r, y: s },
+    } = line;
     const det = round((c - a) * (s - q) - (r - p) * (d - b));
     if (det === 0) {
       // Then the two lines are parallel. In our case it is fine to

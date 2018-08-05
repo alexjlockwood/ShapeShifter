@@ -5,7 +5,7 @@ import { Point } from './Point';
 
 /** Returns the floor modulus of the integer argument. */
 export function floorMod(num: number, maxNum: number) {
-  return (num % maxNum + maxNum) % maxNum;
+  return ((num % maxNum) + maxNum) % maxNum;
 }
 
 /** Linearly interpolate between a and b using time t. */
@@ -56,7 +56,7 @@ export function round(n: number) {
 
 /** Snaps a directional vector to the specified angle. */
 export function snapVectorToAngle(delta: Point, snapAngleDegrees: number): Point {
-  const snapAngle = snapAngleDegrees * Math.PI / 180;
+  const snapAngle = (snapAngleDegrees * Math.PI) / 180;
   const angle = Math.round(Math.atan2(delta.y, delta.x) / snapAngle) * snapAngle;
   const dirx = Math.cos(angle);
   const diry = Math.sin(angle);

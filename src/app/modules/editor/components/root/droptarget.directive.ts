@@ -11,7 +11,8 @@ enum DragState {
   selector: '[appDropTarget]',
 })
 export class DropTargetDirective implements OnInit {
-  @Output() onDropFiles = new EventEmitter<FileList>();
+  @Output()
+  onDropFiles = new EventEmitter<FileList>();
 
   private element: JQuery;
   private dragState = DragState.None;

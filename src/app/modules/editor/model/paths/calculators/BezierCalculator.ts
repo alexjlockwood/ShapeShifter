@@ -76,12 +76,12 @@ export class BezierCalculator implements Calculator {
       const qcp2 = this.points[2];
       const ccp0 = qcp0;
       const ccp1 = {
-        x: qcp0.x + 2 / 3 * (qcp1.x - qcp0.x),
-        y: qcp0.y + 2 / 3 * (qcp1.y - qcp0.y),
+        x: qcp0.x + (2 / 3) * (qcp1.x - qcp0.x),
+        y: qcp0.y + (2 / 3) * (qcp1.y - qcp0.y),
       };
       const ccp2 = {
-        x: qcp2.x + 2 / 3 * (qcp1.x - qcp2.x),
-        y: qcp2.y + 2 / 3 * (qcp1.y - qcp2.y),
+        x: qcp2.x + (2 / 3) * (qcp1.x - qcp2.x),
+        y: qcp2.y + (2 / 3) * (qcp1.y - qcp2.y),
       };
       const ccp3 = qcp2;
       return new BezierCalculator(this.id, svgChar, ccp0, ccp1, ccp2, ccp3);

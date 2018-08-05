@@ -84,7 +84,7 @@ export class SelectDragHandleGesture extends Gesture {
     const localHandle = this.localDownHandle.add(localPoint.subtract(localDownPoint));
     if (event.modifiers.shift) {
       // Project the handle onto the handle's original vector.
-      const theta = -(this.localDownHandle.angle - localHandle.angle) * Math.PI / 180;
+      const theta = (-(this.localDownHandle.angle - localHandle.angle) * Math.PI) / 180;
       localHandle.set(
         this.localDownHandle.normalize().multiply(localHandle.length * Math.cos(theta)),
       );

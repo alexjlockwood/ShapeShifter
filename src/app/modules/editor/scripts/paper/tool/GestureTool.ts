@@ -1,7 +1,11 @@
 import { ToolMode } from 'app/modules/editor/model/paper';
 import { ClickDetector } from 'app/modules/editor/scripts/paper/detector';
 import { Gesture } from 'app/modules/editor/scripts/paper/gesture';
-import { EllipseGesture, PencilGesture, RectangleGesture } from 'app/modules/editor/scripts/paper/gesture/create';
+import {
+  EllipseGesture,
+  PencilGesture,
+  RectangleGesture,
+} from 'app/modules/editor/scripts/paper/gesture/create';
 import {
   BatchSelectSegmentsGesture,
   MouldCurveGesture,
@@ -10,7 +14,10 @@ import {
   ToggleSegmentHandlesGesture,
 } from 'app/modules/editor/scripts/paper/gesture/edit';
 import { HoverGesture } from 'app/modules/editor/scripts/paper/gesture/hover';
-import { RotateItemsDragPivotGesture, RotateItemsGesture } from 'app/modules/editor/scripts/paper/gesture/rotate';
+import {
+  RotateItemsDragPivotGesture,
+  RotateItemsGesture,
+} from 'app/modules/editor/scripts/paper/gesture/rotate';
 import { ScaleItemsGesture } from 'app/modules/editor/scripts/paper/gesture/scale';
 import {
   BatchSelectItemsGesture,

@@ -7,7 +7,8 @@ const GROUPS = new Map<string, JQuery[]>();
   selector: '[appScrollGroup]',
 })
 export class ScrollGroupDirective implements OnDestroy {
-  @Input() scrollGroup: string;
+  @Input()
+  scrollGroup: string;
 
   private readonly element: JQuery;
 

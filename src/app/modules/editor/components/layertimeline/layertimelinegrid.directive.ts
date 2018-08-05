@@ -22,8 +22,10 @@ const GRID_INTERVALS_MS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 3
 
 @Directive({ selector: '[appLayerTimelineGrid]' })
 export class LayerTimelineGridDirective extends DestroyableMixin() implements OnInit {
-  @Input() isHeader: boolean;
-  @Output() scrub = new EventEmitter<ScrubEvent>();
+  @Input()
+  isHeader: boolean;
+  @Output()
+  scrub = new EventEmitter<ScrubEvent>();
 
   private readonly canvas: HTMLCanvasElement;
   private readonly $canvas: JQuery;
@@ -97,8 +99,7 @@ export class LayerTimelineGridDirective extends DestroyableMixin() implements On
   private handleScrubEvent(clientX: number, disableSnap: boolean) {
     const x = clientX - this.$canvas.offset().left;
     let time =
-      (x - TIMELINE_ANIMATION_PADDING) /
-      (this.$canvas.width() - TIMELINE_ANIMATION_PADDING * 2) *
+      ((x - TIMELINE_ANIMATION_PADDING) / (this.$canvas.width() - TIMELINE_ANIMATION_PADDING * 2)) *
       this.animation.duration;
     time = _.clamp(time, 0, this.animation.duration);
     this.scrub.emit({ time, disableSnap });

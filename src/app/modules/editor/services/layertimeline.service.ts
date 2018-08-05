@@ -24,7 +24,11 @@ import {
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/modules/editor/store/layers/selectors';
-import { SelectAnimation, SetAnimation, SetSelectedBlocks } from 'app/modules/editor/store/timeline/actions';
+import {
+  SelectAnimation,
+  SetAnimation,
+  SetSelectedBlocks,
+} from 'app/modules/editor/store/timeline/actions';
 import {
   getAnimation,
   getSelectedBlockIds,

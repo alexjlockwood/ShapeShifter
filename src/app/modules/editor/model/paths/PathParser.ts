@@ -390,7 +390,7 @@ function drawArc(
   isMoreThanHalf: boolean,
   isPositiveArc: boolean,
 ) {
-  const thetaD = theta * Math.PI / 180;
+  const thetaD = (theta * Math.PI) / 180;
   const cosTheta = Math.cos(thetaD);
   const sinTheta = Math.sin(thetaD);
   const x0p = (x0 * cosTheta + y0 * sinTheta) / a;
@@ -467,7 +467,7 @@ function arcToBezier(
   start: number,
   sweep: number,
 ) {
-  const numSegments = Math.trunc(Math.ceil(Math.abs(sweep * 4 / Math.PI)));
+  const numSegments = Math.trunc(Math.ceil(Math.abs((sweep * 4) / Math.PI)));
   let eta1 = start;
   const cosTheta = Math.cos(theta);
   const sinTheta = Math.sin(theta);
@@ -485,7 +485,7 @@ function arcToBezier(
     const ep2x = -a * cosTheta * sinEta2 - b * sinTheta * cosEta2;
     const ep2y = -a * sinTheta * sinEta2 + b * cosTheta * cosEta2;
     const tanDiff2 = Math.tan((eta2 - eta1) / 2);
-    const alpha = Math.sin(eta2 - eta1) * (Math.sqrt(4 + 3 * tanDiff2 * tanDiff2) - 1) / 3;
+    const alpha = (Math.sin(eta2 - eta1) * (Math.sqrt(4 + 3 * tanDiff2 * tanDiff2) - 1)) / 3;
     const q1x = e1x + alpha * ep1x;
     const q1y = e1y + alpha * ep1y;
     const q2x = e2x - alpha * ep2x;

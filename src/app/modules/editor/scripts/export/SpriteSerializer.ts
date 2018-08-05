@@ -51,7 +51,7 @@ export function createSvgFrames(vectorLayer: VectorLayer, animation: Animation, 
   const svgs: string[] = [];
   const { width, height } = vectorLayer;
   for (let i = 0; i <= numSteps; i++) {
-    const time = i / numSteps * animation.duration;
+    const time = (i / numSteps) * animation.duration;
     svgs.push(SvgSerializer.toSvgString(renderer.setCurrentTime(time), width, height));
   }
   return svgs;
@@ -62,7 +62,7 @@ export function createSvgSprite(vectorLayer: VectorLayer, animation: Animation, 
   const svgs: string[] = [];
   const { width, height } = vectorLayer;
   for (let i = 0; i <= numSteps; i++) {
-    const time = i / numSteps * animation.duration;
+    const time = (i / numSteps) * animation.duration;
     const vl = renderer.setCurrentTime(time);
     svgs.push(SvgSerializer.toSvgSpriteFrameString(vl, width * i, 0, i.toString()));
   }

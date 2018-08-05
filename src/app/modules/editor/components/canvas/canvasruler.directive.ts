@@ -14,7 +14,8 @@ const TICK_SIZE = 6;
 
 @Directive({ selector: '[appCanvasRuler]' })
 export class CanvasRulerDirective extends CanvasLayoutMixin() {
-  @Input() orientation: Orientation;
+  @Input()
+  orientation: Orientation;
 
   private readonly $canvas: JQuery<HTMLCanvasElement>;
 

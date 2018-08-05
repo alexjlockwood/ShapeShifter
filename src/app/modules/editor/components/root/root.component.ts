@@ -52,8 +52,10 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
 
   readonly IS_BETA = environment.beta;
 
-  @HostBinding('class.ss-dark-theme') isDarkThemeHostBinding: boolean;
-  @ViewChild('displayContainer') displayContainerRef: ElementRef;
+  @HostBinding('class.ss-dark-theme')
+  isDarkThemeHostBinding: boolean;
+  @ViewChild('displayContainer')
+  displayContainerRef: ElementRef;
   private $displayContainer: JQuery;
 
   private readonly displayBoundsSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });

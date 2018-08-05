@@ -168,8 +168,8 @@ function filterByMinDelta<T>(list: (T & Delta)[]): Values<T> & Delta {
     (prev, curr) => {
       const info = {
         min: Math.abs(curr.delta),
-        pos: curr.delta >= 0 ? [curr] : [] as (T & Delta)[],
-        neg: curr.delta >= 0 ? [] : [curr] as (T & Delta)[],
+        pos: curr.delta >= 0 ? [curr] : ([] as (T & Delta)[]),
+        neg: curr.delta >= 0 ? [] : ([curr] as (T & Delta)[]),
       };
       if (prev.min === info.min) {
         return {

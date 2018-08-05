@@ -20,7 +20,7 @@ import { getZoomPanInfo } from 'app/modules/editor/store/paper/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
-import { Observable ,  combineLatest } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { CanvasContainerDirective } from './canvascontainer.directive';
@@ -43,14 +43,21 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   implements OnInit, AfterViewInit {
   readonly IS_BETA = environment.beta;
 
-  @ViewChildren(CanvasContainerDirective) canvasContainer: QueryList<CanvasContainerDirective>;
-  @ViewChildren(CanvasLayersDirective) canvasLayers: QueryList<CanvasLayersDirective>;
-  @ViewChildren(CanvasOverlayDirective) canvasOverlay: QueryList<CanvasOverlayDirective>;
-  @ViewChildren(CanvasPaperDirective) canvasPaper: QueryList<CanvasPaperDirective>;
-  @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
+  @ViewChildren(CanvasContainerDirective)
+  canvasContainer: QueryList<CanvasContainerDirective>;
+  @ViewChildren(CanvasLayersDirective)
+  canvasLayers: QueryList<CanvasLayersDirective>;
+  @ViewChildren(CanvasOverlayDirective)
+  canvasOverlay: QueryList<CanvasOverlayDirective>;
+  @ViewChildren(CanvasPaperDirective)
+  canvasPaper: QueryList<CanvasPaperDirective>;
+  @ViewChildren(CanvasRulerDirective)
+  canvasRulers: QueryList<CanvasRulerDirective>;
 
-  @Input() actionSource: ActionSource;
-  @Input() canvasBounds$: Observable<Size>;
+  @Input()
+  actionSource: ActionSource;
+  @Input()
+  canvasBounds$: Observable<Size>;
 
   private readonly $element: JQuery;
   isActionMode$: Observable<boolean>;
@@ -69,9 +76,10 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   ngAfterViewInit() {
-    const activeViewport$ = this.store
-      .select(getVectorLayer)
-      .pipe(map(vl => ({ w: vl.width, h: vl.height })), distinctUntilChanged(_.isEqual));
+    const activeViewport$ = this.store.select(getVectorLayer).pipe(
+      map(vl => ({ w: vl.width, h: vl.height })),
+      distinctUntilChanged(_.isEqual),
+    );
     this.registerSubscription(
       combineLatest(this.canvasBounds$, activeViewport$).subscribe(([bounds, viewport]) => {
         const w = Math.max(1, bounds.w - CANVAS_MARGIN * 2);

@@ -28,8 +28,8 @@ export class Matrix {
    * Creates a counter clockwise rotation transformation matrix.
    */
   static rotation(degrees: number) {
-    const cosr = Math.cos(degrees * Math.PI / 180);
-    const sinr = Math.sin(degrees * Math.PI / 180);
+    const cosr = Math.cos((degrees * Math.PI) / 180);
+    const sinr = Math.sin((degrees * Math.PI) / 180);
     return new Matrix(cosr, sinr, -sinr, cosr, 0, 0);
   }
 
@@ -100,7 +100,7 @@ export class Matrix {
    * Extracts the rotation in degrees from the transformation matrix.
    */
   getRotation() {
-    return MathUtil.round(180 / Math.PI * Math.atan2(-this.c, this.a));
+    return MathUtil.round((180 / Math.PI) * Math.atan2(-this.c, this.a));
   }
 
   /**

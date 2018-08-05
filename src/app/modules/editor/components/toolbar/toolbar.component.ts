@@ -1,5 +1,10 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ActionMode, ActionSource, Selection, SelectionType } from 'app/modules/editor/model/actionmode';
+import {
+  ActionMode,
+  ActionSource,
+  Selection,
+  SelectionType,
+} from 'app/modules/editor/model/actionmode';
 import { MorphableLayer } from 'app/modules/editor/model/layers';
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { ActionModeUtil } from 'app/modules/editor/scripts/actionmode';

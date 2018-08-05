@@ -874,9 +874,9 @@ describe('Path', () => {
     TESTS_PROJECT.forEach(a => {
       const point = a.point as Point;
       const path = typeof a.path === 'string' ? new Path(a.path) : a.path;
-      it(`projecting '(${point.x},${point.y})' onto '${path.getPathString()}' yields ${JSON.stringify(
-        a.proj,
-      )}`, () => {
+      it(`projecting '(${point.x},${
+        point.y
+      })' onto '${path.getPathString()}' yields ${JSON.stringify(a.proj)}`, () => {
         const result = path.project(point, a.subIdx);
         result.projection.t = _.round(result.projection.t, 10);
         expect(result).toEqual(a.proj as ProjectionOntoPath);
@@ -926,11 +926,11 @@ describe('Path', () => {
 
     TESTS_HIT_TEST_FILL.forEach(a => {
       const point = a[0] as Point;
-      const path = typeof a[1] === 'string' ? new Path(a[1] as string) : a[1] as Path;
+      const path = typeof a[1] === 'string' ? new Path(a[1] as string) : (a[1] as Path);
       it(`hit test for '(${point.x},${point.y})' on fill path '${a[1]}' yields '${a[2]}'`, () => {
-        expect(
-          path.hitTest(point, { findShapesInRange: true }).isShapeHit,
-        ).toEqual(a[2] as boolean);
+        expect(path.hitTest(point, { findShapesInRange: true }).isShapeHit).toEqual(
+          a[2] as boolean,
+        );
       });
     });
 
@@ -950,7 +950,9 @@ describe('Path', () => {
     const TESTS: [string, number, Point][] = [['M 0 0 L 0 100', 10, newPoint(0, 10)]];
 
     TESTS.forEach(([pathStr, length, expectedPoint]) => {
-      it(`point at length ${length} on path ${pathStr} yields '(${expectedPoint.x},${expectedPoint.y})`, () => {
+      it(`point at length ${length} on path ${pathStr} yields '(${expectedPoint.x},${
+        expectedPoint.y
+      })`, () => {
         expect(new Path(pathStr).getPointAtLength(length)).toEqual(expectedPoint);
       });
     });

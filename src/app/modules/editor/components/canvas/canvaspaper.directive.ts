@@ -11,7 +11,8 @@ import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 @Directive({ selector: '[appCanvasPaper]' })
 export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit, OnDestroy {
-  @Input() actionSource: ActionSource;
+  @Input()
+  actionSource: ActionSource;
   private readonly $canvas: JQuery<HTMLCanvasElement>;
   private paperProject: PaperProject;
 

@@ -21,15 +21,24 @@ type Edge = 'left' | 'right' | 'top';
   // TODO: use 'OnPush' change detection
 })
 export class SplitterComponent implements OnInit {
-  @Input() edge: Edge;
-  @Input() min: number;
-  @Input() persistId: string;
-  @Output() split = new EventEmitter<number>();
-  @HostBinding('class.splt-horizontal') spltHorizontal: boolean;
-  @HostBinding('class.splt-vertical') spltVertical: boolean;
-  @HostBinding('class.splt-edge-left') spltEdgeLeft: boolean;
-  @HostBinding('class.splt-edge-right') spltEdgeRight: boolean;
-  @HostBinding('style.backgroundColor') backgroundColor = '';
+  @Input()
+  edge: Edge;
+  @Input()
+  min: number;
+  @Input()
+  persistId: string;
+  @Output()
+  split = new EventEmitter<number>();
+  @HostBinding('class.splt-horizontal')
+  spltHorizontal: boolean;
+  @HostBinding('class.splt-vertical')
+  spltVertical: boolean;
+  @HostBinding('class.splt-edge-left')
+  spltEdgeLeft: boolean;
+  @HostBinding('class.splt-edge-right')
+  spltEdgeRight: boolean;
+  @HostBinding('style.backgroundColor')
+  backgroundColor = '';
 
   private persistKey: string;
   private orientation: Orientation;

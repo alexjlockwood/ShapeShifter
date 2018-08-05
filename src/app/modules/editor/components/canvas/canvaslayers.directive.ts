@@ -1,14 +1,23 @@
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import { ActionSource } from 'app/modules/editor/model/actionmode';
-import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import {
+  ClipPathLayer,
+  Layer,
+  LayerUtil,
+  PathLayer,
+  VectorLayer,
+} from 'app/modules/editor/model/layers';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
 import { PlaybackService } from 'app/modules/editor/services';
 import { State, Store } from 'app/modules/editor/store';
-import { getActionModeEndState, getActionModeStartState } from 'app/modules/editor/store/actionmode/selectors';
+import {
+  getActionModeEndState,
+  getActionModeStartState,
+} from 'app/modules/editor/store/actionmode/selectors';
 import { getHiddenLayerIds, getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import * as $ from 'jquery';
-import { combineLatest ,  merge } from 'rxjs';
+import { combineLatest, merge } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
@@ -22,7 +31,8 @@ type Context = CanvasRenderingContext2D;
 @Directive({ selector: '[appCanvasLayers]' })
 export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {
-  @Input() actionSource: ActionSource;
+  @Input()
+  actionSource: ActionSource;
 
   private readonly $renderingCanvas: JQuery<HTMLCanvasElement>;
   private readonly $offscreenCanvas: JQuery<HTMLCanvasElement>;

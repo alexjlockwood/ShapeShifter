@@ -1,5 +1,11 @@
 import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
-import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import {
+  ClipPathLayer,
+  GroupLayer,
+  Layer,
+  PathLayer,
+  VectorLayer,
+} from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import * as _ from 'lodash';
 

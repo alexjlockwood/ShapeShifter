@@ -1,4 +1,10 @@
-import { ClipPathLayer, GroupLayer, LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import {
+  ClipPathLayer,
+  GroupLayer,
+  LayerUtil,
+  PathLayer,
+  VectorLayer,
+} from 'app/modules/editor/model/layers';
 import { CursorType } from 'app/modules/editor/model/paper';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { Gesture } from 'app/modules/editor/scripts/paper/gesture';
