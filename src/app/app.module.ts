@@ -1,11 +1,9 @@
 import { HttpClientModule } from '@angular/common/http';
-import { ErrorHandler, NgModule } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { CoreModule } from 'app/core';
-import { errorHandlerFactory } from 'app/editor/scripts/bugsnag';
 import { environment } from 'environments/environment';
 
 import { AppComponent } from './app.component';
@@ -20,7 +18,6 @@ import { MaterialModule } from './shared';
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    ReactiveFormsModule,
     // App modules.
     AppRoutingModule,
     CoreModule,
@@ -30,7 +27,6 @@ import { MaterialModule } from './shared';
     // TODO: figure out if additional per-feature configuration is needed for the service worker
     ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),
   ],
-  providers: [{ provide: ErrorHandler, useFactory: errorHandlerFactory }],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
