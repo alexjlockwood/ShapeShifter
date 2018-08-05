@@ -1,4 +1,3 @@
-import { InjectionToken } from '@angular/core';
 import { Action, ActionReducer, ActionReducerMap, combineReducers, compose } from '@ngrx/store';
 
 import * as fromActionMode from './actionmode/reducer';
@@ -48,6 +47,6 @@ const reducerFn: ActionReducer<State> = compose(
   combineReducers,
 )(reducers);
 
-export function reducer(state: State, action: Action): State {
+export function reducer(state: State, action: Action) {
   return reducerFn(state, action);
 }
