@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
+import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireAuthModule } from 'angularfire2/auth';
 import { AngularFirestoreModule } from 'angularfire2/firestore';
@@ -17,4 +17,14 @@ import { AuthService } from './services';
   ],
   providers: [AuthGuard, AuthService],
 })
-export class CoreModule {}
+export class CoreModule {
+  constructor(
+    @Optional()
+    @SkipSelf()
+    parentModule: CoreModule,
+  ) {
+    if (parentModule) {
+      throw new Error('CoreModule should only be imported by AppModule.');
+    }
+  }
+}

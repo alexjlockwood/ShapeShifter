@@ -5,7 +5,6 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
-import { CoreModule } from 'app/core';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -66,7 +65,6 @@ import { ProjectResolver } from './project.resolver';
   ],
   imports: [
     CommonModule,
-    CoreModule,
     EditorRoutingModule,
     FlexLayoutModule,
     FormsModule,
