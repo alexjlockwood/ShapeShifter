@@ -78,7 +78,7 @@ import { MaterialModule } from 'app/shared';
   bootstrap: [RootComponent],
 })
 export class EditorModule {
-  // TODO: figure out if this stuff should be declared in the root module?
+  // TODO: figure out if this stuff should be declared in the app/core module?
   constructor(matIconRegistry: MatIconRegistry, private readonly sanitizer: DomSanitizer) {
     matIconRegistry
       // Logo.

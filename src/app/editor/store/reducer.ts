@@ -1,4 +1,5 @@
-import { ActionReducer, ActionReducerMap, combineReducers, compose } from '@ngrx/store';
+import { InjectionToken } from '@angular/core';
+import { Action, ActionReducer, ActionReducerMap, combineReducers, compose } from '@ngrx/store';
 
 import * as fromActionMode from './actionmode/reducer';
 import * as metaBatchAction from './batch/metareducer';
@@ -42,7 +43,11 @@ const metaReducers = [
   metaReset.metaReducer,
 ];
 
-export const reducer: ActionReducer<State> = compose(
+const reducerFn: ActionReducer<State> = compose(
   ...metaReducers,
   combineReducers,
 )(reducers);
+
+export function reducer(state: State, action: Action): State {
+  return reducerFn(state, action);
+}
