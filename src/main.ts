@@ -2,7 +2,7 @@ import 'hammerjs';
 
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-import { EditorModule } from 'app/editor/editor.module';
+import { EditorModule } from 'app/modules/editor/editor.module';
 import { environment } from 'environments/environment';
 
 const script = document.createElement('script');
