@@ -52,7 +52,6 @@
     "jszip": "^3.1.5",
     "local-storage-fallback": "^4.1.1",
     "lodash": "^4.17.10",
-    "ngrx-store-logger": "^0.2.2",
     "os-browserify": "^0.3.0",
     "paper": "^0.11.5",
     "polylabel": "^1.0.2",
