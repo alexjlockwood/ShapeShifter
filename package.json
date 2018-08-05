@@ -22,7 +22,9 @@
     "deploy-stable": "./scripts/deploy-stable.sh",
     "deploy-beta": "./scripts/deploy-beta.sh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "postinstall": "node ./scripts/check-node-version.js"
+    "postinstall": "node ./scripts/check-node-version.js",
+    "precise-commits": "precise-commits",
+    "precommit": "npm run precise-commits"
   },
   "dependencies": {
     "@angular/animations": "^6.1.0",
@@ -78,6 +80,7 @@
     "codelyzer": "^4.3.0",
     "coveralls": "^3.0.1",
     "deep-freeze-strict": "^1.1.1",
+    "husky": "^0.14.3",
     "jasmine-core": "^3.1.0",
     "jasmine-jquery": "^2.1.1",
     "jasmine-spec-reporter": "^4.2.1",
@@ -88,6 +91,7 @@
     "karma-jasmine": "^1.1.2",
     "karma-jasmine-html-reporter": "^1.1.0",
     "karma-verbose-reporter": "0.0.6",
+    "precise-commits": "^1.0.2",
     "prettier": "^1.14.0",
     "protractor": "^5.4.0",
     "redux": "^4.0.0",
