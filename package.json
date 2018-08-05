@@ -82,6 +82,7 @@
     "codelyzer": "^4.3.0",
     "coveralls": "^3.0.1",
     "firebase-tools": "^4.0.0",
+    "husky": "^0.14.3",
     "jasmine-core": "^3.1.0",
     "jasmine-jquery": "^2.1.1",
     "jasmine-spec-reporter": "^4.2.1",
@@ -93,6 +94,7 @@
     "karma-jasmine-html-reporter": "^1.1.0",
     "karma-verbose-reporter": "0.0.6",
     "ngrx-store-freeze": "^0.2.4",
+    "precise-commits": "^1.0.2",
     "prettier": "^1.14.0",
     "protractor": "^5.4.0",
     "redux": "^4.0.0",
@@ -100,9 +102,7 @@
     "ts-node": "^6.1.0",
     "tslint": "^5.11.0",
     "typescript": "~2.9.2",
-    "webdriver-manager": "^12.1.0",
-    "precise-commits": "^1.0.2",
-    "husky": "^0.14.3"
+    "webdriver-manager": "^12.1.0"
   },
   "importSort": {
     ".js, .jsx, .es6, .es": {
