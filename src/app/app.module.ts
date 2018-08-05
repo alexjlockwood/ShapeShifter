@@ -31,8 +31,6 @@ import { MaterialModule } from './shared';
     MaterialModule,
     // TODO: figure out if additional per-feature configuration is needed for the service worker
     ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),
-    // TODO: figure out how to split this state up into individual features?
-    StoreModule.forRoot(reducers, { metaReducers }),
   ],
   providers: [{ provide: ErrorHandler, useFactory: errorHandlerFactory }],
   bootstrap: [AppComponent],

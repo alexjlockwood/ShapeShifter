@@ -5,6 +5,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
+import { StoreModule } from '@ngrx/store';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -34,9 +35,9 @@ import { SplitterComponent } from 'app/editor/components/splitter/splitter.compo
 import { ToolbarComponent } from 'app/editor/components/toolbar/toolbar.component';
 import { ToolPanelComponent } from 'app/editor/components/toolpanel/toolpanel.component';
 import { EditorRoutingModule } from 'app/editor/editor.routes';
+import { ProjectResolver } from 'app/editor/project.resolver';
+import { metaReducers, reducers } from 'app/editor/store';
 import { MaterialModule } from 'app/shared';
-
-import { ProjectResolver } from './project.resolver';
 
 @NgModule({
   declarations: [
@@ -70,6 +71,7 @@ import { ProjectResolver } from './project.resolver';
     FormsModule,
     HttpClientModule,
     MaterialModule,
+    StoreModule.forFeature('editor', reducers, { metaReducers }),
   ],
   providers: [ProjectResolver],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
