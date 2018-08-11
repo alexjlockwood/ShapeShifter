@@ -1,0 +1,20 @@
+<mat-toolbar color="primary">
+    <mat-toolbar-row>
+        <span fxFlex="1 1 auto"></span>
+        <button mat-button
+            *ngIf="this.isAuthenticated"
+            (click)="this.onCreateNewProjectClick()">
+            New project
+        </button>
+        <button mat-button
+            *ngIf="!this.isAuthenticated"
+            (click)="this.onSignInClick()">
+            Sign in
+        </button>
+        <button mat-button
+            *ngIf="this.isAuthenticated"
+            (click)="this.onSignOutClick()">
+            Sign out
+        </button>
+    </mat-toolbar-row>
+</mat-toolbar>

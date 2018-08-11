@@ -2,15 +2,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core';
+import { Project } from 'app/shared/models';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-
-interface FirestoreProject {
-  readonly id: string;
-  readonly name: string;
-  readonly uid: string;
-  readonly content: string;
-}
 
 @Component({
   templateUrl: './home.component.html',
@@ -18,7 +12,7 @@ interface FirestoreProject {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent {
-  readonly projects$: Observable<FirestoreProject[]>;
+  readonly projects$: Observable<ReadonlyArray<Project>>;
   readonly isAuthenticated$: Observable<boolean>;
 
   constructor(
@@ -27,12 +21,12 @@ export class HomeComponent {
     private readonly router: Router,
   ) {
     this.projects$ = angularFirestore
-      .collection<FirestoreProject>('projects')
+      .collection<Project>('projects')
       .snapshotChanges()
       .pipe(
         map(actions => {
           return actions.map(action => {
-            const project = action.payload.doc.data() as FirestoreProject;
+            const project = action.payload.doc.data() as Project;
             const id = action.payload.doc.id;
             return { id, ...project };
           });
@@ -43,6 +37,10 @@ export class HomeComponent {
 
   onCreateNewProjectClick() {
     this.router.navigateByUrl(`/project/${this.angularFirestore.createId()}`);
+  }
+
+  onProjectClick(project: Project) {
+    this.router.navigateByUrl(`/project/${project.id}`);
   }
 
   onSignInClick() {

@@ -1,5 +1,4 @@
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { SharedModule } from 'app/shared';
 
 import { HomeComponent } from './home.component';

@@ -15,6 +15,9 @@ import {
   MatTooltipModule,
 } from '@angular/material';
 
+import { HeaderComponent } from './components/header/header.component';
+import { ProjectGridComponent } from './components/projectgrid/projectgrid.component';
+
 const materialModules = [
   MatButtonModule,
   MatDialogModule,
@@ -31,12 +34,11 @@ const materialModules = [
 
 /**
  * The SharedModule should contain reusable components, directives, pipes, etc. that are
- * reused across the application. It should not declare any singleton providers/services
- * (unless they are stateless).
+ * reused across the application. It should not declare any singleton, stateful providers.
  */
 @NgModule({
   imports: [CommonModule, FlexLayoutModule, materialModules],
-  declarations: [],
-  exports: [CommonModule, FlexLayoutModule, materialModules],
+  declarations: [HeaderComponent, ProjectGridComponent],
+  exports: [CommonModule, FlexLayoutModule, HeaderComponent, materialModules, ProjectGridComponent],
 })
 export class SharedModule {}
