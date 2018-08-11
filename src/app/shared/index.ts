@@ -1,1 +1,1 @@
-export { MaterialModule } from './material.module';
+export * from './shared.module';

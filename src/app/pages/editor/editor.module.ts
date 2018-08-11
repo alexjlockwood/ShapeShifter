@@ -37,7 +37,7 @@ import { ToolPanelComponent } from 'app/pages/editor/components/toolpanel/toolpa
 import { EditorRoutingModule } from 'app/pages/editor/editor.routes';
 import { ProjectResolver } from 'app/pages/editor/project.resolver';
 import { reducer } from 'app/pages/editor/store';
-import { MaterialModule } from 'app/shared';
+import { SharedModule } from 'app/shared';
 
 @NgModule({
   declarations: [
@@ -65,12 +65,10 @@ import { MaterialModule } from 'app/shared';
     ToolPanelComponent,
   ],
   imports: [
-    CommonModule,
     EditorRoutingModule,
-    FlexLayoutModule,
     FormsModule,
     HttpClientModule,
-    MaterialModule,
+    SharedModule,
     StoreModule.forFeature('editor', reducer),
   ],
   providers: [ProjectResolver],
