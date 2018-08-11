@@ -8,7 +8,7 @@ import { environment } from 'environments/environment';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app.routes';
-import { HomeModule } from './modules/home';
+import { HomeModule } from './pages/home';
 import { MaterialModule } from './shared';
 
 @NgModule({
