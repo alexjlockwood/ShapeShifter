@@ -1,53 +1,53 @@
 @import '~@angular/material/theming';
-@import '../components/canvas/_canvas-theme.scss';
-@import '../components/dialogs/_dialog-theme.scss';
-@import '../components/layertimeline/_layerlisttree-theme.scss';
-@import '../components/layertimeline/_layertimeline-theme.scss';
-@import '../components/layertimeline/_timelineanimationrow-theme.scss';
-@import '../components/playback/_playback-theme.scss';
-@import '../components/propertyinput/_propertyinput-theme.scss';
-@import '../components/root/_root-theme.scss';
-@import '../components/toolbar/_toolbar-theme.scss';
+@import '../pages/editor/components/canvas/_canvas-theme.scss';
+@import '../pages/editor/components/dialogs/_dialog-theme.scss';
+@import '../pages/editor/components/layertimeline/_layerlisttree-theme.scss';
+@import '../pages/editor/components/layertimeline/_layertimeline-theme.scss';
+@import '../pages/editor/components/layertimeline/_timelineanimationrow-theme.scss';
+@import '../pages/editor/components/playback/_playback-theme.scss';
+@import '../pages/editor/components/propertyinput/_propertyinput-theme.scss';
+@import '../pages/editor/components/root/_root-theme.scss';
+@import '../pages/editor/components/toolbar/_toolbar-theme.scss';
 @include mat-core();
 
 $ss-light-theme-foreground: (
-  divider:                rgba(black, 0.12),
-  divider-inverse:        rgba(white, 0.12),
-  disabled-text:          rgba(black, 0.38),
-  disabled-text-inverse:  rgba(white, 0.5),
-  secondary-text:         rgba(black, 0.54),
-  secondary-text-inverse: rgba(white, 0.7),
-  primary-text:           rgba(black, 0.87),
-  primary-text-inverse:   rgba(white, 1),
+    divider: rgba(black, 0.12),
+    divider-inverse: rgba(white, 0.12),
+    disabled-text: rgba(black, 0.38),
+    disabled-text-inverse: rgba(white, 0.5),
+    secondary-text: rgba(black, 0.54),
+    secondary-text-inverse: rgba(white, 0.7),
+    primary-text: rgba(black, 0.87),
+    primary-text-inverse: rgba(white, 1),
 );
 
 $ss-dark-theme-foreground: (
-  divider:                rgba(white, 0.12),
-  divider-inverse:        rgba(black, 0.12),
-  disabled-text:          rgba(white, 0.5),
-  disabled-text-inverse:  rgba(black, 0.38),
-  secondary-text:         rgba(white, 0.7),
-  secondary-text-inverse: rgba(black, 0.54),
-  primary-text:           rgba(white, 1),
-  primary-text-inverse:   rgba(black, 0.87),
+    divider: rgba(white, 0.12),
+    divider-inverse: rgba(black, 0.12),
+    disabled-text: rgba(white, 0.5),
+    disabled-text-inverse: rgba(black, 0.38),
+    secondary-text: rgba(white, 0.7),
+    secondary-text-inverse: rgba(black, 0.54),
+    primary-text: rgba(white, 1),
+    primary-text-inverse: rgba(black, 0.87),
 );
 
 $ss-light-theme-background: (
-  base: white,
-  base50: map-get($mat-grey, 50),
-  base100: map-get($mat-grey, 100),
-  base200: map-get($mat-grey, 200),
-  base200-inverse: map-get($mat-grey, 900),
-  base300: map-get($mat-grey, 300),
+    base: white,
+    base50: map-get($mat-grey, 50),
+    base100: map-get($mat-grey, 100),
+    base200: map-get($mat-grey, 200),
+    base200-inverse: map-get($mat-grey, 900),
+    base300: map-get($mat-grey, 300),
 );
 
 $ss-dark-theme-background: (
-  base: black,
-  base50: #303030,
-  base100: map_get($mat-grey, 800),
-  base200: map_get($mat-grey, 900),
-  base200-inverse: map-get($mat-grey, 200),
-  base300: #101010,
+    base: black,
+    base50: #303030,
+    base100: map_get($mat-grey, 800),
+    base200: map_get($mat-grey, 900),
+    base200-inverse: map-get($mat-grey, 200),
+    base300: #101010,
 );
 
 $light-accent: mat-palette($mat-blue, A400, A200, A700);
@@ -55,21 +55,27 @@ $dark-accent: mat-palette($mat-deep-orange, A200, A100, A400);
 
 @function ss-light-theme($primary, $accent, $warn: mat-palette($mat-red)) {
     $base-theme: mat-light-theme($primary, $accent, $warn);
-    $result: map_merge($base-theme, (
-      accent-inverse: $dark-accent,
-      ss-foreground: $ss-light-theme-foreground,
-      ss-background: $ss-light-theme-background,
-    ));
+    $result: map_merge(
+        $base-theme,
+        (
+            accent-inverse: $dark-accent,
+            ss-foreground: $ss-light-theme-foreground,
+            ss-background: $ss-light-theme-background,
+        )
+    );
     @return $result;
 }
 
 @function ss-dark-theme($primary, $accent, $warn: mat-palette($mat-red)) {
     $base-theme: mat-dark-theme($primary, $accent, $warn);
-    $result: map_merge($base-theme, (
-      accent-inverse: $light-accent,
-      ss-foreground: $ss-dark-theme-foreground,
-      ss-background: $ss-dark-theme-background,
-    ));
+    $result: map_merge(
+        $base-theme,
+        (
+            accent-inverse: $light-accent,
+            ss-foreground: $ss-dark-theme-foreground,
+            ss-background: $ss-dark-theme-background,
+        )
+    );
     @return $result;
 }
 
@@ -115,12 +121,20 @@ $dark-theme: ss-dark-theme($dark-primary, $dark-accent, $dark-warn);
         @include theme-animation-properties;
     }
     @keyframes lightToDark#{$animName} {
-        0% { background-color: mat-color($light, $paletteKey); }
-        100% { background-color: mat-color($dark, $paletteKey); }
+        0% {
+            background-color: mat-color($light, $paletteKey);
+        }
+        100% {
+            background-color: mat-color($dark, $paletteKey);
+        }
     }
     @keyframes darkToLight#{$animName} {
-        0% { background-color: mat-color($dark, $paletteKey); }
-        100% { background-color: mat-color($light, $paletteKey); }
+        0% {
+            background-color: mat-color($dark, $paletteKey);
+        }
+        100% {
+            background-color: mat-color($light, $paletteKey);
+        }
     }
 }
 
@@ -148,18 +162,34 @@ $dark-theme: ss-dark-theme($dark-primary, $dark-accent, $dark-warn);
     @include theme-animation-properties;
 }
 @keyframes actionModeOnToOffDark {
-    0% { background-color: mat-color(map-get($dark-theme, accent)); }
-    100% { background-color: mat-color(map-get($dark-theme, primary)); }
+    0% {
+        background-color: mat-color(map-get($dark-theme, accent));
+    }
+    100% {
+        background-color: mat-color(map-get($dark-theme, primary));
+    }
 }
 @keyframes actionModeOffToOnDark {
-    0% { background-color: mat-color(map-get($dark-theme, primary)); }
-    100% { background-color: mat-color(map-get($dark-theme, accent)); }
+    0% {
+        background-color: mat-color(map-get($dark-theme, primary));
+    }
+    100% {
+        background-color: mat-color(map-get($dark-theme, accent));
+    }
 }
 @keyframes actionModeOnToOffLight {
-    0% { background-color: mat-color(map-get($light-theme, accent)); }
-    100% { background-color: mat-color(map-get($light-theme, primary)); }
+    0% {
+        background-color: mat-color(map-get($light-theme, accent));
+    }
+    100% {
+        background-color: mat-color(map-get($light-theme, primary));
+    }
 }
 @keyframes actionModeOffToOnLight {
-    0% { background-color: mat-color(map-get($light-theme, primary)); }
-    100% { background-color: mat-color(map-get($light-theme, accent)); }
+    0% {
+        background-color: mat-color(map-get($light-theme, primary));
+    }
+    100% {
+        background-color: mat-color(map-get($light-theme, accent));
+    }
 }

@@ -2,13 +2,13 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from 'app/core';
 
-import { RootComponent } from './components/root/root.component';
+import { EditorComponent } from './editor.component';
 import { ProjectResolver } from './project.resolver';
 
 const routes: Routes = [
   {
     path: ':id',
-    component: RootComponent,
+    component: EditorComponent,
     // TODO: remove this? make it possible to enter this screen w/o logging in?
     canActivate: [AuthGuard],
     resolve: { data: ProjectResolver },

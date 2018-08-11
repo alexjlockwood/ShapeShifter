@@ -1,7 +1,5 @@
-import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -34,6 +32,7 @@ import { SplashScreenComponent } from 'app/pages/editor/components/splashscreen/
 import { SplitterComponent } from 'app/pages/editor/components/splitter/splitter.component';
 import { ToolbarComponent } from 'app/pages/editor/components/toolbar/toolbar.component';
 import { ToolPanelComponent } from 'app/pages/editor/components/toolpanel/toolpanel.component';
+import { EditorComponent } from 'app/pages/editor/editor.component';
 import { EditorRoutingModule } from 'app/pages/editor/editor.routes';
 import { ProjectResolver } from 'app/pages/editor/project.resolver';
 import { reducer } from 'app/pages/editor/store';
@@ -51,6 +50,7 @@ import { SharedModule } from 'app/shared';
     DemoDialogComponent,
     DropFilesDialogComponent,
     DropTargetDirective,
+    EditorComponent,
     LayerListTreeComponent,
     LayerTimelineComponent,
     LayerTimelineGridDirective,
@@ -73,7 +73,6 @@ import { SharedModule } from 'app/shared';
   ],
   providers: [ProjectResolver],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
-  bootstrap: [RootComponent],
 })
 export class EditorModule {
   // TODO: figure out if this stuff should be declared in the app/core module?

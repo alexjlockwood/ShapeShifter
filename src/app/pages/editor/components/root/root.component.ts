@@ -40,6 +40,7 @@ const ELEMENT_RESIZE_DETECTOR = erd({ strategy: 'scroll' });
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
 @Component({
+  selector: 'app-editor-root',
   templateUrl: './root.component.html',
   styleUrls: ['./root.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
