@@ -6,6 +6,10 @@ const routes: Routes = [
     path: 'project',
     loadChildren: './pages/editor/editor.module#EditorModule',
   },
+  {
+    path: 'user/:uid',
+    loadChildren: './pages/dashboard/dashboard.module#DashboardModule',
+  },
 ];
 
 @NgModule({

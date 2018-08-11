@@ -7,11 +7,11 @@ import { Observable } from 'rxjs';
 import { first, map } from 'rxjs/operators';
 
 @Component({
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss'],
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent {
+export class DashboardComponent {
   readonly projects$: Observable<ReadonlyArray<Project>>;
   readonly isAuthenticated$: Observable<boolean>;
 

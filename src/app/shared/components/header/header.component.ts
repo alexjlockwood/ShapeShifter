@@ -13,12 +13,18 @@ export class HeaderComponent {
   @Output()
   createNewProjectClick = new EventEmitter<undefined>();
   @Output()
+  myProjectsClick = new EventEmitter<undefined>();
+  @Output()
   signInClick = new EventEmitter<undefined>();
   @Output()
   signOutClick = new EventEmitter<undefined>();
 
   onCreateNewProjectClick() {
     this.createNewProjectClick.emit();
+  }
+
+  onMyProjectsClick() {
+    this.myProjectsClick.emit();
   }
 
   onSignInClick() {
