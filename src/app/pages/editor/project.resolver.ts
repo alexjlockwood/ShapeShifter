@@ -5,6 +5,7 @@ import { AuthService } from 'app/core';
 import { Project } from 'app/pages/editor/components/project';
 import { ModelUtil } from 'app/pages/editor/scripts/common';
 import { FileExportService } from 'app/pages/editor/services';
+import { Project as FirestoreProject } from 'app/shared/models';
 import { combineLatest, from, of } from 'rxjs';
 import { first, map, switchMap } from 'rxjs/operators';
 
@@ -24,12 +25,6 @@ const defaultProjectContent = JSON.stringify({
   },
   timeline: { animation: { id: '2', name: 'anim', duration: 300, blocks: [] as string[] } },
 });
-
-interface FirestoreProject {
-  readonly name: string;
-  readonly uid: string;
-  readonly content: string;
-}
 
 @Injectable()
 export class ProjectResolver implements Resolve<Project> {
