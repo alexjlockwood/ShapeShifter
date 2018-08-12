@@ -10,6 +10,7 @@ import { errorHandlerFactory } from 'app/pages/editor/scripts/bugsnag';
 import { environment } from 'environments/environment';
 
 import { AuthGuard, AuthService } from './auth/services';
+import { ProjectService } from './projects/services';
 import { metaReducers, reducers } from './store/core.reducer';
 
 /**
@@ -27,7 +28,12 @@ import { metaReducers, reducers } from './store/core.reducer';
     // TODO: figure out if additional per-feature configuration is needed for the service worker
     ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),
   ],
-  providers: [AuthGuard, AuthService, { provide: ErrorHandler, useFactory: errorHandlerFactory }],
+  providers: [
+    AuthGuard,
+    AuthService,
+    ProjectService,
+    { provide: ErrorHandler, useFactory: errorHandlerFactory },
+  ],
 })
 export class CoreModule {
   constructor(
