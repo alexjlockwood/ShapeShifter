@@ -5,8 +5,7 @@ import { AngularFirestore } from 'angularfire2/firestore';
 import * as fromCore from 'app/core/store/core.reducer';
 import { User } from 'app/shared/models/firestore';
 import * as firebase from 'firebase/app';
-import { of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 import { SetUser } from '../store/auth.actions';
 
@@ -17,17 +16,12 @@ export class AuthService {
     private readonly angularFirestore: AngularFirestore,
     private readonly store: Store<fromCore.State>,
   ) {
-    this.angularFireAuth.authState
-      .pipe(
-        switchMap(user => {
-          if (!user) {
-            return of<User>(undefined);
-          }
-          // TODO: investigate the best way to speed this query up (should appear to be immediate)
-          return this.angularFirestore.doc<User>(`users/${user.uid}`).valueChanges();
-        }),
-      )
-      .subscribe(user => this.store.dispatch(new SetUser(user)));
+    // TODO: investigate if we should be reading this from the fire store instead?
+    // TODO: should we set the user to the firestore here?
+    // return this.angularFirestore.doc<User>(`users/${user.uid}`).valueChanges();
+    this.angularFireAuth.authState.subscribe(user => {
+      this.store.dispatch(new SetUser(fromFirebaseUser(user)));
+    });
   }
 
   observeUser() {
@@ -46,6 +40,7 @@ export class AuthService {
     return new Promise<void>((resolve, reject) => {
       this.angularFireAuth.auth.signInWithPopup(provider).then(
         credential => {
+          // TODO: figure out what to do in the case that this write operation fails?
           this.updateUserData(credential.user);
           resolve();
         },
@@ -67,4 +62,16 @@ export class AuthService {
   signOut() {
     return this.angularFireAuth.auth.signOut();
   }
+}
+
+function fromFirebaseUser(user: firebase.User | undefined): User | undefined {
+  if (!user) {
+    return undefined;
+  }
+  return {
+    id: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    photoURL: user.photoURL,
+  };
 }
