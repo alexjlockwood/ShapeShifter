@@ -1,6 +1,6 @@
 <div class="home-project-list">
     <div class="inner">
-        <a *ngFor="let project of this.projects; trackBy: this.trackByProjectFn"
+        <a *ngFor="let project of this.projects; trackBy: this.trackByFn"
             href="/project/{{ project.id }}"
             class="home-project-card mat-elevation-z4">
             <div class="project-image">

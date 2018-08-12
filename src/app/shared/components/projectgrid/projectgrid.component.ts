@@ -11,7 +11,7 @@ export class ProjectGridComponent {
   @Input()
   projects: ReadonlyArray<Project>;
 
-  trackByProject(index: number, project: Project) {
+  trackByFn(index: number, project: Project) {
     return project.id;
   }
 }
