@@ -5,7 +5,7 @@ import { AuthService } from 'app/core';
 import { Project } from 'app/pages/editor/components/project';
 import { ModelUtil } from 'app/pages/editor/scripts/common';
 import { FileExportService } from 'app/pages/editor/services';
-import { Project as FirestoreProject } from 'app/shared/models';
+import { Project as FirestoreProject } from 'app/shared/models/firestore';
 import { combineLatest, from, of } from 'rxjs';
 import { first, map, switchMap } from 'rxjs/operators';
 
@@ -36,18 +36,18 @@ export class ProjectResolver implements Resolve<Project> {
   resolve(route: ActivatedRouteSnapshot) {
     const id = route.paramMap.get('id');
     const observeUserId = this.authService.observeUser().pipe(map(user => user.id));
-    const observeDocPayload = this.angularFirestore
+    const observeDocumentPayload = this.angularFirestore
       .doc<FirestoreProject>(`projects/${id}`)
       .snapshotChanges()
       .pipe(map(action => action.payload));
-    return combineLatest(observeUserId, observeDocPayload)
+    return combineLatest(observeUserId, observeDocumentPayload)
       .pipe(
         switchMap(([userId, payload]) => {
           if (!payload.exists) {
             const firestoreProject = {
               id,
               userId,
-              name: 'my new project',
+              name: 'My new project',
               content: defaultProjectContent,
             };
             return from<Project>(

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core';
-import { Project } from 'app/shared/models';
+import { Project } from 'app/shared/models/firestore';
 import { Observable } from 'rxjs';
 import { first, map } from 'rxjs/operators';
 

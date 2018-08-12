@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { Project } from 'app/shared/models';
+import { Project } from 'app/shared/models/firestore';
 
 @Component({
   selector: 'app-projectgrid',
