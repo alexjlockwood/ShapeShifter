@@ -2,9 +2,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ServiceWorkerModule } from '@angular/service-worker';
 import { CoreModule } from 'app/core';
-import { environment } from 'environments/environment';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app.routes';
@@ -19,8 +17,6 @@ import { AppRoutingModule } from './app.routes';
     // App modules.
     AppRoutingModule,
     CoreModule,
-    // TODO: figure out if additional per-feature configuration is needed for the service worker
-    ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),
   ],
   bootstrap: [AppComponent],
 })

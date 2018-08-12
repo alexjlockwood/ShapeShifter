@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
+import { ServiceWorkerModule } from '@angular/service-worker';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { AngularFireModule } from 'angularfire2';
@@ -8,9 +9,8 @@ import { AngularFirestoreModule } from 'angularfire2/firestore';
 import { errorHandlerFactory } from 'app/pages/editor/scripts/bugsnag';
 import { environment } from 'environments/environment';
 
-import { AuthGuard } from './guards';
-import { AuthService } from './services';
-import { metaReducers, reducers } from './store/reducer';
+import { AuthGuard, AuthService } from './auth/services';
+import { metaReducers, reducers } from './store/core.reducer';
 
 /**
  * The core module contains singleton services that are loaded when the application
@@ -24,6 +24,8 @@ import { metaReducers, reducers } from './store/reducer';
     AngularFireAuthModule,
     StoreModule.forRoot(reducers, { metaReducers }),
     ...(environment.production ? [] : [StoreDevtoolsModule.instrument()]),
+    // TODO: figure out if additional per-feature configuration is needed for the service worker
+    ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),
   ],
   providers: [AuthGuard, AuthService, { provide: ErrorHandler, useFactory: errorHandlerFactory }],
 })

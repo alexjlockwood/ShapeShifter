@@ -1,36 +1,41 @@
 import { Injectable } from '@angular/core';
+import { Store, select } from '@ngrx/store';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { AngularFirestore } from 'angularfire2/firestore';
+import * as fromCore from 'app/core/store/core.reducer';
 import { User } from 'app/shared/models/firestore';
 import * as firebase from 'firebase/app';
-import { Observable, of } from 'rxjs';
-import { concat, map, switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+
+import { SetUser } from '../store/auth.actions';
 
 @Injectable()
 export class AuthService {
-  private readonly user$: Observable<User | undefined>;
-
   constructor(
     private readonly angularFireAuth: AngularFireAuth,
     private readonly angularFirestore: AngularFirestore,
+    private readonly store: Store<fromCore.State>,
   ) {
-    this.user$ = this.angularFireAuth.authState.pipe(
-      switchMap(user => {
-        if (!user) {
-          return of(undefined);
-        }
-        // TODO: investigate the best way to speed this query up (should appear to be immediate)
-        return this.angularFirestore.doc<User>(`users/${user.uid}`).valueChanges();
-      }),
-    );
+    this.angularFireAuth.authState
+      .pipe(
+        switchMap(user => {
+          if (!user) {
+            return of<User>(undefined);
+          }
+          // TODO: investigate the best way to speed this query up (should appear to be immediate)
+          return this.angularFirestore.doc<User>(`users/${user.uid}`).valueChanges();
+        }),
+      )
+      .subscribe(user => this.store.dispatch(new SetUser(user)));
   }
 
   observeUser() {
-    return this.user$;
+    return this.store.pipe(select(state => state.auth.user));
   }
 
   observeIsAuthenticated() {
-    return this.user$.pipe(map(user => !!user));
+    return this.observeUser().pipe(map(user => !!user));
   }
 
   signInWithGoogle() {

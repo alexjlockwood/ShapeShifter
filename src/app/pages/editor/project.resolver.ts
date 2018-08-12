@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
-import { AuthService } from 'app/core';
+import { AuthService } from 'app/core/auth/services';
 import { Project } from 'app/pages/editor/components/project';
 import { ModelUtil } from 'app/pages/editor/scripts/common';
 import { FileExportService } from 'app/pages/editor/services';
