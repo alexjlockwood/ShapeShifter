@@ -3,8 +3,8 @@ import { Router } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core/auth/services';
 import { Project } from 'app/shared/models/firestore';
-import { Observable } from 'rxjs';
-import { first } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { distinctUntilChanged, first, map, switchMap } from 'rxjs/operators';
 
 @Component({
   templateUrl: './dashboard.component.html',
@@ -20,7 +20,18 @@ export class DashboardComponent {
     private readonly authService: AuthService,
     private readonly router: Router,
   ) {
-    this.projects$ = angularFirestore.collection<Project>('projects').valueChanges();
+    this.projects$ = this.authService.observeUser().pipe(
+      map(user => (user ? user.id : undefined)),
+      distinctUntilChanged(),
+      switchMap(userId => {
+        if (!userId) {
+          return of([] as Project[]);
+        }
+        return angularFirestore
+          .collection<Project>('projects', ref => ref.where('userId', '==', userId))
+          .valueChanges();
+      }),
+    );
     this.isAuthenticated$ = this.authService.observeIsAuthenticated();
   }
 

@@ -14,7 +14,5 @@
             </p>
         </div>
     </div>
-    <app-projectgrid *ngIf="this.isAuthenticated$ | async"
-        [projects]="this.projects$ | async">
-    </app-projectgrid>
+    <app-projectgrid [projects]="this.projects$ | async"></app-projectgrid>
 </div>

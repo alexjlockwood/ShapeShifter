@@ -2,12 +2,11 @@ import { Injectable } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { AngularFirestore } from 'angularfire2/firestore';
+import { SetUser } from 'app/core/auth/store/auth.actions';
 import * as fromCore from 'app/core/store/core.reducer';
 import { User } from 'app/shared/models/firestore';
 import * as firebase from 'firebase/app';
 import { map } from 'rxjs/operators';
-
-import { SetUser } from '../store/auth.actions';
 
 @Injectable()
 export class AuthService {
