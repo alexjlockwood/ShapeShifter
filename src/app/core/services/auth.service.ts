@@ -1,16 +1,10 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { AngularFirestore } from 'angularfire2/firestore';
+import { User } from 'app/shared/models';
 import * as firebase from 'firebase/app';
 import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-
-interface User {
-  uid: string;
-  email?: string;
-  photoURL?: string;
-  displayName?: string;
-}
 
 @Injectable()
 export class AuthService {
@@ -58,18 +52,10 @@ export class AuthService {
   }
 
   private updateUserData(user: firebase.User) {
-    // TODO: remove this log
-    console.log('updating user data', user);
-
-    return this.angularFirestore.doc<User>(`users/${user.uid}`).set(
-      {
-        uid: user.uid,
-        email: user.email,
-        photoURL: user.photoURL,
-        displayName: user.displayName,
-      },
-      { merge: true },
-    );
+    const { uid: id, email, photoURL, displayName } = user;
+    return this.angularFirestore
+      .doc<User>(`users/${id}`)
+      .set({ id, email, photoURL, displayName }, { merge: true });
   }
 
   signOut() {

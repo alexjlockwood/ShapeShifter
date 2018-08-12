@@ -35,18 +35,18 @@ export class ProjectResolver implements Resolve<Project> {
 
   resolve(route: ActivatedRouteSnapshot) {
     const id = route.paramMap.get('id');
-    const observeUserUid = this.authService.observeUser().pipe(map(user => user.uid));
+    const observeUserId = this.authService.observeUser().pipe(map(user => user.id));
     const observeDocPayload = this.angularFirestore
       .doc<FirestoreProject>(`projects/${id}`)
       .snapshotChanges()
       .pipe(map(action => action.payload));
-    return combineLatest(observeUserUid, observeDocPayload)
+    return combineLatest(observeUserId, observeDocPayload)
       .pipe(
-        switchMap(([uid, payload]) => {
+        switchMap(([userId, payload]) => {
           if (!payload.exists) {
             const firestoreProject = {
               id,
-              uid,
+              userId,
               name: 'my new project',
               content: defaultProjectContent,
             };

@@ -20,23 +20,8 @@ export class DashboardComponent {
     private readonly authService: AuthService,
     private readonly router: Router,
   ) {
-    this.projects$ = angularFirestore
-      .collection<Project>('projects')
-      .snapshotChanges()
-      .pipe(
-        map(actions => {
-          return actions.map(action => {
-            const project = action.payload.doc.data() as Project;
-            const id = action.payload.doc.id;
-            return { id, ...project };
-          });
-        }),
-      );
+    this.projects$ = angularFirestore.collection<Project>('projects').valueChanges();
     this.isAuthenticated$ = this.authService.observeIsAuthenticated();
-  }
-
-  onProjectClick(project: Project) {
-    this.router.navigateByUrl(`/project/${project.id}`);
   }
 
   onCreateNewProjectClick() {
@@ -47,7 +32,7 @@ export class DashboardComponent {
     this.authService
       .observeUser()
       .pipe(first())
-      .subscribe(user => this.router.navigateByUrl(`/user/${user.uid}`));
+      .subscribe(user => this.router.navigateByUrl(`/user/${user.id}`));
   }
 
   onSignInClick() {
