@@ -10,7 +10,7 @@ import { errorHandlerFactory } from 'app/pages/editor/scripts/bugsnag';
 import { environment } from 'environments/environment';
 
 import { AuthGuard, AuthService } from './auth/services';
-import { ProjectService } from './projects/services';
+// import { ProjectsService } from './projects/services';
 import { metaReducers, reducers } from './store/core.reducer';
 
 /**
@@ -31,7 +31,7 @@ import { metaReducers, reducers } from './store/core.reducer';
   providers: [
     AuthGuard,
     AuthService,
-    ProjectService,
+    // ProjectsService,
     { provide: ErrorHandler, useFactory: errorHandlerFactory },
   ],
 })

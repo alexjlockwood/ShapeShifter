@@ -6,7 +6,8 @@ import { SetUser } from 'app/core/auth/store/auth.actions';
 import * as fromCore from 'app/core/store/core.reducer';
 import { User } from 'app/shared/models/firestore';
 import * as firebase from 'firebase/app';
-import { map } from 'rxjs/operators';
+import * as _ from 'lodash';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +25,7 @@ export class AuthService {
   }
 
   observeUser() {
-    return this.store.pipe(select(state => state.auth.user));
+    return this.store.pipe(select(state => state.auth.user), distinctUntilChanged(_.isEqual));
   }
 
   observeIsAuthenticated() {

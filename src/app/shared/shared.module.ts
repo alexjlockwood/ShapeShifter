@@ -14,6 +14,7 @@ import {
   MatToolbarModule,
   MatTooltipModule,
 } from '@angular/material';
+import { RouterModule } from '@angular/router';
 
 import { HeaderComponent } from './components/header/header.component';
 import { ProjectGridComponent } from './components/projectgrid/projectgrid.component';
@@ -37,8 +38,15 @@ const materialModules = [
  * reused across the application. It should not declare any singleton, stateful providers.
  */
 @NgModule({
-  imports: [CommonModule, FlexLayoutModule, materialModules],
+  imports: [CommonModule, FlexLayoutModule, materialModules, RouterModule],
   declarations: [HeaderComponent, ProjectGridComponent],
-  exports: [CommonModule, FlexLayoutModule, HeaderComponent, materialModules, ProjectGridComponent],
+  exports: [
+    CommonModule,
+    FlexLayoutModule,
+    HeaderComponent,
+    materialModules,
+    ProjectGridComponent,
+    RouterModule,
+  ],
 })
 export class SharedModule {}

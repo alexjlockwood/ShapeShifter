@@ -1,14 +1,30 @@
 <div class="outer-container">
     <div class="inner-container">
-        <a *ngFor="let project of this.projects; trackBy: this.trackByFn"
-            href="/project/{{ project.id }}"
-            class="project-card mat-elevation-z4">
+        <!-- TODO: make the cursor change to a pointer when hovering on top of the card-->
+        <div *ngFor="let project of this.projects; trackBy: this.trackByFn"
+            class="project-card mat-elevation-z4"
+            (click)="this.onProjectClick(project)">
             <div class="project-image">
                 <!-- TODO: replace this with the actual project image -->
                 <img src="https://romannurik.github.io/AndroidAssetStudio/res/generator-thumbs/icon-animator.svg">
             </div>
-            <div class="project-title">{{ project.name }}</div>
-            <div class="project-description">{{ project.userId }}</div>
-        </a>
+            <div class="project-info-outer">
+                <div class="project-info-inner">
+                    <div class="project-title">{{ project.name }}</div>
+                    <div class="project-description">{{ project.userId }}</div>
+                </div>
+                <mat-menu #appMenu="matMenu">
+                    <button mat-menu-item
+                        (click)="this.onDeleteProjectClick(project)">
+                        Delete
+                    </button>
+                </mat-menu>
+                <button mat-icon-button
+                    [matMenuTriggerFor]="appMenu"
+                    (click)="$event.stopPropagation()">
+                    <mat-icon>more_vert</mat-icon>
+                </button>
+            </div>
+        </div>
     </div>
 </div>

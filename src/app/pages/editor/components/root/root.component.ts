@@ -58,7 +58,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
   displayContainerRef: ElementRef;
   private $displayContainer: JQuery;
 
-  private readonly displayBoundsSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
+  private displayBoundsSubject: BehaviorSubject<Size>;
   canvasBounds$: Observable<Size>;
   isActionMode$: Observable<boolean>;
   cursorClassName$: Observable<string>;
@@ -108,6 +108,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       return undefined;
     });
 
+    this.displayBoundsSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
     const displaySize$ = this.displayBoundsSubject.asObservable().pipe(
       distinctUntilChanged((s1, s2) => {
         return s1.w === s2.w && s1.h === s2.h;

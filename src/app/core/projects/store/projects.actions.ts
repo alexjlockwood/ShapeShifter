@@ -1,6 +1,6 @@
-import { Action } from '@ngrx/store';
-import { Project } from 'app/shared/models/firestore';
+// import { Action } from '@ngrx/store';
+// import { Project } from 'app/shared/models/firestore';
 
-export enum ProjectsActionTypes {}
+// export enum ProjectsActionTypes {}
 
-export type ProjectsActions = Action;
+// export type ProjectsActions = Action;
