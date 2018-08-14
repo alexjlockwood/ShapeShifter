@@ -12,6 +12,7 @@ import { environment } from 'environments/environment';
 
 import { AuthGuard, AuthService } from './auth/services';
 import { ProjectsService } from './projects/services/projects.service';
+import { ProjectsEffects } from './projects/store/projects.effects';
 import { metaReducers, reducers } from './store/core.reducer';
 
 /**
@@ -25,7 +26,7 @@ import { metaReducers, reducers } from './store/core.reducer';
     AngularFirestoreModule,
     AngularFireAuthModule,
     StoreModule.forRoot(reducers, { metaReducers }),
-    EffectsModule.forRoot([]),
+    EffectsModule.forRoot([ProjectsEffects]),
     ...(environment.production ? [] : [StoreDevtoolsModule.instrument()]),
     // TODO: figure out if additional per-feature configuration is needed for the service worker
     ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),

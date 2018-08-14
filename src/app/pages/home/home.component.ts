@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core/auth/services';
+import { ProjectsService } from 'app/core/projects/services';
 import { Project } from 'app/shared/models/firestore';
 import { Observable, of } from 'rxjs';
 import { distinctUntilChanged, first, map, switchMap } from 'rxjs/operators';
-import { ProjectsService } from 'app/core/projects/services/projects.service';
 
 @Component({
   templateUrl: './home.component.html',
@@ -29,7 +29,7 @@ export class HomeComponent {
         if (!userId) {
           return of([] as Project[]);
         }
-        return angularFirestore.collection<Project>('projects').valueChanges();
+        return this.projectsService.queryProjects();
       }),
     );
     this.isAuthenticated$ = this.authService.observeIsAuthenticated();

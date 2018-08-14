@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core/auth/services';
+import { ProjectsService } from 'app/core/projects/services';
 import { Project } from 'app/shared/models/firestore';
 import { Observable, of } from 'rxjs';
 import { distinctUntilChanged, first, map, switchMap } from 'rxjs/operators';
@@ -19,6 +20,7 @@ export class DashboardComponent {
     private readonly angularFirestore: AngularFirestore,
     private readonly authService: AuthService,
     private readonly router: Router,
+    projectsService: ProjectsService,
   ) {
     this.projects$ = this.authService.observeUser().pipe(
       map(user => (user ? user.id : undefined)),
@@ -27,9 +29,7 @@ export class DashboardComponent {
         if (!userId) {
           return of([] as Project[]);
         }
-        return angularFirestore
-          .collection<Project>('projects', ref => ref.where('userId', '==', userId))
-          .valueChanges();
+        return projectsService.queryProjectsForUser(userId);
       }),
     );
     this.isAuthenticated$ = this.authService.observeIsAuthenticated();

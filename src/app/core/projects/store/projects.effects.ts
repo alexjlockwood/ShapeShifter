@@ -26,7 +26,7 @@ import {
 export class ProjectsEffects {
   @Effect()
   query$ = this.actions$.ofType<Query>(ProjectsActionTypes.Query).pipe(
-    switchMap(() => this.afs.collection<Project>('projects').stateChanges()),
+    switchMap(({ queryFn }) => this.afs.collection<Project>('projects', queryFn).stateChanges()),
     mergeMap(actions => actions),
     map(({ type, payload }) => {
       const project = payload.doc.data();

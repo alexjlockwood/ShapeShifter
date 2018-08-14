@@ -1,4 +1,5 @@
 import { Action } from '@ngrx/store';
+import { QueryFn } from 'angularfire2/firestore';
 import { Project } from 'app/shared/models/firestore';
 
 export enum ProjectsActionTypes {
@@ -15,6 +16,7 @@ export enum ProjectsActionTypes {
 
 export class Query implements Action {
   readonly type = ProjectsActionTypes.Query;
+  constructor(readonly queryFn?: QueryFn) {}
 }
 
 export class Create implements Action {
