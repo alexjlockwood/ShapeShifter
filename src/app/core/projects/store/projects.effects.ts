@@ -3,28 +3,39 @@ import { Actions, Effect } from '@ngrx/effects';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { Project } from 'app/shared/models/firestore';
 import { from } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, mergeMap, switchMap } from 'rxjs/operators';
 
 import {
-  AddAll,
+  Added,
   Create,
   Delete,
+  Modified,
   ProjectsActionTypes,
   Query,
+  Removed,
   Success,
   Update,
 } from './projects.actions';
 
 /**
- * TODO: figure out how to handle failures
+ * TODO: dispatch a failure action when failures occur
  * TODO: figure out how to efficiently update the store after create/update/delete actions
+ * TODO: figure out if switchMap is being used correctly in write operations below
  */
 @Injectable()
-export class PizzaEffects {
+export class ProjectsEffects {
   @Effect()
   query$ = this.actions$.ofType<Query>(ProjectsActionTypes.Query).pipe(
-    switchMap(action => this.afs.collection<Project>('projects').valueChanges()),
-    map(projects => new AddAll(projects)),
+    switchMap(() => this.afs.collection<Project>('projects').stateChanges()),
+    mergeMap(actions => actions),
+    map(({ type, payload }) => {
+      const project = payload.doc.data();
+      return type === 'added'
+        ? new Added(project)
+        : type === 'modified'
+          ? new Modified(project)
+          : new Removed(project);
+    }),
   );
 
   @Effect()

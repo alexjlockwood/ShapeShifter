@@ -5,6 +5,7 @@ import { AuthService } from 'app/core/auth/services';
 import { Project } from 'app/shared/models/firestore';
 import { Observable, of } from 'rxjs';
 import { distinctUntilChanged, first, map, switchMap } from 'rxjs/operators';
+import { ProjectsService } from 'app/core/projects/services/projects.service';
 
 @Component({
   templateUrl: './home.component.html',
@@ -19,6 +20,7 @@ export class HomeComponent {
     private readonly angularFirestore: AngularFirestore,
     private readonly authService: AuthService,
     private readonly router: Router,
+    private readonly projectsService: ProjectsService,
   ) {
     this.projects$ = this.authService.observeUser().pipe(
       map(user => (user ? user.id : undefined)),

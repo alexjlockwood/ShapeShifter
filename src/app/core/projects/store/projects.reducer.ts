@@ -14,8 +14,12 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: ProjectsActions) {
   switch (action.type) {
-    case ProjectsActionTypes.AddAll:
-      return projectsAdapter.addAll(action.projects as Project[], state);
+    case ProjectsActionTypes.Added:
+      return projectsAdapter.addOne(action.project, state);
+    case ProjectsActionTypes.Modified:
+      return projectsAdapter.updateOne({ id: action.project.id, changes: action.project }, state);
+    case ProjectsActionTypes.Removed:
+      return projectsAdapter.removeOne(action.project.id, state);
   }
   return state;
 }
