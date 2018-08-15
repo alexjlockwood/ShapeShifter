@@ -21,6 +21,7 @@ import {
  * TODO: dispatch a failure action when failures occur
  * TODO: figure out how to efficiently update the store after create/update/delete actions
  * TODO: figure out if switchMap is being used correctly in write operations below
+ * TODO: unsubscribe from query using takeUntil() in component's ngOnDestroy method
  */
 @Injectable()
 export class ProjectsEffects {
