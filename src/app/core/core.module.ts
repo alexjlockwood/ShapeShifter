@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { EffectsModule } from '@ngrx/effects';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { AngularFireModule } from 'angularfire2';
@@ -13,6 +14,7 @@ import { environment } from 'environments/environment';
 import { AuthGuard, AuthService } from './auth/services';
 import { ProjectsService } from './projects/services/projects.service';
 import { ProjectsEffects } from './projects/store/projects.effects';
+import { RouterEffects } from './router/store/router.effects';
 import { metaReducers, reducers } from './store/core.reducer';
 
 /**
@@ -26,7 +28,8 @@ import { metaReducers, reducers } from './store/core.reducer';
     AngularFirestoreModule,
     AngularFireAuthModule,
     StoreModule.forRoot(reducers, { metaReducers }),
-    EffectsModule.forRoot([ProjectsEffects]),
+    EffectsModule.forRoot([ProjectsEffects, RouterEffects]),
+    StoreRouterConnectingModule.forRoot(),
     ...(environment.production ? [] : [StoreDevtoolsModule.instrument()]),
     // TODO: figure out if additional per-feature configuration is needed for the service worker
     ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),

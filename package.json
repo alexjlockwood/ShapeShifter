@@ -42,6 +42,7 @@
     "@angular/service-worker": "^6.1.0",
     "@ngrx/effects": "^6.1.0",
     "@ngrx/entity": "^6.1.0",
+    "@ngrx/router-store": "^6.1.0",
     "@ngrx/store": "^6.0.1",
     "@ngrx/store-devtools": "^6.1.0",
     "angularfire2": "^5.0.0-rc.11",
