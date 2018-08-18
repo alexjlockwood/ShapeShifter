@@ -16,6 +16,8 @@ export function reducer(state = buildInitialState(), action: AuthActions) {
   switch (action.type) {
     case AuthActionTypes.SetUser:
       return { ...state, user: action.user };
+    case AuthActionTypes.SignoutSuccess:
+      return { ...state, user: undefined };
   }
   return state;
 }

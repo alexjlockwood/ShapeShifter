@@ -2,12 +2,12 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatDialogRef } from '@angular/material';
 
 @Component({
-  templateUrl: './signout-dialog.component.html',
-  styleUrls: ['./signout-dialog.component.scss'],
+  templateUrl: './signin-dialog.component.html',
+  styleUrls: ['./signin-dialog.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SignoutDialogComponent {
-  constructor(private readonly dialogRef: MatDialogRef<SignoutDialogComponent, boolean>) {}
+export class SigninDialogComponent {
+  constructor(private readonly dialogRef: MatDialogRef<SigninDialogComponent, boolean>) {}
 
   cancel() {
     this.dialogRef.close(false);

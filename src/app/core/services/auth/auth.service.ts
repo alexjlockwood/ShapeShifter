@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { AngularFireAuth } from 'angularfire2/auth';
-import { AngularFirestore } from 'angularfire2/firestore';
-import * as fromCore from 'app/core/store';
-import { SetUser } from 'app/core/store/auth/auth.actions';
+import { AppState } from 'app/core/store';
+import { SetUser, ShowSigninDialog, ShowSignoutDialog } from 'app/core/store/auth/auth.actions';
 import { User } from 'app/shared/models/firestore';
 import * as firebase from 'firebase/app';
 import * as _ from 'lodash';
@@ -13,8 +12,7 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
 export class AuthService {
   constructor(
     private readonly angularFireAuth: AngularFireAuth,
-    private readonly angularFirestore: AngularFirestore,
-    private readonly store: Store<fromCore.State>,
+    private readonly store: Store<AppState>,
   ) {
     // TODO: investigate if we should be reading this from the fire store instead?
     // TODO: should we set the user to the firestore here?
@@ -32,35 +30,12 @@ export class AuthService {
     return this.observeUser().pipe(map(user => !!user));
   }
 
-  signInWithGoogle() {
-    return this.signInWithOAuth(new firebase.auth.GoogleAuthProvider());
+  showSigninDialog() {
+    this.store.dispatch(new ShowSigninDialog());
   }
 
-  private signInWithOAuth(provider: firebase.auth.AuthProvider) {
-    return new Promise<void>((resolve, reject) => {
-      this.angularFireAuth.auth.signInWithPopup(provider).then(
-        credential => {
-          // TODO: figure out what to do in the case that this write operation fails?
-          this.updateUserData(credential.user);
-          resolve();
-        },
-        error => {
-          console.error(error);
-          reject();
-        },
-      );
-    });
-  }
-
-  private updateUserData(user: firebase.User) {
-    const { uid: id, email, photoURL, displayName } = user;
-    return this.angularFirestore
-      .doc<User>(`users/${id}`)
-      .set({ id, email, photoURL, displayName }, { merge: true });
-  }
-
-  signOut() {
-    return this.angularFireAuth.auth.signOut();
+  showSignoutDialog() {
+    this.store.dispatch(new ShowSignoutDialog());
   }
 }
 

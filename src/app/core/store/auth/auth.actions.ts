@@ -3,6 +3,11 @@ import { User } from 'app/shared/models/firestore';
 
 export enum AuthActionTypes {
   SetUser = '[auth] SetUser',
+  ShowSigninDialog = '[auth] ShowSigninDialog',
+  SigninDialogConfirmed = '[auth] SigninDialogConfirmed',
+  SigninDialogCanceled = '[auth] SigninDialogCanceled',
+  SigninSuccess = '[auth] SigninSuccess',
+  SigninFailure = '[auth] SigninFailure',
   ShowSignoutDialog = '[auth] ShowSignoutDialog',
   SignoutDialogConfirmed = '[auth] SignoutDialogConfirmed',
   SignoutDialogCanceled = '[auth] SignoutDialogCanceled',
@@ -13,6 +18,26 @@ export enum AuthActionTypes {
 export class SetUser implements Action {
   readonly type = AuthActionTypes.SetUser;
   constructor(readonly user: User | undefined) {}
+}
+
+export class ShowSigninDialog implements Action {
+  readonly type = AuthActionTypes.ShowSigninDialog;
+}
+
+export class SigninDialogConfirmed implements Action {
+  readonly type = AuthActionTypes.SigninDialogConfirmed;
+}
+
+export class SigninDialogCanceled implements Action {
+  readonly type = AuthActionTypes.SigninDialogCanceled;
+}
+
+export class SigninSuccess implements Action {
+  readonly type = AuthActionTypes.SigninSuccess;
+}
+
+export class SigninFailure implements Action {
+  readonly type = AuthActionTypes.SigninFailure;
 }
 
 export class ShowSignoutDialog implements Action {
@@ -37,6 +62,11 @@ export class SignoutFailure implements Action {
 
 export type AuthActions =
   | SetUser
+  | ShowSigninDialog
+  | SigninDialogConfirmed
+  | SigninDialogCanceled
+  | SigninSuccess
+  | SigninFailure
   | ShowSignoutDialog
   | SignoutDialogConfirmed
   | SignoutDialogCanceled

@@ -6,12 +6,12 @@ import * as fromAuth from './auth/auth.reducer';
 import * as fromProjects from './projects/projects.reducer';
 
 // TODO: add the editor feature slice to this state as well
-export interface State {
+export interface AppState {
   readonly auth: fromAuth.State;
   readonly projects: fromProjects.State;
 }
 
-export const reducers: ActionReducerMap<State> = {
+export const reducers: ActionReducerMap<AppState> = {
   auth: fromAuth.reducer,
   projects: fromProjects.reducer,
 };

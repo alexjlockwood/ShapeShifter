@@ -1,2 +1,2 @@
 export * from './appstore.module';
-export { State } from './appstore.reducer';
+export { AppState } from './appstore.reducer';

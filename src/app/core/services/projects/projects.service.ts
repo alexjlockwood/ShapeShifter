@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Store, select } from '@ngrx/store';
-import * as fromCore from 'app/core/store';
+import { AppState } from 'app/core/store';
 import { Query } from 'app/core/store/projects/projects.actions';
 import * as fromProjects from 'app/core/store/projects/projects.reducer';
 import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {
-  constructor(private readonly store: Store<fromCore.State>) {}
+  constructor(private readonly store: Store<AppState>) {}
 
   queryProjects() {
     this.store.dispatch(new Query());
