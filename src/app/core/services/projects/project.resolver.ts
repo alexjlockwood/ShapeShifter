@@ -26,7 +26,7 @@ const defaultProjectContent = JSON.stringify({
   timeline: { animation: { id: '2', name: 'anim', duration: 300, blocks: [] as string[] } },
 });
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class ProjectResolver implements Resolve<Project> {
   constructor(
     private readonly angularFirestore: AngularFirestore,

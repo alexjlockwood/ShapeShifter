@@ -60,4 +60,12 @@ export class HomeComponent {
   onSignOutClick() {
     this.store.dispatch(new ShowSignoutDialog());
   }
+
+  onProjectClick(project: Project) {
+    this.router.navigateByUrl(`/project/${project.id}`);
+  }
+
+  onDeleteProjectClick(project: Project) {
+    console.log('TODO: implement delete project');
+  }
 }

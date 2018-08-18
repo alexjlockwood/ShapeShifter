@@ -4,7 +4,7 @@ import { first, tap } from 'rxjs/operators';
 
 import { AuthService } from './auth.service';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
   constructor(private readonly authService: AuthService, private readonly router: Router) {}
 

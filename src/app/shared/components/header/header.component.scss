@@ -1,12 +1,16 @@
-.header {
-    //padding: 8px 16px;
-    z-index: 1;
-    .header-logo {
-        width: 40px;
-        height: 40px;
-        margin-right: 8px;
-    }
-    .header-title {
-        font-size: 18px;
+mat-toolbar {
+    a {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 8px;
+        }
+        .header-title {
+            // TODO: make this theme-aware?
+            color: #fff;
+        }
     }
 }

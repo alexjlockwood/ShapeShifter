@@ -9,7 +9,7 @@ import * as firebase from 'firebase/app';
 import * as _ from 'lodash';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class AuthService {
   constructor(
     private readonly angularFireAuth: AngularFireAuth,

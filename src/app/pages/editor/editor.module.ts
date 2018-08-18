@@ -34,7 +34,6 @@ import { ToolbarComponent } from 'app/pages/editor/components/toolbar/toolbar.co
 import { ToolPanelComponent } from 'app/pages/editor/components/toolpanel/toolpanel.component';
 import { EditorComponent } from 'app/pages/editor/editor.component';
 import { EditorRoutingModule } from 'app/pages/editor/editor.routes';
-import { ProjectResolver } from 'app/pages/editor/project.resolver';
 import { reducer } from 'app/pages/editor/store';
 import { SharedModule } from 'app/shared';
 
@@ -71,7 +70,6 @@ import { SharedModule } from 'app/shared';
     SharedModule,
     StoreModule.forFeature('editor', reducer),
   ],
-  providers: [ProjectResolver],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
 })
 export class EditorModule {

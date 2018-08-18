@@ -5,7 +5,7 @@ import { Query } from 'app/core/store/projects/projects.actions';
 import * as fromProjects from 'app/core/store/projects/projects.reducer';
 import { map } from 'rxjs/operators';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class ProjectsService {
   constructor(private readonly store: Store<fromCore.State>) {}
 

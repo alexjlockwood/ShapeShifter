@@ -1,9 +1,9 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from 'app/core/services/auth';
+import { ProjectResolver } from 'app/core/services/projects';
 
 import { EditorComponent } from './editor.component';
-import { ProjectResolver } from './project.resolver';
 
 const routes: Routes = [
   {

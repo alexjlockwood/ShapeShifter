@@ -1,27 +1,30 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { Project } from 'app/shared/models/firestore';
 
 @Component({
-  selector: 'app-projectgrid',
-  templateUrl: './projectgrid.component.html',
-  styleUrls: ['./projectgrid.component.scss'],
+  selector: 'app-project-grid',
+  templateUrl: './project-grid.component.html',
+  styleUrls: ['./project-grid.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectGridComponent {
   @Input()
   projects: ReadonlyArray<Project>;
 
+  @Output()
+  projectClick = new EventEmitter<Project>();
+  @Output()
+  deleteProjectClick = new EventEmitter<Project>();
+
   constructor(private readonly router: Router) {}
 
   onProjectClick(project: Project) {
-    // TODO: move this into the parent component to keep this component dumb?
-    this.router.navigateByUrl(`/project/${project.id}`);
+    this.projectClick.emit(project);
   }
 
   onDeleteProjectClick(project: Project) {
-    // TODO: move this into the parent component to keep this component dumb?
-    console.log('deleting project', project);
+    this.deleteProjectClick.emit(project);
   }
 
   trackByFn(index: number, project: Project) {

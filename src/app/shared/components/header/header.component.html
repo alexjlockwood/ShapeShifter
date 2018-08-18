@@ -1,11 +1,11 @@
-<mat-toolbar class="header"
-    color="primary">
+<mat-toolbar color="primary">
     <mat-toolbar-row>
-        <!-- Shape Shifter logo. -->
-        <mat-icon class="header-logo"
-            svgIcon="shapeshifter">
-        </mat-icon>
-        <span>Shape Shifter</span>
+        <a [routerLink]="['/']">
+            <mat-icon class="header-logo"
+                svgIcon="shapeshifter">
+            </mat-icon>
+            <span class="header-title">Shape Shifter</span>
+        </a>
         <span fxFlex="1 1 auto"></span>
         <!-- TODO: make this an 'a' element similar to observablehq? -->
         <button mat-button
