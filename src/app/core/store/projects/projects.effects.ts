@@ -27,13 +27,15 @@ import {
  */
 @Injectable()
 export class ProjectsEffects {
-  @Effect()
-  queryForHomePage$ = this.actions$.pipe(
-    ofRoute(''),
-    switchMap(() => this.afs.collection<Project>('projects').valueChanges()),
-    first(),
-    map(projects => console.log(projects) || new SetProjects(projects)),
-  );
+  // TODO: uncomment this and remove the explicit query from the HomeComponent
+  // TODO: figure out how to re-trigger queries when the router url doesn't change (i.e. after login)
+  // @Effect()
+  // queryForHomePage$ = this.actions$.pipe(
+  //   ofRoute(''),
+  //   switchMap(() => this.afs.collection<Project>('projects').valueChanges()),
+  //   first(),
+  //   map(projects => console.log(projects) || new SetProjects(projects)),
+  // );
 
   @Effect()
   query$ = this.actions$.pipe(
