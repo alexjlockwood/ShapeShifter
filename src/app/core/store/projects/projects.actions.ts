@@ -3,15 +3,16 @@ import { QueryFn } from 'angularfire2/firestore';
 import { Project } from 'app/shared/models/firestore';
 
 export enum ProjectsActionTypes {
-  Query = '[projects] query',
-  Create = '[projects] create',
-  Update = '[projects] update',
-  Delete = '[projects] delete',
-  Added = '[projects] added',
-  Modified = '[projects] modified',
-  Removed = '[projects] removed',
-  Success = '[projects] success',
-  Failure = '[projects] failure',
+  Query = '[projects] Query',
+  Create = '[projects] Create',
+  Update = '[projects] Update',
+  Delete = '[projects] Delete',
+  Added = '[projects] Added',
+  Modified = '[projects] Modified',
+  Removed = '[projects] Removed',
+  Success = '[projects] Success',
+  Failure = '[projects] Failure',
+  SetProjects = '[projects] SetProjects',
 }
 
 export class Query implements Action {
@@ -57,6 +58,11 @@ export class Failure implements Action {
   readonly type = ProjectsActionTypes.Failure;
 }
 
+export class SetProjects implements Action {
+  readonly type = ProjectsActionTypes.SetProjects;
+  constructor(readonly projects: Project[]) {}
+}
+
 export type ProjectsActions =
   | Query
   | Create
@@ -66,4 +72,5 @@ export type ProjectsActions =
   | Modified
   | Removed
   | Success
-  | Failure;
+  | Failure
+  | SetProjects;

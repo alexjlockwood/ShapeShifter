@@ -6,15 +6,10 @@ import { RouterActionTypes, RouterActions } from './router.actions';
 
 export function ofRoute(route: string | string[]): OperatorFunction<Action, Action> {
   return filter((action: RouterActions) => {
-    if (action.type === RouterActionTypes.Change) {
-      const routeAction = action;
-      const routePath = routeAction.payload.path;
-      if (Array.isArray(route)) {
-        return route.includes(routePath);
-      } else {
-        return routePath === route;
-      }
+    if (action.type !== RouterActionTypes.Change) {
+      return false;
     }
-    return false;
+    const { path } = action.payload;
+    return Array.isArray(route) ? route.includes(path) : route === path;
   });
 }

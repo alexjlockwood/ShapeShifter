@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { ActivationEnd, Router } from '@angular/router';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
+import { AppState } from 'app/core/store';
 import { filter, map, tap } from 'rxjs/operators';
 
 import { Back, Change, Forward, Go, RouterActionTypes } from './router.actions';
@@ -13,13 +14,12 @@ export class RouterEffects {
     private readonly actions$: Actions,
     private readonly router: Router,
     private readonly location: Location,
-    // TODO: replace 'any' with the correct type
-    private readonly store: Store<any>,
+    store: Store<AppState>,
   ) {
     this.router.events
       .pipe(filter(event => event instanceof ActivationEnd))
       .subscribe((event: ActivationEnd) =>
-        this.store.dispatch(
+        store.dispatch(
           new Change({
             params: { ...event.snapshot.params },
             path: event.snapshot.routeConfig.path,

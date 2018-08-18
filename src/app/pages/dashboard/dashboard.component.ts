@@ -5,7 +5,7 @@ import { AuthService } from 'app/core/services/auth';
 import { ProjectsService } from 'app/core/services/projects';
 import { Project } from 'app/shared/models/firestore';
 import { Observable, of } from 'rxjs';
-import { distinctUntilChanged, first, map, switchMap } from 'rxjs/operators';
+import { first, switchMap } from 'rxjs/operators';
 
 @Component({
   templateUrl: './dashboard.component.html',
@@ -22,14 +22,9 @@ export class DashboardComponent {
     private readonly router: Router,
     projectsService: ProjectsService,
   ) {
-    this.projects$ = this.authService.observeUser().pipe(
-      map(user => (user ? user.id : undefined)),
-      distinctUntilChanged(),
+    this.projects$ = this.authService.observeCurrentUserId().pipe(
       switchMap(userId => {
-        if (!userId) {
-          return of([] as Project[]);
-        }
-        return projectsService.queryProjectsForUser(userId);
+        return userId ? projectsService.queryProjectsForUser(userId) : of([] as Project[]);
       }),
     );
     this.isAuthenticated$ = this.authService.observeIsAuthenticated();
@@ -41,7 +36,7 @@ export class DashboardComponent {
 
   onMyProjectsClick() {
     this.authService
-      .observeUser()
+      .observeCurrentUser()
       .pipe(first())
       .subscribe(user => this.router.navigateByUrl(`/user/${user.id}`));
   }

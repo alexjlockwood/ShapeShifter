@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { AngularFirestore } from 'angularfire2/firestore';
+import { ofRoute } from 'app/core/store/router/router.utils';
 import { Project } from 'app/shared/models/firestore';
 import { from } from 'rxjs';
-import { map, mergeMap, switchMap } from 'rxjs/operators';
+import { first, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 
 import {
   Added,
@@ -13,6 +14,7 @@ import {
   ProjectsActionTypes,
   Query,
   Removed,
+  SetProjects,
   Success,
   Update,
 } from './projects.actions';
@@ -25,6 +27,14 @@ import {
  */
 @Injectable()
 export class ProjectsEffects {
+  @Effect()
+  queryForHomePage$ = this.actions$.pipe(
+    ofRoute(''),
+    switchMap(() => this.afs.collection<Project>('projects').valueChanges()),
+    first(),
+    map(projects => console.log(projects) || new SetProjects(projects)),
+  );
+
   @Effect()
   query$ = this.actions$.pipe(
     ofType<Query>(ProjectsActionTypes.Query),

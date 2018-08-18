@@ -22,12 +22,19 @@ export class AuthService {
     });
   }
 
-  observeUser() {
-    return this.store.pipe(select(state => state.auth.user), distinctUntilChanged(_.isEqual));
+  observeCurrentUser() {
+    return this.store.pipe(select(state => state.auth.user), distinctUntilChanged<User>(_.isEqual));
+  }
+
+  observeCurrentUserId() {
+    return this.observeCurrentUser().pipe(
+      map(user => (user ? user.id : undefined)),
+      distinctUntilChanged(),
+    );
   }
 
   observeIsAuthenticated() {
-    return this.observeUser().pipe(map(user => !!user));
+    return this.observeCurrentUser().pipe(map(user => !!user));
   }
 
   showSigninDialog() {

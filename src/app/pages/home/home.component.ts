@@ -22,7 +22,7 @@ export class HomeComponent {
     private readonly router: Router,
     projectsService: ProjectsService,
   ) {
-    this.projects$ = this.authService.observeUser().pipe(
+    this.projects$ = this.authService.observeCurrentUser().pipe(
       map(user => (user ? user.id : undefined)),
       distinctUntilChanged(),
       switchMap(userId => {
@@ -41,7 +41,7 @@ export class HomeComponent {
 
   onMyProjectsClick() {
     this.authService
-      .observeUser()
+      .observeCurrentUser()
       .pipe(first())
       .subscribe(user => this.router.navigateByUrl(`/user/${user.id}`));
   }

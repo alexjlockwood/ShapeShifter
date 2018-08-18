@@ -20,6 +20,8 @@ export function reducer(state = buildInitialState(), action: ProjectsActions) {
       return projectsAdapter.updateOne({ id: action.project.id, changes: action.project }, state);
     case ProjectsActionTypes.Removed:
       return projectsAdapter.removeOne(action.project.id, state);
+    case ProjectsActionTypes.SetProjects:
+      return projectsAdapter.addAll(action.projects, state);
   }
   return state;
 }
