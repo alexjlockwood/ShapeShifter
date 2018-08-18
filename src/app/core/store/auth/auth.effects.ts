@@ -97,19 +97,6 @@ export class AuthEffects {
     return from(this.angularFireAuth.auth.signInWithPopup(provider)).pipe(
       switchMap(credential => this.updateUserData(credential.user)),
     );
-    // return new Promise<void>((resolve, reject) => {
-    //   this.angularFireAuth.auth.signInWithPopup(provider).then(
-    //     credential => {
-    //       // TODO: figure out what to do in the case that this write operation fails?
-    //       this.updateUserData(credential.user);
-    //       resolve();
-    //     },
-    //     error => {
-    //       console.error(error);
-    //       reject();
-    //     },
-    //   );
-    // });
   }
 
   private updateUserData(user: firebase.User) {
