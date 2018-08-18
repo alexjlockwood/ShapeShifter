@@ -1,8 +1,9 @@
 import { ActionReducerMap } from '@ngrx/store';
-import * as fromAuth from 'app/core/auth/store/auth.reducer';
-import * as fromProjects from 'app/core/projects/store/projects.reducer';
 import { environment } from 'environments/environment';
 import { storeFreeze } from 'ngrx-store-freeze';
+
+import * as fromAuth from './auth/auth.reducer';
+import * as fromProjects from './projects/projects.reducer';
 
 // TODO: find a way to also add the feature module slices to this state as well?
 export interface State {

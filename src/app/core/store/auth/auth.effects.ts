@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { Router } from '@angular/router';
 import { Actions, Effect } from '@ngrx/effects';
-import { AuthService } from 'app/core/auth/services/auth.service';
+import { AuthService } from 'app/core/services/auth/auth.service';
 import { SignoutDialogComponent } from 'app/shared/components/signout-dialog';
 import { from, of } from 'rxjs';
 import { catchError, exhaustMap, map, tap } from 'rxjs/operators';

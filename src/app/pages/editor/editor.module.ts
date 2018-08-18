@@ -78,8 +78,6 @@ export class EditorModule {
   // TODO: figure out if this stuff should be declared in the app/core module?
   constructor(matIconRegistry: MatIconRegistry, private readonly sanitizer: DomSanitizer) {
     matIconRegistry
-      // Logo.
-      .addSvgIcon('shapeshifter', this.trustUrl('assets/shapeshifter.svg'))
       // Icons.
       .addSvgIcon('addlayer', this.trustUrl('assets/icons/addlayer.svg'))
       .addSvgIcon('autofix', this.trustUrl('assets/icons/autofix.svg'))

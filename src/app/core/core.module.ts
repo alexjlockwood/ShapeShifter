@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
+import { MatIconRegistry } from '@angular/material';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
@@ -11,12 +13,12 @@ import { AngularFirestoreModule } from 'angularfire2/firestore';
 import { errorHandlerFactory } from 'app/pages/editor/scripts/bugsnag';
 import { environment } from 'environments/environment';
 
-import { AuthGuard, AuthService } from './auth/services';
-import { AuthEffects } from './auth/store/auth.effects';
-import { ProjectsService } from './projects/services/projects.service';
-import { ProjectsEffects } from './projects/store/projects.effects';
-import { RouterEffects } from './router/store/router.effects';
+import { AuthGuard, AuthService } from './services/auth';
+import { ProjectsService } from './services/projects/projects.service';
+import { AuthEffects } from './store/auth/auth.effects';
 import { metaReducers, reducers } from './store/core.reducer';
+import { ProjectsEffects } from './store/projects/projects.effects';
+import { RouterEffects } from './store/router/router.effects';
 
 /**
  * The core module contains singleton services that are loaded when the application
@@ -47,9 +49,16 @@ export class CoreModule {
     @Optional()
     @SkipSelf()
     parentModule: CoreModule,
+    matIconRegistry: MatIconRegistry,
+    sanitizer: DomSanitizer,
   ) {
     if (parentModule) {
       throw new Error('CoreModule should only be imported by AppModule.');
     }
+    // TODO: should we put icon registry stuff in a separate module?
+    matIconRegistry.addSvgIcon(
+      'shapeshifter',
+      sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'),
+    );
   }
 }
