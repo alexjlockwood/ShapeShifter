@@ -15,8 +15,8 @@ import { environment } from 'environments/environment';
 
 import { AuthGuard, AuthService } from './services/auth';
 import { ProjectsService } from './services/projects/projects.service';
+import { metaReducers, reducers } from './store';
 import { AuthEffects } from './store/auth/auth.effects';
-import { metaReducers, reducers } from './store/core.reducer';
 import { ProjectsEffects } from './store/projects/projects.effects';
 import { RouterEffects } from './store/router/router.effects';
 
