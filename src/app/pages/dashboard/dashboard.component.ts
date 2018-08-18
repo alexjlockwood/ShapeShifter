@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core/auth/services';
+import { ShowSignoutDialog } from 'app/core/auth/store/auth.actions';
 import { ProjectsService } from 'app/core/projects/services';
+import { State } from 'app/core/store/core.reducer';
 import { Project } from 'app/shared/models/firestore';
 import { Observable, of } from 'rxjs';
 import { distinctUntilChanged, first, map, switchMap } from 'rxjs/operators';
@@ -20,6 +23,7 @@ export class DashboardComponent {
     private readonly angularFirestore: AngularFirestore,
     private readonly authService: AuthService,
     private readonly router: Router,
+    private readonly store: Store<State>,
     projectsService: ProjectsService,
   ) {
     this.projects$ = this.authService.observeUser().pipe(
@@ -54,9 +58,6 @@ export class DashboardComponent {
   }
 
   onSignOutClick() {
-    this.authService
-      .signOut()
-      .then(() => this.router.navigateByUrl('/'))
-      .catch(() => console.log('Failed to sign out'));
+    this.store.dispatch(new ShowSignoutDialog());
   }
 }

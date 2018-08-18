@@ -18,6 +18,7 @@ import { RouterModule } from '@angular/router';
 
 import { HeaderComponent } from './components/header/header.component';
 import { ProjectGridComponent } from './components/projectgrid/projectgrid.component';
+import { SignoutDialogComponent } from './components/signout-dialog';
 
 const materialModules = [
   MatButtonModule,
@@ -39,7 +40,8 @@ const materialModules = [
  */
 @NgModule({
   imports: [CommonModule, FlexLayoutModule, materialModules, RouterModule],
-  declarations: [HeaderComponent, ProjectGridComponent],
+  declarations: [HeaderComponent, ProjectGridComponent, SignoutDialogComponent],
+  entryComponents: [SignoutDialogComponent],
   exports: [
     CommonModule,
     FlexLayoutModule,

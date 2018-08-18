@@ -12,6 +12,7 @@ import { errorHandlerFactory } from 'app/pages/editor/scripts/bugsnag';
 import { environment } from 'environments/environment';
 
 import { AuthGuard, AuthService } from './auth/services';
+import { AuthEffects } from './auth/store/auth.effects';
 import { ProjectsService } from './projects/services/projects.service';
 import { ProjectsEffects } from './projects/store/projects.effects';
 import { RouterEffects } from './router/store/router.effects';
@@ -28,7 +29,7 @@ import { metaReducers, reducers } from './store/core.reducer';
     AngularFirestoreModule,
     AngularFireAuthModule,
     StoreModule.forRoot(reducers, { metaReducers }),
-    EffectsModule.forRoot([ProjectsEffects, RouterEffects]),
+    EffectsModule.forRoot([AuthEffects, ProjectsEffects, RouterEffects]),
     StoreRouterConnectingModule.forRoot(),
     ...(environment.production ? [] : [StoreDevtoolsModule.instrument()]),
     // TODO: figure out if additional per-feature configuration is needed for the service worker

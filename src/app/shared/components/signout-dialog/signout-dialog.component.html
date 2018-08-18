@@ -1,0 +1,16 @@
+<h3 mat-dialog-title>Log Out</h3>
+
+<mat-dialog-content>
+    Are you sure you want to logout?
+</mat-dialog-content>
+
+<mat-dialog-actions>
+    <button mat-button
+        (click)="this.cancel()">
+        No
+    </button>
+    <button mat-button
+        (click)="this.confirm()">
+        Yes
+    </button>
+</mat-dialog-actions>
