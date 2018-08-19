@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core/services/auth';
@@ -12,19 +12,21 @@ import { first, switchMap } from 'rxjs/operators';
   styleUrls: ['./dashboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DashboardComponent {
-  readonly projects$: Observable<ReadonlyArray<Project>>;
-  readonly isAuthenticated$: Observable<boolean>;
+export class DashboardComponent implements OnInit {
+  projects$: Observable<ReadonlyArray<Project>>;
+  isAuthenticated$: Observable<boolean>;
 
   constructor(
     private readonly angularFirestore: AngularFirestore,
     private readonly authService: AuthService,
     private readonly router: Router,
-    projectsService: ProjectsService,
-  ) {
+    private readonly projectsService: ProjectsService,
+  ) {}
+
+  ngOnInit() {
     this.projects$ = this.authService.observeCurrentUserId().pipe(
       switchMap(userId => {
-        return userId ? projectsService.queryProjectsForUser(userId) : of([] as Project[]);
+        return userId ? this.projectsService.queryProjectsForUser(userId) : of([] as Project[]);
       }),
     );
     this.isAuthenticated$ = this.authService.observeIsAuthenticated();
