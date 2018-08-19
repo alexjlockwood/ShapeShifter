@@ -56,6 +56,6 @@ export class DashboardComponent implements OnInit {
   }
 
   onDeleteProjectClick(project: Project) {
-    console.log('TODO: implement delete project');
+    this.projectsService.deleteProject(project);
   }
 }

@@ -52,6 +52,6 @@ export class HomeComponent implements OnInit {
   }
 
   onDeleteProjectClick(project: Project) {
-    console.log('TODO: implement delete project');
+    this.projectsService.deleteProject(project);
   }
 }

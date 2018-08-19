@@ -34,10 +34,7 @@ export class ProjectsEffects {
     switchMap(({ payload: { path, params } }: RouteNavigation) => {
       const queryFn: QueryFn | undefined =
         path === 'user/:id' ? ref => ref.where('userId', '==', params.id) : undefined;
-      return this.afs
-        .collection<Project>('projects', queryFn)
-        .valueChanges()
-        .pipe(finalize(() => console.log('finalized')));
+      return this.afs.collection<Project>('projects', queryFn).valueChanges();
     }),
     map(projects => new SetProjects(projects)),
   );
