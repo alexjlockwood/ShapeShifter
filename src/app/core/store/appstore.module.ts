@@ -4,11 +4,11 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { environment } from 'environments/environment';
+import { RouterEffects } from 'ngrx-router';
 
 import { metaReducers, reducers } from './appstore.reducer';
 import { AuthEffects } from './auth/auth.effects';
 import { ProjectsEffects } from './projects/projects.effects';
-import { RouterEffects } from './router/router.effects';
 
 @NgModule({
   imports: [

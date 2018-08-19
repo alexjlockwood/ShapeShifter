@@ -4,8 +4,8 @@ import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core/services/auth';
 import { ProjectsService } from 'app/core/services/projects';
 import { Project } from 'app/shared/models/firestore';
-import { Observable, of } from 'rxjs';
-import { distinctUntilChanged, first, map, switchMap } from 'rxjs/operators';
+import { Observable, } from 'rxjs';
+import { first, } from 'rxjs/operators';
 
 @Component({
   templateUrl: './home.component.html',
@@ -22,16 +22,7 @@ export class HomeComponent {
     private readonly router: Router,
     projectsService: ProjectsService,
   ) {
-    this.projects$ = this.authService.observeCurrentUser().pipe(
-      map(user => (user ? user.id : undefined)),
-      distinctUntilChanged(),
-      switchMap(userId => {
-        if (!userId) {
-          return of([] as Project[]);
-        }
-        return projectsService.queryProjects();
-      }),
-    );
+    this.projects$ = projectsService.queryProjects();
     this.isAuthenticated$ = this.authService.observeIsAuthenticated();
   }
 

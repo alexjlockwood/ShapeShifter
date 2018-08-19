@@ -11,7 +11,7 @@ const routes: Routes = [
     loadChildren: './pages/editor/editor.module#EditorModule',
   },
   {
-    path: 'user/:uid',
+    path: 'user/:id',
     loadChildren: './pages/dashboard/dashboard.module#DashboardModule',
   },
 ];
