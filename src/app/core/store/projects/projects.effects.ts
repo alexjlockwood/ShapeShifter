@@ -27,6 +27,7 @@ import {
  */
 @Injectable()
 export class ProjectsEffects {
+  // TODO: clear the previous list of projects when the route changes?
   // TODO: figure out how to re-trigger queries after login?
   @Effect()
   queryForPage$ = this.actions$.pipe(
