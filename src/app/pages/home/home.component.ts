@@ -17,12 +17,22 @@ export class HomeComponent implements OnInit {
   projectItems$: Observable<ReadonlyArray<ProjectItem>>;
   currentUser$: Observable<User | undefined>;
 
+  lottieConfig: Object;
+  private anim: any;
+  private animationSpeed = 1;
+
   constructor(
     private readonly angularFirestore: AngularFirestore,
     private readonly authService: AuthService,
     private readonly router: Router,
     private readonly projectsService: ProjectsService,
-  ) {}
+  ) {
+    this.lottieConfig = {
+      path: 'assets/pinjump.json',
+      autoplay: true,
+      loop: true,
+    };
+  }
 
   ngOnInit() {
     this.projectItems$ = combineLatest(
@@ -70,4 +80,6 @@ export class HomeComponent implements OnInit {
   onDeleteProjectClick(project: Project) {
     this.projectsService.deleteProject(project);
   }
+
+  handleAnimation(event: any) {}
 }
