@@ -4,11 +4,12 @@
         <div *ngFor="let projectItem of this.projectItems; trackBy: this.trackByFn"
             class="project-card mat-elevation-z4"
             (click)="this.onProjectClick(projectItem.project)">
-            <div class="project-image"
-                matRipple>
-                <!-- TODO: replace this with the actual project image -->
-                <img src="https://romannurik.github.io/AndroidAssetStudio/res/generator-thumbs/icon-animator.svg">
-            </div>
+            <lottie-animation-view class="project-image"
+                [options]="lottieConfig"
+                [width]="296"
+                [height]="200"
+                (animCreated)="handleAnimation($event)">
+            </lottie-animation-view>
             <div class="project-info-outer">
                 <div class="project-info-inner">
                     <div class="project-title">{{ projectItem.project.name }}</div>

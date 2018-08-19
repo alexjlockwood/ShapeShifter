@@ -15,6 +15,7 @@ import {
   MatTooltipModule,
 } from '@angular/material';
 import { RouterModule } from '@angular/router';
+import { LottieAnimationViewModule } from 'ng-lottie';
 
 import { HeaderComponent } from './components/header';
 import { ProjectGridComponent } from './components/project-grid';
@@ -40,7 +41,13 @@ const materialModules = [
  * reused across the application. It should not declare any singleton, stateful providers.
  */
 @NgModule({
-  imports: [CommonModule, FlexLayoutModule, materialModules, RouterModule],
+  imports: [
+    CommonModule,
+    FlexLayoutModule,
+    LottieAnimationViewModule.forRoot(),
+    materialModules,
+    RouterModule,
+  ],
   declarations: [
     HeaderComponent,
     ProjectGridComponent,

@@ -16,6 +16,18 @@ export class ProjectGridComponent {
   @Output()
   deleteProjectClick = new EventEmitter<Project>();
 
+  lottieConfig: Object;
+  private anim: any;
+  private animationSpeed = 1;
+
+  constructor() {
+    this.lottieConfig = {
+      path: 'assets/pinjump.json',
+      autoplay: true,
+      loop: true,
+    };
+  }
+
   onProjectClick(project: Project) {
     this.projectClick.emit(project);
   }
@@ -27,6 +39,9 @@ export class ProjectGridComponent {
   trackByFn(index: number, projectItem: ProjectItem) {
     return projectItem.project.id;
   }
+
+  // TODO: implement this?
+  handleAnimation() {}
 }
 
 export interface ProjectItem {
