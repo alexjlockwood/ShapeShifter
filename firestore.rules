@@ -1,11 +1,33 @@
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /projects/{project} {
+
+    match /projects/{projectId} {
       allow read: if true;
-      allow write: if request.auth.uid == resource.data.userId;
+      allow create: if isOwner(incomingData().userId);
+      allow update, delete: if isOwner(existingData().userId);
     }
-    match /users/{user} {
-      allow read, write: if request.auth.uid == resource.data.id;
+
+    match /users/{userId} {
+      // TODO: determine if non-signed-in users should be allowed to read user data
+      allow read: if false;
+      allow create: if isOwner(incomingData().userId);
+      allow update, delete: if isOwner(existingData().userId);
+    }
+
+    function isSignedIn() {
+      return request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incomingData() {
+      return request.resource.data;
+    }
+
+    function existingData() {
+      return resource.data;
     }
   }
 }

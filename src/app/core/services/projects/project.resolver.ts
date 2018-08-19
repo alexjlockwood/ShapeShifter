@@ -56,7 +56,11 @@ export class ProjectResolver implements Resolve<EditorProject> {
                 .doc(id)
                 .set(firestoreProject)
                 .then(() => this.fromFirestoreProject(firestoreProject))
-                .catch(() => undefined),
+                .catch(error => {
+                  // TODO: figure out how to handle this error
+                  console.error(error);
+                  return undefined;
+                }),
             );
           }
           return of(this.fromFirestoreProject(payload.data()));
