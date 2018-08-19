@@ -17,8 +17,6 @@ export class ProjectGridComponent {
   @Output()
   deleteProjectClick = new EventEmitter<Project>();
 
-  constructor(private readonly router: Router) {}
-
   onProjectClick(project: Project) {
     this.projectClick.emit(project);
   }
