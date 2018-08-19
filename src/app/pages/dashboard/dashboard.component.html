@@ -14,7 +14,7 @@
             </p>
         </div>
     </div>
-    <app-project-grid [projects]="this.projects$ | async"
+    <app-project-grid [projectItems]="this.projectItems$ | async"
         (projectClick)="this.onProjectClick($event)"
         (deleteProjectClick)="this.onDeleteProjectClick($event)">
     </app-project-grid>

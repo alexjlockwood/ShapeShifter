@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { Project, User } from 'app/shared/models/firestore';
+import { Project } from 'app/shared/models/firestore';
 
 @Component({
   selector: 'app-project-grid',
@@ -9,7 +9,7 @@ import { Project, User } from 'app/shared/models/firestore';
 })
 export class ProjectGridComponent {
   @Input()
-  projects: ReadonlyArray<Project>;
+  projectItems: ReadonlyArray<ProjectItem>;
 
   @Output()
   projectClick = new EventEmitter<Project>();
@@ -24,7 +24,14 @@ export class ProjectGridComponent {
     this.deleteProjectClick.emit(project);
   }
 
-  trackByFn(index: number, project: Project) {
-    return project.id;
+  trackByFn(index: number, projectItem: ProjectItem) {
+    return projectItem.project.id;
   }
+}
+
+export interface ProjectItem {
+  // The firestore project to display.
+  readonly project: Project;
+  // True iff the signed in user owns this project.
+  readonly isOwner: boolean;
 }

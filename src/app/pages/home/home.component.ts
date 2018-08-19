@@ -3,8 +3,9 @@ import { Router } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core/services/auth';
 import { ProjectsService } from 'app/core/services/projects';
+import { ProjectItem } from 'app/shared/components/project-grid';
 import { Project, User } from 'app/shared/models/firestore';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { first } from 'rxjs/operators';
 
 @Component({
@@ -13,7 +14,7 @@ import { first } from 'rxjs/operators';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent implements OnInit {
-  projects$: Observable<ReadonlyArray<Project>>;
+  projectItems$: Observable<ReadonlyArray<ProjectItem>>;
   currentUser$: Observable<User | undefined>;
 
   constructor(
@@ -24,7 +25,18 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.projects$ = this.projectsService.queryProjects();
+    this.projectItems$ = combineLatest(
+      this.authService.observeCurrentUserId(),
+      this.projectsService.queryProjects(),
+      (currentUserId, projects) => {
+        return projects.map(project => {
+          return {
+            project,
+            isOwner: project.userId === currentUserId,
+          };
+        });
+      },
+    );
     this.currentUser$ = this.authService.observeCurrentUser();
   }
 

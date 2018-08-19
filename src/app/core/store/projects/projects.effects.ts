@@ -4,7 +4,7 @@ import { AngularFirestore, QueryFn } from 'angularfire2/firestore';
 import { Project } from 'app/shared/models/firestore';
 import { RouteNavigation, ofRoute } from 'ngrx-router';
 import { from } from 'rxjs';
-import { finalize, first, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { map, mergeMap, switchMap } from 'rxjs/operators';
 
 import {
   Added,
