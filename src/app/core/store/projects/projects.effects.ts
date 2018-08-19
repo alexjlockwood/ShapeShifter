@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Actions, Effect, ofType } from '@ngrx/effects';
-import { AngularFirestore } from 'angularfire2/firestore';
+import { AngularFirestore, QueryFn } from 'angularfire2/firestore';
 import { Project } from 'app/shared/models/firestore';
 import { RouteNavigation, ofRoute } from 'ngrx-router';
 import { from } from 'rxjs';
-import { first, map, mergeMap, switchMap } from 'rxjs/operators';
+import { finalize, first, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 
 import {
   Added,
@@ -27,25 +27,18 @@ import {
  */
 @Injectable()
 export class ProjectsEffects {
-  // TODO: figure out how to re-trigger queries when the router url doesn't change (i.e. after login)
+  // TODO: figure out how to re-trigger queries after login?
   @Effect()
-  queryForHomePage$ = this.actions$.pipe(
-    ofRoute(''),
-    switchMap(() => this.afs.collection<Project>('projects').valueChanges()),
-    first(),
-    map(projects => new SetProjects(projects)),
-  );
-
-  @Effect()
-  queryForDashboardPage$ = this.actions$.pipe(
-    ofRoute('user/:id'),
-    switchMap((action: RouteNavigation) => {
-      const userId = action.payload.params.id;
+  queryForPage$ = this.actions$.pipe(
+    ofRoute(['', 'user/:id']),
+    switchMap(({ payload: { path, params } }: RouteNavigation) => {
+      const queryFn: QueryFn | undefined =
+        path === 'user/:id' ? ref => ref.where('userId', '==', params.id) : undefined;
       return this.afs
-        .collection<Project>('projects', ref => ref.where('userId', '==', userId))
-        .valueChanges();
+        .collection<Project>('projects', queryFn)
+        .valueChanges()
+        .pipe(finalize(() => console.log('finalized')));
     }),
-    first(),
     map(projects => new SetProjects(projects)),
   );
 
