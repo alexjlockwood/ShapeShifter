@@ -9,22 +9,22 @@
         <span fxFlex="1 1 auto"></span>
         <!-- TODO: make this an 'a' element similar to observablehq? -->
         <button mat-button
-            *ngIf="this.isAuthenticated"
+            *ngIf="this.currentUser"
             (click)="this.onCreateNewProjectClick()">
             New project
         </button>
         <button mat-button
-            *ngIf="this.isAuthenticated"
+            *ngIf="this.currentUser"
             (click)="this.onMyProjectsClick()">
             My projects
         </button>
         <button mat-button
-            *ngIf="!this.isAuthenticated"
+            *ngIf="!this.currentUser"
             (click)="this.onSignInClick()">
             Sign in
         </button>
         <button mat-button
-            *ngIf="this.isAuthenticated"
+            *ngIf="this.currentUser"
             (click)="this.onSignOutClick()">
             Sign out
         </button>

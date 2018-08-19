@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core/services/auth';
 import { ProjectsService } from 'app/core/services/projects';
-import { Project } from 'app/shared/models/firestore';
+import { Project, User } from 'app/shared/models/firestore';
 import { Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 
@@ -14,7 +14,7 @@ import { first } from 'rxjs/operators';
 })
 export class HomeComponent implements OnInit {
   projects$: Observable<ReadonlyArray<Project>>;
-  isAuthenticated$: Observable<boolean>;
+  currentUser$: Observable<User | undefined>;
 
   constructor(
     private readonly angularFirestore: AngularFirestore,
@@ -25,8 +25,10 @@ export class HomeComponent implements OnInit {
 
   ngOnInit() {
     this.projects$ = this.projectsService.queryProjects();
-    this.isAuthenticated$ = this.authService.observeIsAuthenticated();
+    this.currentUser$ = this.authService.observeCurrentUser();
   }
+
+  // Callback methods for the HeaderComponent.
 
   onCreateNewProjectClick() {
     this.router.navigateByUrl(`/project/${this.angularFirestore.createId()}`);
@@ -46,6 +48,8 @@ export class HomeComponent implements OnInit {
   onSignOutClick() {
     this.authService.showSignoutDialog();
   }
+
+  // Callback methods for the ProjectGridComponent.
 
   onProjectClick(project: Project) {
     this.router.navigateByUrl(`/project/${project.id}`);

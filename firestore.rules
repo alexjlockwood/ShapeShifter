@@ -10,8 +10,8 @@ service cloud.firestore {
     match /users/{userId} {
       // TODO: determine if non-signed-in users should be allowed to read user data
       allow read: if false;
-      allow create: if isOwner(incomingData().userId);
-      allow update, delete: if isOwner(existingData().userId);
+      allow create: if isOwner(incomingData().id);
+      allow update, delete: if isOwner(existingData().id);
     }
 
     function isSignedIn() {

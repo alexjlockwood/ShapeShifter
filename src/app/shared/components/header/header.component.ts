@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { User } from 'app/shared/models/firestore';
 
 @Component({
   selector: 'app-header',
@@ -8,7 +9,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 })
 export class HeaderComponent {
   @Input()
-  isAuthenticated: boolean;
+  currentUser: User | undefined;
 
   @Output()
   createNewProjectClick = new EventEmitter<undefined>();

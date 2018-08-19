@@ -1,4 +1,4 @@
-<app-header [isAuthenticated]="this.isAuthenticated$ | async"
+<app-header [currentUser]="this.currentUser$ | async"
     (createNewProjectClick)="this.onCreateNewProjectClick()"
     (myProjectsClick)="this.onMyProjectsClick()"
     (signInClick)="this.onSignInClick()"
