@@ -4,8 +4,8 @@ import { AngularFirestore } from 'angularfire2/firestore';
 import { AuthService } from 'app/core/services/auth';
 import { ProjectsService } from 'app/core/services/projects';
 import { Project } from 'app/shared/models/firestore';
-import { Observable, } from 'rxjs';
-import { first, } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { first } from 'rxjs/operators';
 
 @Component({
   templateUrl: './home.component.html',
