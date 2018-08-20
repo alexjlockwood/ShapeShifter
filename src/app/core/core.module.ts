@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { errorHandlerFactory } from 'app/modules/editor/scripts/bugsnag';
+import { errorHandlerFactory } from 'app/pages/editor/scripts/bugsnag';
 import { environment } from 'environments/environment';
 
 import { FirebaseModule } from './firebase';
