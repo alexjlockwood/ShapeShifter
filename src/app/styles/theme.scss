@@ -1,13 +1,13 @@
 @import '~@angular/material/theming';
-@import '../pages/editor/components/canvas/_canvas-theme.scss';
-@import '../pages/editor/components/dialogs/_dialog-theme.scss';
-@import '../pages/editor/components/layertimeline/_layerlisttree-theme.scss';
-@import '../pages/editor/components/layertimeline/_layertimeline-theme.scss';
-@import '../pages/editor/components/layertimeline/_timelineanimationrow-theme.scss';
-@import '../pages/editor/components/playback/_playback-theme.scss';
-@import '../pages/editor/components/propertyinput/_propertyinput-theme.scss';
-@import '../pages/editor/components/root/_root-theme.scss';
-@import '../pages/editor/components/toolbar/_toolbar-theme.scss';
+@import '../modules/editor/components/canvas/_canvas-theme.scss';
+@import '../modules/editor/components/dialogs/_dialog-theme.scss';
+@import '../modules/editor/components/layertimeline/_layerlisttree-theme.scss';
+@import '../modules/editor/components/layertimeline/_layertimeline-theme.scss';
+@import '../modules/editor/components/layertimeline/_timelineanimationrow-theme.scss';
+@import '../modules/editor/components/playback/_playback-theme.scss';
+@import '../modules/editor/components/propertyinput/_propertyinput-theme.scss';
+@import '../modules/editor/components/root/_root-theme.scss';
+@import '../modules/editor/components/toolbar/_toolbar-theme.scss';
 @include mat-core();
 
 $ss-light-theme-foreground: (
