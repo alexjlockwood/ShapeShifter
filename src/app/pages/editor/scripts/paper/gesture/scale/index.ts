@@ -1,1 +1,0 @@
-export { ScaleItemsGesture } from './ScaleItemsGesture';

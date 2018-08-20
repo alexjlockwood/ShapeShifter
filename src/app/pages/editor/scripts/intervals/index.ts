@@ -1,1 +1,0 @@
-export { IntervalTree } from './IntervalTree';
