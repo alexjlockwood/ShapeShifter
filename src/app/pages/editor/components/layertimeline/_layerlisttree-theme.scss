@@ -1,0 +1,51 @@
+@mixin ss-layerlisttree-theme($theme) {
+  $foreground: map-get($theme, ss-foreground);
+  $background: map-get($theme, ss-background);
+  $accent: map-get($theme, accent);
+  $is-dark: map-get($theme, is-dark);
+  .slt-layer {
+    color: mat-color($foreground, secondary-text);
+    &:focus {
+      box-shadow: 0 0 0 1px mat-color($accent) inset;
+    }
+    &.is-selected {
+      background-color: mat-color($accent);
+      color: #fff;
+      &,
+      & mat-icon {
+        color: #fff;
+      }
+    }
+    &.is-hovered {
+      box-shadow: 0 0 0 1px mat-color($accent) inset;
+    }
+  }
+  .slt-properties {
+    background-color: mat-color($background, if($is-dark, base50, base));
+    box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
+  }
+  .slt-property {
+    color: mat-color($foreground, secondary-text);
+    &:not(:last-child) {
+      box-shadow: 0 -1px 0 mat-color($foreground, divider) inset;
+    }
+    button {
+      &[mat-icon-button] {
+        mat-icon {
+          color: mat-color($foreground, disabled-text);
+        }
+      }
+      &[mat-icon-button][disabled] {
+        mat-icon {
+          color: mat-color($foreground, disabled-text, 0.5);
+        }
+      }
+    }
+  }
+  .slt-layers-list-drag-indicator {
+    background-color: mat-color($accent);
+    &::before {
+      background-color: mat-color($accent);
+    }
+  }
+}

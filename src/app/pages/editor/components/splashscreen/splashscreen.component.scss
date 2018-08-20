@@ -1,0 +1,25 @@
+@import '~@angular/material/theming';
+:host {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    user-select: none;
+    background-color: mat-color(mat-palette($mat-grey, 300));
+}
+
+.splashscreen-logo {
+    width: 144px;
+    height: 144px;
+    margin-bottom: 16px;
+}
+
+.splashscreen-text {
+    font-size: 18px;
+    line-height: 22px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+    text-align: center;
+}

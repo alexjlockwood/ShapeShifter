@@ -1,0 +1,63 @@
+<div>
+  <app-splashscreen fxLayoutAlign="center center"
+    *ngIf="this.isMobile()">
+  </app-splashscreen>
+
+  <!-- Disable drag start events by default. -->
+  <div *ngIf="!this.isMobile()"
+    appDropTarget
+    (onDropFiles)="onDropFiles($event)"
+    class="app-container"
+    fxLayout="column"
+    ondragstart="return false;"
+    (click)="this.onClick($event)"
+    fxFlex>
+    <!-- Toolbar. -->
+    <div class="toolbar-container">
+      <app-toolbar></app-toolbar>
+    </div>
+    <div fxLayout="row"
+      fxFlex>
+      <!-- Tool Panel -->
+      <app-toolpanel *ngIf="this.IS_BETA"
+        fxLayout="column">
+      </app-toolpanel>
+      <div class="display-container"
+        *ngIf="(this.themeService.asObservable() | async) as theme"
+        [class.dark-to-light-base300]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+        [class.light-to-dark-base300]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
+        fxLayout="column"
+        fxFlex>
+        <!-- Canvas -->
+        <div #displayContainer
+          fxLayout="row"
+          fxLayoutAlign="center center"
+          fxFlex
+          [ngClass]="this.cursorClassName$ | async">
+          <app-canvas class="start"
+            *ngIf="this.isActionMode$ | async"
+            [actionSource]="ACTION_SOURCE_FROM"
+            [canvasBounds$]="this.canvasBounds$">
+          </app-canvas>
+          <app-canvas [canvasBounds$]="this.canvasBounds$"
+            [actionSource]="ACTION_SOURCE_ANIMATED">
+          </app-canvas>
+          <app-canvas class="end"
+            *ngIf="this.isActionMode$ | async"
+            [actionSource]="ACTION_SOURCE_TO"
+            [canvasBounds$]="this.canvasBounds$">
+          </app-canvas>
+        </div>
+        <!-- Playback controls. -->
+        <app-playback></app-playback>
+      </div>
+      <!-- Property input panel. -->
+      <app-propertyinput *ngIf="(this.isActionMode$ | async) === false"
+        fxLayout="column"
+        (click)="$event.stopPropagation()">
+      </app-propertyinput>
+    </div>
+    <!-- Layer list & animation timeline. -->
+    <app-layertimeline></app-layertimeline>
+  </div>
+</div>

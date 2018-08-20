@@ -1,0 +1,28 @@
+@mixin use-icon-font {
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px; // Preferred icon size
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal; // Support for all WebKit browsers.
+    -webkit-font-smoothing: antialiased; // Support for Safari and Chrome.
+    text-rendering: optimizeLegibility; // Support for Firefox.
+    -moz-osx-font-smoothing: grayscale; // Support for IE.
+    -webkit-font-feature-settings: 'liga';
+    -moz-font-feature-settings: 'liga';
+    font-feature-settings: 'liga'; // Custom added for GMP
+    user-select: none;
+}
+
+@mixin material-icons {
+    @include use-icon-font;
+    font-family: 'Material Icons';
+}
+
+.material-icons {
+    @include material-icons;
+}

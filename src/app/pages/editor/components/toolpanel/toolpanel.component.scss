@@ -1,0 +1,17 @@
+.tool-panel {
+  // TODO: move this into a themed CSS file
+  background-color: #eeeeee;
+  position: relative;
+
+  .tool-button {
+    margin: 4px;
+    &:hover {
+      cursor: pointer;
+    }
+    &.is-checked {
+        // TODO: move this into a themed CSS file
+      background-color: #d0d0d0;
+    }
+  }
+}
+

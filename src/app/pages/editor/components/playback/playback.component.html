@@ -1,0 +1,50 @@
+<div *ngIf="(this.playbackModel$ | async) as model"
+  class="playback"
+  fxLayout="row"
+  fxLayoutAlign="center center">
+  <span fxFlex></span>
+  <button class="slow-motion-button"
+    mat-icon-button
+    matTooltip="Slow motion (S)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
+    (click)="this.isSlowMotionClick($event)">
+    <mat-icon [class.activated]="model.isSlowMotion">slow_motion_video</mat-icon>
+  </button>
+  <button mat-icon-button
+    matTooltip="Rewind (Left)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
+    (click)="this.rewindClick($event)">
+    <mat-icon>skip_previous</mat-icon>
+  </button>
+  <button mat-mini-fab
+    matTooltip="{{ (model.isPlaying) ? 'Pause' : 'Play' }} (Spacebar)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
+    (click)="this.playPauseButtonClick($event)">
+    <div
+      class="play-pause-icon"
+      [ngClass]="{
+        'can-animate': true,
+        'is-playing': model.isPlaying
+      }">
+    </div>
+  </button>
+  <button mat-icon-button
+    matTooltip="Fast forward (Right)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
+    (click)="this.fastForwardClick($event)">
+    <mat-icon>skip_next</mat-icon>
+  </button>
+  <button class="repeating-button"
+    mat-icon-button
+    matTooltip="Repeat (R)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
+    (click)="this.isRepeatingClick($event)">
+    <mat-icon [class.activated]="model.isRepeating">repeat</mat-icon>
+  </button>
+  <span fxFlex></span>
+</div>

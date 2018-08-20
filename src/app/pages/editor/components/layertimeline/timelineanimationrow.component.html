@@ -1,0 +1,41 @@
+<div class="slt-layer-row"></div>
+
+<ng-container *ngIf="(this.animationRowModel$ | async) as model">
+  <div class="slt-properties"
+    *ngIf="model.isExpanded"
+    [ngClass]="{'slt-properties-empty': !model.blocksByPropertyNameValues.length}">
+    <div class="slt-property"
+      *ngFor="let blocks of model.blocksByPropertyNameValues">
+      <div class="slt-timeline-block"
+        *ngFor="let block of blocks"
+        (dblclick)="this.onTimelineBlockDoubleClick($event, block, this.layer)"
+        (click)="this.onTimelineBlockClick($event, block, this.layer)"
+        (mousedown)="this.onTimelineBlockMouseDown($event, block, this.layer)"
+        tabindex="-1"
+        [ngStyle]="{
+          'left': (100 * block.startTime / model.animation.duration) + '%',
+          'width': (100 * (block.endTime - block.startTime) / model.animation.duration) + '%'
+        }"
+        [ngClass]="{
+          'is-disabled': model.isActionMode,
+          'is-selected': block.isAnimatable() && model.selectedBlockIds.has(block.id),
+          'has-error': !block.isAnimatable() && !model.selectedBlockIds.has(block.id),
+          'is-selected-with-error': !block.isAnimatable() && model.selectedBlockIds.has(block.id)
+        }">
+        <div class="slt-timeline-block-edge slt-timeline-block-edge-start"></div>
+        <div class="slt-timeline-block-edge slt-timeline-block-edge-end"></div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="slt-children-row"
+    *ngIf="layer.children.length > 0 && model.isExpanded">
+    <li *ngFor="let child of layer.children; trackBy: trackLayerFn">
+      <app-timelineanimationrow [layer]="child"
+        (timelineBlockMouseDown)="this.onTimelineBlockMouseDown($event.event, $event.block, $event.layer)"
+        (timelineBlockClick)="this.onTimelineBlockClick($event.event, $event.block, $event.layer)"
+        (timelineBlockDoubleClick)="this.onTimelineBlockDoubleClick($event.event, $event.block, $event.layer)">
+      </app-timelineanimationrow>
+    </li>
+  </ul>
+</ng-container>

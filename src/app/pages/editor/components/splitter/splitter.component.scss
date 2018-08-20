@@ -1,0 +1,41 @@
+$splitterWidth: 4px;
+:host {
+    position: absolute;
+    z-index: 100;
+}
+
+:host(.splt-vertical) {
+    position: absolute;
+    z-index: 100;
+    top: 0;
+    bottom: 0;
+    width: $splitterWidth;
+    cursor: col-resize;
+}
+
+:host(.splt-horizontal) {
+    position: absolute;
+    z-index: 100;
+    left: 0;
+    right: 0;
+    height: $splitterWidth;
+    cursor: row-resize;
+}
+
+:host(.splt-edge-left) {
+    position: absolute;
+    z-index: 100;
+    left: 0;
+}
+
+:host(.splt-edge-right) {
+    position: absolute;
+    z-index: 100;
+    right: 0;
+}
+
+:host(.splt-edge-top) {
+    position: absolute;
+    z-index: 100;
+    top: 0;
+}

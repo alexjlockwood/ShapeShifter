@@ -1,0 +1,126 @@
+<ng-container *ngIf="(this.layerModel$ | async) as model">
+  <div class="slt-layer slt-layer-type-{{ this.layer.type }}"
+    fxLayout="row"
+    fxLayoutAlign="start center"
+    [ngClass]="{
+      'is-selected': model.isSelected,
+      'is-hovered': model.isHovered,
+      'is-disabled': model.isActionMode
+    }"
+    (click)="this.onLayerClick($event, this.layer)"
+    (dblclick)="this.onLayerToggleExpanded($event, this.layer)"
+    (mousedown)="this.onLayerMouseDown($event, this.layer)">
+    <button mat-icon-button
+      *ngIf="model.isExpandable"
+      (click)="this.onLayerToggleExpanded($event, this.layer)"
+      [disabled]="model.isActionMode"
+      matTooltip="{{ model.isExpanded ? 'Collapse layer' : 'Expand layer' }}"
+      matTooltipPosition="right"
+      matTooltipShowDelay="1000">
+      <mat-icon>{{ model.isExpanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
+    </button>
+    <!-- Add extra 20px margin if the expand/collapse icon isn't being displayed -->
+    <mat-icon svgIcon="{{ this.layer.type }}"
+      [style.margin-left]="model.isExpandable ? '0px' : '20px'">
+    </mat-icon>
+    <span class="slt-layer-id-text"
+      fxFlex>
+      {{ this.layer.name }}
+    </span>
+    <!-- Show overflow options. -->
+    <mat-menu #showOverflowOptionsMenu="matMenu">
+      <button *ngIf="model.canBeConvertedToClipPath"
+        (click)="this.onConvertToClipPathClick($event, layer)"
+        mat-menu-item>
+        Convert to clip path
+      </button>
+      <button *ngIf="model.canBeConvertedToPath"
+        (click)="this.onConvertToPathClick($event, layer)"
+        mat-menu-item>
+        Convert to path
+      </button>
+      <button *ngIf="model.canBeFlattened"
+        (click)="this.onFlattenGroupClick($event, layer)"
+        mat-menu-item>
+        Flatten group
+      </button>
+    </mat-menu>
+    <button mat-icon-button
+      *ngIf="model.canBeConvertedToClipPath || model.canBeConvertedToPath || model.canBeFlattened"
+      class="slt-layer-action-button slt-layer-more-actions"
+      (click)="$event.stopPropagation()"
+      [disabled]="model.isActionMode"
+      [matMenuTriggerFor]="showOverflowOptionsMenu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <!-- Visibility toggle. -->
+    <button mat-icon-button
+      class="slt-layer-action-button slt-layer-visibility-toggle"
+      (click)="this.onLayerToggleVisibility($event, this.layer)"
+      [disabled]="model.isActionMode"
+      matTooltip="{{ model.isVisible ? 'Hide layer' : 'Show layer' }}"
+      matTooltipPosition="below"
+      matTooltipShowDelay="1000"
+      [ngClass]="{'is-checked': model.isVisible}">
+      <mat-icon>{{ model.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+    </button>
+    <!-- Animate layer. -->
+    <mat-menu #addTimelineBlockMenu="matMenu">
+      <button *ngFor="let propertyName of model.availablePropertyNames"
+        (click)="this.onAddTimelineBlockClick($event, layer, propertyName)"
+        mat-menu-item>
+        {{ propertyName }}
+      </button>
+    </mat-menu>
+    <button mat-icon-button
+      *ngIf="model.availablePropertyNames.length > 0"
+      class="slt-layer-action-button"
+      (click)="$event.stopPropagation()"
+      [disabled]="model.isActionMode"
+      matTooltip="Animate this layer"
+      matTooltipPosition="below"
+      matTooltipShowDelay="1000"
+      [matMenuTriggerFor]="addTimelineBlockMenu">
+      <mat-icon svgIcon="animationblock"></mat-icon>
+    </button>
+  </div>
+
+  <!-- List the property names that have been animated. -->
+  <div class="slt-properties"
+    *ngIf="model.isExpanded && model.existingPropertyNames.length > 0">
+    <div class="slt-property"
+      fxLayout="row"
+      fxLayoutAlign="start center"
+      *ngFor="let propertyName of model.existingPropertyNames">
+      <span class="slt-property-name">{{ propertyName }}</span>
+      <button mat-icon-button
+        class="slt-property-add-timeline-block-button"
+        (click)="this.onAddTimelineBlockClick($event, layer, propertyName)"
+        [disabled]="model.isActionMode"
+        matTooltip="Add another animation"
+        matTooltipPosition="below"
+        matTooltipShowDelay="1000">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- List the layer's children if it is expanded. -->
+  <ul *ngIf="model.isExpanded && this.layer.children.length > 0"
+    class="slt-children">
+    <li *ngFor="let child of this.layer.children; trackBy: this.trackLayerFn"
+      class="slt-layer-container"
+      [attr.data-layer-id]="child.id">
+      <app-layerlisttree [layer]="child"
+        (layerMouseDown)="this.onLayerMouseDown($event.event, $event.layer)"
+        (layerClick)="this.onLayerClick($event.event, $event.layer)"
+        (layerToggleExpanded)="this.onLayerToggleExpanded($event.event, $event.layer)"
+        (layerToggleVisibility)="this.onLayerToggleVisibility($event.event, $event.layer)"
+        (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)"
+        (convertToClipPathClick)="this.onConvertToClipPathClick($event.event, $event.layer)"
+        (convertToPathClick)="this.onConvertToPathClick($event.event, $event.layer)"
+        (flattenGroupClick)="this.onFlattenGroupClick($event.event, $event.layer)">
+      </app-layerlisttree>
+    </li>
+  </ul>
+</ng-container>

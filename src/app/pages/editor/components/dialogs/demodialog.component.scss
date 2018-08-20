@@ -1,0 +1,19 @@
+button {
+    text-transform: uppercase;
+    &:mat-dialog-close {
+        margin-right: 8px;
+    }
+}
+
+mat-dialog-actions {
+    min-width: 220px;
+}
+
+.dialog-radio-group {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.dialog-radio-button {
+    margin-bottom: 16px;
+}

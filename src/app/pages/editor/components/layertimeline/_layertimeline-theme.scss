@@ -1,0 +1,74 @@
+@mixin ss-layertimeline-theme($theme) {
+    $foreground: map-get($theme, ss-foreground);
+    $background: map-get($theme, ss-background);
+    $accent: map-get($theme, accent);
+    .studio-layer-timeline {
+        $headerHeight: 40px;
+        background-color: mat-color($background, base100);
+        .slt-layers {
+            .slt-header {
+                .slt-layers-menu-group-button {
+                    color: mat-color($foreground, secondary-text);
+                    &:focus {
+                        background-color: mat-color($foreground, divider);
+                    }
+                    &.is-disabled {
+                        color: mat-color($foreground, disabled-text);
+                    }
+                }
+                button {
+                    &[mat-icon-button] {
+                        mat-icon {
+                            color: mat-color($foreground, secondary-text);
+                        }
+                    }
+                    &[mat-icon-button][disabled] {
+                        mat-icon {
+                            color: mat-color($foreground, disabled-text);
+                        }
+                    }
+                }
+            }
+            .slt-layers-list-drag-indicator {
+                background-color: mat-color($accent);
+                &::before {
+                    background-color: mat-color($accent);
+                }
+            }
+        }
+        .slt-layers-empty {
+            color: mat-color($foreground, disabled-text);
+        }
+        .slt-timeline {
+            .slt-timeline-animation {
+                box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
+                &.is-selected {
+                    background-color: mat-color($accent);
+                }
+            }
+            .slt-header {
+                .slt-timeline-animation-meta {
+                    &.is-selected,
+                    &.is-selected .slt-timeline-animation-name {
+                        background-color: mat-color($accent, darker);
+                        color: #fff;
+                    }
+                    &.is-disabled {
+                        cursor: default;
+                    }
+                }
+                .slt-timeline-animation-name {
+                    color: mat-color($foreground, primary-text);
+                    margin-right: 4px;
+                    font-weight: 500;
+                }
+                .slt-timeline-header-grid {
+                    background-color: mat-color($background, base100);
+                }
+            }
+        }
+        .slt-header {
+            color: mat-color($foreground, secondary-text);
+        }
+    }
+}

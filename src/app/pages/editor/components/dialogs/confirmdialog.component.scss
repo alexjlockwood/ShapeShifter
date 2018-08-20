@@ -1,0 +1,10 @@
+button {
+    text-transform: uppercase;
+    &:mat-dialog-close {
+        margin-right: 8px;
+    }
+}
+
+mat-dialog-actions {
+    min-width: 220px;
+}

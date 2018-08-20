@@ -1,0 +1,155 @@
+:host,
+.app-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  user-select: none;
+}
+
+app-canvas.start {
+  margin-right: 48px;
+}
+
+app-canvas.end {
+  margin-left: 48px;
+}
+
+div.toolbar-container {
+  position: relative;
+  z-index: 1;
+}
+
+.file-drop-target {
+  &.is-dragging-over::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    animation: pulsate-color 0.66s ease 0s infinite;
+    pointer-events: none;
+    transform: translateZ(0);
+  }
+  @keyframes pulsate-color {
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.5;
+    }
+  }
+}
+
+div.display-container {
+  box-sizing: border-box;
+  padding-bottom: 16px;
+  user-select: none;
+}
+
+app-toolpanel {
+  // TODO: make this color theme dependent
+  background-color: white;
+}
+
+.cursor-default {
+  cursor: default;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-resize0 {
+  cursor: ns-resize;
+}
+
+.cursor-resize45 {
+  cursor: nesw-resize;
+}
+
+.cursor-resize90 {
+  cursor: ew-resize;
+}
+
+.cursor-resize135 {
+  cursor: nwse-resize;
+}
+
+.cursor-zoom-in {
+  cursor: zoom-in;
+}
+
+.cursor-zoom-out {
+  cursor: zoom-out;
+}
+
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing;
+}
+
+.cursor-point-select {
+  cursor: url(/assets/cursor/point-select.png) 3 3, auto;
+}
+
+.cursor-crosshair {
+  cursor: url(/assets/cursor/crosshair.png) 10 10, auto;
+}
+
+.cursor-pen {
+  cursor: url(/assets/cursor/pen.png) 6 0, auto;
+}
+
+.cursor-pen-add {
+  cursor: url(/assets/cursor/pen-add.png) 6 0, auto;
+}
+
+.cursor-pen-close {
+  cursor: url(/assets/cursor/pen-close.png) 6 0, auto;
+}
+
+.cursor-pencil {
+  cursor: url(/assets/cursor/pencil.png) 0 18, auto;
+}
+
+.cursor-rotate0 {
+  cursor: url(/assets/cursor/rotate-top.png) 11 11, auto;
+}
+
+.cursor-rotate45 {
+  cursor: url(/assets/cursor/rotate-top-right.png) 10 11, auto;
+}
+
+.cursor-rotate90 {
+  cursor: url(/assets/cursor/rotate-right.png) 10 12, auto;
+}
+
+.cursor-rotate135 {
+  cursor: url(/assets/cursor/rotate-bottom-right.png) 11 11, auto;
+}
+
+.cursor-rotate180 {
+  cursor: url(/assets/cursor/rotate-bottom.png) 11 10, auto;
+}
+
+.cursor-rotate225 {
+  cursor: url(/assets/cursor/rotate-bottom-left.png) 11 10, auto;
+}
+
+.cursor-rotate270 {
+  cursor: url(/assets/cursor/rotate-left.png) 11 12, auto;
+}
+
+.cursor-rotate315 {
+  cursor: url(/assets/cursor/rotate-top-left.png) 10 10, auto;
+}

@@ -1,0 +1,146 @@
+<div class="property-input mat-elevation-z4"
+  *ngIf="(this.themeState$ | async) as theme"
+  [class.dark-to-light-base200]="theme.prevThemeType === 'dark' && theme.currThemeType === 'light'"
+  [class.light-to-dark-base200]="theme.prevThemeType === 'light' && theme.currThemeType === 'dark'"
+  fxLayout="column"
+  fxFlex>
+  <app-splitter [persistId]="'property-inspector'"
+    [edge]="'left'"
+    [min]="200">
+  </app-splitter>
+  <ng-container *ngIf="(this.propertyInputModel$ | async) as model">
+    <!-- No models selected. -->
+    <div *ngIf="model.numSelections === 0"
+      class="spi-empty"
+      fxFlex>
+      Select something to edit its properties
+    </div>
+    <!-- At least one model selected. -->
+    <div *ngIf="model.numSelections > 0"
+      fxLayout="column"
+      fxFlex>
+      <div class="spi-header mat-elevation-z2"
+        [class.dark-to-light-base]="theme.prevThemeType === 'dark' && theme.currThemeType === 'light'"
+        [class.light-to-dark-base]="theme.prevThemeType === 'light' && theme.currThemeType === 'dark'"
+        fxLayoutAlign="center center"
+        fxFlex="none">
+        <mat-icon class="spi-selection-icon"
+          svgIcon="{{model.icon}}">
+        </mat-icon>
+        <div class="spi-selection-description-container"
+          fxLayout="column"
+          fxFlex>
+          <span class="spi-selection-description">{{ model.description }}</span>
+          <span class="spi-selection-sub-description">{{ model.subDescription }}</span>
+        </div>
+        <mat-menu #addTimelineBlockMenu="matMenu">
+          <button mat-menu-item
+            *ngFor="let propertyName of model.availablePropertyNames"
+            (click)="this.onAnimateLayerClick(model.model, propertyName)">
+            {{ propertyName }}
+          </button>
+        </mat-menu>
+        <button mat-icon-button
+          class="spi-secondary-icon"
+          *ngIf="this.shouldShowAnimateLayerButton(model)"
+          matTooltip="Animate this layer"
+          matTooltipPosition="left"
+          matTooltipShowDelay="500"
+          [matMenuTriggerFor]="addTimelineBlockMenu">
+          <mat-icon svgIcon="animationblock"></mat-icon>
+        </button>
+        <button mat-icon-button
+          class="spi-secondary-icon"
+          [disabled]="this.shouldDisableStartActionModeButton(model)"
+          *ngIf="this.shouldShowStartActionModeButton(model)"
+          (click)="this.onStartActionModeClick()"
+          matTooltip="Edit path morphing animation"
+          matTooltipPosition="left"
+          matTooltipShowDelay="500">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </div>
+      <div class="spi-body"
+        fxLayout="column"
+        fxFlex>
+        <div class="spi-empty"
+          *ngIf="!model.inspectedProperties.length"
+          fxFlex>
+          No shared properties to view or edit
+        </div>
+        <div class="spi-property"
+          *ngFor="let ip of model.inspectedProperties; trackBy: trackInspectedPropertyFn">
+          <div class="spi-property-name">{{ ip.propertyName }}</div>
+          <div class="spi-property-value"
+            fxLayout="row">
+            <div *ngIf="ip.typeName === 'ColorProperty'"
+              class="spi-property-color-preview"
+              [style.background-color]="this.androidToCssColor(ip.value)">
+            </div>
+            <span *ngIf="!ip.isEditable()"
+              class="spi-property-value-static"
+              fxFlex>
+              <!-- Only show text if the property isn't inspectable. -->
+              {{ ip.getDisplayValue() }}
+            </span>
+            <div *ngIf="ip.isEditable()"
+              class="spi-property-value-editor"
+              fxLayout="column"
+              fxFlex>
+              <input (keydown)="this.onValueEditorKeyDown($event, ip)"
+                [ngClass]="{
+                  'has-input-error': ip.typeName === 'PathProperty' && this.shouldShowInvalidPathAnimationBlockMsg(model)
+                }"
+                (blur)="ip.resolveEnteredValue()"
+                name="{{ip.propertyName}}"
+                [(ngModel)]="ip.editableValue"
+                *ngIf="ip.typeName === 'NameProperty'
+                || ip.typeName === 'PathProperty'
+                || ip.typeName === 'ColorProperty'
+                || ip.typeName === 'NumberProperty'
+                || ip.typeName === 'FractionProperty'">
+              <ng-container *ngIf="ip.typeName === 'EnumProperty'">
+                <mat-menu #enumMenu="matMenu">
+                  <button mat-menu-item
+                    *ngFor="let option of ip.property.options; trackBy: trackEnumOptionFn"
+                    (click)="ip.value = option.value;">
+                  {{ option.label }}
+                </button>
+                </mat-menu>
+                <button class="spi-property-value-menu-target"
+                  [matMenuTriggerFor]="enumMenu">
+                  <span class="spi-property-value-menu-current-value">
+                    {{ ip.getDisplayValue() }}
+                  </span>
+                </button>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="this.shouldShowInvalidPathAnimationBlockMsg(model)"
+          class="alert alert-danger"
+          fxLayout="row">
+          <span class="paths-incompatible-text"
+            [innerHTML]="
+            (this.isPathBlockFromValueEmpty(model.model) && !this.isPathBlockToValueEmpty(model.model))
+              ? '<i>fromValue</i> must not be empty'
+              : (!this.isPathBlockFromValueEmpty(model.model) && this.isPathBlockToValueEmpty(model.model))
+                ? '<i>toValue</i> must not be empty'
+                : (this.isPathBlockFromValueEmpty(model.model) && this.isPathBlockToValueEmpty(model.model))
+                  ? '<i>fromValue</i> and <i>toValue</i> must not be empty'
+                  : 'Paths are incompatible. <i>Auto fix</i> or click the <i>edit path morphing animation</i> button above.'">
+          </span>
+          <button mat-icon-button
+            class="auto-fix-button"
+            *ngIf="!this.isPathBlockFromValueEmpty(model.model) && !this.isPathBlockToValueEmpty(model.model)"
+            (click)="this.onAutoFixPathsClick(model)"
+            matTooltip="Auto fix"
+            matTooltipPosition="below"
+            matTooltipShowDelay="500">
+            <mat-icon svgIcon="autofix"></mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

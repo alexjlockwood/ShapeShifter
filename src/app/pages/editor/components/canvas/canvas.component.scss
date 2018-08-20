@@ -1,0 +1,42 @@
+.app-canvas-container {
+  position: relative;
+  .canvas-ruler {
+    position: absolute;
+    transition: opacity 0.15s ease, visibility 0s linear 0.15s;
+    opacity: 0;
+    visibility: hidden;
+  }
+  &:hover .canvas-ruler {
+    transition: opacity 0.15s ease;
+    opacity: 1;
+    visibility: visible;
+  }
+  .canvas-container {
+    position: relative;
+    canvas.rendering-canvas {
+      position: absolute;
+      z-index: 1;
+    }
+    canvas.overlay-canvas {
+      position: absolute;
+      background-color: transparent;
+      z-index: 2;
+    }
+    canvas.paper-canvas {
+      position: absolute;
+      background-color: transparent;
+      z-index: 3;
+    }
+  }
+  $rulerWidth: 32px;
+  .orientation-horizontal {
+    left: -12px;
+    top: -$rulerWidth;
+    height: $rulerWidth;
+  }
+  .orientation-vertical {
+    top: -12px;
+    left: -$rulerWidth;
+    width: $rulerWidth;
+  }
+}

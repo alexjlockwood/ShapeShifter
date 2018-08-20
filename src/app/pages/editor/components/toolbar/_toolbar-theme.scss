@@ -1,0 +1,22 @@
+@mixin ss-toolbar-theme($theme) {
+    $primary: map-get($theme, primary);
+    $foreground: map-get($theme, ss-foreground);
+    $accent-inverse: map-get($theme, accent-inverse);
+    $is-dark: map-get($theme, is-dark);
+    .toolbar {
+        background-color: mat-color($primary);
+        color: mat-color($primary, default-contrast);
+        button {
+            &[mat-icon-button][disabled] {
+                mat-icon {
+                    color: mat-color($foreground, if($is-dark, disabled-text, disabled-text-inverse));
+                }
+            }
+        }
+        button.activated {
+            mat-icon {
+                color: mat-color($accent-inverse);
+            }
+        }
+    }
+}

@@ -1,0 +1,1 @@
+export { TransformPathsGesture } from './TransformPathsGesture';

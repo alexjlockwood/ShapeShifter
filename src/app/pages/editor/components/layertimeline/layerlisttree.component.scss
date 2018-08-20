@@ -1,0 +1,193 @@
+:host {
+  user-select: none;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  list-style: none;
+}
+
+.slt-layer {
+  box-sizing: border-box;
+  height: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 2px;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  border-radius: 2px 0 0 2px;
+  &.is-selected {
+    box-shadow: none;
+  }
+  &.is-disabled {
+    cursor: default;
+  }
+  span.slt-layer-id-text {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 4px;
+  }
+  mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+  button {
+    line-height: 16px;
+    height: 20px;
+    width: 20px;
+    min-height: 20px;
+    &[mat-icon-button] {
+      mat-icon {
+        line-height: normal;
+        vertical-align: top;
+      }
+    }
+  }
+}
+
+.slt-layer-type-group,
+.slt-layer-type-vector {
+  font-weight: 500;
+}
+
+.slt-children {
+  padding: 0;
+  margin: 0 0 0 20px;
+}
+
+@mixin layer-list-button {
+  margin: 0;
+  padding: 2px;
+  height: 20px;
+  width: 20px;
+  line-height: 16px;
+  min-height: 20px;
+  mat-icon {
+    vertical-align: top;
+  }
+}
+
+.slt-layer:hover {
+  .slt-layer-action-button {
+    &[disabled].is-checked {
+      opacity: 0;
+    }
+    &:not([disabled]) {
+      opacity: 1;
+    }
+  }
+}
+
+.slt-layer.is-selected {
+  .slt-layer-action-button {
+    opacity: 1;
+  }
+}
+
+.slt-layer-expanded-toggle {
+  @include layer-list-button;
+  visibility: hidden;
+  &.is-visible {
+    visibility: visible;
+  }
+}
+
+.slt-layer-id {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slt-layer-action-button {
+  @include layer-list-button;
+  opacity: 0.2;
+  &[disabled] {
+    opacity: 0;
+  }
+}
+
+mat-menu {
+  display: flex;
+}
+
+.slt-layer-visibility-toggle {
+  &.is-checked {
+    opacity: 0;
+  }
+  &:not(.is-checked) {
+    opacity: 0.7;
+  }
+}
+
+.slt-layer-more-actions {
+  opacity: 0;
+}
+
+.slt-layer-type-group {
+  font-weight: 500;
+}
+
+.slt-properties {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  margin-left: 40px; // indent by both the icon (20px) and expand toggle (20px)
+  margin-right: -2px; // hide inset shadow
+  padding-right: 2px; // offset margin
+  border-radius: 2px;
+}
+
+.slt-property {
+  padding-left: 8px;
+  font-size: 12px;
+  .slt-property-name {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  button {
+    margin: 2px;
+    padding: 2px;
+    line-height: 16px;
+    height: 20px;
+    width: 20px;
+    min-height: 20px;
+    &[mat-icon-button] {
+      mat-icon {
+        width: 16px;
+        height: 16px;
+        font-size: 16px;
+        line-height: normal;
+        vertical-align: top;
+      }
+    }
+  }
+}
+
+.slt-layers-list-drag-indicator {
+  position: absolute;
+  height: 2px;
+  left: 0;
+  right: 0;
+  margin-top: -1px;
+  pointer-events: none;
+  &::before {
+    position: absolute;
+    content: '';
+    left: -4px;
+    top: -3px;
+    height: 8px;
+    width: 8px;
+    border-radius: 50%;
+  }
+}

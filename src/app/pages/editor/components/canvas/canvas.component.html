@@ -1,0 +1,29 @@
+<div class="app-canvas-container"
+  (click)="$event.stopPropagation()">
+  <canvas appCanvasRuler
+    class="canvas-ruler orientation-horizontal"
+    [orientation]="'horizontal'">
+  </canvas>
+  <canvas appCanvasRuler
+    class="canvas-ruler orientation-vertical"
+    [orientation]="'vertical'">
+  </canvas>
+  <div appCanvasContainer
+    class="canvas-container">
+    <canvas appCanvasLayers
+      *ngIf="!this.IS_BETA || (this.isActionMode$ | async) === true"
+      class="rendering-canvas mat-elevation-z4"
+      [actionSource]="this.actionSource">
+    </canvas>
+    <canvas appCanvasOverlay
+      *ngIf="!this.IS_BETA || (this.isActionMode$ | async) === true"
+      class="overlay-canvas"
+      [actionSource]="this.actionSource">
+    </canvas>
+    <canvas appCanvasPaper
+      *ngIf="this.IS_BETA && (this.isActionMode$ | async) === false"
+      class="paper-canvas mat-elevation-z4"
+      [actionSource]="this.actionSource">
+    </canvas>
+  </div>
+</div>

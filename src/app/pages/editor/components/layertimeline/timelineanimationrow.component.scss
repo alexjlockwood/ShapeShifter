@@ -1,0 +1,59 @@
+$timelineAnimationPadding: 20px;
+ul {
+    margin: 0;
+    padding: 0;
+}
+
+li {
+    list-style: none;
+}
+
+.slt-layer-row {
+    box-sizing: border-box;
+    line-height: 20px;
+    height: 20px;
+}
+
+.slt-children-row {
+    padding: 0;
+    margin: 0 0 0 0px;
+}
+
+.slt-properties {
+    margin: 4px 0;
+    border-radius: 2px;
+    .slt-property {
+        position: relative;
+        line-height: 24px;
+        height: 24px;
+        .slt-timeline-block {
+            position: absolute;
+            height: 12px;
+            border-radius: 6px;
+            top: 50%;
+            transform: translate(0, -50%);
+            outline: 0;
+            cursor: pointer;
+            .slt-timeline-block-edge {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 6px;
+                cursor: ew-resize;
+            }
+            .slt-timeline-block-edge-start {
+                left: 0;
+            }
+            .slt-timeline-block-edge-end {
+                right: 0;
+            }
+            &.is-disabled {
+                cursor: default;
+            }
+        }
+    }
+}
+
+.slt-properties-empty {
+    display: none;
+}
