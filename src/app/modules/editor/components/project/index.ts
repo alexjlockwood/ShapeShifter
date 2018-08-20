@@ -1,1 +1,1 @@
-export { ProjectService } from './project.service';
+export { Project, ProjectService } from './project.service';
