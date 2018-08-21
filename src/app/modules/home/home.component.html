@@ -5,15 +5,4 @@
     (signOutClick)="this.onSignOutClick()">
 </app-header>
 
-<div class="home-container">
-    <div class="home-header">
-        <div class="inner">
-            <h1>Shape Shifter</h1>
-            <p class="subtitle">An SVG icon animation tool for Android, iOS, and the web.</p>
-        </div>
-    </div>
-    <app-project-grid [projectItems]="this.projectItems$ | async"
-        (projectClick)="this.onProjectClick($event)"
-        (deleteProjectClick)="this.onDeleteProjectClick($event)">
-    </app-project-grid>
-</div>
+<router-outlet></router-outlet>

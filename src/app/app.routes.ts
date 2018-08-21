@@ -10,10 +10,6 @@ const routes: Routes = [
     path: 'project',
     loadChildren: './modules/editor/editor.module#EditorModule',
   },
-  {
-    path: 'user/:id',
-    loadChildren: './modules/dashboard/dashboard.module#DashboardModule',
-  },
 ];
 
 @NgModule({
