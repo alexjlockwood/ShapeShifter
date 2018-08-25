@@ -1,4 +1,4 @@
-import { Property } from './property';
+import { Property } from './properties';
 
 export type Shape = GroupShape | PathShape | TransformShape;
 
@@ -40,9 +40,9 @@ interface FillShape {
   // The shape type. Always 'fl'.
   ty: 'fl';
   // The fill color.
-  c: AnimatableProperty<Color>;
+  c: Property<Color>;
   // The fill-opacity (default opacity is 100).
-  o: AnimatableProperty<number>;
+  o: Property<number>;
   // The fill rule (1 - nonzero, 2 - evenodd).
   r: 1 | 2;
 }
@@ -51,11 +51,11 @@ interface StrokeShape {
   // The shape type. Always 'st'.
   ty: 'st';
   // The stroke color.
-  c: AnimatableProperty<Color>;
+  c: Property<Color>;
   // The stroke-opacity (default opacity is 100).
-  o: AnimatableProperty<number>;
+  o: Property<number>;
   // The stroke-width.
-  w: AnimatableProperty<number>;
+  w: Property<number>;
   // The stroke line cap (1 - 'butt', 2 - 'round', 3 - 'square').
   lc: 1 | 2 | 3;
   // The stroke line join (1 - 'miter', 2 - 'round', 3 - 'bevel').

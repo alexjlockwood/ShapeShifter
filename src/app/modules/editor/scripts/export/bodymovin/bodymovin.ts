@@ -28,7 +28,7 @@ export function createBodymovin(
   };
 }
 
-export interface Bodymovin {
+interface Bodymovin {
   /** The bodymovin version. Always the latest version. */
   v: string;
   /** The framerate of the animation. */
@@ -50,7 +50,7 @@ export interface Bodymovin {
 }
 
 interface Asset {
-  /** The ID of the asset. */
+  /** The ID of the asset. Referenced by other layer's 'refId'. */
   id: string;
   /** The list of layers for this asset. */
   layers: Layer[];

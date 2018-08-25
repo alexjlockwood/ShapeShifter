@@ -1,3 +1,6 @@
+import { Property } from './properties';
+import { Shape } from './shape';
+
 export type Layer = ShapeLayer;
 
 interface ShapeLayer {
