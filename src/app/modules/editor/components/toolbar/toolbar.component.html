@@ -3,12 +3,18 @@
     fxLayoutAlign="center center"
     *ngIf="(this.themeState$ | async) as state"
     [class.dark-to-light-primary]="state.prevThemeType === 'dark' && state.currThemeType === 'light' && !state.currIsActionMode"
+
     [class.light-to-dark-primary]="state.prevThemeType === 'light' && state.currThemeType === 'dark' && !state.currIsActionMode"
+
     [class.dark-to-light-accent]="state.prevThemeType === 'dark' && state.currThemeType === 'light' && state.currIsActionMode"
+
     [class.light-to-dark-accent]="state.prevThemeType === 'light' && state.currThemeType === 'dark' && state.currIsActionMode"
+
     [class.action-mode-on-to-off-dark]="state.hasActionModeBeenEnabled && !state.currIsActionMode && state.currThemeType === 'dark'"
+
     [class.action-mode-off-to-on-dark]="state.currIsActionMode && state.currThemeType === 'dark'"
     [class.action-mode-on-to-off-light]="state.hasActionModeBeenEnabled && !state.currIsActionMode && state.currThemeType === 'light'"
+
     [class.action-mode-off-to-on-light]="state.currIsActionMode && state.currThemeType === 'light'"
     class="toolbar mat-elevation-z2">
 
@@ -176,8 +182,8 @@
         matTooltipShowDelay="500"
         *ngIf="data.showDeletePoints"
         (click)="onDeletePointsClick($event)">
-      <mat-icon>delete</mat-icon>
-    </button>
+        <mat-icon>delete</mat-icon>
+      </button>
 
       <!-- Overflow menu buttons. -->
       <button class="toolbar-action-button"
@@ -196,7 +202,8 @@
         <a href="http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html"
           target="_blank"
           class="toolbar-overflow-link-item">
-          <button mat-menu-item (click)="this.onGettingStartedClick()">
+          <button mat-menu-item
+            (click)="this.onGettingStartedClick()">
             <mat-icon>info</mat-icon>
             <span>Getting started</span>
           </button>
@@ -204,17 +211,28 @@
         <a href="https://github.com/alexjlockwood/ShapeShifter"
           target="_blank"
           class="toolbar-overflow-link-item">
-          <button mat-menu-item (click)="this.onContributeClick()">
-            <mat-icon style="line-height: 1" svgIcon="contribute"></mat-icon>
+          <button mat-menu-item
+            (click)="this.onContributeClick()">
+            <mat-icon style="line-height: 1"
+              svgIcon="contribute"></mat-icon>
             <span>Contribute</span>
           </button>
         </a>
         <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
           target="_blank"
           class="toolbar-overflow-link-item">
-          <button mat-menu-item (click)="this.onSendFeedbackClick()">
+          <button mat-menu-item
+            (click)="this.onSendFeedbackClick()">
             <mat-icon>bug_report</mat-icon>
             <span>Send feedback</span>
+          </button>
+        </a>
+        <a href="{{ this.isBeta() ? 'https://shapeshifter.design' : 'https://beta.shapeshifter.design' }}"
+          target="_blank"
+          class="toolbar-overflow-link-item">
+          <button mat-menu-item>
+            <mat-icon>open_in_new</mat-icon>
+            <span>Switch to {{ this.isBeta() ? 'stable' : 'beta' }} </span>
           </button>
         </a>
       </mat-menu>

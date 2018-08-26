@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ToolMode } from 'app/modules/editor/model/paper';
-import { PaperService } from 'app/modules/editor/services';
+import { PaperService, ShortcutService } from 'app/modules/editor/services';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -61,6 +61,10 @@ export class ToolPanelComponent implements OnInit {
   onZoomPanClick(event: Event) {
     this.ps.setToolMode(ToolMode.ZoomPan);
     event.stopPropagation();
+  }
+
+  isMac() {
+    return ShortcutService.isMac();
   }
 }
 

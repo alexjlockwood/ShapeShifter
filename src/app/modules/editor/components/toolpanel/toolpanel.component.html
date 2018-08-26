@@ -60,10 +60,11 @@
     (click)="onRectangleClick($event)">
     <mat-icon svgIcon="tool_rectangle"></mat-icon>
   </button>
+  <!-- TODO: set the tooltip delay back to 500 once we have a better way of telling the user about zooming out -->
   <button class="tool-button"
-    matTooltip="Zoom"
+    matTooltip="Zoom (hold {{ this.isMac() ? 'option' : 'alt' }} to zoom out)"
     matTooltipPosition="right"
-    matTooltipShowDelay="500"
+    matTooltipShowDelay="0"
     [class.is-checked]="model.toolMode === this.TOOL_MODE_ZOOMPAN"
     (click)="onZoomPanClick($event)">
     <mat-icon>zoom_in</mat-icon>

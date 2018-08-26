@@ -28,7 +28,7 @@ export class ShortcutService {
     return !!(ShortcutService.isMac() ? !!event.metaKey : !!event.ctrlKey);
   }
 
-  private static isMac() {
+  static isMac() {
     return navigator.appVersion.includes('Mac');
   }
 

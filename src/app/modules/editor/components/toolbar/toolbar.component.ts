@@ -12,6 +12,7 @@ import { ActionModeService, ThemeService } from 'app/modules/editor/services';
 import { State, Store } from 'app/modules/editor/store';
 import { getToolbarState } from 'app/modules/editor/store/actionmode/selectors';
 import { ThemeType } from 'app/modules/editor/store/theme/reducer';
+import { environment } from 'environments/environment.beta.dev';
 import * as _ from 'lodash';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -167,6 +168,10 @@ export class ToolbarComponent implements OnInit {
   onDeletePointsClick(event: MouseEvent) {
     event.stopPropagation();
     this.actionModeService.deleteSelectedActionModeModels();
+  }
+
+  isBeta() {
+    return environment.beta;
   }
 }
 
