@@ -1,8 +1,9 @@
-import { Boolean } from './helpers';
+import { Boolean } from '../helpers';
+import { Color, Point } from '../types';
 
-type Keyframe<T> = MidKeyframe<T> | LastKeyframe<T>;
+type Keyframe<T> = NotLastKeyframe<T> | LastKeyframe<T>;
 
-interface MidKeyframe<T> {
+interface NotLastKeyframe<T> {
   /** The start time in frames. */
   t: number;
   /** The start value of the segment. */
@@ -15,12 +16,7 @@ interface MidKeyframe<T> {
   i: { x: [number]; y: [number] };
 }
 
-interface LastKeyframe<T> {
-  /** The start time in frames. */
-  t: number;
-}
-
-type Property<T> = StaticProperty<T> | AnimatedProperty<T>;
+type LastKeyframe<T> = Pick<NotLastKeyframe<T>, 't'>;
 
 interface StaticProperty<T> {
   /** A single value or list of keyframes. */
@@ -36,7 +32,11 @@ interface AnimatedProperty<T> {
   a: Boolean.True;
 }
 
-export type MultiDimensionalProperty = Property<number[]>;
+type Property<T> = StaticProperty<T> | AnimatedProperty<T>;
+
+export type PointProperty = Property<Point>;
+
+export type ColorProperty = Property<Color>;
 
 export type ShapeProperty = Property<{
   /** Defines whether or not the shape is closed. */
@@ -45,7 +45,7 @@ export type ShapeProperty = Property<{
   o: [number, number][];
   /** The bezier curve in points of the shape. Expressed in coordinates relative to the vertex. */
   i: [number, number][];
-  /** The bezier curve vertices of the shape. Expressed in coordinates relative to the vertex. */
+  /** The bezier curve vertices of the shape. */
   v: [number, number][];
 }>;
 
