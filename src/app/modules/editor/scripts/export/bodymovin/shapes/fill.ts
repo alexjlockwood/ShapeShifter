@@ -2,7 +2,7 @@ import { FillRule } from '../helpers';
 import { ColorProperty, ValueProperty } from '../properties';
 
 export interface FillShape {
-  /** The shape type. Always 'fl'. */
+  /** The shape type. */
   ty: 'fl';
   /** The fill color. */
   c: ColorProperty;

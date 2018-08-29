@@ -2,7 +2,7 @@ import { LineCap, LineJoin } from '../helpers';
 import { ColorProperty, ValueProperty } from '../properties';
 
 export interface StrokeShape {
-  /** The shape type. Always 'st'. */
+  /** The shape type. */
   ty: 'st';
   /** The stroke color. */
   c: ColorProperty;

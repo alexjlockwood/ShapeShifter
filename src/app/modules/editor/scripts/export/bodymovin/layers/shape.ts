@@ -2,7 +2,7 @@ import { Transform } from '../helpers';
 import { Shape } from '../shapes';
 
 export interface ShapeLayer {
-  /** The layer type. Always 4. */
+  /** The layer type. */
   ty: 4;
   /** The layer index. */
   ind: number;

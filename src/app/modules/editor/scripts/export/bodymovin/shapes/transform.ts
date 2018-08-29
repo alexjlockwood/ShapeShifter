@@ -2,7 +2,7 @@ import { PointProperty, ValueProperty } from '../properties';
 
 // TODO: ask Hernan what he means by 'the position needs to compensate the pivot value' in his sample bodymovin file
 export interface TransformShape {
-  /** The shape type. Always 'tr'. */
+  /** The shape type. */
   ty: 'tr';
   /** The anchor point. */
   a: PointProperty;
