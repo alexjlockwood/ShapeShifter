@@ -18,6 +18,8 @@ format for Android. I am totally open to adding support for other export formats
 if you have a format that you'd like to see added in the future,
 file a [feature request][report-feature-request]!
 
+Try out the [beta version](https://beta.shapeshifter.design), which adds the ability to draw/edit paths directly on the canvas (written using the amazing [paper.js](http://paperjs.org/) library)!
+
 ![Screen capture of tool](art/screencap.gif)
 
 ## Backers
