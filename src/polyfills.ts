@@ -40,9 +40,7 @@ import 'core-js/es7/array';
 // import 'core-js/es6/reflect';
 /** Evergreen browsers require these. **/
 // Used for reflect-metadata in JIT. If you use AOT (and only Angular decorators), you can remove.
-// TODO: comment this out before creating prod builds
-// TODO: comment this out for local debugging once this bug is fixed: https://github.com/angular/angular-cli/issues/9036
-import 'core-js/es7/reflect';
+// import 'core-js/es7/reflect';
 /**
  * Required to support Web Animations `@angular/platform-browser/animations`.
  * Needed for: All but Chrome, Firefox and Opera. http://caniuse.com/#feat=web-animation
