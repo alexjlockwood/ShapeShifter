@@ -83,10 +83,12 @@ declare const ga: Function;
 })
 export class LayerTimelineComponent extends DestroyableMixin()
   implements OnInit, AfterViewInit, TimelineAnimationRowCallbacks, LayerListTreeCallbacks {
-  @ViewChild('timeline') private timelineRef: ElementRef;
+  @ViewChild('timeline')
+  private timelineRef: ElementRef;
   private $timeline: JQuery;
 
-  @ViewChild('timelineAnimation') private timelineAnimationRef: ElementRef;
+  @ViewChild('timelineAnimation')
+  private timelineAnimationRef: ElementRef;
   @ViewChildren(LayerTimelineGridDirective)
   timelineDirectives: QueryList<LayerTimelineGridDirective>;
 
@@ -359,7 +361,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     const $target = $(mouseDownEvent.target);
 
     // Some geometry and hit-testing basics.
-    const animRect = $(mouseDownEvent.target)
+    const animRect = $(mouseDownEvent.target as Element)
       .parents('.slt-property')
       .get(0)
       .getBoundingClientRect();
@@ -865,8 +867,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // @Override LayerListTreeComponentCallbacks
   onLayerMouseDown(mouseDownEvent: MouseEvent, mouseDownDragLayer: Layer) {
-    const $layersList = $(mouseDownEvent.target).parents('.slt-layers-list');
-    const $scroller = $(mouseDownEvent.target).parents('.slt-layers-list-scroller');
+    const $layersList = $(mouseDownEvent.target as Element).parents('.slt-layers-list');
+    const $scroller = $(mouseDownEvent.target as Element).parents('.slt-layers-list-scroller');
 
     interface LayerInfo {
       layer: Layer;
