@@ -102,7 +102,6 @@ export class LayerTimelineComponent extends DestroyableMixin()
   horizZoomObservable = this.horizZoomSubject.asObservable();
   private currentTime_ = 0;
 
-  private shouldSuppressClick = false;
   private shouldSuppressRebuildSnapTimes = false;
   private snapTimes: Map<string, number[]>;
 
@@ -506,12 +505,10 @@ export class LayerTimelineComponent extends DestroyableMixin()
       downY: mouseDownEvent.clientY,
       draggingCursor: action === MouseActions.Moving ? 'grabbing' : 'ew-resize',
       onBeginDragFn: () => {
-        this.shouldSuppressClick = true;
         this.shouldSuppressRebuildSnapTimes = true;
       },
       onDropFn: () =>
         setTimeout(() => {
-          this.shouldSuppressClick = false;
           this.shouldSuppressRebuildSnapTimes = false;
           this.rebuildSnapTimes();
         }, 0),
@@ -900,8 +897,6 @@ export class LayerTimelineComponent extends DestroyableMixin()
       downY: mouseDownEvent.clientY,
 
       onBeginDragFn: () => {
-        this.shouldSuppressClick = true;
-
         // Build up a list of all layers ordered by Y position.
         orderedLayerInfos = [];
         scrollerRect = $scroller.get(0).getBoundingClientRect();
@@ -1001,7 +996,6 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
       onDropFn: () => {
         this.updateDragIndicator({ isVisible: false });
-        setTimeout(() => (this.shouldSuppressClick = false));
 
         if (!targetLayerInfo) {
           return;

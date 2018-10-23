@@ -24,7 +24,7 @@ import { ThemeType } from 'app/modules/editor/store/theme/reducer';
 import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
-import { Observable ,  combineLatest } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { InspectedProperty } from './InspectedProperty';
@@ -43,7 +43,7 @@ export class PropertyInputComponent implements OnInit {
 
   // Map used to track user state that has been entered into textfields
   // but may not have been saved in the store.
-  private readonly enteredValueMap = new Map<string, any>();
+  private readonly enteredValueMap = new Map<string>();
 
   themeState$: Observable<{ prevThemeType: ThemeType; currThemeType: ThemeType }>;
 
