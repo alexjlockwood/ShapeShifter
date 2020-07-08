@@ -69,7 +69,7 @@ export function createSvgSprite(vectorLayer: VectorLayer, animation: Animation, 
   const totalWidth = width * numSteps + width;
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" ` +
-    `viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
+    `viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}" height="${height}">
 ${svgs.join('\n')}
 </svg>
 `;
