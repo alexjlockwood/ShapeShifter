@@ -79,7 +79,7 @@ const pluginsData = {
   convertTransform,
   removeEmptyAttrs,
   removeEmptyContainers,
-  mergePaths,
+  // mergePaths,
   // removeUnusedNS,
   // sortAttrs,
   removeTitle,
