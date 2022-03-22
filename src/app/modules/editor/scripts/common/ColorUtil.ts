@@ -59,7 +59,7 @@ export function svgToAndroidColor(color: string): string | undefined {
   }
   const colorInstance = tinycolor(color);
   const colorHex = colorInstance.toHex();
-  const alphaHex = colorInstance.toHex8().substr(6);
+  const alphaHex = colorInstance.toHex8().slice(6);
   return '#' + (alphaHex !== 'ff' ? alphaHex : '') + colorHex;
 }
 
