@@ -1,8 +1,11 @@
+@use 'sass:map';
+@use '../../styles/palette' as *;
+
 @mixin ss-layerlisttree-theme($theme) {
-  $foreground: map-get($theme, ss-foreground);
-  $background: map-get($theme, ss-background);
-  $accent: map-get($theme, accent);
-  $is-dark: map-get($theme, is-dark);
+  $foreground: map.get($theme, ss-foreground);
+  $background: map.get($theme, ss-background);
+  $accent: map.get($theme, accent);
+  $is-dark: map.get($theme, is-dark);
   .slt-layer {
     color: mat-color($foreground, secondary-text);
     &:focus {
@@ -12,7 +15,7 @@
       background-color: mat-color($accent);
       color: #fff;
       &,
-      & mat-icon {
+      & .ss-icon {
         color: #fff;
       }
     }
@@ -21,7 +24,7 @@
     }
   }
   .slt-properties {
-    background-color: mat-color($background, if($is-dark, base50, base));
+    background-color: mat-color($background, if(sass($is-dark): base50; else: base));
     box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
   }
   .slt-property {
@@ -30,13 +33,13 @@
       box-shadow: 0 -1px 0 mat-color($foreground, divider) inset;
     }
     button {
-      &[mat-icon-button] {
-        mat-icon {
+      &.MuiIconButton-root {
+        .ss-icon {
           color: mat-color($foreground, disabled-text);
         }
       }
-      &[mat-icon-button][disabled] {
-        mat-icon {
+      &.MuiIconButton-root.Mui-disabled {
+        .ss-icon {
           color: mat-color($foreground, disabled-text, 0.5);
         }
       }

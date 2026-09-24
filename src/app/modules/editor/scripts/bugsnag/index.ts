@@ -12,6 +12,7 @@ export function startBugsnag() {
     appVersion: version,
     releaseStage: environment.production ? 'production' : 'development',
     enabledReleaseStages: ['production'],
+    autoTrackSessions: false,
     plugins: [new BugsnagPluginReact()],
   });
 }

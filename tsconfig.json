@@ -22,15 +22,23 @@
     "noEmit": true
   },
   "include": [
+    "src/app/modules/editor/components/dialogs",
+    "src/app/modules/editor/components/icons",
+    "src/app/modules/editor/components/project",
+    "src/app/modules/editor/components/root",
+    "src/app/modules/editor/components/snackbar",
+    "src/app/modules/editor/components/splashscreen",
+    "src/app/modules/editor/context",
+    "src/app/modules/editor/hooks",
     "src/app/modules/editor/model",
     "src/app/modules/editor/scripts",
     "src/app/modules/editor/services",
     "src/app/modules/editor/store",
-    "src/app/modules/editor/components/dialogs/dialog.service.ts",
-    "src/app/modules/editor/components/project/project.service.ts",
+    "src/app/modules/editor/styles",
     "src/environments",
     "src/test",
     "src/typings",
+    "src/main.tsx",
     "src/vite-env.d.ts"
   ],
   "exclude": [

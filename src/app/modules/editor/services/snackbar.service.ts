@@ -28,14 +28,13 @@ export class SnackBarService {
     this.listeners.forEach(listener => listener());
   }
 
-  getSnackBar() {
-    return this.snackBar;
-  }
+  // These are arrow functions so that they can be passed to useSyncExternalStore.
+  readonly getSnackBar = () => this.snackBar;
 
-  subscribe(listener: () => void) {
+  readonly subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
     };
-  }
+  };
 }

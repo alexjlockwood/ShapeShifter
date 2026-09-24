@@ -1,4 +1,4 @@
-:host,
+.app-root,
 .app-container {
   position: absolute;
   left: 0;
@@ -8,11 +8,11 @@
   user-select: none;
 }
 
-app-canvas.start {
+.app-canvas.start {
   margin-right: 48px;
 }
 
-app-canvas.end {
+.app-canvas.end {
   margin-left: 48px;
 }
 
@@ -51,11 +51,6 @@ div.display-container {
   box-sizing: border-box;
   padding-bottom: 16px;
   user-select: none;
-}
-
-app-toolpanel {
-  // TODO: make this color theme dependent
-  background-color: white;
 }
 
 .cursor-default {
@@ -152,4 +147,13 @@ app-toolpanel {
 
 .cursor-rotate315 {
   cursor: url(/assets/cursor/rotate-top-left.png) 10 10, auto;
+}
+
+.app-error {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 18px;
 }

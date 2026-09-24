@@ -1,7 +1,10 @@
+@use 'sass:map';
+@use '../../styles/palette' as *;
+
 @mixin ss-layertimeline-theme($theme) {
-    $foreground: map-get($theme, ss-foreground);
-    $background: map-get($theme, ss-background);
-    $accent: map-get($theme, accent);
+    $foreground: map.get($theme, ss-foreground);
+    $background: map.get($theme, ss-background);
+    $accent: map.get($theme, accent);
     .studio-layer-timeline {
         $headerHeight: 40px;
         background-color: mat-color($background, base100);
@@ -17,13 +20,13 @@
                     }
                 }
                 button {
-                    &[mat-icon-button] {
-                        mat-icon {
+                    &.MuiIconButton-root {
+                        .ss-icon {
                             color: mat-color($foreground, secondary-text);
                         }
                     }
-                    &[mat-icon-button][disabled] {
-                        mat-icon {
+                    &.MuiIconButton-root.Mui-disabled {
+                        .ss-icon {
                             color: mat-color($foreground, disabled-text);
                         }
                     }

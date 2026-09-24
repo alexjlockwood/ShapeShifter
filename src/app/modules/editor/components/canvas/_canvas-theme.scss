@@ -1,5 +1,8 @@
+@use 'sass:map';
+@use '../../styles/palette' as *;
+
 @mixin ss-canvas-theme($theme) {
-    $background: map-get($theme, ss-background);
+    $background: map.get($theme, ss-background);
     .app-canvas-container {
         .canvas-container {
             canvas.rendering-canvas {

@@ -41,16 +41,15 @@ export class DialogService {
     });
   }
 
-  getRequest() {
-    return this.request;
-  }
+  // These are arrow functions so that they can be passed to useSyncExternalStore.
+  readonly getRequest = () => this.request;
 
-  subscribe(listener: () => void) {
+  readonly subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
     };
-  }
+  };
 
   private open(request: DialogRequest) {
     // Only one dialog is shown at a time, so dismiss the current one (if any).

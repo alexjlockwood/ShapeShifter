@@ -1,0 +1,46 @@
+// Layout classes that replace the @angular/flex-layout directives.
+.fx-row,
+.fx-column {
+    display: flex;
+    box-sizing: border-box;
+}
+
+.fx-row {
+    flex-direction: row;
+}
+
+.fx-column {
+    flex-direction: column;
+}
+
+// fxFlex
+.fx-flex {
+    flex: 1 1 0%;
+    box-sizing: border-box;
+}
+
+// fxFlex="1 1 auto"
+.fx-flex-auto {
+    flex: 1 1 auto;
+    box-sizing: border-box;
+}
+
+// fxFlex="none"
+.fx-flex-none {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+}
+
+// fxLayoutAlign="center center"
+.fx-align-center {
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+}
+
+// fxLayoutAlign="start center"
+.fx-align-start-center {
+    justify-content: flex-start;
+    align-items: center;
+    align-content: center;
+}

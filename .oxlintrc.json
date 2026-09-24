@@ -10,11 +10,16 @@
   },
   "ignorePatterns": [
     "dist/**",
-    "src/app/modules/editor/components/**",
-    "src/app/modules/editor/editor.module.ts",
+    "src/app/modules/editor/components/canvas/**",
+    "src/app/modules/editor/components/layertimeline/**",
+    "src/app/modules/editor/components/playback/**",
+    "src/app/modules/editor/components/propertyinput/**",
+    "src/app/modules/editor/components/scrollgroup/**",
+    "src/app/modules/editor/components/splitter/**",
+    "src/app/modules/editor/components/toolbar/**",
+    "src/app/modules/editor/components/toolpanel/**",
     "src/app/modules/editor/scripts/paper/**",
     "src/app/modules/editor/services/paper.service.ts",
-    "src/main.ts",
     "src/typings/paper/**"
   ],
   "rules": {
@@ -58,7 +63,9 @@
     "no-unused-vars": "off",
     "typescript/no-unsafe-declaration-merging": "off",
     "unicorn/no-new-array": "off",
-    "unicorn/no-useless-spread": "off"
+    "unicorn/no-useless-spread": "off",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error"
   },
   "overrides": [
     {
