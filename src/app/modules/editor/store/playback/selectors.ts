@@ -1,8 +1,7 @@
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
-import { getEditorState } from 'app/modules/editor/store/selectors';
+import { createSelector, getEditorState } from 'app/modules/editor/store/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
-import { createSelector } from 'reselect';
 
 export const getPlaybackState = createSelector(getEditorState, s => s.playback);
 export const getIsSlowMotion = createSelector(getPlaybackState, p => p.isSlowMotion);

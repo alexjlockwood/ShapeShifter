@@ -2,6 +2,7 @@ import { Action, ActionReducer } from 'app/modules/editor/store';
 import { ActionModeActionTypes } from 'app/modules/editor/store/actionmode/actions';
 import { PlaybackActionTypes } from 'app/modules/editor/store/playback/actions';
 import { EditorState } from 'app/modules/editor/store/reducer';
+import type { UnknownAction } from 'redux';
 import undoable, { StateWithHistory, UndoableOptions, excludeAction } from 'redux-undo';
 
 const UNDO_HISTORY_SIZE = 30;
@@ -37,6 +38,6 @@ export function metaReducer(reducer: EditorStateReducer): StateReducer {
     },
   } as UndoableOptions);
   return (state: StateWithHistoryAndTimestamp, action: Action) => {
-    return { ...undoableReducer(state, action), timestamp: Date.now() };
+    return { ...undoableReducer(state, action as UnknownAction), timestamp: Date.now() };
   };
 }

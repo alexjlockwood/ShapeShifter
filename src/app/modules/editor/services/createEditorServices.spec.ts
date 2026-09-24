@@ -1,0 +1,85 @@
+import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
+import { createEditorStore, type State, type Store } from 'app/modules/editor/store';
+import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
+
+import { createEditorServices, type EditorServices } from './createEditorServices';
+import { FileExportService } from './fileexport.service';
+
+const demos = import.meta.glob('/public/demos/*.shapeshifter', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+describe('createEditorServices', () => {
+  let store: Store<State>;
+  let services: EditorServices;
+  let downloads: Blob[];
+
+  beforeEach(() => {
+    store = createEditorStore();
+    services = createEditorServices(store);
+    downloads = [];
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((blob: Blob) => {
+      downloads.push(blob);
+      return 'blob:download';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    services.dispose();
+    vi.restoreAllMocks();
+  });
+
+  function loadDemo(json: string) {
+    const { vectorLayer, animation, hiddenLayerIds } = FileExportService.fromJSON(
+      JSON.parse(json),
+    );
+    const project = ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds);
+    store.dispatch(
+      new ResetWorkspace(project.vectorLayer, project.animation, project.hiddenLayerIds),
+    );
+    return project;
+  }
+
+  for (const [path, json] of Object.entries(demos)) {
+    describe(path, () => {
+      it('auto fixes each path animation', () => {
+        const { animation } = loadDemo(json);
+        const pathBlocks = animation.blocks.filter(b => b instanceof PathAnimationBlock);
+        for (const { id } of pathBlocks) {
+          services.layerTimelineService.selectBlock(id, true);
+          services.actionModeService.autoFix();
+          const block = services.layerTimelineService
+            .getAnimation()
+            .blocks.find(b => b.id === id) as PathAnimationBlock;
+          expect(block.fromValue.isMorphableWith(block.toValue)).toBe(true);
+        }
+      });
+
+      it('exports the project in every format', async () => {
+        const { vectorLayer, animation, hiddenLayerIds } = loadDemo(json);
+
+        services.fileExportService.exportJSON();
+        const exported = FileExportService.fromJSON(JSON.parse(await downloads[0].text()));
+        expect(exported.vectorLayer.toJSON()).toEqual(vectorLayer.toJSON());
+        expect(exported.animation.toJSON()).toEqual(animation.toJSON());
+        expect(exported.hiddenLayerIds).toEqual(hiddenLayerIds);
+
+        services.fileExportService.exportVectorDrawable();
+        services.fileExportService.exportAnimatedVectorDrawable();
+        expect(downloads.length).toBe(3);
+        expect(await downloads[1].text()).toMatch(/^<vector\s/);
+        expect(await downloads[2].text()).toMatch(/^<animated-vector\s/);
+
+        services.fileExportService.exportSvg();
+        services.fileExportService.exportSvgSpritesheet();
+        await vi.waitFor(() => expect(downloads.length).toBe(5));
+        expect(downloads.slice(3).map(d => d.size > 0)).toEqual([true, true]);
+      });
+    });
+  }
+});

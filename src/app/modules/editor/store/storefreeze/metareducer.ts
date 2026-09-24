@@ -1,5 +1,5 @@
 import { Action, ActionReducer } from 'app/modules/editor/store';
-import * as deepFreeze from 'deep-freeze-strict';
+import deepFreeze from 'deep-freeze-strict';
 
 /**
  * Meta reducer that prevents state from being mutated anywhere in the app.

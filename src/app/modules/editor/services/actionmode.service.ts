@@ -1,4 +1,3 @@
-import { Injectable } from '@angular/core';
 import {
   ActionMode,
   ActionSource,
@@ -29,15 +28,12 @@ import {
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
 import _ from 'lodash';
-import { OutputSelector } from 'reselect';
-import { first } from 'rxjs/operators';
 
 import { LayerTimelineService } from './layertimeline.service';
 
 /**
  * A simple service that provides an interface for making action mode changes.
  */
-@Injectable({ providedIn: 'root' })
 export class ActionModeService {
   constructor(
     private readonly store: Store<State>,
@@ -503,12 +499,7 @@ export class ActionModeService {
     return vl.findLayerById(this.getActivePathBlock().layerId) as MorphableLayer;
   }
 
-  private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
-    let obj: T;
-    this.store
-      .select(selector)
-      .pipe(first())
-      .subscribe(o => (obj = o));
-    return obj;
+  private queryStore<T>(selector: (state: State) => T) {
+    return selector(this.store.getState());
   }
 }

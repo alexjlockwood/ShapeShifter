@@ -1,14 +1,11 @@
-import { Injectable } from '@angular/core';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation } from 'app/modules/editor/model/timeline';
 import { AvdSerializer, SpriteSerializer, SvgSerializer } from 'app/modules/editor/scripts/export';
 import { State, Store } from 'app/modules/editor/store';
 import { getHiddenLayerIds, getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
-import * as $ from 'jquery';
-import * as JSZip from 'jszip';
+import JSZip from 'jszip';
 import _ from 'lodash';
-import { first } from 'rxjs/operators';
 
 // Store a version number just in case we ever change the export format...
 const IMPORT_EXPORT_VERSION = 1;
@@ -18,7 +15,6 @@ const EXPORTED_FPS = [30, 60];
 /**
  * A simple service that exports vectors and animations.
  */
-@Injectable({ providedIn: 'root' })
 export class FileExportService {
   static fromJSON(jsonObj: any) {
     const { layers, timeline } = jsonObj;
@@ -121,30 +117,15 @@ export class FileExportService {
   }
 
   private getVectorLayer() {
-    let vectorLayer: VectorLayer;
-    this.store
-      .select(getVectorLayer)
-      .pipe(first())
-      .subscribe(vl => (vectorLayer = vl));
-    return vectorLayer;
+    return getVectorLayer(this.store.getState());
   }
 
   private getAnimation() {
-    let animation: Animation;
-    this.store
-      .select(getAnimation)
-      .pipe(first())
-      .subscribe(anim => (animation = anim));
-    return animation;
+    return getAnimation(this.store.getState());
   }
 
   private getHiddenLayerIds() {
-    let hiddenLayerIds: ReadonlySet<string>;
-    this.store
-      .select(getHiddenLayerIds)
-      .pipe(first())
-      .subscribe(ids => (hiddenLayerIds = ids));
-    return hiddenLayerIds;
+    return getHiddenLayerIds(this.store.getState());
   }
 
   private getVectorLayerWithoutHiddenLayers() {
@@ -160,13 +141,15 @@ export class FileExportService {
 }
 
 function downloadFile(content: string | Blob, fileName: string) {
-  const anchor = $('<a>')
-    .hide()
-    .appendTo(document.body);
   const blob = content instanceof Blob ? content : new Blob([content], { type: 'octet/stream' });
   const url = window.URL.createObjectURL(blob);
-  anchor.attr({ href: url, download: fileName });
-  anchor.get(0).click();
+  const anchor = document.createElement('a');
+  anchor.style.display = 'none';
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
   window.URL.revokeObjectURL(url);
 }
 

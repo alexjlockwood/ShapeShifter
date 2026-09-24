@@ -11,10 +11,9 @@
   "ignorePatterns": [
     "dist/**",
     "src/app/modules/editor/components/**",
-    "src/app/modules/editor/services/**",
-    "src/app/modules/editor/store/**",
     "src/app/modules/editor/editor.module.ts",
     "src/app/modules/editor/scripts/paper/**",
+    "src/app/modules/editor/services/paper.service.ts",
     "src/main.ts",
     "src/typings/paper/**"
   ],
@@ -30,7 +29,7 @@
     "no-console": [
       "error",
       {
-        "allow": ["log", "warn", "error"]
+        "allow": ["log", "warn", "error", "group", "groupCollapsed", "groupEnd"]
       }
     ],
     "no-var": "error",

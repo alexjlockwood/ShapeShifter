@@ -24,10 +24,18 @@
   "include": [
     "src/app/modules/editor/model",
     "src/app/modules/editor/scripts",
+    "src/app/modules/editor/services",
+    "src/app/modules/editor/store",
+    "src/app/modules/editor/components/dialogs/dialog.service.ts",
+    "src/app/modules/editor/components/project/project.service.ts",
     "src/environments",
     "src/test",
     "src/typings",
     "src/vite-env.d.ts"
   ],
-  "exclude": ["src/app/modules/editor/scripts/paper", "src/typings/paper"]
+  "exclude": [
+    "src/app/modules/editor/scripts/paper",
+    "src/app/modules/editor/services/paper.service.ts",
+    "src/typings/paper"
+  ]
 }

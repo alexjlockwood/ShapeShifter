@@ -1,6 +1,6 @@
 import { ActionMode, ActionSource, SelectionType } from 'app/modules/editor/model/actionmode';
 import { LayerUtil, MorphableLayer, VectorLayer } from 'app/modules/editor/model/layers';
-import { Animation, PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { ActionModeUtil } from 'app/modules/editor/scripts/actionmode';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import {
@@ -9,13 +9,17 @@ import {
   getVectorLayer,
 } from 'app/modules/editor/store/layers/selectors';
 import { State } from 'app/modules/editor/store/reducer';
-import { createDeepEqualSelector, getEditorState } from 'app/modules/editor/store/selectors';
+import {
+  createDeepEqualSelector,
+  createSelector,
+  createStructuredSelector,
+  getEditorState,
+} from 'app/modules/editor/store/selectors';
 import {
   getAnimation,
   getSingleSelectedBlockLayerId,
   getSingleSelectedPathBlock,
 } from 'app/modules/editor/store/timeline/selectors';
-import { createSelector, createStructuredSelector } from 'reselect';
 
 const getActionModeState = createSelector(getEditorState, s => s.actionmode);
 export const getActionMode = createSelector(getActionModeState, s => s.mode);
@@ -76,11 +80,7 @@ function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
 const getVectorLayerFromValue = getVectorLayerValue(block => block.startTime);
 const getVectorLayerToValue = getVectorLayerValue(block => block.endTime);
 
-type CombinerFunc = (vl: VectorLayer, anim: Animation, block: PathAnimationBlock) => VectorLayer;
-
-function getMorphableLayerValue(
-  selector: Reselect.OutputSelector<State, VectorLayer, CombinerFunc>,
-) {
+function getMorphableLayerValue(selector: (state: State) => VectorLayer) {
   return createSelector([selector, getSingleSelectedBlockLayerId], (vl, blockLayerId) => {
     if (!vl || !blockLayerId) {
       return undefined;
@@ -92,9 +92,8 @@ function getMorphableLayerValue(
 const getMorphableLayerFromValue = getMorphableLayerValue(getVectorLayerFromValue);
 const getMorphableLayerToValue = getMorphableLayerValue(getVectorLayerToValue);
 
-const getPathsCompatibleResult = createSelector(
-  getSingleSelectedPathBlock,
-  block => (block ? ActionModeUtil.checkPathsCompatible(block) : undefined),
+const getPathsCompatibleResult = createSelector(getSingleSelectedPathBlock, block =>
+  block ? ActionModeUtil.checkPathsCompatible(block) : undefined,
 );
 
 function getHighlightedSubIdxWithError(actionSource: ActionSource) {

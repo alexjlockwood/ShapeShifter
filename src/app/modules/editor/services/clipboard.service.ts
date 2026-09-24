@@ -1,17 +1,16 @@
-import { Injectable } from '@angular/core';
 import { AnimationBlock } from 'app/modules/editor/model/timeline';
+import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
+import { on } from 'app/modules/editor/scripts/dom';
 import { SvgLoader, VectorDrawableLoader } from 'app/modules/editor/scripts/import';
-import * as $ from 'jquery';
 
 import { ActionModeService } from './actionmode.service';
 import { LayerTimelineService } from './layertimeline.service';
 import { PlaybackService } from './playback.service';
 
-declare const ga: Function;
-
-@Injectable({ providedIn: 'root' })
 export class ClipboardService {
+  private removeListeners: (() => void)[] = [];
+
   constructor(
     private readonly layerTimelineService: LayerTimelineService,
     private readonly playbackService: PlaybackService,
@@ -19,7 +18,10 @@ export class ClipboardService {
   ) {}
 
   init() {
-    const cutCopyHandlerFn = (event: JQuery.Event, shouldCut: boolean) => {
+    if (this.removeListeners.length) {
+      return;
+    }
+    const cutCopyHandlerFn = (event: ClipboardEvent, shouldCut: boolean) => {
       if (document.activeElement.matches('input')) {
         return true;
       }
@@ -28,8 +30,7 @@ export class ClipboardService {
       if (!blocks.length) {
         return false;
       }
-      const clipboardData = (event.originalEvent as ClipboardEvent).clipboardData;
-      clipboardData.setData('text/plain', JSON.stringify({ blocks }, undefined, 2));
+      event.clipboardData.setData('text/plain', JSON.stringify({ blocks }, undefined, 2));
 
       if (shouldCut) {
         this.layerTimelineService.deleteSelectedModels();
@@ -38,7 +39,7 @@ export class ClipboardService {
       return false;
     };
 
-    const pasteHandlerFn = (event: JQuery.Event) => {
+    const pasteHandlerFn = (event: ClipboardEvent) => {
       if (this.actionModeService.isActionMode()) {
         // TODO: make action mode automatically exit when layers/blocks are added in other parts of the app
         bugsnagClient.notify('Attempt to import files while in action mode', {
@@ -50,19 +51,18 @@ export class ClipboardService {
         return true;
       }
 
-      const clipboardData = (event.originalEvent as ClipboardEvent).clipboardData;
-      const str = clipboardData.getData('text');
+      const str = event.clipboardData.getData('text');
       const existingVl = this.layerTimelineService.getVectorLayer();
 
       if (str.match(/<\/svg>\s*$/)) {
         // Paste SVG.
-        ga('send', 'event', 'paste', 'svg');
+        trackEvent('paste', 'svg');
         SvgLoader.loadVectorLayerFromSvgString(str, name => !!existingVl.findLayerByName(name))
           .then(vl => this.layerTimelineService.importLayers([vl]))
           .catch(() => console.warn('failed to import SVG'));
       } else if (str.match(/<\/vector>\s*$/)) {
         // Paste VD.
-        ga('send', 'event', 'paste', 'vd');
+        trackEvent('paste', 'vd');
         const importedVl = VectorDrawableLoader.loadVectorLayerFromXmlString(
           str,
           name => !!existingVl.findLayerByName(name),
@@ -79,7 +79,7 @@ export class ClipboardService {
           return false;
         }
         if (parsed.blocks) {
-          ga('send', 'event', 'paste', 'json.blocks');
+          trackEvent('paste', 'json.blocks');
           this.layerTimelineService.addBlocks(
             parsed.blocks.map((b: any) => {
               const block = AnimationBlock.from(b);
@@ -106,7 +106,7 @@ export class ClipboardService {
             false,
           );
         } else {
-          ga('send', 'event', 'paste', 'json.unknown');
+          trackEvent('paste', 'json.unknown');
         }
         return false;
       }
@@ -114,20 +114,15 @@ export class ClipboardService {
       return false;
     };
 
-    const cutHandler = (event: JQuery.Event) => cutCopyHandlerFn(event, true);
-    const copyHandler = (event: JQuery.Event) => cutCopyHandlerFn(event, false);
-    const pasteHandler = pasteHandlerFn;
-
-    $(window)
-      .on('cut', cutHandler)
-      .on('copy', copyHandler)
-      .on('paste', pasteHandler);
+    this.removeListeners = [
+      on(window, 'cut', event => cutCopyHandlerFn(event, true)),
+      on(window, 'copy', event => cutCopyHandlerFn(event, false)),
+      on(window, 'paste', pasteHandlerFn),
+    ];
   }
 
   destroy() {
-    $(window)
-      .unbind('cut')
-      .unbind('copy')
-      .unbind('paste');
+    this.removeListeners.forEach(removeListener => removeListener());
+    this.removeListeners = [];
   }
 }

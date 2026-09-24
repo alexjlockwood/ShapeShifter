@@ -1,5 +1,4 @@
 import { environment } from 'environments/environment';
-import { storeLogger } from 'ngrx-store-logger';
 
 import * as fromActionMode from './actionmode/reducer';
 import * as metaBatchAction from './batch/metareducer';
@@ -45,9 +44,6 @@ const prodMetaReducers = [
 ];
 
 const devMetaReducers = [
-  // Meta reducer that logs the before/after state of the store
-  // as actions are performed in dev builds.
-  storeLogger({ collapsed: true }),
   // Meta reducer that freezes the state tree to ensure that
   // accidental mutations fail fast in dev builds.
   metaStoreFreeze.metaReducer,

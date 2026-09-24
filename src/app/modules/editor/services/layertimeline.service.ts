@@ -1,4 +1,3 @@
-import { Injectable } from '@angular/core';
 import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 import {
   ClipPathLayer,
@@ -37,15 +36,12 @@ import {
 } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import _ from 'lodash';
-import { OutputSelector } from 'reselect';
-import { first } from 'rxjs/operators';
 
 import * as StoreUtil from './StoreUtil';
 
 /**
  * A simple service that provides an interface for making layer/timeline changes.
  */
-@Injectable({ providedIn: 'root' })
 export class LayerTimelineService {
   constructor(private readonly store: Store<State>) {}
 
@@ -707,12 +703,7 @@ export class LayerTimelineService {
     return this.queryStore(isAnimationSelected);
   }
 
-  private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
-    let obj: T;
-    this.store
-      .select(selector)
-      .pipe(first())
-      .subscribe(o => (obj = o));
-    return obj;
+  private queryStore<T>(selector: (state: State) => T) {
+    return selector(this.store.getState());
   }
 }

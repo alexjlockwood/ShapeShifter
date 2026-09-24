@@ -14,7 +14,7 @@ import {
   getSingleSelectedPathBlock,
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
-import { createSelector, createStructuredSelector } from 'reselect';
+import { createSelector, createStructuredSelector } from 'app/modules/editor/store/selectors';
 
 export const getCanvasOverlayState = createStructuredSelector({
   hiddenLayerIds: getHiddenLayerIds,

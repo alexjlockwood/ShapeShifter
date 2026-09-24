@@ -1,2 +1,4 @@
-export { StoreModule, Store, Action, ActionReducer } from '@ngrx/store';
-export { State, reducers, metaReducers } from './reducer';
+export { Store } from './Store';
+export type { Action, ActionReducer } from './Store';
+export type { State } from './reducer';
+export { createEditorStore } from './createEditorStore';

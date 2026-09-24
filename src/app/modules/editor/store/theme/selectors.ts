@@ -1,5 +1,8 @@
-import { getEditorState } from 'app/modules/editor/store/selectors';
-import { createSelector, createStructuredSelector } from 'reselect';
+import {
+  createSelector,
+  createStructuredSelector,
+  getEditorState,
+} from 'app/modules/editor/store/selectors';
 
 const getThemeState = createSelector(getEditorState, s => s.theme);
 export const getThemeType = createStructuredSelector({
