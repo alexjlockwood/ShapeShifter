@@ -28,7 +28,7 @@ import {
 } from 'app/modules/editor/store/actionmode/selectors';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
 

@@ -12,7 +12,7 @@ import { Dragger } from 'app/modules/editor/scripts/dragger';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
 import { ShortcutService, ThemeService } from 'app/modules/editor/services';
 import * as $ from 'jquery';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { filter } from 'rxjs/operators';
 
 import { TIMELINE_ANIMATION_PADDING } from './constants';

@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 // Needleman-Wunsch scoring function constants.
 export const MATCH = 1;

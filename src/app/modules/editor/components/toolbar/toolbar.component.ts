@@ -13,7 +13,7 @@ import { State, Store } from 'app/modules/editor/store';
 import { getToolbarState } from 'app/modules/editor/store/actionmode/selectors';
 import { ThemeType } from 'app/modules/editor/store/theme/reducer';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 

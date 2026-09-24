@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation } from 'app/modules/editor/model/timeline';
-import { ModelUtil } from 'app/modules/editor/scripts/common';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { SvgLoader, VectorDrawableLoader } from 'app/modules/editor/scripts/import';
 import { State, Store } from 'app/modules/editor/store';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';

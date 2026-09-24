@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { Matrix } from './Matrix';
 import { Point } from './Point';

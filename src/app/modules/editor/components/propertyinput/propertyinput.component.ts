@@ -10,7 +10,8 @@ import {
 } from 'app/modules/editor/model/layers';
 import { FractionProperty, NameProperty, Option } from 'app/modules/editor/model/properties';
 import { Animation, PathAnimationBlock } from 'app/modules/editor/model/timeline';
-import { ColorUtil, ModelUtil } from 'app/modules/editor/scripts/common';
+import { ColorUtil } from 'app/modules/editor/scripts/common';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import {
   ActionModeService,
   LayerTimelineService,
@@ -23,7 +24,7 @@ import { getPropertyInputState } from 'app/modules/editor/store/common/selectors
 import { ThemeType } from 'app/modules/editor/store/theme/reducer';
 import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
 import * as $ from 'jquery';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 

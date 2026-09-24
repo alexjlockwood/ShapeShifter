@@ -1,7 +1,7 @@
 import { Path } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from './Layer';
 

@@ -19,7 +19,7 @@ import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { getZoomPanInfo } from 'app/modules/editor/store/paper/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Observable, combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 

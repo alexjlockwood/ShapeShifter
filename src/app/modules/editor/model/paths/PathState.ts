@@ -1,5 +1,5 @@
 import { MathUtil, Point, Rect } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import polylabel from 'polylabel';
 
 import { CommandState } from './CommandState';
@@ -273,7 +273,7 @@ export class PathState {
       const { x: p2x, y: p2y } = _.last(cmds).end;
       polygon.push(...[[p1x, p1y], [p2x, p2y]]);
     }
-    const pole = polylabel([polygon]);
+    const pole = polylabel([polygon as [number, number][]]);
     return { x: pole[0], y: pole[1] };
   }
 

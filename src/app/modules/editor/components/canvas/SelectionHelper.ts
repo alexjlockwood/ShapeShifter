@@ -3,7 +3,7 @@ import { LayerUtil } from 'app/modules/editor/model/layers';
 import { ProjectionOntoPath } from 'app/modules/editor/model/paths';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 

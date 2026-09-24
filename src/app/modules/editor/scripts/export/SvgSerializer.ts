@@ -7,7 +7,7 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import * as XmlSerializer from './XmlSerializer';
 

@@ -1,1 +1,2 @@
-export { ActionMode, ActionSource, Hover, HoverType, Selection, SelectionType } from './types';
+export { ActionMode, ActionSource, HoverType, SelectionType } from './types';
+export type { Hover, Selection } from './types';

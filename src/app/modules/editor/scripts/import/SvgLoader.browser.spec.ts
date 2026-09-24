@@ -3,43 +3,39 @@ import { PathLayer } from 'app/modules/editor/model/layers';
 import { SvgLoader } from '.';
 
 describe('SvgLoader', () => {
-  it(`can import simple SVG`, done => {
+  it(`can import simple SVG`, async () => {
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <path id="path" fill="#000" d="M 0 0 L 10 10 L 20 20 L 30 30"/>
 </svg>
 `;
-    SvgLoader.loadVectorLayerFromSvgString(svg, () => false).then(vl => {
-      expect(vl.width).toBe(24);
-      expect(vl.height).toBe(24);
-      expect(vl.children.length).toBe(1);
-      const pathLayer = vl.children[0] as PathLayer;
-      expect(pathLayer.name).toBe('path');
-      expect(pathLayer.fillColor).toBe('#000');
-      expect(pathLayer.pathData.getPathString()).toBe('M 0 0 L 10 10 L 20 20 L 30 30');
-      done();
-    });
+    const vl = await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    expect(vl.width).toBe(24);
+    expect(vl.height).toBe(24);
+    expect(vl.children.length).toBe(1);
+    const pathLayer = vl.children[0] as PathLayer;
+    expect(pathLayer.name).toBe('path');
+    expect(pathLayer.fillColor).toBe('#000');
+    expect(pathLayer.pathData.getPathString()).toBe('M 0 0 L 10 10 L 20 20 L 30 30');
   });
 
-  it(`can import simple SVG with viewBox translation`, done => {
+  it(`can import simple SVG with viewBox translation`, async () => {
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="5 -10 24 24">
   <path id="path" fill="#000" d="M 0 0 L 10 10 L 20 20 L 30 30"/>
 </svg>
 `;
-    SvgLoader.loadVectorLayerFromSvgString(svg, () => false).then(vl => {
-      expect(vl.width).toBe(24);
-      expect(vl.height).toBe(24);
-      expect(vl.children.length).toBe(1);
-      const pathLayer = vl.children[0] as PathLayer;
-      expect(pathLayer.name).toBe('path');
-      expect(pathLayer.fillColor).toBe('#000');
-      expect(pathLayer.pathData.getPathString()).toBe('M -5 10 L 5 20 L 15 30 L 25 40');
-      done();
-    });
+    const vl = await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    expect(vl.width).toBe(24);
+    expect(vl.height).toBe(24);
+    expect(vl.children.length).toBe(1);
+    const pathLayer = vl.children[0] as PathLayer;
+    expect(pathLayer.name).toBe('path');
+    expect(pathLayer.fillColor).toBe('#000');
+    expect(pathLayer.pathData.getPathString()).toBe('M -5 10 L 5 20 L 15 30 L 25 40');
   });
 
-  it(`can import simple SVG with group/path transformations`, done => {
+  it(`can import simple SVG with group/path transformations`, async () => {
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <path d="M 0 0 L 10 10 L 20 20 L 30 30" transform="scale(2, 2)"/>
@@ -52,22 +48,20 @@ describe('SvgLoader', () => {
   </g>
 </svg>
 `;
-    SvgLoader.loadVectorLayerFromSvgString(svg, () => false).then(vl => {
-      const paths = [
-        'M 0 0 L 20 20 L 40 40 L 60 60',
-        'M 0 0 L -20 -20 L -40 -40 L -60 -60',
-        'M 0 0 L -20 -20 L -40 -40 L -60 -60',
-        'M 10 20 L -10 0 L -30 -20 L -50 -40',
-        'M -20 -40 L -40 -60 L -60 -80 L -80 -100',
-        'M 20 40 L 40 60 L 60 80 L 80 100',
-      ];
-      const actualPath = (vl.children[0] as PathLayer).pathData.getPathString();
-      expect(actualPath).toBe(paths.join(' '));
-      done();
-    });
+    const vl = await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    const paths = [
+      'M 0 0 L 20 20 L 40 40 L 60 60',
+      'M 0 0 L -20 -20 L -40 -40 L -60 -60',
+      'M 0 0 L -20 -20 L -40 -40 L -60 -60',
+      'M 10 20 L -10 0 L -30 -20 L -50 -40',
+      'M -20 -40 L -40 -60 L -60 -80 L -80 -100',
+      'M 20 40 L 40 60 L 60 80 L 80 100',
+    ];
+    const actualPath = (vl.children[0] as PathLayer).pathData.getPathString();
+    expect(actualPath).toBe(paths.join(' '));
   });
 
-  it(`can import simple SVG with clip paths`, done => {
+  it(`can import simple SVG with clip paths`, async () => {
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
   <defs>
@@ -90,10 +84,8 @@ describe('SvgLoader', () => {
   </g>
 </svg>
 `;
-    SvgLoader.loadVectorLayerFromSvgString(svg, () => false).then(vl => {
-      // TODO: test stuff
-      expect(true).toBe(true);
-      done();
-    });
+    await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    // TODO: test stuff
+    expect(true).toBe(true);
   });
 });

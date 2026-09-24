@@ -8,11 +8,11 @@ import {
 } from '@angular/core';
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation, PathAnimationBlock } from 'app/modules/editor/model/timeline';
-import { ModelUtil } from 'app/modules/editor/scripts/common';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { ActionModeService } from 'app/modules/editor/services';
 import { State, Store } from 'app/modules/editor/store';
 import { getLayerListTreeState } from 'app/modules/editor/store/common/selectors';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 

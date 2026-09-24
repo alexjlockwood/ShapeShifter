@@ -20,7 +20,7 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
-import { ModelUtil } from 'app/modules/editor/scripts/common';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { Dragger } from 'app/modules/editor/scripts/dragger';
 import { IntervalTree } from 'app/modules/editor/scripts/intervals';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
@@ -43,7 +43,7 @@ import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { filter, first, map } from 'rxjs/operators';
 

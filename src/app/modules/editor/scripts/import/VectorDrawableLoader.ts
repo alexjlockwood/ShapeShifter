@@ -12,7 +12,7 @@ import {
 import { Path } from 'app/modules/editor/model/paths';
 import { NameProperty } from 'app/modules/editor/model/properties';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 // import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 // import { AnimationBlock } from 'app/modules/editor/model/timeline';

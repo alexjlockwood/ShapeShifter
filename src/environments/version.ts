@@ -1,5 +1,3 @@
 import { environment } from './environment';
 
-export const version = `${require('../../package.json').version}-${
-  environment.beta ? 'beta' : 'stable'
-}`;
+export const version = `${__APP_VERSION__}-${environment.beta ? 'beta' : 'stable'}`;

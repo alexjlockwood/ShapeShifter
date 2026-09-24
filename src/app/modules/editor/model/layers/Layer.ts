@@ -11,14 +11,13 @@ import {
   Property,
 } from 'app/modules/editor/model/properties';
 import { MathUtil, Matrix, Rect } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 type Type = 'vector' | 'group' | 'mask' | 'path';
 
 /**
  * Interface that is shared by all vector drawable layer models below.
  */
-@Property.register(new NameProperty('name'))
 export abstract class Layer implements Inspectable, Animatable {
   /**
    * A non-user-visible string that uniquely identifies this layer in the tree.
@@ -29,7 +28,7 @@ export abstract class Layer implements Inspectable, Animatable {
    * A user-visible string uniquely identifying this layer in the tree. This value
    * can be renamed, as long as it doesn't conflict with other layers in the tree.
    */
-  name: string;
+  declare name: string;
 
   /**
    * This layers children list of layers.
@@ -118,6 +117,7 @@ export abstract class Layer implements Inspectable, Animatable {
    */
   abstract deepClone(): Layer;
 }
+Property.register(new NameProperty('name'))(Layer);
 
 // TODO: share this interface with Layer?
 interface LayerArgs {
@@ -157,12 +157,6 @@ const VECTOR_DEFAULTS = {
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
  */
-@Property.register(
-  new ColorProperty('canvasColor'),
-  new NumberProperty('width', { isAnimatable: false, min: 1, isInteger: true }),
-  new NumberProperty('height', { isAnimatable: false, min: 1, isInteger: true }),
-  new FractionProperty('alpha', { isAnimatable: true }),
-)
 export class VectorLayer extends Layer {
   // @Override
   readonly type = 'vector';
@@ -212,6 +206,12 @@ export class VectorLayer extends Layer {
     return obj;
   }
 }
+Property.register(
+  new ColorProperty('canvasColor'),
+  new NumberProperty('width', { isAnimatable: false, min: 1, isInteger: true }),
+  new NumberProperty('height', { isAnimatable: false, min: 1, isInteger: true }),
+  new FractionProperty('alpha', { isAnimatable: true }),
+)(VectorLayer);
 
 interface VectorLayerArgs {
   canvasColor?: string;
@@ -236,15 +236,6 @@ const GROUP_DEFAULTS = {
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
  */
-@Property.register(
-  new NumberProperty('rotation', { isAnimatable: true }),
-  new NumberProperty('scaleX', { isAnimatable: true }),
-  new NumberProperty('scaleY', { isAnimatable: true }),
-  new NumberProperty('pivotX', { isAnimatable: true }),
-  new NumberProperty('pivotY', { isAnimatable: true }),
-  new NumberProperty('translateX', { isAnimatable: true }),
-  new NumberProperty('translateY', { isAnimatable: true }),
-)
 export class GroupLayer extends Layer {
   // @Override
   readonly type = 'group';
@@ -334,6 +325,15 @@ export class GroupLayer extends Layer {
     return obj;
   }
 }
+Property.register(
+  new NumberProperty('rotation', { isAnimatable: true }),
+  new NumberProperty('scaleX', { isAnimatable: true }),
+  new NumberProperty('scaleY', { isAnimatable: true }),
+  new NumberProperty('pivotX', { isAnimatable: true }),
+  new NumberProperty('pivotY', { isAnimatable: true }),
+  new NumberProperty('translateX', { isAnimatable: true }),
+  new NumberProperty('translateY', { isAnimatable: true }),
+)(GroupLayer);
 
 interface GroupLayerArgs {
   pivotX?: number;
@@ -351,7 +351,6 @@ export interface GroupConstructorArgs extends LayerConstructorArgs, GroupLayerAr
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.
  */
-@Property.register(new PathProperty('pathData', { isAnimatable: true }))
 export class ClipPathLayer extends Layer implements MorphableLayer {
   // @Override
   readonly type = 'mask';
@@ -392,6 +391,7 @@ export class ClipPathLayer extends Layer implements MorphableLayer {
     return true;
   }
 }
+Property.register(new PathProperty('pathData', { isAnimatable: true }))(ClipPathLayer);
 
 interface ClipPathLayerArgs {
   pathData: Path;
@@ -435,21 +435,6 @@ const PATH_DEFAULTS = {
 /**
  * Model object that mirrors the VectorDrawable's '<path>' element.
  */
-@Property.register(
-  new PathProperty('pathData', { isAnimatable: true }),
-  new ColorProperty('fillColor', { isAnimatable: true }),
-  new FractionProperty('fillAlpha', { isAnimatable: true }),
-  new ColorProperty('strokeColor', { isAnimatable: true }),
-  new FractionProperty('strokeAlpha', { isAnimatable: true }),
-  new NumberProperty('strokeWidth', { min: 0, isAnimatable: true }),
-  new EnumProperty('strokeLinecap', ENUM_LINECAP_OPTIONS),
-  new EnumProperty('strokeLinejoin', ENUM_LINEJOIN_OPTIONS),
-  new NumberProperty('strokeMiterLimit', { min: 1 }),
-  new FractionProperty('trimPathStart', { isAnimatable: true }),
-  new FractionProperty('trimPathEnd', { isAnimatable: true }),
-  new FractionProperty('trimPathOffset', { isAnimatable: true }),
-  new EnumProperty('fillType', ENUM_FILLTYPE_OPTIONS),
-) // TODO: need to fix enum properties so they store/return strings instead of options?
 export class PathLayer extends Layer implements MorphableLayer {
   // @Override
   readonly type = 'path';
@@ -520,6 +505,22 @@ export class PathLayer extends Layer implements MorphableLayer {
     return !!this.fillColor;
   }
 }
+// TODO: need to fix enum properties so they store/return strings instead of options?
+Property.register(
+  new PathProperty('pathData', { isAnimatable: true }),
+  new ColorProperty('fillColor', { isAnimatable: true }),
+  new FractionProperty('fillAlpha', { isAnimatable: true }),
+  new ColorProperty('strokeColor', { isAnimatable: true }),
+  new FractionProperty('strokeAlpha', { isAnimatable: true }),
+  new NumberProperty('strokeWidth', { min: 0, isAnimatable: true }),
+  new EnumProperty('strokeLinecap', ENUM_LINECAP_OPTIONS),
+  new EnumProperty('strokeLinejoin', ENUM_LINEJOIN_OPTIONS),
+  new NumberProperty('strokeMiterLimit', { min: 1 }),
+  new FractionProperty('trimPathStart', { isAnimatable: true }),
+  new FractionProperty('trimPathEnd', { isAnimatable: true }),
+  new FractionProperty('trimPathOffset', { isAnimatable: true }),
+  new EnumProperty('fillType', ENUM_FILLTYPE_OPTIONS),
+)(PathLayer);
 
 interface PathLayerArgs {
   pathData: Path;

@@ -35,7 +35,7 @@ import {
 import { getCanvasOverlayState } from 'app/modules/editor/store/common/selectors';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import * as $ from 'jquery';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { combineLatest ,  merge } from 'rxjs';
 import { map } from 'rxjs/operators';
 

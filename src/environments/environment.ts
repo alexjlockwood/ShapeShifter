@@ -1,5 +1,5 @@
 export const environment = {
-  production: false,
+  production: import.meta.env.PROD,
+  // The paper.js beta editor hasn't been migrated yet, so beta is always off.
   beta: false,
-  analyticsTrackingId: 'UA-92075411-1',
 };

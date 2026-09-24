@@ -3,7 +3,7 @@
 import { Command, Path, PathUtil } from 'app/modules/editor/model/paths';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 

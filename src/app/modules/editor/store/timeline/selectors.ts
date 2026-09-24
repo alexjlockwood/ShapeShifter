@@ -1,6 +1,6 @@
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { createDeepEqualSelector, getEditorState } from 'app/modules/editor/store/selectors';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { createSelector } from 'reselect';
 
 const getTimelineState = createSelector(getEditorState, s => s.timeline);

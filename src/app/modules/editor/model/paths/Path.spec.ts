@@ -1,5 +1,5 @@
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as PathUtil from 'test/PathUtil';
 
 import { Command } from './Command';

@@ -1,0 +1,75 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "import", "react", "vitest"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true,
+    "es2022": true
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "src/app/modules/editor/components/**",
+    "src/app/modules/editor/services/**",
+    "src/app/modules/editor/store/**",
+    "src/app/modules/editor/editor.module.ts",
+    "src/app/modules/editor/scripts/paper/**",
+    "src/main.ts",
+    "src/typings/paper/**"
+  ],
+  "rules": {
+    "curly": "error",
+    "eqeqeq": [
+      "error",
+      "always",
+      {
+        "null": "ignore"
+      }
+    ],
+    "no-console": [
+      "error",
+      {
+        "allow": ["log", "warn", "error"]
+      }
+    ],
+    "no-var": "error",
+    "prefer-const": "error",
+    "radix": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "jquery",
+            "message": "Use the DOM APIs (or the helpers in scripts/dom) instead."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["@angular/*", "@ngrx/*"],
+            "message": "The app no longer uses Angular or ngrx."
+          }
+        ]
+      }
+    ],
+    "no-control-regex": "off",
+    "no-extra-boolean-cast": "off",
+    "no-unused-expressions": "off",
+    "no-unused-vars": "off",
+    "typescript/no-unsafe-declaration-merging": "off",
+    "unicorn/no-new-array": "off",
+    "unicorn/no-useless-spread": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts"],
+      "rules": {
+        "vitest/expect-expect": "off",
+        "vitest/no-conditional-tests": "off",
+        "vitest/require-to-throw-message": "off",
+        "vitest/valid-title": "off"
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 export function CanvasLayoutMixin<T extends Constructor>(Base = class {} as T) {
   return class extends Base {

@@ -2,7 +2,7 @@ import { ActionMode } from 'app/modules/editor/model/actionmode';
 import { HitResult, ProjectionOntoPath } from 'app/modules/editor/model/paths';
 import { Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 

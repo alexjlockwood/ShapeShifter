@@ -1,8 +1,8 @@
 import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 import { Layer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
-import { ModelUtil } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
+import _ from 'lodash';
 
 const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
   activeBlock: undefined,

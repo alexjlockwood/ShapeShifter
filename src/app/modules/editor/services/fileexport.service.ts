@@ -7,7 +7,7 @@ import { getHiddenLayerIds, getVectorLayer } from 'app/modules/editor/store/laye
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import * as $ from 'jquery';
 import * as JSZip from 'jszip';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { first } from 'rxjs/operators';
 
 // Store a version number just in case we ever change the export format...

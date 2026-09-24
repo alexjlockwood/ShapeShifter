@@ -7,7 +7,7 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import * as XmlSerializer from './XmlSerializer';
 

@@ -15,7 +15,7 @@ import {
   getIsSlowMotion,
 } from 'app/modules/editor/store/playback/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
 

@@ -2,6 +2,7 @@
   "printWidth": 100,
   "singleQuote": true,
   "trailingComma": "all",
+  "arrowParens": "avoid",
   "overrides": [
     {
       "files": "*.scss",

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle id="circle" cx="20" cy="20" r="10" fill="#f00"/>
+  <ellipse id="ellipse" cx="60" cy="20" rx="15" ry="8" fill="#0f0"/>
+  <line id="line" x1="5" y1="50" x2="95" y2="50" stroke="#000" stroke-width="2"/>
+  <polyline id="polyline" points="5,60 20,80 35,60 50,80" fill="none" stroke="#00f"/>
+  <polygon id="polygon" points="60,60 90,60 75,90" fill="#ff0"/>
+</svg>

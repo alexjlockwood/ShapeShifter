@@ -1,5 +1,5 @@
 import { MathUtil } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { Config, Property } from './Property';
 

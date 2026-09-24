@@ -4,7 +4,7 @@ import {
   NumberProperty,
   Property,
 } from 'app/modules/editor/model/properties';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { AnimationBlock } from './AnimationBlock';
 
@@ -14,10 +14,6 @@ import { AnimationBlock } from './AnimationBlock';
  * each target a single layer in the vector. An animation is structured as an
  * AnimatedVectorDrawable, with the targets being AnimationBlocks.
  */
-@Property.register(
-  new NameProperty('name'),
-  new NumberProperty('duration', { min: 100, max: 60000 }),
-)
 export class Animation {
   constructor(obj = {} as ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
@@ -41,6 +37,10 @@ export class Animation {
     };
   }
 }
+Property.register(
+  new NameProperty('name'),
+  new NumberProperty('duration', { min: 100, max: 60000 }),
+)(Animation);
 
 interface AnimationArgs {
   id?: string;

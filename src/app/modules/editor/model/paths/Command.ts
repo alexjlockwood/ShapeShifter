@@ -1,5 +1,5 @@
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { SvgChar } from '.';
 

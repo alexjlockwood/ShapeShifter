@@ -9,7 +9,8 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
-import { MathUtil, Matrix, ModelUtil } from 'app/modules/editor/scripts/common';
+import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { Action, State, Store } from 'app/modules/editor/store';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import {
@@ -35,7 +36,7 @@ import {
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { OutputSelector } from 'reselect';
 import { first } from 'rxjs/operators';
 

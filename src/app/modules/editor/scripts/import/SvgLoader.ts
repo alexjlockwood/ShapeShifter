@@ -13,7 +13,7 @@ import { Path } from 'app/modules/editor/model/paths';
 import { NameProperty } from 'app/modules/editor/model/properties';
 import { ColorUtil, MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { optimizeSvg } from 'app/modules/editor/scripts/svgo';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 // TODO: trim ids/strings?
 // TODO: check for invalid enum values
@@ -38,7 +38,7 @@ export function loadVectorLayerFromSvgString(
 }
 
 // TODO: give better error message when user attempts to import SVG w/o a namespace declaration
-function loadVectorLayerFromSvgStringInternal(
+export function loadVectorLayerFromSvgStringInternal(
   svgString: string,
   doesNameExistFn: (name: string) => boolean,
 ): VectorLayer {
@@ -154,7 +154,7 @@ function loadVectorLayerFromSvgStringInternal(
       const fillType: FillType =
         'fillType' in attrMap ? fillRuleToFillTypeFn(attrMap['fillType']) : 'nonZero';
 
-      let pathData = new Path(path);
+      let pathData = parsePath(path, !!strokeColor && strokeLinecap !== 'butt');
       if (transforms.length) {
         pathData = new Path(
           pathData
@@ -247,9 +247,29 @@ function isSvgNode(node: Element): node is SVGSVGElement {
 }
 
 /**
+ * Parses a path, dropping any zero-length segments. svgo 1.x removed these for us, but svgo 4
+ * ties that option to also dropping closepath commands, which would leave closed subpaths open.
+ * Zero-length segments are kept when a round or square line cap would draw them as dots.
+ */
+function parsePath(pathStr: string, isDrawnAsDot = false) {
+  const path = new Path(pathStr);
+  if (isDrawnAsDot) {
+    return path;
+  }
+  const cmds = path.getCommands();
+  const nonZeroLengthCmds = cmds.filter(
+    cmd =>
+      cmd.type === 'M' ||
+      cmd.type === 'Z' ||
+      cmd.points.some(p => !MathUtil.arePointsEqual(p, cmd.start)),
+  );
+  return nonZeroLengthCmds.length === cmds.length ? path : new Path(nonZeroLengthCmds);
+}
+
+/**
  * Returns a list of transform matricies assigned to the specified node.
  */
-function getNodeTransforms(node: SVGGraphicsElement) {
+function getNodeTransforms(node: SVGGraphicsElement | SVGClipPathElement) {
   if (!node.transform) {
     return [];
   }
@@ -332,7 +352,7 @@ function buildPathInfosForClipPath(node: SVGClipPathElement) {
         pathInfos.push({
           refClipPathId,
           path: new Path(
-            new Path(pathStr)
+            parsePath(pathStr)
               .mutate()
               .transform(Matrix.flatten(transforms))
               .build()
