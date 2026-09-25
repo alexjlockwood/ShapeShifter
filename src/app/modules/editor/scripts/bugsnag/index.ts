@@ -14,7 +14,24 @@ export function startBugsnag() {
     enabledReleaseStages: ['production'],
     autoTrackSessions: false,
     plugins: [new BugsnagPluginReact()],
+    onError: event => isReportable(window.location, event.errors[0]?.errorMessage),
   });
+}
+
+/**
+ * Returns false for errors that don't come from Shape Shifter's own site, since forks and other
+ * apps that bundle a copy of it use the same API key. Also returns false for errors from
+ * cross-origin scripts, which browsers strip of any details.
+ */
+export function isReportable(
+  { protocol, hostname }: { readonly protocol: string; readonly hostname: string },
+  errorMessage: string | undefined,
+) {
+  return (
+    protocol === 'https:' &&
+    /(^|\.)shapeshifter\.design$/.test(hostname) &&
+    errorMessage !== 'Script error.'
+  );
 }
 
 /**

@@ -5,7 +5,7 @@ import './styles.scss';
 
 import Bugsnag from '@bugsnag/js';
 import { App } from 'app/modules/editor/components/root/App';
-import { startBugsnag } from 'app/modules/editor/scripts/bugsnag';
+import { bugsnagClient, startBugsnag } from 'app/modules/editor/scripts/bugsnag';
 import { createEditorServices } from 'app/modules/editor/services/createEditorServices';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { createEditorStore } from 'app/modules/editor/store';
@@ -36,6 +36,11 @@ registerSW({
   // New versions activate right away (see vite.config.ts), and the next page load gets them.
   // Reloading an open page could lose the user's work.
   onNeedReload() {},
+  // E.g. in private windows, or when the app is opened from a file. It still works, just not
+  // offline.
+  onRegisterError(error) {
+    bugsnagClient.leaveBreadcrumb('Service worker registration failed', { error: String(error) });
+  },
 });
 
 if (!environment.production) {
