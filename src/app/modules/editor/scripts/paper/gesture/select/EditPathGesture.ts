@@ -13,7 +13,10 @@ import * as paper from 'paper';
 export class EditPathGesture extends Gesture {
   private readonly pl = paper.project.activeLayer as PaperLayer;
 
-  constructor(private readonly ps: PaperService, private readonly editPathId: string) {
+  constructor(
+    private readonly ps: PaperService,
+    private readonly editPathId: string,
+  ) {
     super();
   }
 

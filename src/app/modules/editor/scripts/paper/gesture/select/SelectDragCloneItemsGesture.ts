@@ -27,7 +27,10 @@ export class SelectDragCloneItemsGesture extends Gesture {
   private initialVectorLayer: VectorLayer;
   private isDragging = false;
 
-  constructor(private readonly ps: PaperService, private readonly hitLayerId: string) {
+  constructor(
+    private readonly ps: PaperService,
+    private readonly hitLayerId: string,
+  ) {
     super();
   }
 

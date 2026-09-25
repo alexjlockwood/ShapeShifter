@@ -9,7 +9,10 @@ import * as paper from 'paper';
  * - The user is in default mode.
  */
 export class DeselectItemGesture extends Gesture {
-  constructor(private readonly ps: PaperService, private readonly deselectedItemId: string) {
+  constructor(
+    private readonly ps: PaperService,
+    private readonly deselectedItemId: string,
+  ) {
     super();
   }
 

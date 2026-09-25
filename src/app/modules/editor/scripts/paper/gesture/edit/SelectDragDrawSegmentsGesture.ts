@@ -207,16 +207,16 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // Then we have just added a segment to the path in onMouseDown()
       // and should thus move the segment's handles onMouseDrag().
       // Note that there will only ever be one selected segment in this case.
-      const selectedSegmentIndex = this.selectedSegmentIndexToInitialLocationMap.keys().next()
-        .value;
+      const selectedSegmentIndex = this.selectedSegmentIndexToInitialLocationMap
+        .keys()
+        .next().value;
       const selectedSegment = editPath.segments[selectedSegmentIndex];
       // TODO: dragging a handle belonging to an endpoint doesn't work! handle info is lost!
       // TODO: snap the dragged segment handle with the newly created segment
       if (event.modifiers.shift) {
         const index = selectedSegmentIndex;
-        const initialSelectedSegmentPosition = this.selectedSegmentIndexToInitialLocationMap.get(
-          index,
-        );
+        const initialSelectedSegmentPosition =
+          this.selectedSegmentIndexToInitialLocationMap.get(index);
         const delta = localSnappedDownPointDelta;
         selectedSegment.handleIn = initialSelectedSegmentPosition.subtract(delta);
         selectedSegment.handleOut = initialSelectedSegmentPosition.add(delta);

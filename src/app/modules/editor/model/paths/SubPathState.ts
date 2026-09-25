@@ -37,9 +37,7 @@ export class SubPathState {
   }
 
   revert() {
-    return this.mutate()
-      .revert()
-      .build();
+    return this.mutate().revert().build();
   }
 
   clone() {
@@ -107,12 +105,7 @@ export class SubPathStateMutator {
   }
 
   revert() {
-    this.commandStates = this.commandStates.map(cs =>
-      cs
-        .mutate()
-        .revert()
-        .build(),
-    );
+    this.commandStates = this.commandStates.map(cs => cs.mutate().revert().build());
     this.isReversed = false;
     this.shiftOffset = 0;
     this.splitSubPaths = [];

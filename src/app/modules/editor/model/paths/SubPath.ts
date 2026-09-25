@@ -114,12 +114,7 @@ export function createSubPaths(commands: ReadonlyArray<Command>) {
       continue;
     }
     if (!currentCmdList.length) {
-      currentCmdList.push(
-        lastSeenMove
-          .mutate()
-          .setId(_.uniqueId())
-          .build(),
-      );
+      currentCmdList.push(lastSeenMove.mutate().setId(_.uniqueId()).build());
     }
     currentCmdList.push(cmd);
     if (cmd.type === 'Z') {

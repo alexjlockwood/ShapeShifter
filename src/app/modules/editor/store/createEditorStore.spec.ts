@@ -109,9 +109,7 @@ describe('createEditorStore', () => {
   it('records a batch of actions as one undo step', () => {
     const store = createEditorStore();
     const numPastStates = store.getState().past.length;
-    store.dispatch(
-      new BatchAction(new SetSelectedLayers(new Set(['a'])), new SetCurrentTime(10)),
-    );
+    store.dispatch(new BatchAction(new SetSelectedLayers(new Set(['a'])), new SetCurrentTime(10)));
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
     expect(getCurrentTime(store.getState())).toBe(10);
     expect(store.getState().past.length).toBe(numPastStates + 1);

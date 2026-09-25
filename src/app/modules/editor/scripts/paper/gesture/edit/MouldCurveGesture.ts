@@ -143,5 +143,5 @@ type CubicHull = [
   paper.Point,
   paper.Point,
   paper.Point,
-  paper.Point
+  paper.Point,
 ];

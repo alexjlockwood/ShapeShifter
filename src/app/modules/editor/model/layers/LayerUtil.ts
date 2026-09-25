@@ -118,12 +118,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
         }
         if (layer.pathData) {
           layer.pathData = new Path(
-            layer.pathData.getCommands().map(cmd =>
-              cmd
-                .mutate()
-                .transform(transforms)
-                .build(),
-            ),
+            layer.pathData.getCommands().map(cmd => cmd.mutate().transform(transforms).build()),
           );
         }
         return;
@@ -219,7 +214,10 @@ export function replaceLayer(vl: VectorLayer, layerId: string, replacement: Laye
   return (function recurseFn(curr: Layer): Layer {
     return curr.id === layerId
       ? replacement
-      : setLayerChildren(curr, curr.children.map(child => recurseFn(child)));
+      : setLayerChildren(
+          curr,
+          curr.children.map(child => recurseFn(child)),
+        );
   })(vl) as VectorLayer;
 }
 

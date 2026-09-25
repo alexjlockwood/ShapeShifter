@@ -403,10 +403,7 @@ export class ActionModeService {
       if (path?.getCommand(subIdx, cmdIdx).isSplitSegment()) {
         updatePathAction = this.buildUpdatedActivePathBlockAnimationAction(
           source,
-          path
-            .mutate()
-            .deleteFilledSubPathSegment(subIdx, cmdIdx)
-            .build(),
+          path.mutate().deleteFilledSubPathSegment(subIdx, cmdIdx).build(),
         );
       }
     } else if (pointSelections.length) {

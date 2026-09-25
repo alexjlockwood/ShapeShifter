@@ -19,7 +19,9 @@ describe('ColorUtil', () => {
   describe('#parseAndroidColor', () => {
     TESTS_ANDROID_RAW.forEach(a => {
       it(`parsing '${a[0]}' yields ${JSON.stringify(a[1])}`, () => {
-        expect(ColorUtil.parseAndroidColor(a[0] as string)).toEqual(a[1] as tinycolor.ColorFormats.RGBA);
+        expect(ColorUtil.parseAndroidColor(a[0] as string)).toEqual(
+          a[1] as tinycolor.ColorFormats.RGBA,
+        );
       });
     });
   });
@@ -28,7 +30,9 @@ describe('ColorUtil', () => {
     TESTS_ANDROID_RAW.forEach(a => {
       if (a[1]) {
         it(`converting ${JSON.stringify(a[1])} to string yields '${a[2]}'`, () => {
-          expect(ColorUtil.toAndroidString(a[1] as tinycolor.ColorFormats.RGBA)).toEqual(a[2] as string);
+          expect(ColorUtil.toAndroidString(a[1] as tinycolor.ColorFormats.RGBA)).toEqual(
+            a[2] as string,
+          );
         });
       }
     });

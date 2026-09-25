@@ -21,7 +21,7 @@ export function arcToBeziers(arc: EllipticalArc) {
   rx = Math.abs(rx);
   ry = Math.abs(ry);
 
-  xAxisRotation = xAxisRotation * Math.PI / 180;
+  xAxisRotation = (xAxisRotation * Math.PI) / 180;
   const cosAngle = Math.cos(xAxisRotation);
   const sinAngle = Math.sin(xAxisRotation);
 
@@ -58,8 +58,8 @@ export function arcToBeziers(arc: EllipticalArc) {
   let sq = (rx_sq * ry_sq - rx_sq * y1_sq - ry_sq * x1_sq) / (rx_sq * y1_sq + ry_sq * x1_sq);
   sq = sq < 0 ? 0 : sq;
   const coef = sign * Math.sqrt(sq);
-  const cx1 = coef * (rx * y1 / ry);
-  const cy1 = coef * -(ry * x1 / rx);
+  const cx1 = coef * ((rx * y1) / ry);
+  const cy1 = coef * -((ry * x1) / rx);
 
   // Step 3 : Compute (cx, cy) from (cx1, cy1)
   const sx2 = (xf + xt) / 2;
@@ -78,13 +78,13 @@ export function arcToBeziers(arc: EllipticalArc) {
   n = Math.sqrt(ux * ux + uy * uy);
   p = ux; // (1 * ux) + (0 * uy)
   sign = uy < 0 ? -1 : 1;
-  let angleStart = sign * Math.acos(p / n) * 180 / Math.PI;
+  let angleStart = (sign * Math.acos(p / n) * 180) / Math.PI;
 
   // Compute the angle extent
   n = Math.sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy));
   p = ux * vx + uy * vy;
   sign = ux * vy - uy * vx < 0 ? -1 : 1;
-  let angleExtent = sign * Math.acos(p / n) * 180 / Math.PI;
+  let angleExtent = (sign * Math.acos(p / n) * 180) / Math.PI;
   if (!sweepFlag && angleExtent > 0) {
     angleExtent -= 360;
   } else if (sweepFlag && angleExtent < 0) {
@@ -121,28 +121,29 @@ export function arcToBeziers(arc: EllipticalArc) {
 }
 
 /*
-* Generate the control points and endpoints for a set of bezier curves that match
-* a circular arc starting from angle 'angleStart' and sweep the angle 'angleExtent'.
-* The circle the arc follows will be centred on (0,0) and have a radius of 1.0.
-*
-* Each bezier can cover no more than 90 degrees, so the arc will be divided evenly
-* into a maximum of four curves.
-*
-* The resulting control points will later be scaled and rotated to match the final
-* arc required.
-*
-* The returned array has the format [x0,y0, x1,y1,...].
-*/
+ * Generate the control points and endpoints for a set of bezier curves that match
+ * a circular arc starting from angle 'angleStart' and sweep the angle 'angleExtent'.
+ * The circle the arc follows will be centred on (0,0) and have a radius of 1.0.
+ *
+ * Each bezier can cover no more than 90 degrees, so the arc will be divided evenly
+ * into a maximum of four curves.
+ *
+ * The resulting control points will later be scaled and rotated to match the final
+ * arc required.
+ *
+ * The returned array has the format [x0,y0, x1,y1,...].
+ */
 function unitCircleArcToBeziers(angleStart: number, angleExtent: number): number[] {
   const numSegments = Math.ceil(Math.abs(angleExtent) / 90);
 
-  angleStart = angleStart * Math.PI / 180;
-  angleExtent = angleExtent * Math.PI / 180;
+  angleStart = (angleStart * Math.PI) / 180;
+  angleExtent = (angleExtent * Math.PI) / 180;
 
   const angleIncrement = angleExtent / numSegments;
 
   // The length of each control point vector is given by the following formula.
-  const controlLength = 4 / 3 * Math.sin(angleIncrement / 2) / (1 + Math.cos(angleIncrement / 2));
+  const controlLength =
+    ((4 / 3) * Math.sin(angleIncrement / 2)) / (1 + Math.cos(angleIncrement / 2));
 
   const coords = new Array(numSegments * 8);
   let pos = 0;

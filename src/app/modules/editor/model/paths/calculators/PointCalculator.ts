@@ -8,7 +8,11 @@ export class PointCalculator implements Calculator {
   private readonly svgChar: SvgChar;
   private readonly point: Point;
 
-  constructor(private readonly id: string, svgChar: SvgChar, point: Point) {
+  constructor(
+    private readonly id: string,
+    svgChar: SvgChar,
+    point: Point,
+  ) {
     this.svgChar = svgChar;
     this.point = point;
   }

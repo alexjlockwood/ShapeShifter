@@ -99,14 +99,10 @@ export class CommandState {
    * Slices the command state object into two parts. Useful for subpath splitting.
    */
   slice(splitIdx: number) {
-    const left = this.mutate()
-      .sliceLeft(splitIdx)
-      .build();
+    const left = this.mutate().sliceLeft(splitIdx).build();
     let right: CommandState | undefined;
     if (this.isSplitAtIndex(splitIdx)) {
-      right = this.mutate()
-        .sliceRight(splitIdx)
-        .build();
+      right = this.mutate().sliceRight(splitIdx).build();
     }
     return { left, right };
   }
@@ -226,10 +222,7 @@ class CommandStateMutator {
    * Reverses the information stored by this command state object.
    */
   reverse() {
-    this.backingCommand = this.backingCommand
-      .mutate()
-      .reverse()
-      .build();
+    this.backingCommand = this.backingCommand.mutate().reverse().build();
     this.calculator = newCalculator(this.backingCommand);
     const lastMutation = this.lastMutation();
     this.mutations = this.mutations
@@ -360,12 +353,7 @@ class CommandStateMutator {
    */
   transform(transform: Matrix) {
     this.matrix = transform.dot(this.matrix);
-    this.calculator = newCalculator(
-      this.backingCommand
-        .mutate()
-        .transform(this.matrix)
-        .build(),
-    );
+    this.calculator = newCalculator(this.backingCommand.mutate().transform(this.matrix).build());
     return this;
   }
 

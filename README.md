@@ -5,7 +5,7 @@
 
 **[Go to live version](https://shapeshifter.design)** or **[ask a question on Slack](https://join.slack.com/t/shapeshifterdesign/shared_invite/enQtNDAwODY5NjI2NTE4LTAyZTE3ZmYxNGUxMmViY2UwNDJjZWYyYzhhNTQzYmVkYmVmNTA0NmEyY2MwMmFiOTllODI5YzZmNDQwOTE1MGU)**
 
------
+---
 
 [Shape Shifter](https://alexjlockwood.github.io/ShapeShifter/) is a web-app that simplifies
 the creation of [icon animations][adp-icon-animations] for Android, iOS, and the web.
@@ -52,41 +52,41 @@ Here are some example icon animations created by Shape Shifter:
 
 Writing high-quality [path morphing animations][adp-path-morphing]
 is a tedious and time-consuming task. In order to morph one shape into another,
-the SVG paths describing the two must be *compatible* with each other&mdash;that is,
+the SVG paths describing the two must be _compatible_ with each other&mdash;that is,
 they need to have the same number and type of drawing commands. This is problematic because:
 
-* Design tools&mdash;such as [Sketch][sketch] and [Illustrator][illustrator]&mdash;do not easily
+- Design tools&mdash;such as [Sketch][sketch] and [Illustrator][illustrator]&mdash;do not easily
   expose the order of points in a shape, making it difficult to change their order. As a result,
   engineers will often have to spend time tweaking the raw SVG path strings given to them by
   designers before they can be morphed, which can take a significant amount of time.
-* Design tools often map to shape primitives not supported in certain platforms
+- Design tools often map to shape primitives not supported in certain platforms
   (e.g. circles need to be represented by a sequence of curves and/or arcs,
   not simply by their center point and radius).
-* Design tools cannot place multiple path points in the same location, a technique that
+- Design tools cannot place multiple path points in the same location, a technique that
   is often necessary when making two shapes compatible with each other.
-* Design tools provide no easy way to visualize the in-between states of the desired
+- Design tools provide no easy way to visualize the in-between states of the desired
   path morph animation.
 
 ## Features
 
 To address these problems, Shape Shifter provides the following features:
 
-* *The ability to add/remove points to each path without altering their original appearance.*
+- _The ability to add/remove points to each path without altering their original appearance._
   The added points can be modified by dragging them to different positions along the path,
   and they can be later deleted using the keyboard as well.
-* *The ability to reverse/shift the relative positions of each path's points.* While reordering points
+- _The ability to reverse/shift the relative positions of each path's points._ While reordering points
   won't affect whether or not two paths are compatible, it often plays a huge role in determining the
   appearance of the resulting animation.
-* *Shape Shifter automatically converts incompatible pairs of SVG commands into a compatible
-  format.* There's no longer any need to convert `L`s into `Q`s and `A`s into `C`s by hand in
+- _Shape Shifter automatically converts incompatible pairs of SVG commands into a compatible
+  format._ There's no longer any need to convert `L`s into `Q`s and `A`s into `C`s by hand in
   order to make your paths compatible&mdash;Shape Shifter does this for you behind-the-scenes!
-* *Shape Shifter provides a useful utility called 'auto fix', which takes two incompatible
-  paths and attempts to make them compatible in an optimal way.* Depending on the complexity
+- _Shape Shifter provides a useful utility called 'auto fix', which takes two incompatible
+  paths and attempts to make them compatible in an optimal way._ Depending on the complexity
   of the paths, auto fix may or may not generate a satisfying final result, so further
   modification may be necessary in order to achieve the animation you're looking for.
-* *The ability to export the results to SVG spritesheets, CSS keyframes, and
+- _The ability to export the results to SVG spritesheets, CSS keyframes, and
   `AnimatedVectorDrawable` format for use on
-  the web and in Android applications.* I'm open to adding support for other export formats
+  the web and in Android applications._ I'm open to adding support for other export formats
   as well, so feel free to file a [feature request][report-feature-request]!
 
 ## How does it work?
@@ -118,34 +118,34 @@ curious how I can make this web app more useful for iOS and web developers.**
 
 If you want to contribute, you can build and serve the web app locally as follows:
 
-  1. First install [`Node.js`](https://nodejs.org/) 22.12 or later (see `.nvmrc`), which comes
-     with [`npm`](https://www.npmjs.com/).
+1. First install [`Node.js`](https://nodejs.org/) 22.12 or later (see `.nvmrc`), which comes
+   with [`npm`](https://www.npmjs.com/).
 
-  2. Clone the repository and in the root directory, run:
+2. Clone the repository and in the root directory, run:
 
-     ```
-     npm install
-     ```
+   ```
+   npm install
+   ```
 
-  3. To build and serve the web app locally, run:
+3. To build and serve the web app locally, run:
 
-     ```
-     npm start
-     ```
+   ```
+   npm start
+   ```
 
-  4. To run the tests, run:
+4. To run the tests, run:
 
-     ```
-     npx playwright install chromium firefox webkit  # Only needed once.
-     npm run typecheck
-     npm run lint
-     npm run test:run
-     npm run e2e
-     ```
+   ```
+   npx playwright install chromium firefox webkit  # Only needed once.
+   npm run typecheck
+   npm run lint
+   npm run test:run
+   npm run e2e
+   ```
 
-     The end-to-end tests run in Chromium, Firefox, and WebKit. To run them in one browser, pass
-     its project name, e.g. `npm run e2e -- --project=chromium` (or `chromium-preview` for the
-     tests that need a production build).
+   The end-to-end tests run in Chromium, Firefox, and WebKit. To run them in one browser, pass
+   its project name, e.g. `npm run e2e -- --project=chromium` (or `chromium-preview` for the
+   tests that need a production build).
 
 The app is built with [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/),
 and [Vite](https://vite.dev/).
@@ -155,19 +155,19 @@ and [Vite](https://vite.dev/).
 Huge thanks to [Nick Butcher][nick-butcher-twitter], [Roman Nurik][roman-nurik-twitter],
 and [Steph Yim][steph-yim-website] for all of their help during the early stages of this project!
 
-  [report-feature-request]: https://github.com/alexjlockwood/ShapeShifter/issues/new
-  [adp-icon-animations]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html
-  [adp-path-morphing]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html#morphing-paths
-  [sketch]: https://www.sketchapp.com/
-  [illustrator]: http://www.adobe.com/products/illustrator.html
-  [Needleman-Wunsch]: https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm
-  [primer-on-bezier-curves]: https://pomax.github.io/bezierinfo
-  [nick-butcher-twitter]: https://twitter.com/crafty
-  [roman-nurik-twitter]: https://twitter.com/romannurik
-  [steph-yim-website]: http://stephanieyim.com
-  [ci-badge]: https://github.com/alexjlockwood/ShapeShifter/actions/workflows/ci.yml/badge.svg?branch=master
-  [ci-badge-url]: https://github.com/alexjlockwood/ShapeShifter/actions/workflows/ci.yml
-  [david-badge]: https://david-dm.org/alexjlockwood/ShapeShifter.svg
-  [david-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter
-  [david-dev-badge]: https://david-dm.org/alexjlockwood/ShapeShifter/dev-status.svg
-  [david-dev-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter?type=dev
+[report-feature-request]: https://github.com/alexjlockwood/ShapeShifter/issues/new
+[adp-icon-animations]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html
+[adp-path-morphing]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html#morphing-paths
+[sketch]: https://www.sketchapp.com/
+[illustrator]: http://www.adobe.com/products/illustrator.html
+[Needleman-Wunsch]: https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm
+[primer-on-bezier-curves]: https://pomax.github.io/bezierinfo
+[nick-butcher-twitter]: https://twitter.com/crafty
+[roman-nurik-twitter]: https://twitter.com/romannurik
+[steph-yim-website]: http://stephanieyim.com
+[ci-badge]: https://github.com/alexjlockwood/ShapeShifter/actions/workflows/ci.yml/badge.svg?branch=master
+[ci-badge-url]: https://github.com/alexjlockwood/ShapeShifter/actions/workflows/ci.yml
+[david-badge]: https://david-dm.org/alexjlockwood/ShapeShifter.svg
+[david-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter
+[david-dev-badge]: https://david-dm.org/alexjlockwood/ShapeShifter/dev-status.svg
+[david-dev-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter?type=dev

@@ -505,7 +505,7 @@ const PIVOT_TYPES: Readonly<
     'bottomRight',
     'bottomCenter',
     'bottomLeft',
-    'leftCenter'
+    'leftCenter',
   ]
 > = [
   'topLeft',
