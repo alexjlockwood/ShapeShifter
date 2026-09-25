@@ -24,6 +24,8 @@ test('draws and plays a demo', async ({ page }) => {
   await page.goto('/?project=demos/playtopause.shapeshifter');
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
 
+  // The demo is only 300ms long, so without repeating it can finish before the checks below.
+  await page.getByRole('button', { name: 'Repeat (R)' }).click();
   await page.getByRole('button', { name: 'Play (Spacebar)' }).click();
   await expect.poll(() => getCurrentTime(page)).toBeGreaterThan(0);
   // The play button turns into a pause button while the animation plays.
