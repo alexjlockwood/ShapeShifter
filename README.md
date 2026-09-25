@@ -137,6 +137,7 @@ If you want to contribute, you can build and serve the web app locally as follow
 
    ```
    npx playwright install chromium firefox webkit  # Only needed once.
+   npm run format:check  # Or `npm run format` to fix it.
    npm run typecheck
    npm run lint
    npm run test:run

@@ -20,6 +20,7 @@
     "test:run": "vitest run",
     "e2e": "playwright test",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "deploy": "./scripts/deploy-stable.sh"
   },
   "dependencies": {
