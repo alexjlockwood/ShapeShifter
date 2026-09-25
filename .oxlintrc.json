@@ -10,9 +10,8 @@
   },
   "ignorePatterns": [
     "dist/**",
-    "src/app/modules/editor/components/canvas/**",
+    "src/app/modules/editor/components/canvas/canvaspaper.directive.ts",
     "src/app/modules/editor/components/layertimeline/**",
-    "src/app/modules/editor/components/playback/**",
     "src/app/modules/editor/components/propertyinput/**",
     "src/app/modules/editor/components/scrollgroup/**",
     "src/app/modules/editor/components/splitter/**",

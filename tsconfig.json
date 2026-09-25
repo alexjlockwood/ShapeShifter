@@ -22,8 +22,10 @@
     "noEmit": true
   },
   "include": [
+    "src/app/modules/editor/components/canvas",
     "src/app/modules/editor/components/dialogs",
     "src/app/modules/editor/components/icons",
+    "src/app/modules/editor/components/playback",
     "src/app/modules/editor/components/project",
     "src/app/modules/editor/components/root",
     "src/app/modules/editor/components/snackbar",
@@ -44,6 +46,7 @@
   "exclude": [
     "src/app/modules/editor/scripts/paper",
     "src/app/modules/editor/services/paper.service.ts",
-    "src/typings/paper"
+    "src/typings/paper",
+    "src/app/modules/editor/components/canvas/canvaspaper.directive.ts"
   ]
 }

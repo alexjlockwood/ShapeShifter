@@ -1,6 +1,10 @@
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
-import { createSelector, getEditorState } from 'app/modules/editor/store/selectors';
+import {
+  createSelector,
+  createStructuredSelector,
+  getEditorState,
+} from 'app/modules/editor/store/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 
 export const getPlaybackState = createSelector(getEditorState, s => s.playback);
@@ -21,3 +25,10 @@ export const getAnimatedVectorLayer = createSelector(
     return { vl, currentTime };
   },
 );
+
+// Excludes the current time, which changes on every frame of playback.
+export const getPlaybackControlsState = createStructuredSelector({
+  isSlowMotion: getIsSlowMotion,
+  isPlaying: getIsPlaying,
+  isRepeating: getIsRepeating,
+});

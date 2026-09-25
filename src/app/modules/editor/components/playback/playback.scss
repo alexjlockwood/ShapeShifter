@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 .playback {
     button {
         margin: 0px 3px;
@@ -24,7 +26,7 @@
             background-position: 0% 0%;
             background-image: url(/assets/icons/pauseplay-white.png);
             transform: translateX(($numAnimationFrames - 1) * -24px);
-            animation-duration: (1s * $numAnimationFrames / 60);
+            animation-duration: math.div(1s * $numAnimationFrames, 60);
             animation-timing-function: steps($numAnimationFrames - 1);
         }
         &.can-animate::after {

@@ -3,7 +3,7 @@ import { ProjectionOntoPath } from 'app/modules/editor/model/paths';
 import { Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
 
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import type { CanvasOverlay } from './CanvasOverlay';
 
 interface ProjInfo {
   readonly proj: ProjectionOntoPath;
@@ -22,7 +22,7 @@ export class SegmentSplitter {
   private currProjInfo: ProjInfo;
   private lastKnownMouseLocation: Point;
 
-  constructor(private readonly component: CanvasOverlayDirective) {
+  constructor(private readonly component: CanvasOverlay) {
     this.actionSource = component.actionSource;
     this.actionModeService = component.actionModeService;
   }

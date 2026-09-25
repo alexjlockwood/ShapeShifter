@@ -1,7 +1,5 @@
-import { Directive, ElementRef, Input } from '@angular/core';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { ThemeService } from 'app/modules/editor/services';
-import * as $ from 'jquery';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 
@@ -12,19 +10,19 @@ const GRID_INTERVALS_PX: ReadonlyArray<number> = [1, 2, 4, 8, 16, 24, 48, 100, 1
 const LABEL_OFFSET = 12;
 const TICK_SIZE = 6;
 
-@Directive({ selector: '[appCanvasRuler]' })
-export class CanvasRulerDirective extends CanvasLayoutMixin() {
-  @Input()
-  orientation: Orientation;
-
-  private readonly $canvas: JQuery<HTMLCanvasElement>;
-
+/**
+ * Draws a ruler along one of the canvas' edges.
+ */
+export class CanvasRuler extends CanvasLayoutMixin() {
   // The current mouse point in viewport coordinates.
   private vpMousePoint: Point;
 
-  constructor(elementRef: ElementRef, private readonly themeService: ThemeService) {
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    private readonly orientation: Orientation,
+    private readonly themeService: ThemeService,
+  ) {
     super();
-    this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
   }
 
   // @Override
@@ -64,10 +62,12 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
     const height = isHorizontal
       ? RULER_SIZE
       : viewport.h * cssScale * zoom + EXTRA_RULER_PADDING * 2;
-    this.$canvas.css({ width, height });
-    this.$canvas.attr({ width: width * devicePixelRatio, height: height * devicePixelRatio });
+    this.canvas.style.width = `${width}px`;
+    this.canvas.style.height = `${height}px`;
+    this.canvas.setAttribute('width', `${width * devicePixelRatio}`);
+    this.canvas.setAttribute('height', `${height * devicePixelRatio}`);
 
-    const ctx = this.$canvas.get(0).getContext('2d');
+    const ctx = this.canvas.getContext('2d');
     ctx.scale(devicePixelRatio, devicePixelRatio);
     const { tx, ty } = this.getTranslation();
     ctx.translate(

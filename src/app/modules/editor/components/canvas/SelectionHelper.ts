@@ -5,7 +5,7 @@ import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
 import _ from 'lodash';
 
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import type { CanvasOverlay } from './CanvasOverlay';
 
 // TODO: use the 'Dragger' to drag points to different locations
 // TODO: clean up this class' messy communication w/ the overlay directive
@@ -26,7 +26,7 @@ export class SelectionHelper {
   private lastKnownMouseLocation: Point;
   private initialMouseDown: Point;
 
-  constructor(private readonly component: CanvasOverlayDirective) {
+  constructor(private readonly component: CanvasOverlay) {
     this.actionSource = component.actionSource;
     this.actionModeService = component.actionModeService;
   }

@@ -1,1 +1,1 @@
-export { PlaybackComponent } from './playback.component';
+export { Playback } from './Playback';

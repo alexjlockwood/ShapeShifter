@@ -1,4 +1,3 @@
-import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import {
   ActionMode,
   ActionSource,
@@ -22,7 +21,6 @@ import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
 import {
   ActionModeService,
   LayerTimelineService,
-  PlaybackService,
   ShortcutService,
 } from 'app/modules/editor/services';
 import { State, Store } from 'app/modules/editor/store';
@@ -33,10 +31,9 @@ import {
   getActionModeStartState,
 } from 'app/modules/editor/store/actionmode/selectors';
 import { getCanvasOverlayState } from 'app/modules/editor/store/common/selectors';
-import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
-import * as $ from 'jquery';
+import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
 import _ from 'lodash';
-import { combineLatest ,  merge } from 'rxjs';
+import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
@@ -80,15 +77,9 @@ const ERROR_COLOR = '#F44336';
 type Context = CanvasRenderingContext2D;
 
 /**
- * A directive that draws overlay selections and other content on top
- * of the currently active vector layer.
+ * Draws overlay selections and other content on top of the currently active vector layer.
  */
-@Directive({ selector: '[appCanvasOverlay]' })
-export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin())
-  implements AfterViewInit {
-  @Input() actionSource: ActionSource;
-
-  private readonly $canvas: JQuery<HTMLCanvasElement>;
+export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
   vectorLayer: VectorLayer;
   // Normal mode variables.
   private hiddenLayerIds: ReadonlySet<string> = new Set<string>();
@@ -111,28 +102,23 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
   private shapeSplitter: ShapeSplitter | undefined;
 
   constructor(
-    elementRef: ElementRef,
+    private readonly canvas: HTMLCanvasElement,
+    readonly actionSource: ActionSource,
     readonly store: Store<State>,
     readonly actionModeService: ActionModeService,
-    private readonly playbackService: PlaybackService,
     private readonly layerTimelineService: LayerTimelineService,
   ) {
     super();
-    this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
   }
 
-  ngAfterViewInit() {
+  init() {
     if (this.actionSource === ActionSource.Animated) {
       // Animated canvas specific setup.
       this.registerSubscription(
-        combineLatest(
-          // TODO: don't think this is necessary anymore? only need to query playback service now?
-          merge(
-            this.playbackService.asObservable().pipe(map(event => event.vl)),
-            this.store.select(getVectorLayer),
-          ),
+        combineLatest([
+          this.store.select(getAnimatedVectorLayer).pipe(map(event => event.vl)),
           this.store.select(getCanvasOverlayState),
-        ).subscribe(
+        ]).subscribe(
           ([
             vectorLayer,
             { hiddenLayerIds, selectedLayerIds, isActionMode, selectedBlockLayerIds },
@@ -259,7 +245,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
   }
 
   private get overlayCtx() {
-    return this.$canvas.get(0).getContext('2d');
+    return this.canvas.getContext('2d');
   }
 
   private get highlightLineWidth() {
@@ -318,8 +304,10 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
   // @Override
   protected onDimensionsChanged() {
     const { w, h } = this.getViewport();
-    this.$canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
-    this.$canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
+    this.canvas.setAttribute('width', `${w * this.attrScale}`);
+    this.canvas.setAttribute('height', `${h * this.attrScale}`);
+    this.canvas.style.width = `${w * this.cssScale}px`;
+    this.canvas.style.height = `${h * this.cssScale}px`;
     this.draw();
   }
 
@@ -801,7 +789,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
   }
 
-  // Called by the CanvasComponent.
+  // Called by the CanvasController.
   onMouseDown(event: MouseEvent) {
     const mouseDown = this.mouseEventToViewportCoords(event);
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
@@ -842,7 +830,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
   }
 
-  // Called by the CanvasComponent.
+  // Called by the CanvasController.
   onMouseMove(event: MouseEvent) {
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
       return;
@@ -864,7 +852,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
   }
 
-  // Called by the CanvasComponent.
+  // Called by the CanvasController.
   onMouseUp(event: MouseEvent) {
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
       return;
@@ -889,7 +877,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
   }
 
-  // Called by the CanvasComponent.
+  // Called by the CanvasController.
   onMouseLeave(event: MouseEvent) {
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
       return;
@@ -914,9 +902,9 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
   }
 
   private mouseEventToViewportCoords(event: MouseEvent) {
-    const canvasOffset = this.$canvas.offset();
-    const x = (event.pageX - canvasOffset.left) / this.cssScale;
-    const y = (event.pageY - canvasOffset.top) / this.cssScale;
+    const { left, top } = this.canvas.getBoundingClientRect();
+    const x = (event.clientX - left) / this.cssScale;
+    const y = (event.clientY - top) / this.cssScale;
     return { x, y };
   }
 
@@ -937,8 +925,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
           return undefined;
         }
         const transformedPoint = MathUtil.transformPoint(point, canvasToLayerMatrix);
-        let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
-        isSegmentInRangeFn = distance => {
+        const isSegmentInRangeFn = (distance: number) => {
           let maxDistance = 0;
           if (layer instanceof PathLayer && layer.isStroked()) {
             maxDistance = Math.max(this.minSnapThreshold, layer.strokeWidth / 2);

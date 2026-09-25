@@ -1,4 +1,3 @@
-import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import { ActionSource } from 'app/modules/editor/model/actionmode';
 import {
   ClipPathLayer,
@@ -9,15 +8,14 @@ import {
 } from 'app/modules/editor/model/layers';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
-import { PlaybackService } from 'app/modules/editor/services';
 import { State, Store } from 'app/modules/editor/store';
 import {
   getActionModeEndState,
   getActionModeStartState,
 } from 'app/modules/editor/store/actionmode/selectors';
-import { getHiddenLayerIds, getVectorLayer } from 'app/modules/editor/store/layers/selectors';
-import * as $ from 'jquery';
-import { combineLatest, merge } from 'rxjs';
+import { getHiddenLayerIds } from 'app/modules/editor/store/layers/selectors';
+import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
+import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
@@ -26,41 +24,29 @@ import * as CanvasUtil from './CanvasUtil';
 type Context = CanvasRenderingContext2D;
 
 /**
- * Directive that draws the current vector layer to the canvas.
+ * Draws the current vector layer to the canvas.
  */
-@Directive({ selector: '[appCanvasLayers]' })
-export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
-  implements AfterViewInit {
-  @Input()
-  actionSource: ActionSource;
-
-  private readonly $renderingCanvas: JQuery<HTMLCanvasElement>;
-  private readonly $offscreenCanvas: JQuery<HTMLCanvasElement>;
+export class CanvasLayers extends CanvasLayoutMixin(DestroyableMixin()) {
+  private readonly offscreenCanvas = document.createElement('canvas');
   private vectorLayer: VectorLayer;
   private hiddenLayerIds: ReadonlySet<string> = new Set<string>();
 
   constructor(
-    elementRef: ElementRef,
-    private readonly playbackService: PlaybackService,
+    private readonly renderingCanvas: HTMLCanvasElement,
+    private readonly actionSource: ActionSource,
     private readonly store: Store<State>,
   ) {
     super();
-    this.$renderingCanvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
-    this.$offscreenCanvas = $(document.createElement('canvas')) as JQuery<HTMLCanvasElement>;
   }
 
-  ngAfterViewInit() {
+  init() {
     if (this.actionSource === ActionSource.Animated) {
       // Preview canvas specific setup.
       this.registerSubscription(
-        combineLatest(
-          // TODO: don't think this is necessary anymore? only need to query playback service now?
-          merge(
-            this.playbackService.asObservable().pipe(map(event => event.vl)),
-            this.store.select(getVectorLayer),
-          ),
+        combineLatest([
+          this.store.select(getAnimatedVectorLayer).pipe(map(event => event.vl)),
           this.store.select(getHiddenLayerIds),
-        ).subscribe(([vectorLayer, hiddenLayerIds]) => {
+        ]).subscribe(([vectorLayer, hiddenLayerIds]) => {
           this.vectorLayer = vectorLayer;
           this.hiddenLayerIds = hiddenLayerIds;
           this.draw();
@@ -81,19 +67,21 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   private get renderingCtx() {
-    return this.$renderingCanvas.get(0).getContext('2d');
+    return this.renderingCanvas.getContext('2d');
   }
 
   private get offscreenCtx() {
-    return this.$offscreenCanvas.get(0).getContext('2d');
+    return this.offscreenCanvas.getContext('2d');
   }
 
   // @Override
   protected onDimensionsChanged(bounds: Size, viewport: Size) {
     const { w, h } = this.getViewport();
-    [this.$renderingCanvas, this.$offscreenCanvas].forEach(canvas => {
-      canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
-      canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
+    [this.renderingCanvas, this.offscreenCanvas].forEach(canvas => {
+      canvas.setAttribute('width', `${w * this.attrScale}`);
+      canvas.setAttribute('height', `${h * this.attrScale}`);
+      canvas.style.width = `${w * this.cssScale}px`;
+      canvas.style.height = `${h * this.cssScale}px`;
     });
     this.draw();
   }

@@ -3,7 +3,7 @@ import { Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
 import _ from 'lodash';
 
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import type { CanvasOverlay } from './CanvasOverlay';
 
 // TODO: clean up this class' messy communication w/ the overlay directive
 
@@ -14,7 +14,7 @@ export class PairSubPathHelper {
   private readonly actionSource: ActionSource;
   private readonly actionModeService: ActionModeService;
 
-  constructor(private readonly component: CanvasOverlayDirective) {
+  constructor(private readonly component: CanvasOverlay) {
     this.actionSource = component.actionSource;
     this.actionModeService = component.actionModeService;
   }

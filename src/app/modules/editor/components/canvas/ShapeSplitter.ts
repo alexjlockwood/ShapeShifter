@@ -4,7 +4,7 @@ import { Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
 import _ from 'lodash';
 
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import type { CanvasOverlay } from './CanvasOverlay';
 
 interface ProjInfo {
   readonly proj: ProjectionOntoPath;
@@ -24,7 +24,7 @@ export class ShapeSplitter {
   private hitResult: HitResult;
   private lastKnownMouseLocation: Point;
 
-  constructor(private readonly component: CanvasOverlayDirective) {
+  constructor(private readonly component: CanvasOverlay) {
     this.actionModeService = component.actionModeService;
   }
 

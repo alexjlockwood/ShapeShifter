@@ -1,9 +1,11 @@
+import { Canvas } from 'app/modules/editor/components/canvas';
 import { DropFilesAction } from 'app/modules/editor/components/dialogs';
+import { Playback } from 'app/modules/editor/components/playback';
 import { SplashScreen } from 'app/modules/editor/components/splashscreen/SplashScreen';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useElementSize } from 'app/modules/editor/hooks/useElementSize';
-import { ActionMode } from 'app/modules/editor/model/actionmode';
+import { ActionMode, ActionSource } from 'app/modules/editor/model/actionmode';
 import { CursorType } from 'app/modules/editor/model/paper';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { on } from 'app/modules/editor/scripts/dom';
@@ -169,8 +171,21 @@ function Workspace() {
           <div
             ref={displayContainerRef}
             className={`fx-row fx-align-center fx-flex ${cursorClassName}`}
-          />
+          >
+            {isActionMode && (
+              <Canvas
+                className="start"
+                actionSource={ActionSource.From}
+                canvasBounds={canvasBounds}
+              />
+            )}
+            <Canvas actionSource={ActionSource.Animated} canvasBounds={canvasBounds} />
+            {isActionMode && (
+              <Canvas className="end" actionSource={ActionSource.To} canvasBounds={canvasBounds} />
+            )}
+          </div>
           {/* Playback controls. */}
+          <Playback />
         </div>
         {/* Property input panel. */}
       </div>
