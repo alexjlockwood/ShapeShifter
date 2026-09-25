@@ -18,7 +18,8 @@ const plugins: PluginConfig[] = [
   { name: 'inlineStyles', params: { onlyMatchedOnce: false } },
   'minifyStyles',
   'convertStyleToAttrs',
-  { name: 'cleanupIds', params: { minify: false } },
+  // SvgLoader names the imported layers after their ids.
+  { name: 'cleanupIds', params: { remove: false, minify: false } },
   // 'prefixIds',
   'removeRasterImages',
   'removeUselessDefs',

@@ -7,9 +7,11 @@ import { optimizeSvg } from '.';
 // outputs captured in legacy-outputs.json before the upgrade. Layer ids are regenerated on
 // each import, and path coordinates are rounded to absorb floating point noise.
 //
-// The svgo 1.x outputs were captured with noSpaceAfterFlags disabled. By default svgo 1.x wrote
-// compact arc flags (e.g. 'a10 10 0 100 20'), which PathParser misreads, so circles and rounded
-// rects used to import with the wrong geometry.
+// The svgo 1.x outputs were captured with noSpaceAfterFlags disabled (in both convertPathData and
+// mergePaths). By default svgo 1.x wrote compact arc flags (e.g. 'a10 10 0 100 20'), which
+// PathParser misreads, so circles and rounded rects used to import with the wrong geometry. They
+// were also captured with cleanupIDs' remove param disabled, matching the svgo 4 pipeline, which
+// keeps ids so that layers are named after them.
 function toComparableJson(svg: string) {
   const vl = loadVectorLayerFromSvgStringInternal(svg, () => false);
   return JSON.parse(JSON.stringify(vl.toJSON()), (key, value) => {

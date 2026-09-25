@@ -33,7 +33,8 @@ export const replaceUseElems: CustomPlugin = {
     // TODO: handle the circular dependency that could potentially result as well
     for (const use of querySelectorAll(root, 'use') as XastElement[]) {
       const { attributes: attrs } = use;
-      const href = attrs['xlink:href'];
+      // SVG 2 replaced xlink:href with href, which takes precedence if both are set.
+      const href = attrs.href ?? attrs['xlink:href'];
       if (href === undefined) {
         continue;
       }
@@ -41,6 +42,7 @@ export const replaceUseElems: CustomPlugin = {
       if (!refElem) {
         continue;
       }
+      delete attrs.href;
       delete attrs['xlink:href'];
 
       if (refElem.name === 'symbol') {

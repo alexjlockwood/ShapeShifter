@@ -18,6 +18,19 @@ import _ from 'lodash';
 // TODO: trim ids/strings?
 // TODO: check for invalid enum values
 
+// The presentation attributes that elements inherit from their ancestors.
+const INHERITED_ATTRS = [
+  'stroke',
+  'stroke-width',
+  'stroke-linecap',
+  'stroke-linejoin',
+  'stroke-miterlimit',
+  'stroke-opacity',
+  'fill',
+  'fill-opacity',
+  'fill-rule',
+];
+
 /**
  * Utility function that takes an SVG string as input and
  * returns a VectorLayer model object.
@@ -65,7 +78,11 @@ export function loadVectorLayerFromSvgStringInternal(
     return infos.map(info => info.path);
   });
 
-  const nodeToLayerFn = (node: Element, transforms: ReadonlyArray<Matrix>): Layer => {
+  const nodeToLayerFn = (
+    node: Element,
+    transforms: ReadonlyArray<Matrix>,
+    inheritedAttrs: Readonly<Dictionary<string>> = {},
+  ): Layer => {
     if (
       !node ||
       node.nodeType === Node.TEXT_NODE ||
@@ -74,6 +91,16 @@ export function loadVectorLayerFromSvgStringInternal(
       node instanceof SVGUseElement
     ) {
       return undefined;
+    }
+
+    // svgo only moves a group's attributes onto its children in some cases (e.g. not when the
+    // group has more than one child, or when the child has an id).
+    const attrs = { ...inheritedAttrs };
+    for (const attr of INHERITED_ATTRS) {
+      const value = node.getAttribute(attr);
+      if (value !== null && value !== 'inherit') {
+        attrs[attr] = value;
+      }
     }
 
     const nodeTransforms = getNodeTransforms(node as SVGGraphicsElement);
@@ -118,8 +145,8 @@ export function loadVectorLayerFromSvgStringInternal(
       const path = node.getAttribute('d');
       const attrMap: Dictionary<any> = {};
       const simpleAttrFn = (nodeAttr: string, contextAttr: string) => {
-        if (node.hasAttribute(nodeAttr)) {
-          attrMap[contextAttr] = node.getAttribute(nodeAttr);
+        if (nodeAttr in attrs) {
+          attrMap[contextAttr] = attrs[nodeAttr];
         }
       };
 
@@ -145,7 +172,7 @@ export function loadVectorLayerFromSvgStringInternal(
       const strokeLinecap: StrokeLineCap =
         'strokeLinecap' in attrMap ? attrMap['strokeLinecap'] : 'butt';
       const strokeLinejoin: StrokeLineJoin =
-        'strokeLinejoin' in attrMap ? attrMap['strokeLinecap'] : 'miter';
+        'strokeLinejoin' in attrMap ? attrMap['strokeLinejoin'] : 'miter';
       const strokeMiterLimit =
         'strokeMiterLimit' in attrMap ? Number(attrMap['strokeMiterLimit']) : 4;
       const fillRuleToFillTypeFn = (fillRule: string) => {
@@ -190,7 +217,7 @@ export function loadVectorLayerFromSvgStringInternal(
       const children: Layer[] = [];
       for (let i = 0; i < node.childNodes.length; i++) {
         const child = node.childNodes.item(i) as Element;
-        const layer = nodeToLayerFn(child, transforms);
+        const layer = nodeToLayerFn(child, transforms, attrs);
         if (layer) {
           children.push(layer);
         }

@@ -15,7 +15,7 @@ describe('SvgLoader', () => {
     expect(vl.children.length).toBe(1);
     const pathLayer = vl.children[0] as PathLayer;
     expect(pathLayer.name).toBe('path');
-    expect(pathLayer.fillColor).toBe('#000');
+    expect(pathLayer.fillColor).toBe('#000000');
     expect(pathLayer.pathData.getPathString()).toBe('M 0 0 L 10 10 L 20 20 L 30 30');
   });
 
@@ -31,8 +31,95 @@ describe('SvgLoader', () => {
     expect(vl.children.length).toBe(1);
     const pathLayer = vl.children[0] as PathLayer;
     expect(pathLayer.name).toBe('path');
-    expect(pathLayer.fillColor).toBe('#000');
+    expect(pathLayer.fillColor).toBe('#000000');
     expect(pathLayer.pathData.getPathString()).toBe('M -5 10 L 5 20 L 15 30 L 25 40');
+  });
+
+  it(`names layers after their ids`, async () => {
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g id="arrow" transform="translate(2 2)">
+    <path id="head" fill="#f00" d="M 10 0 L 20 10 L 10 20 Z"/>
+    <path id="shaft" fill="#00f" d="M 0 8 L 10 8 L 10 12 L 0 12 Z"/>
+  </g>
+  <path fill="#0f0" d="M 0 0 L 4 0 L 4 4 Z"/>
+</svg>
+`;
+    const vl = await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    expect(vl.children.map(l => l.name)).toEqual(['arrow', 'path']);
+    expect(vl.children[0].children.map(l => l.name)).toEqual(['head', 'shaft']);
+  });
+
+  it(`inherits paint from groups`, async () => {
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g fill="#f00" fill-rule="evenodd" stroke="#00f">
+    <path d="M 0 0 L 10 0 L 10 10 Z"/>
+    <g id="group" stroke-width="3">
+      <path id="line" fill="none" d="M 12 12 L 20 20"/>
+    </g>
+  </g>
+</svg>
+`;
+    const vl = await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    const pathLayers: PathLayer[] = [];
+    vl.walk(l => l instanceof PathLayer && pathLayers.push(l));
+    expect(
+      pathLayers.map(({ name, fillColor, fillType, strokeColor, strokeWidth }) => ({
+        name,
+        fillColor,
+        fillType,
+        strokeColor,
+        strokeWidth,
+      })),
+    ).toEqual([
+      {
+        name: 'path',
+        fillColor: '#ff0000',
+        fillType: 'evenOdd',
+        strokeColor: '#0000ff',
+        strokeWidth: 1,
+      },
+      {
+        name: 'line',
+        fillColor: '',
+        fillType: 'evenOdd',
+        strokeColor: '#0000ff',
+        strokeWidth: 3,
+      },
+    ]);
+  });
+
+  it(`imports stroke line caps and joins`, async () => {
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path stroke="#000" stroke-linecap="round" stroke-linejoin="bevel" fill="none" d="M 0 0 L 10 10 L 20 0"/>
+</svg>
+`;
+    const vl = await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    const pathLayer = vl.children[0] as PathLayer;
+    expect(pathLayer.strokeLinecap).toBe('round');
+    expect(pathLayer.strokeLinejoin).toBe('bevel');
+  });
+
+  it(`replaces use elements with the content they reference`, async () => {
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+  <defs>
+    <path id="tri" d="M 0 0 L 10 0 L 5 8 Z"/>
+  </defs>
+  <use xlink:href="#tri" fill="#f00"/>
+  <use href="#tri" x="12" fill="#00f"/>
+</svg>
+`;
+    const vl = await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    const pathLayers: PathLayer[] = [];
+    vl.walk(l => l instanceof PathLayer && pathLayers.push(l));
+    expect(pathLayers.map(l => l.fillColor)).toEqual(['#ff0000', '#0000ff']);
+    expect(pathLayers.map(l => l.pathData.getPathString())).toEqual([
+      'M 0 0 L 10 0 L 5 8 Z',
+      'M 12 0 L 22 0 L 17 8 Z',
+    ]);
   });
 
   it(`can import simple SVG with group/path transformations`, async () => {
