@@ -1,4 +1,3 @@
-import { Injectable } from '@angular/core';
 import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 import {
   ClipPathLayer,
@@ -9,7 +8,8 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
-import { MathUtil, Matrix, ModelUtil } from 'app/modules/editor/scripts/common';
+import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { Action, State, Store } from 'app/modules/editor/store';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import {
@@ -35,16 +35,13 @@ import {
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash';
-import { OutputSelector } from 'reselect';
-import { first } from 'rxjs/operators';
+import _ from 'lodash';
 
 import * as StoreUtil from './StoreUtil';
 
 /**
  * A simple service that provides an interface for making layer/timeline changes.
  */
-@Injectable({ providedIn: 'root' })
 export class LayerTimelineService {
   constructor(private readonly store: Store<State>) {}
 
@@ -222,10 +219,12 @@ export class LayerTimelineService {
       const selectedLayer = selectedLayers[0];
       if (!(selectedLayer instanceof VectorLayer)) {
         // Add the new layer as a sibling to the currently selected layer.
-        const parent = LayerUtil.findParent(vl, selectedLayer.id).clone();
-        parent.children = [...parent.children, layer];
-        this.updateLayer(parent);
-        return;
+        const parent = LayerUtil.findParent(vl, selectedLayer.id)?.clone();
+        if (parent) {
+          parent.children = [...parent.children, layer];
+          this.updateLayer(parent);
+          return;
+        }
       }
     }
     const vectorLayer = vl.clone();
@@ -257,7 +256,10 @@ export class LayerTimelineService {
       return;
     }
     const vl = this.getVectorLayer();
-    const parent = LayerUtil.findParent(vl, layerId).clone();
+    const parent = LayerUtil.findParent(vl, layerId)?.clone();
+    if (!parent) {
+      return;
+    }
     const layerIndex = _.findIndex(parent.children, l => l.id === layerId);
     const children = [...parent.children];
     children.splice(layerIndex, 1, newLayer);
@@ -297,8 +299,10 @@ export class LayerTimelineService {
       return;
     }
     const layerTransform = Matrix.flatten(LayerUtil.getCanvasTransformsForGroupLayer(layer));
-    const layerChildren = layer.children.map(
-      (l: GroupLayer | PathLayer | ClipPathLayer): Layer => {
+    // A group's children are groups, paths, and clip paths.
+    const groupChildren = layer.children as ReadonlyArray<GroupLayer | PathLayer | ClipPathLayer>;
+    const layerChildren = groupChildren.map(
+      (l): Layer => {
         if (l instanceof GroupLayer) {
           const flattenedTransform = Matrix.flatten([
             layerTransform,
@@ -319,12 +323,12 @@ export class LayerTimelineService {
         }
         l = l.clone();
         if (l instanceof PathLayer && l.strokeWidth) {
-          const scaleFactor = layerTransform.getScaleFactor();
-          const newStrokeWidth = l.strokeWidth * scaleFactor ? 1 / scaleFactor : 0;
-          l.strokeWidth = MathUtil.round(newStrokeWidth);
+          // Group transforms scale strokes too (as they do on Android), so scale the width by the
+          // same amount as the path.
+          l.strokeWidth = MathUtil.round(l.strokeWidth * layerTransform.getScaleFactor());
         }
         const path = l.pathData;
-        if (!path || !l.pathData.getPathString()) {
+        if (!path || !path.getPathString()) {
           return l;
         }
         l.pathData = path
@@ -335,7 +339,10 @@ export class LayerTimelineService {
       },
     );
     const layerChildrenIds = new Set(layerChildren.map(l => l.id));
-    const parent = LayerUtil.findParent(vl, layerId).clone();
+    const parent = LayerUtil.findParent(vl, layerId)?.clone();
+    if (!parent) {
+      return;
+    }
     const children = [...parent.children];
     children.splice(_.findIndex(parent.children, l => l.id === layerId), 1, ...layerChildren);
     parent.children = children;
@@ -400,7 +407,9 @@ export class LayerTimelineService {
     let vl = this.getVectorLayer();
 
     // Sort selected layers by order they appear in tree.
-    let tempSelLayers = Array.from(selectedLayerIds).map(id => vl.findLayerById(id));
+    let tempSelLayers = Array.from(selectedLayerIds)
+      .map(id => vl.findLayerById(id))
+      .filter((l): l is Layer => !!l);
     const selLayerOrdersMap: Dictionary<number> = {};
     let n = 0;
     vl.walk(layer => {
@@ -420,10 +429,11 @@ export class LayerTimelineService {
         }
         let p = LayerUtil.findParent(vl, layer.id);
         while (p) {
-          if (_.find(tempSelLayers, l => l.id === p.id)) {
+          const parentId = p.id;
+          if (tempSelLayers.some(l => l.id === parentId)) {
             return false;
           }
-          p = LayerUtil.findParent(vl, p.id);
+          p = LayerUtil.findParent(vl, parentId);
         }
         return true;
       });
@@ -433,31 +443,41 @@ export class LayerTimelineService {
       }
 
       // Find destination parent and insertion point.
-      const firstSelectedLayerParent = LayerUtil.findParent(vl, tempSelLayers[0].id).clone();
+      const firstSelectedLayerParent = LayerUtil.findParent(vl, tempSelLayers[0].id);
+      if (!firstSelectedLayerParent) {
+        return;
+      }
       const firstSelectedLayerIndexInParent = _.findIndex(
         firstSelectedLayerParent.children,
         l => l.id === tempSelLayers[0].id,
       );
 
-      // Remove all selected items from their parents and move them into a new parent.
+      // Remove all selected layers from their parents (which may differ) and move them into a new
+      // group. The layers are in tree order, so no other selected layer comes before the first one
+      // in its parent, and removing them doesn't change its index.
       const newGroup = new GroupLayer({
         name: LayerUtil.getUniqueLayerName([vl], 'group'),
         children: tempSelLayers,
       });
-      const parentChildren = [...firstSelectedLayerParent.children];
+      vl = LayerUtil.removeLayers(vl, ...tempSelLayers.map(l => l.id));
+      const parent = vl.findLayerById(firstSelectedLayerParent.id)?.clone();
+      if (!parent) {
+        return;
+      }
+      const parentChildren = [...parent.children];
       parentChildren.splice(firstSelectedLayerIndexInParent, 0, newGroup);
-      _.remove(parentChildren, child =>
-        _.find(tempSelLayers, selectedLayer => selectedLayer.id === child.id),
-      );
-      firstSelectedLayerParent.children = parentChildren;
-      vl = LayerUtil.updateLayer(vl, firstSelectedLayerParent);
+      parent.children = parentChildren;
+      vl = LayerUtil.updateLayer(vl, parent);
       selectedLayerIds = new Set([newGroup.id]);
     } else {
       // Ungroup selected groups layers.
       const newSelectedLayers: Layer[] = [];
       tempSelLayers.filter(layer => layer instanceof GroupLayer).forEach(groupLayer => {
         // Move children into parent.
-        const parent = LayerUtil.findParent(vl, groupLayer.id).clone();
+        const parent = LayerUtil.findParent(vl, groupLayer.id)?.clone();
+        if (!parent) {
+          return;
+        }
         const indexInParent = Math.max(
           0,
           _.findIndex(parent.children, l => l.id === groupLayer.id),
@@ -553,14 +573,9 @@ export class LayerTimelineService {
     }>,
     autoSelectBlocks = true,
   ) {
-    blocks.forEach(b => {
-      if (!b.id) {
-        b.id = _.uniqueId();
-      }
-    });
     let animation = this.getAnimation();
-    const addedBlocks: { id?: string }[] = [];
-    for (const block of blocks) {
+    const addedBlocks: { id: string }[] = [];
+    for (const block of blocks.map(b => ({ ...b, id: b.id || _.uniqueId() }))) {
       const anim = this.addBlockToAnimation(animation, block);
       if (animation !== anim) {
         animation = anim;
@@ -591,7 +606,8 @@ export class LayerTimelineService {
     },
   ) {
     const layer = this.getVectorLayer().findLayerById(block.layerId);
-    if (!layer) {
+    const property = layer?.animatableProperties.get(block.propertyName);
+    if (!layer || !property) {
       return animation;
     }
     const newBlockDuration = block.duration || 100;
@@ -636,7 +652,6 @@ export class LayerTimelineService {
     }
 
     // Generate the new block.
-    const property = layer.animatableProperties.get(propertyName);
     let type: 'path' | 'color' | 'number';
     if (property.getTypeName() === 'PathProperty') {
       type = 'path';
@@ -677,7 +692,9 @@ export class LayerTimelineService {
 
   getSelectedLayers() {
     const vl = this.getVectorLayer();
-    return Array.from(this.getSelectedLayerIds()).map(id => vl.findLayerById(id));
+    return Array.from(this.getSelectedLayerIds())
+      .map(id => vl.findLayerById(id))
+      .filter((l): l is Layer => !!l);
   }
 
   private getHiddenLayerIds() {
@@ -695,7 +712,9 @@ export class LayerTimelineService {
   getSelectedBlocks() {
     const anim = this.getAnimation();
     const blockIds = this.getSelectedBlockIds();
-    return Array.from(blockIds).map(id => _.find(anim.blocks, b => b.id === id));
+    return Array.from(blockIds)
+      .map(id => _.find(anim.blocks, b => b.id === id))
+      .filter((b): b is AnimationBlock => !!b);
   }
 
   getAnimation() {
@@ -706,12 +725,7 @@ export class LayerTimelineService {
     return this.queryStore(isAnimationSelected);
   }
 
-  private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
-    let obj: T;
-    this.store
-      .select(selector)
-      .pipe(first())
-      .subscribe(o => (obj = o));
-    return obj;
+  private queryStore<T>(selector: (state: State) => T) {
+    return selector(this.store.getState());
   }
 }

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path id="stroke-none" d="M 2 2 L 10 2 L 10 10 Z" stroke="none" fill="#000"/>
+  <path id="fill-none" d="M 12 2 L 20 2" fill="none" stroke="#f00" stroke-width="1.5" stroke-linejoin="bevel" stroke-miterlimit="8"/>
+  <path id="alpha" d="M 2 12 L 10 12 L 10 20 Z" fill="#00f" fill-opacity=".25" stroke="#0f0" stroke-opacity="0.75"/>
+  <path id="evenodd" d="M 12 12 L 22 12 L 22 22 L 12 22 Z M 14 14 L 20 14 L 20 20 L 14 20 Z" fill-rule="evenodd"/>
+  <path id="hidden" d="M 0 0 L 1 1" display="none"/>
+  <path id="transparent" d="M 0 0 L 1 1" opacity="0"/>
+  <g id="empty-group"></g>
+  <text x="0" y="0"></text>
+</svg>

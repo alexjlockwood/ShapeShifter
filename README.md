@@ -1,7 +1,6 @@
 # Shape Shifter
 
-[![Build Status][travis-badge]][travis-badge-url]
-[![Coverage Status][coveralls-badge]][coveralls-badge-url]
+[![Build Status][ci-badge]][ci-badge-url]
 [![GitHub Stats](https://img.shields.io/badge/github-stats-ff5500.svg)](http://githubstats.com/alexjlockwood/ShapeShifter)
 
 **[Go to live version](https://shapeshifter.design)** or **[ask a question on Slack](https://join.slack.com/t/shapeshifterdesign/shared_invite/enQtNDAwODY5NjI2NTE4LTAyZTE3ZmYxNGUxMmViY2UwNDJjZWYyYzhhNTQzYmVkYmVmNTA0NmEyY2MwMmFiOTllODI5YzZmNDQwOTE1MGU)**
@@ -96,13 +95,13 @@ Pretty much all of the graphics in this app are powered by bezier curve approxim
 I learned most of what I needed to know from this excellent [primer on bezier curves][primer-on-bezier-curves]
 (especially sections 9 and 33, which explain how to split and project points onto bezier
 curves without altering their original appearance). Most of the interesting SVG-related code
-is located under [`src/app/model/paths`](https://github.com/alexjlockwood/ShapeShifter/tree/master/src/app/model/paths).
+is located under [`src/app/modules/editor/model/paths`](https://github.com/alexjlockwood/ShapeShifter/tree/master/src/app/modules/editor/model/paths).
 
 Auto fix is powered by an adaptation of the [Needleman-Wunsch algorithm][Needleman-Wunsch],
 which is used in bioinformatics to align protein or nucleotide sequences. Instead of
 aligning DNA base-pairs, Shape Shifter aligns the individual SVG commands that make up
 each path instead. You can view the current implementation of the algorithm in the
-[`AutoAwesome.ts`](https://github.com/alexjlockwood/ShapeShifter/blob/master/src/app/scripts/algorithms/AutoAwesome.ts) file.
+[`AutoAwesome.ts`](https://github.com/alexjlockwood/ShapeShifter/blob/master/src/app/modules/editor/scripts/algorithms/AutoAwesome.ts) file.
 
 ## Bug reports & feature requests
 
@@ -119,7 +118,8 @@ curious how I can make this web app more useful for iOS and web developers.**
 
 If you want to contribute, you can build and serve the web app locally as follows:
 
-  1. First install [`Node.js`](https://nodejs.org/) and [`npm`](https://www.npmjs.com/).
+  1. First install [`Node.js`](https://nodejs.org/) 22.12 or later (see `.nvmrc`), which comes
+     with [`npm`](https://www.npmjs.com/).
 
   2. Clone the repository and in the root directory, run:
 
@@ -132,6 +132,23 @@ If you want to contribute, you can build and serve the web app locally as follow
      ```
      npm start
      ```
+
+  4. To run the tests, run:
+
+     ```
+     npx playwright install chromium firefox webkit  # Only needed once.
+     npm run typecheck
+     npm run lint
+     npm run test:run
+     npm run e2e
+     ```
+
+     The end-to-end tests run in Chromium, Firefox, and WebKit. To run them in one browser, pass
+     its project name, e.g. `npm run e2e -- --project=chromium` (or `chromium-preview` for the
+     tests that need a production build).
+
+The app is built with [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/),
+and [Vite](https://vite.dev/).
 
 ## Special thanks
 
@@ -148,11 +165,9 @@ and [Steph Yim][steph-yim-website] for all of their help during the early stages
   [nick-butcher-twitter]: https://twitter.com/crafty
   [roman-nurik-twitter]: https://twitter.com/romannurik
   [steph-yim-website]: http://stephanieyim.com
-  [travis-badge]: https://travis-ci.org/alexjlockwood/ShapeShifter.svg?branch=master
-  [travis-badge-url]: https://travis-ci.org/alexjlockwood/ShapeShifter
+  [ci-badge]: https://github.com/alexjlockwood/ShapeShifter/actions/workflows/ci.yml/badge.svg?branch=master
+  [ci-badge-url]: https://github.com/alexjlockwood/ShapeShifter/actions/workflows/ci.yml
   [david-badge]: https://david-dm.org/alexjlockwood/ShapeShifter.svg
   [david-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter
   [david-dev-badge]: https://david-dm.org/alexjlockwood/ShapeShifter/dev-status.svg
   [david-dev-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter?type=dev
-  [coveralls-badge]: https://coveralls.io/repos/github/alexjlockwood/ShapeShifter/badge.svg?branch=master
-  [coveralls-badge-url]: https://coveralls.io/github/alexjlockwood/ShapeShifter?branch=master

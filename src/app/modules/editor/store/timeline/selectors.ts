@@ -1,7 +1,10 @@
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
-import { createDeepEqualSelector, getEditorState } from 'app/modules/editor/store/selectors';
-import * as _ from 'lodash';
-import { createSelector } from 'reselect';
+import {
+  createDeepEqualSelector,
+  createSelector,
+  getEditorState,
+} from 'app/modules/editor/store/selectors';
+import _ from 'lodash';
 
 const getTimelineState = createSelector(getEditorState, s => s.timeline);
 export const getAnimation = createSelector(getTimelineState, t => t.animation);
@@ -10,9 +13,8 @@ export const getSelectedBlockIds = createDeepEqualSelector(
   getTimelineState,
   t => t.selectedBlockIds,
 );
-export const getSingleSelectedBlockId = createSelector(
-  getSelectedBlockIds,
-  blockIds => (blockIds.size === 1 ? blockIds.values().next().value : undefined),
+export const getSingleSelectedBlockId = createSelector(getSelectedBlockIds, blockIds =>
+  blockIds.size === 1 ? blockIds.values().next().value : undefined,
 );
 export const getSingleSelectedPathBlock = createSelector(
   [getAnimation, getSingleSelectedBlockId],
@@ -22,14 +24,14 @@ export const getSingleSelectedPathBlock = createSelector(
     }
     return _.find(
       anim.blocks,
-      b => b.id === blockId && b instanceof PathAnimationBlock,
-    ) as PathAnimationBlock;
+      (b): b is PathAnimationBlock => b.id === blockId && b instanceof PathAnimationBlock,
+    );
   },
 );
 export const getSelectedBlockLayerIds = createDeepEqualSelector(
   [getAnimation, getSelectedBlockIds],
   (anim, blockIds) => {
-    return new Set(Array.from(blockIds).map(id => _.find(anim.blocks, b => b.id === id).layerId));
+    return new Set(anim.blocks.filter(b => blockIds.has(b.id)).map(b => b.layerId));
   },
 );
 export const getSingleSelectedBlockLayerId = createSelector(

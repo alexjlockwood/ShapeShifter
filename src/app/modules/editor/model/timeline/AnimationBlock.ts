@@ -8,18 +8,13 @@ import {
   PathProperty,
   Property,
 } from 'app/modules/editor/model/properties';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 type AnimationBlockType = 'path' | 'color' | 'number';
 
 /**
  * An animation block is an individual layer property tween (property animation).
  */
-@Property.register(
-  new NumberProperty('startTime', { min: 0, isInteger: true }),
-  new NumberProperty('endTime', { min: 0, isInteger: true }),
-  new EnumProperty('interpolator', INTERPOLATORS),
-)
 export abstract class AnimationBlock {
   static from(obj: ConstructorArgs) {
     switch (obj.type) {
@@ -73,11 +68,15 @@ export abstract class AnimationBlock {
 
   abstract isAnimatable(): boolean;
 }
+Property.register(
+  new NumberProperty('startTime', { min: 0, isInteger: true }),
+  new NumberProperty('endTime', { min: 0, isInteger: true }),
+  new EnumProperty('interpolator', INTERPOLATORS),
+)(AnimationBlock);
 
 /**
  * An animation block that animates the 'pathData' property.
  */
-@Property.register(new PathProperty('fromValue'), new PathProperty('toValue'))
 export class PathAnimationBlock extends AnimationBlock {
   // @Override
   toJSON() {
@@ -92,11 +91,11 @@ export class PathAnimationBlock extends AnimationBlock {
     return !!this.fromValue && !!this.toValue && this.fromValue.isMorphableWith(this.toValue);
   }
 }
+Property.register(new PathProperty('fromValue'), new PathProperty('toValue'))(PathAnimationBlock);
 
 /**
  * An animation block that animates a color property.
  */
-@Property.register(new ColorProperty('fromValue'), new ColorProperty('toValue'))
 export class ColorAnimationBlock extends AnimationBlock {
   // @Override
   isAnimatable() {
@@ -104,17 +103,24 @@ export class ColorAnimationBlock extends AnimationBlock {
     return !!this.fromValue && !!this.toValue;
   }
 }
+Property.register(
+  new ColorProperty('fromValue'),
+  new ColorProperty('toValue'),
+)(ColorAnimationBlock);
 
 /**
  * An animation block that animates a number property.
  */
-@Property.register(new NumberProperty('fromValue'), new NumberProperty('toValue'))
 export class NumberAnimationBlock extends AnimationBlock {
   // @Override
   isAnimatable() {
     return _.isFinite(this.fromValue) && _.isFinite(this.toValue);
   }
 }
+Property.register(
+  new NumberProperty('fromValue'),
+  new NumberProperty('toValue'),
+)(NumberAnimationBlock);
 
 interface AnimationBlockArgs {
   id?: string;
@@ -128,12 +134,13 @@ interface AnimationBlockArgs {
   type: AnimationBlockType;
 }
 
-export interface AnimationBlock extends AnimationBlockArgs, Inspectable {}
+export interface AnimationBlock extends Required<AnimationBlockArgs>, Inspectable {}
 export interface ConstructorArgs extends AnimationBlockArgs {}
 
 export interface PathAnimationBlock {
-  fromValue: Path;
-  toValue: Path;
+  // Undefined when the block was added to a layer that hasn't been given a path yet.
+  fromValue: Path | undefined;
+  toValue: Path | undefined;
   clone(): PathAnimationBlock;
 }
 

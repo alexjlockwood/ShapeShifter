@@ -4,20 +4,20 @@ import { ActionModeActionTypes, ActionModeActions } from './actions';
 
 export interface State {
   readonly mode: ActionMode;
-  readonly hover: Hover;
+  readonly hover: Hover | undefined;
   readonly selections: ReadonlyArray<Selection>;
   readonly pairedSubPaths: ReadonlySet<number>;
-  readonly unpairedSubPath: { readonly source: ActionSource; readonly subIdx: number };
+  readonly unpairedSubPath: { readonly source: ActionSource; readonly subIdx: number } | undefined;
 }
 
-export function buildInitialState() {
+export function buildInitialState(): State {
   return {
     mode: ActionMode.None,
     hover: undefined,
     selections: [],
     pairedSubPaths: new Set<number>(),
     unpairedSubPath: undefined,
-  } as State;
+  };
 }
 
 // TODO: move as much logic as possible from here into action mode service

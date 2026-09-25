@@ -1,7 +1,8 @@
 import { MathUtil, Point, Rect } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import polylabel from 'polylabel';
 
+import { isPoint } from './Command';
 import { CommandState } from './CommandState';
 import * as PathParser from './PathParser';
 import { createSubPaths } from './SubPath';
@@ -14,17 +15,21 @@ import { Command, HitOptions, HitResult, Projection, ProjectionOntoPath, SubPath
 export class PathState {
   readonly subPaths: ReadonlyArray<SubPath>;
   readonly commands: ReadonlyArray<Command>;
+  // Maps internal spsIdx indices to SubPathState objects. The last 'numCollapsingSubPaths'
+  // indices hold references to the collapsing sub paths.
+  readonly subPathStateMap: ReadonlyArray<SubPathState>;
+  // Maps client-visible subIdx values to their positions in the subPathStateMap.
+  readonly subPathOrdering: ReadonlyArray<number>;
+  // The number of collapsing subpaths appended to the end of the subPathStateMap.
+  readonly numCollapsingSubPaths: number;
 
   constructor(
     obj: string | ReadonlyArray<Command>,
-    // Maps internal spsIdx indices to SubPathState objects. The last 'numCollapsingSubPaths'
-    // indices hold references to the collapsing sub paths.
-    readonly subPathStateMap?: ReadonlyArray<SubPathState>,
-    // Maps client-visible subIdx values to their positions in the subPathStateMap.
-    readonly subPathOrdering?: ReadonlyArray<number>,
-    // The number of collapsing subpaths appended to the end of the subPathStateMap.
-    readonly numCollapsingSubPaths = 0,
+    subPathStateMap?: ReadonlyArray<SubPathState>,
+    subPathOrdering?: ReadonlyArray<number>,
+    numCollapsingSubPaths = 0,
   ) {
+    this.numCollapsingSubPaths = numCollapsingSubPaths;
     const commands = typeof obj === 'string' ? PathParser.parseCommands(obj) : obj;
     const subPaths = createSubPaths(commands);
     this.subPathStateMap =
@@ -118,12 +123,12 @@ export class PathState {
         });
       })
       .flatMap(projections => projections)
-      .filter(obj => !!obj.projection)
+      .filter((obj): obj is ReduceArg => !!obj.projection)
       // Reverse so that commands drawn with higher z-orders are preferred.
       .reverse()
-      .reduce((prev: ReduceArg, curr: ReduceArg) => {
+      .reduce((prev: ReduceArg | undefined, curr: ReduceArg) => {
         return prev && prev.projection.d < curr.projection.d ? prev : curr;
-      }, undefined);
+      }, undefined as ReduceArg | undefined);
     if (!minProjectionResultInfo) {
       return undefined;
     }
@@ -138,8 +143,9 @@ export class PathState {
     const shapeHits: Array<{ readonly subIdx: number }> = [];
     const defaultRestrictToSubIdx = this.subPaths.map((unused, i) => i);
     const restrictToSubIdxSet = new Set<number>(opts.restrictToSubIdx || defaultRestrictToSubIdx);
+    const { isPointInRangeFn, isSegmentInRangeFn } = opts;
 
-    if (opts.isPointInRangeFn) {
+    if (isPointInRangeFn) {
       endPointHits.push(
         ..._(this.subPaths as SubPath[])
           .map((subPath, subIdx) => ({ subPath, subIdx }))
@@ -158,7 +164,7 @@ export class PathState {
             });
           })
           .flatMap(pointInfos => pointInfos)
-          .filter(pointInfo => opts.isPointInRangeFn(pointInfo.projection.d, pointInfo.cmd))
+          .filter(pointInfo => isPointInRangeFn(pointInfo.projection.d, pointInfo.cmd))
           .map(pointInfo => {
             const { subIdx, cmdIdx, projection } = pointInfo;
             return { subIdx, cmdIdx, projection };
@@ -167,7 +173,7 @@ export class PathState {
       );
     }
 
-    if (opts.isSegmentInRangeFn) {
+    if (isSegmentInRangeFn) {
       // TODO: also check to see if the hit occurred at a stroke-linejoin vertex
       // TODO: take stroke width scaling into account as well?
       segmentHits.push(
@@ -198,7 +204,7 @@ export class PathState {
           })
           .filter(obj => {
             const cmd = this.subPaths[obj.subIdx].getCommands()[obj.cmdIdx];
-            return opts.isSegmentInRangeFn(obj.projection.d, cmd);
+            return isSegmentInRangeFn(obj.projection.d, cmd);
           })
           .value(),
       );
@@ -263,17 +269,18 @@ export class PathState {
       return { x: end.x, y: end.y };
     }
     const cmds = subPathCmds.slice(1);
+    // Only the first command is missing its start point, and it's been removed.
     const polygon = _.flatMap(cmds, cmd => {
-      const { x: p1x, y: p1y } = cmd.start;
+      const { x: p1x, y: p1y } = cmd.start ?? cmd.end;
       const { x: p2x, y: p2y } = cmd.end;
       return [[p1x, p1y], [p2x, p2y]];
     });
     if (cmds.length && !this.subPaths[subIdx].isClosed()) {
-      const { x: p1x, y: p1y } = cmds[0].start;
-      const { x: p2x, y: p2y } = _.last(cmds).end;
+      const { x: p1x, y: p1y } = cmds[0].start ?? cmds[0].end;
+      const { x: p2x, y: p2y } = cmds[cmds.length - 1].end;
       polygon.push(...[[p1x, p1y], [p2x, p2y]]);
     }
-    const pole = polylabel([polygon]);
+    const pole = polylabel([polygon as [number, number][]]);
     return { x: pole[0], y: pole[1] };
   }
 
@@ -371,10 +378,13 @@ function containsPoint(rect: Rect, p: Point) {
 }
 
 function getArea(cmd: Command) {
-  if (cmd.type === 'M') {
+  const { start } = cmd;
+  if (cmd.type === 'M' || !start) {
     return 0;
   }
-  const { x: x0, y: y0 } = cmd.start;
+  const { x: x0, y: y0 } = start;
+  // Only moves can be missing a point.
+  const points = cmd.points.filter(isPoint);
   const { x: x3, y: y3 } = cmd.end;
   let area = 0;
   switch (cmd.type) {
@@ -389,16 +399,16 @@ function getArea(cmd: Command) {
       let x2: number;
       let y2: number;
       if (cmd.type === 'Q') {
-        const cp = cmd.points[1];
+        const cp = points[1];
         x1 = x0 + (2 / 3) * (cp.x - x0);
         y1 = y0 + (2 / 3) * (cp.y - y0);
         x2 = x3 + (2 / 3) * (cp.x - x3);
         y2 = y3 + (2 / 3) * (cp.y - y3);
       } else {
-        x1 = cmd.points[1].x;
-        y1 = cmd.points[1].y;
-        x2 = cmd.points[2].x;
-        y2 = cmd.points[2].y;
+        x1 = points[1].x;
+        y1 = points[1].y;
+        x2 = points[2].x;
+        y2 = points[2].y;
       }
       area =
         (3 *

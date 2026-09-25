@@ -1,158 +1,87 @@
-import * as CSSClassList from 'svgo/lib/svgo/css-class-list';
-import * as CSSStyleDeclaration from 'svgo/lib/svgo/css-style-declaration';
-import * as JSAPI from 'svgo/lib/svgo/jsAPI';
-
-export const replaceUseElems = {
-  active: true,
-  type: 'full',
-  fn: replaceUseElemsFn,
-  params: undefined as any,
-};
+import { type CustomPlugin, querySelectorAll, type XastElement } from 'svgo/browser';
 
 /**
  * Replace <use> elems with their referenced content.
- *
- * @param {Object} document the root document
- * @param {Object} params plugin params
  */
-function replaceUseElemsFn(document: any, params: any): any {
-  const defsElems = document.querySelectorAll('defs') || [];
-
-  const queryReferencedElementFn = (selector: string) => {
-    for (const defs of defsElems) {
-      const referencedElem = defs.querySelector(selector);
-      if (referencedElem) {
-        return cloneParsedSvg(referencedElem);
+export const replaceUseElems: CustomPlugin = {
+  name: 'replaceUseElems',
+  fn: root => {
+    // Maps ids to elements defined inside of a <defs> element.
+    const defsElemsById = new Map<string, XastElement>();
+    const collectIdsFn = (elem: XastElement) => {
+      for (const child of elem.children) {
+        if (child.type !== 'element') {
+          continue;
+        }
+        const { id } = child.attributes;
+        if (id !== undefined && !defsElemsById.has(id)) {
+          defsElemsById.set(id, child);
+        }
+        collectIdsFn(child);
       }
-    }
-    return undefined;
-  };
-
-  // TODO: handle the case where a 'use' element references another 'use'
-  // TODO: handle the circular dependency that could potentially result as well
-  const useElems = document.querySelectorAll('use') || [];
-  for (const use of useElems) {
-    if (!use.hasAttr('xlink:href')) {
-      continue;
-    }
-    const refElem = queryReferencedElementFn(use.attr('xlink:href').value);
-    if (!refElem) {
-      continue;
-    }
-    use.removeAttr('xlink:href');
-
-    if (refElem.isElem('symbol')) {
-      // TODO: determine whether we should support 'symbol' elements as well
-      continue;
+    };
+    for (const defs of querySelectorAll(root, 'defs')) {
+      collectIdsFn(defs as XastElement);
     }
 
-    const addAttrFn = function(elem: any, attrName: string, attrValue: string) {
-      elem.addAttr({
-        name: attrName,
-        value: attrValue,
-        prefix: '',
-        local: attrName,
-      });
+    const queryReferencedElementFn = (href: string) => {
+      const referencedElem = href.startsWith('#') ? defsElemsById.get(href.slice(1)) : undefined;
+      return referencedElem ? structuredClone(referencedElem) : undefined;
     };
 
-    if (refElem.isElem('svg')) {
-      // TODO: test this
-      const svg = refElem;
-      if (use.hasAttr('width')) {
-        addAttrFn(svg, 'width', use.attr('width').value);
-        use.removeAttr('width');
+    // TODO: handle the case where a 'use' element references another 'use'
+    // TODO: handle the circular dependency that could potentially result as well
+    for (const use of querySelectorAll(root, 'use') as XastElement[]) {
+      const { attributes: attrs } = use;
+      // SVG 2 replaced xlink:href with href, which takes precedence if both are set.
+      const href = attrs.href ?? attrs['xlink:href'];
+      if (href === undefined) {
+        continue;
       }
-      if (use.hasAttr('height')) {
-        addAttrFn(svg, 'height', use.attr('height').value);
-        use.removeAttr('height');
+      const refElem = queryReferencedElementFn(href);
+      if (!refElem) {
+        continue;
       }
-    }
+      delete attrs.href;
+      delete attrs['xlink:href'];
 
-    // TODO: handle the NAN cases?
-    let x = 0;
-    let y = 0;
-    if (use.hasAttr('x')) {
-      x = +use.attr('x').value;
-      use.removeAttr('x');
-    }
-    if (use.hasAttr('y')) {
-      y = +use.attr('y').value;
-      use.removeAttr('y');
-    }
-    if (x || y) {
-      let transform = `translate(${x} ${y})`;
-      if (use.hasAttr('transform')) {
-        transform = use.attr('transform').value + ' ' + transform;
+      if (refElem.name === 'symbol') {
+        // TODO: determine whether we should support 'symbol' elements as well
+        continue;
       }
-      addAttrFn(use, 'transform', transform);
-    }
-    use.content = [refElem];
-    refElem.parentNode = use;
-    use.renameElem('g');
-  }
 
-  return document;
-}
-
-// Clone is currently broken. Hack it:
-function cloneParsedSvg(svg: any): any {
-  const clones = new Map();
-
-  function cloneKeys(target: any, obj: any) {
-    for (const key of Object.keys(obj)) {
-      target[key] = clone(obj[key]);
-    }
-    return target;
-  }
-
-  function clone(obj: any) {
-    if (typeof obj !== 'object' || obj === null) {
-      return obj;
-    }
-
-    if (clones.has(obj)) {
-      return clones.get(obj);
-    }
-
-    let objClone;
-
-    if (obj.constructor === JSAPI) {
-      objClone = new JSAPI({}, obj.parentNode);
-      clones.set(obj, objClone);
-
-      if (obj.parentNode) {
-        objClone.parentNode = clone(obj.parentNode);
+      if (refElem.name === 'svg') {
+        // TODO: test this
+        if (attrs.width !== undefined) {
+          refElem.attributes.width = attrs.width;
+          delete attrs.width;
+        }
+        if (attrs.height !== undefined) {
+          refElem.attributes.height = attrs.height;
+          delete attrs.height;
+        }
       }
-      cloneKeys(objClone, obj);
-    } else if (
-      obj.constructor === CSSClassList ||
-      obj.constructor === CSSStyleDeclaration ||
-      obj.constructor === Object ||
-      obj.constructor === Array
-    ) {
-      objClone = new obj.constructor();
-      clones.set(obj, objClone);
-      cloneKeys(objClone, obj);
-    } else if (obj.constructor === Map) {
-      objClone = new Map();
-      clones.set(obj, objClone);
 
-      for (const [key, val] of obj) {
-        objClone.set(clone(key), clone(val));
+      // TODO: handle the NAN cases?
+      let x = 0;
+      let y = 0;
+      if (attrs.x !== undefined) {
+        x = +attrs.x;
+        delete attrs.x;
       }
-    } else if (obj.constructor === Set) {
-      objClone = new Set();
-      clones.set(obj, objClone);
-
-      for (const val of obj) {
-        objClone.add(clone(val));
+      if (attrs.y !== undefined) {
+        y = +attrs.y;
+        delete attrs.y;
       }
-    } else {
-      throw Error('unexpected type');
+      if (x || y) {
+        let transform = `translate(${x} ${y})`;
+        if (attrs.transform !== undefined) {
+          transform = attrs.transform + ' ' + transform;
+        }
+        attrs.transform = transform;
+      }
+      use.children = [refElem];
+      use.name = 'g';
     }
-
-    return objClone;
-  }
-
-  return clone(svg);
-}
+  },
+};

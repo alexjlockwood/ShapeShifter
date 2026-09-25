@@ -1,4 +1,7 @@
 // Core page layouts and common stuff.
-@import 'root';
-// Material design theme.
-@import 'theme';
+@use 'root';
+@use 'flex';
+@use 'elevation';
+@use 'icons';
+// Colors for the light and dark themes.
+@use 'theme';

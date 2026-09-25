@@ -1,18 +1,15 @@
-import { Injectable } from '@angular/core';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation } from 'app/modules/editor/model/timeline';
-import { ModelUtil } from 'app/modules/editor/scripts/common';
+import { trackEvent } from 'app/modules/editor/scripts/analytics';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { SvgLoader, VectorDrawableLoader } from 'app/modules/editor/scripts/import';
 import { State, Store } from 'app/modules/editor/store';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
-import { first } from 'rxjs/operators';
 
 import { FileExportService } from './fileexport.service';
 import { LayerTimelineService } from './layertimeline.service';
 import { Duration, SnackBarService } from './snackbar.service';
-
-declare const ga: Function;
 
 enum ImportType {
   Svg = 1,
@@ -23,7 +20,6 @@ enum ImportType {
 /**
  * A simple service that imports vector layers from files.
  */
-@Injectable({ providedIn: 'root' })
 export class FileImportService {
   constructor(
     private readonly store: Store<State>,
@@ -32,12 +28,7 @@ export class FileImportService {
   ) {}
 
   private get vectorLayer() {
-    let vectorLayer: VectorLayer;
-    this.store
-      .select(getVectorLayer)
-      .pipe(first())
-      .subscribe(vl => (vectorLayer = vl));
-    return vectorLayer;
+    return getVectorLayer(this.store.getState());
   }
 
   import(fileList: FileList, resetWorkspace = false) {
@@ -46,7 +37,6 @@ export class FileImportService {
     }
 
     const files: File[] = [];
-    // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < fileList.length; i++) {
       files.push(fileList[i]);
     }
@@ -71,7 +61,7 @@ export class FileImportService {
 
       fileReader.onload = event => {
         const text = (event.target as any).result;
-        const callbackFn = (vectorLayer: VectorLayer) => {
+        const callbackFn = (vectorLayer: VectorLayer | undefined) => {
           if (!vectorLayer) {
             numErrors++;
             maybeAddVectorLayersFn();
@@ -93,10 +83,8 @@ export class FileImportService {
             });
         } else if (file.type.includes('xml')) {
           importType = ImportType.VectorDrawable;
-          let vl: VectorLayer;
           try {
-            vl = VectorDrawableLoader.loadVectorLayerFromXmlString(text, doesNameExistFn);
-            callbackFn(vl);
+            callbackFn(VectorDrawableLoader.loadVectorLayerFromXmlString(text, doesNameExistFn));
           } catch (e) {
             console.warn('Failed to parse the file', e);
             callbackFn(undefined);
@@ -119,6 +107,7 @@ export class FileImportService {
           } catch (e) {
             console.warn('Failed to parse the file', e);
             this.onFailure();
+            return;
           }
           this.onSuccess(importType, resetWorkspace, [vl], animation, hiddenLayerIds);
         }
@@ -159,13 +148,13 @@ export class FileImportService {
     hiddenLayerIds?: ReadonlySet<string>,
   ) {
     if (importType === ImportType.Json) {
-      ga('send', 'event', 'Import', 'JSON');
+      trackEvent('Import', 'JSON');
       this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds));
     } else {
       if (importType === ImportType.Svg) {
-        ga('send', 'event', 'Import', 'SVG');
+        trackEvent('Import', 'SVG');
       } else if (importType === ImportType.VectorDrawable) {
-        ga('send', 'event', 'Import', 'Vector Drawable');
+        trackEvent('Import', 'Vector Drawable');
       }
       if (resetWorkspace) {
         this.store.dispatch(new ResetWorkspace());

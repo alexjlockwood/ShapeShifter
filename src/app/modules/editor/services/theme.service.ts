@@ -1,9 +1,7 @@
-import { Injectable } from '@angular/core';
 import { State, Store } from 'app/modules/editor/store';
 import { SetTheme } from 'app/modules/editor/store/theme/actions';
 import { ThemeType } from 'app/modules/editor/store/theme/reducer';
 import { getThemeType } from 'app/modules/editor/store/theme/selectors';
-import { first } from 'rxjs/operators';
 
 // TODO: change the animation block green color
 
@@ -19,7 +17,6 @@ const DARK_DIVIDER_TEXT = 'rgba(255, 255, 255, 0.12)';
 /**
  * A simple service that provides an interface for making theme changes.
  */
-@Injectable({ providedIn: 'root' })
 export class ThemeService {
   constructor(private readonly store: Store<State>) {}
 
@@ -32,11 +29,7 @@ export class ThemeService {
   }
 
   getThemeType() {
-    let result: { themeType: ThemeType; isInitialPageLoad: boolean };
-    this.asObservable()
-      .pipe(first())
-      .subscribe(res => (result = res));
-    return result;
+    return getThemeType(this.store.getState());
   }
 
   asObservable() {

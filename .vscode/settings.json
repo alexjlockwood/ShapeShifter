@@ -11,9 +11,7 @@
     }
   },
   "files.trimTrailingWhitespace": true,
-  "html.format.wrapAttributes": "force",
   "prettier.printWidth": 100,
   "prettier.singleQuote": true,
-  "prettier.tabWidth": 2,
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "prettier.tabWidth": 2
 }

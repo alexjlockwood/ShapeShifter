@@ -19,8 +19,8 @@ export class SetActionMode implements Action {
 
 export class SetActionModeHover implements Action {
   readonly type = ActionModeActionTypes.SetActionModeHover;
-  readonly payload: { hover: Hover };
-  constructor(hover: Hover) {
+  readonly payload: { hover: Hover | undefined };
+  constructor(hover: Hover | undefined) {
     this.payload = { hover };
   }
 }
@@ -43,8 +43,8 @@ export class SetPairedSubPaths implements Action {
 
 export class SetUnpairedSubPath implements Action {
   readonly type = ActionModeActionTypes.SetUnpairedSubPath;
-  readonly payload: { unpairedSubPath: { source: ActionSource; subIdx: number } };
-  constructor(unpairedSubPath: { source: ActionSource; subIdx: number }) {
+  readonly payload: { unpairedSubPath: { source: ActionSource; subIdx: number } | undefined };
+  constructor(unpairedSubPath: { source: ActionSource; subIdx: number } | undefined) {
     this.payload = { unpairedSubPath };
   }
 }

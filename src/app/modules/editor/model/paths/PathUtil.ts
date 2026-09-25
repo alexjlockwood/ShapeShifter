@@ -15,7 +15,7 @@ export function interpolate(start: Path, end: Path, fraction: number) {
   const newCommands: Command[] = [];
   start.getCommands().forEach((startCmd, i) => {
     const endCmd = end.getCommands()[i];
-    const points: Point[] = [];
+    const points: Array<Point | undefined> = [];
     for (let j = 0; j < startCmd.points.length; j++) {
       const p1 = startCmd.points[j];
       const p2 = endCmd.points[j];

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 48 48">
+  <defs>
+    <path id="tri" d="M 0 0 L 10 0 L 5 8 Z"/>
+    <g id="pair">
+      <path id="left" d="M 0 0 L 4 0 L 4 4 L 0 4 Z" fill="#f00"/>
+      <path id="right" d="M 6 0 L 10 0 L 10 4 L 6 4 Z" fill="#0f0"/>
+    </g>
+  </defs>
+  <use xlink:href="#tri" fill="#000"/>
+  <use xlink:href="#tri" x="12" y="4" fill="#333"/>
+  <use xlink:href="#tri" x="24" transform="rotate(45 5 4)" fill="#666"/>
+  <use xlink:href="#pair" x="2" y="30"/>
+</svg>

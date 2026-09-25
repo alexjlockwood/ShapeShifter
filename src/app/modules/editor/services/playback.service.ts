@@ -1,4 +1,3 @@
-import { Injectable, NgZone } from '@angular/core';
 import { Action, State, Store } from 'app/modules/editor/store';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import {
@@ -15,19 +14,18 @@ import {
   getIsSlowMotion,
 } from 'app/modules/editor/store/playback/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
-import * as _ from 'lodash';
-import { OutputSelector } from 'reselect';
-import { first } from 'rxjs/operators';
+import _ from 'lodash';
+import { Subscription } from 'rxjs';
 
 /** A simple service that provides an interface for making playback changes. */
-@Injectable({ providedIn: 'root' })
 export class PlaybackService {
   private readonly animator: Animator;
+  private readonly subscription = new Subscription();
 
   // TODO: set current time to 0 when animation/vector layer changes (like before)?
   // TODO: reset time (or any other special handling) during workspace resets?
-  constructor(private readonly store: Store<State>, ngZone: NgZone) {
-    this.animator = new Animator(ngZone, {
+  constructor(private readonly store: Store<State>) {
+    this.animator = new Animator({
       onAnimationStart: () => {
         this.setIsPlaying(true);
       },
@@ -39,22 +37,33 @@ export class PlaybackService {
         this.setIsPlaying(false);
       },
     });
-    this.store.select(getIsPlaying).subscribe(isPlaying => {
-      if (isPlaying) {
-        const { duration } = this.queryStore(getAnimation);
-        const currentTime = this.getCurrentTime();
-        const startTime = duration === this.getCurrentTime() ? 0 : currentTime;
-        this.animator.play(duration, startTime);
-      } else {
-        this.animator.pause();
-      }
-    });
-    this.store.select(getIsSlowMotion).subscribe(isSlowMotion => {
-      this.animator.setIsSlowMotion(isSlowMotion);
-    });
-    this.store.select(getIsRepeating).subscribe(isRepeating => {
-      this.animator.setIsRepeating(isRepeating);
-    });
+    this.subscription.add(
+      this.store.select(getIsPlaying).subscribe(isPlaying => {
+        if (isPlaying) {
+          const { duration } = this.queryStore(getAnimation);
+          const currentTime = this.getCurrentTime();
+          const startTime = duration === this.getCurrentTime() ? 0 : currentTime;
+          this.animator.play(duration, startTime);
+        } else {
+          this.animator.pause();
+        }
+      }),
+    );
+    this.subscription.add(
+      this.store.select(getIsSlowMotion).subscribe(isSlowMotion => {
+        this.animator.setIsSlowMotion(isSlowMotion);
+      }),
+    );
+    this.subscription.add(
+      this.store.select(getIsRepeating).subscribe(isRepeating => {
+        this.animator.setIsRepeating(isRepeating);
+      }),
+    );
+  }
+
+  dispose() {
+    this.subscription.unsubscribe();
+    this.animator.pause();
   }
 
   asObservable() {
@@ -119,13 +128,8 @@ export class PlaybackService {
     }
   }
 
-  private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
-    let obj: T;
-    this.store
-      .select(selector)
-      .pipe(first())
-      .subscribe(o => (obj = o));
-    return obj;
+  private queryStore<T>(selector: (state: State) => T) {
+    return selector(this.store.getState());
   }
 }
 
@@ -135,12 +139,12 @@ const SLOW_MOTION_PLAYBACK_SPEED = 5;
 
 /** A simple class that simulates an animation loop. */
 class Animator {
-  private timeoutId: number;
-  private animationFrameId: number;
+  private timeoutId: number | undefined;
+  private animationFrameId: number | undefined;
   private playbackSpeed = DEFAULT_PLAYBACK_SPEED;
   private isRepeating = false;
 
-  constructor(private readonly ngZone: NgZone, private readonly callback: Callback) {}
+  constructor(private readonly callback: Callback) {}
 
   setIsRepeating(isRepeating: boolean) {
     this.isRepeating = isRepeating;
@@ -152,8 +156,8 @@ class Animator {
   }
 
   play(duration: number, startTime: number) {
-    this.runOutsideAngular(() => this.startAnimation(duration, startTime));
-    this.runInsideAngular(() => this.callback.onAnimationStart());
+    this.startAnimation(duration, startTime);
+    this.callback.onAnimationStart();
   }
 
   private startAnimation(duration: number, startTime: number) {
@@ -175,12 +179,7 @@ class Animator {
         this.pause(true);
       }
       const fraction = _.clamp(progress / (duration * playbackSpeed), 0, 1);
-      const executeFn = () => this.callback.onAnimationUpdate(fraction * duration);
-      if (fraction === 0 || fraction === 1) {
-        this.runInsideAngular(executeFn);
-      } else {
-        executeFn();
-      }
+      this.callback.onAnimationUpdate(fraction * duration);
     };
     this.animationFrameId = window.requestAnimationFrame(onAnimationFrameFn);
   }
@@ -195,7 +194,7 @@ class Animator {
       this.animationFrameId = undefined;
     }
     if (shouldNotify) {
-      this.runInsideAngular(() => this.callback.onAnimationEnd());
+      this.callback.onAnimationEnd();
     }
   }
 
@@ -205,22 +204,6 @@ class Animator {
 
   fastForward() {
     this.pause();
-  }
-
-  private runInsideAngular(fn: () => void) {
-    if (NgZone.isInAngularZone()) {
-      fn();
-    } else {
-      this.ngZone.run(fn);
-    }
-  }
-
-  private runOutsideAngular(fn: () => void) {
-    if (NgZone.isInAngularZone()) {
-      this.ngZone.runOutsideAngular(fn);
-    } else {
-      fn();
-    }
   }
 }
 

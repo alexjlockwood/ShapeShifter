@@ -17,6 +17,11 @@ export function checkPathsCompatible(block: PathAnimationBlock): Result {
   if (block.isAnimatable()) {
     return { areCompatible: true };
   }
+  if (!fromValue || !toValue) {
+    // One of the paths hasn't been set yet (e.g. the block was added to a layer without
+    // path data).
+    return { areCompatible: false };
+  }
 
   const numFromSubPaths = fromValue.getSubPaths().length;
   const numToSubPaths = toValue.getSubPaths().length;

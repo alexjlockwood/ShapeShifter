@@ -1,5 +1,3 @@
-/* tslint:disable:max-line-length */
-
 import * as PathParser from './PathParser';
 
 class Test {

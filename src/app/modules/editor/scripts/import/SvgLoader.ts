@@ -13,10 +13,23 @@ import { Path } from 'app/modules/editor/model/paths';
 import { NameProperty } from 'app/modules/editor/model/properties';
 import { ColorUtil, MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { optimizeSvg } from 'app/modules/editor/scripts/svgo';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 // TODO: trim ids/strings?
 // TODO: check for invalid enum values
+
+// The presentation attributes that elements inherit from their ancestors.
+const INHERITED_ATTRS = [
+  'stroke',
+  'stroke-width',
+  'stroke-linecap',
+  'stroke-linejoin',
+  'stroke-miterlimit',
+  'stroke-opacity',
+  'fill',
+  'fill-opacity',
+  'fill-rule',
+];
 
 /**
  * Utility function that takes an SVG string as input and
@@ -27,23 +40,23 @@ export function loadVectorLayerFromSvgString(
   doesNameExistFn: (name: string) => boolean,
 ) {
   return optimizeSvg(svgString).then(optimizedSvgString => {
-    return new Promise<VectorLayer>((resolve, reject) => {
-      if (!optimizedSvgString) {
-        reject();
-        return;
-      }
-      resolve(loadVectorLayerFromSvgStringInternal(optimizedSvgString, doesNameExistFn));
-    });
+    const vl = optimizedSvgString
+      ? loadVectorLayerFromSvgStringInternal(optimizedSvgString, doesNameExistFn)
+      : undefined;
+    if (!vl) {
+      throw new Error("Couldn't import the SVG");
+    }
+    return vl;
   });
 }
 
 // TODO: give better error message when user attempts to import SVG w/o a namespace declaration
-function loadVectorLayerFromSvgStringInternal(
+export function loadVectorLayerFromSvgStringInternal(
   svgString: string,
   doesNameExistFn: (name: string) => boolean,
-): VectorLayer {
+): VectorLayer | undefined {
   const usedIds = new Set<string>();
-  const makeFinalNodeIdFn = (nodeId: string, prefix: string) => {
+  const makeFinalNodeIdFn = (nodeId: string | null, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
       NameProperty.sanitize(nodeId || prefix),
       name => doesNameExistFn(name) || usedIds.has(name),
@@ -65,7 +78,11 @@ function loadVectorLayerFromSvgStringInternal(
     return infos.map(info => info.path);
   });
 
-  const nodeToLayerFn = (node: Element, transforms: ReadonlyArray<Matrix>): Layer => {
+  const nodeToLayerFn = (
+    node: Element,
+    transforms: ReadonlyArray<Matrix>,
+    inheritedAttrs: Readonly<Dictionary<string>> = {},
+  ): Layer | undefined => {
     if (
       !node ||
       node.nodeType === Node.TEXT_NODE ||
@@ -74,6 +91,16 @@ function loadVectorLayerFromSvgStringInternal(
       node instanceof SVGUseElement
     ) {
       return undefined;
+    }
+
+    // svgo only moves a group's attributes onto its children in some cases (e.g. not when the
+    // group has more than one child, or when the child has an id).
+    const attrs = { ...inheritedAttrs };
+    for (const attr of INHERITED_ATTRS) {
+      const value = node.getAttribute(attr);
+      if (value !== null && value !== 'inherit') {
+        attrs[attr] = value;
+      }
     }
 
     const nodeTransforms = getNodeTransforms(node as SVGGraphicsElement);
@@ -114,12 +141,12 @@ function loadVectorLayerFromSvgStringInternal(
       });
     };
 
-    if (node instanceof SVGPathElement && node.getAttribute('d')) {
-      const path = node.getAttribute('d');
+    const path = node.getAttribute('d');
+    if (node instanceof SVGPathElement && path) {
       const attrMap: Dictionary<any> = {};
       const simpleAttrFn = (nodeAttr: string, contextAttr: string) => {
-        if (node.hasAttribute(nodeAttr)) {
-          attrMap[contextAttr] = node.getAttribute(nodeAttr);
+        if (nodeAttr in attrs) {
+          attrMap[contextAttr] = attrs[nodeAttr];
         }
       };
 
@@ -145,7 +172,7 @@ function loadVectorLayerFromSvgStringInternal(
       const strokeLinecap: StrokeLineCap =
         'strokeLinecap' in attrMap ? attrMap['strokeLinecap'] : 'butt';
       const strokeLinejoin: StrokeLineJoin =
-        'strokeLinejoin' in attrMap ? attrMap['strokeLinecap'] : 'miter';
+        'strokeLinejoin' in attrMap ? attrMap['strokeLinejoin'] : 'miter';
       const strokeMiterLimit =
         'strokeMiterLimit' in attrMap ? Number(attrMap['strokeMiterLimit']) : 4;
       const fillRuleToFillTypeFn = (fillRule: string) => {
@@ -154,7 +181,7 @@ function loadVectorLayerFromSvgStringInternal(
       const fillType: FillType =
         'fillType' in attrMap ? fillRuleToFillTypeFn(attrMap['fillType']) : 'nonZero';
 
-      let pathData = new Path(path);
+      let pathData = parsePath(path, !!strokeColor && strokeLinecap !== 'butt');
       if (transforms.length) {
         pathData = new Path(
           pathData
@@ -190,7 +217,7 @@ function loadVectorLayerFromSvgStringInternal(
       const children: Layer[] = [];
       for (let i = 0; i < node.childNodes.length; i++) {
         const child = node.childNodes.item(i) as Element;
-        const layer = nodeToLayerFn(child, transforms);
+        const layer = nodeToLayerFn(child, transforms, attrs);
         if (layer) {
           children.push(layer);
         }
@@ -224,7 +251,7 @@ function loadVectorLayerFromSvgStringInternal(
   return new VectorLayer({
     id: _.uniqueId(),
     name: makeFinalNodeIdFn(documentElement.getAttribute('id'), 'vector'),
-    children: rootLayer ? rootLayer.children : undefined,
+    children: rootLayer ? rootLayer.children : [],
     width,
     height,
     alpha,
@@ -247,9 +274,30 @@ function isSvgNode(node: Element): node is SVGSVGElement {
 }
 
 /**
+ * Parses a path, dropping any zero-length segments. svgo 1.x removed these for us, but svgo 4
+ * ties that option to also dropping closepath commands, which would leave closed subpaths open.
+ * Zero-length segments are kept when a round or square line cap would draw them as dots.
+ */
+function parsePath(pathStr: string, isDrawnAsDot = false) {
+  const path = new Path(pathStr);
+  if (isDrawnAsDot) {
+    return path;
+  }
+  const cmds = path.getCommands();
+  const nonZeroLengthCmds = cmds.filter(cmd => {
+    const { start } = cmd;
+    if (cmd.type === 'M' || cmd.type === 'Z' || !start) {
+      return true;
+    }
+    return cmd.points.some(p => !!p && !MathUtil.arePointsEqual(p, start));
+  });
+  return nonZeroLengthCmds.length === cmds.length ? path : new Path(nonZeroLengthCmds);
+}
+
+/**
  * Returns a list of transform matricies assigned to the specified node.
  */
-function getNodeTransforms(node: SVGGraphicsElement) {
+function getNodeTransforms(node: SVGGraphicsElement | SVGClipPathElement) {
   if (!node.transform) {
     return [];
   }
@@ -267,10 +315,7 @@ function getNodeTransforms(node: SVGGraphicsElement) {
  * if one exists.
  */
 function getReferencedClipPathId(node: Element) {
-  if (!node.getAttribute('clip-path')) {
-    return undefined;
-  }
-  const clipPathAttr = node.getAttribute('clip-path').trim();
+  const clipPathAttr = node.getAttribute('clip-path')?.trim();
   if (!clipPathAttr || !clipPathAttr.startsWith('url(#')) {
     return undefined;
   }
@@ -323,23 +368,27 @@ function buildPathInfosForClipPath(node: SVGClipPathElement) {
   const pathInfos: PathInfo[] = [];
   if (node.childNodes) {
     for (let i = 0; i < node.childNodes.length; i++) {
-      const childNode = node.childNodes.item(i) as Element;
-      if (childNode instanceof SVGPathElement && childNode.getAttribute('d')) {
-        const pathStr = childNode.getAttribute('d');
-        const pathTransforms = getNodeTransforms(childNode).reverse();
-        const transforms = [...pathTransforms, ...clipPathTransforms];
-        const refClipPathId = getReferencedClipPathId(childNode);
-        pathInfos.push({
-          refClipPathId,
-          path: new Path(
-            new Path(pathStr)
-              .mutate()
-              .transform(Matrix.flatten(transforms))
-              .build()
-              .getPathString(),
-          ),
-        });
+      const childNode = node.childNodes.item(i);
+      if (!(childNode instanceof SVGPathElement)) {
+        continue;
       }
+      const pathStr = childNode.getAttribute('d');
+      if (!pathStr) {
+        continue;
+      }
+      const pathTransforms = getNodeTransforms(childNode).reverse();
+      const transforms = [...pathTransforms, ...clipPathTransforms];
+      const refClipPathId = getReferencedClipPathId(childNode);
+      pathInfos.push({
+        refClipPathId,
+        path: new Path(
+          parsePath(pathStr)
+            .mutate()
+            .transform(Matrix.flatten(transforms))
+            .build()
+            .getPathString(),
+        ),
+      });
     }
   }
   return pathInfos;

@@ -1,21 +1,24 @@
+@use 'sass:map';
+@use '../../styles/palette' as *;
+
 @mixin ss-playback-theme($theme) {
-    $foreground: map-get($theme, ss-foreground);
-    $background: map-get($theme, ss-background);
+    $foreground: map.get($theme, ss-foreground);
+    $background: map.get($theme, ss-background);
     .playback {
         button {
             margin: 0px 3px;
         }
         button {
-            &[mat-icon-button] {
-                mat-icon {
+            &.MuiIconButton-root {
+                .ss-icon {
                     color: mat-color($foreground, secondary-text);
                 }
-                mat-icon.activated {
+                .ss-icon.activated {
                     color: mat-color(mat-palette($mat-orange, A700));
                 }
             }
-            &[maticon-button][disabled] {
-                mat-icon {
+            &.MuiIconButton-root.Mui-disabled {
+                .ss-icon {
                     color: mat-color($foreground, disabled-text);
                 }
             }

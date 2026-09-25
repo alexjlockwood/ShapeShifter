@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { Property } from './Property';
 
@@ -8,8 +8,17 @@ export class EnumProperty extends Property<string> {
   }
 
   // @Override
+  protected setter(model: any, propertyName: string, value: string) {
+    // Replace invalid values (e.g. from an older file) with the first option, which is the
+    // default. Otherwise the property inspector can't display them.
+    const isValid = this.options.some(o => o.value === value);
+    super.setter(model, propertyName, isValid ? value : this.options[0].value);
+  }
+
+  // @Override
   displayValueForValue(value: string) {
-    return _.find(this.options, o => o.value === value).label;
+    const option = _.find(this.options, o => o.value === value);
+    return option ? option.label : value;
   }
 
   // @Override

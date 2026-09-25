@@ -1,26 +1,31 @@
 {
-  "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "./dist/out-tsc",
-    "baseUrl": "src",
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["vite/client", "vitest/globals"],
     "paths": {
-      "src/*": ["./src/*"]
+      "app/*": ["./src/app/*"],
+      "environments/*": ["./src/environments/*"],
+      "test/*": ["./src/test/*"]
     },
-    "sourceMap": true,
-    "declaration": false,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
+    "strict": true,
     "noImplicitReturns": true,
-    "noImplicitAny": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "importHelpers": true,
-    "target": "es5",
-    "typeRoots": ["node_modules/@types"],
-    "lib": ["es2017", "dom"]
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+    "noEmit": true
   },
-  "angularCompilerOptions": {
-    "preserveWhitespaces": false
-  }
+  "include": ["src"],
+  "exclude": [
+    "src/app/modules/editor/components/canvas/canvaspaper.directive.ts",
+    "src/app/modules/editor/components/toolpanel",
+    "src/app/modules/editor/scripts/paper",
+    "src/app/modules/editor/services/paper.service.ts",
+    "src/typings/paper"
+  ]
 }

@@ -1,8 +1,8 @@
 import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 import { Layer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
-import { ModelUtil } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
+import _ from 'lodash';
 
 const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
   activeBlock: undefined,
@@ -24,9 +24,15 @@ export class AnimationRenderer {
     this.renderedVectorLayer = originalVectorLayer.deepClone();
     const animDataByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(activeAnimation);
     Object.keys(animDataByLayer).forEach(layerId => {
+      const originalLayer = originalVectorLayer.findLayerById(layerId);
+      const renderedLayer = this.renderedVectorLayer.findLayerById(layerId);
+      if (!originalLayer || !renderedLayer) {
+        // Skip blocks for layers that no longer exist.
+        return;
+      }
       this.animDataByLayer[layerId] = {
-        originalLayer: originalVectorLayer.findLayerById(layerId),
-        renderedLayer: this.renderedVectorLayer.findLayerById(layerId),
+        originalLayer,
+        renderedLayer,
         orderedBlocks: animDataByLayer[layerId],
       };
     });
@@ -50,6 +56,9 @@ export class AnimationRenderer {
 
         // Compute the rendered value at the given time.
         const property = animData.originalLayer.animatableProperties.get(propertyName);
+        if (!property) {
+          return;
+        }
         let value = (animData.originalLayer as any)[propertyName];
         for (const block of blocks) {
           if (timeMillis < block.startTime) {
@@ -58,8 +67,8 @@ export class AnimationRenderer {
           if (timeMillis < block.endTime) {
             const f = (timeMillis - block.startTime) / (block.endTime - block.startTime);
             // TODO: this is a bit hacky... no need to perform a search every time.
-            const interpolatorFn = _.find(INTERPOLATORS, i => i.value === block.interpolator)
-              .interpolateFn;
+            const { interpolateFn: interpolatorFn } =
+              _.find(INTERPOLATORS, i => i.value === block.interpolator) ?? INTERPOLATORS[0];
             value = property.interpolateValue(block.fromValue, block.toValue, interpolatorFn(f));
             _ar.activeBlock = block;
             _ar.interpolatedValue = true;
@@ -90,6 +99,6 @@ interface RendererData {
 }
 
 interface PropertyState {
-  activeBlock: AnimationBlock;
+  activeBlock: AnimationBlock | undefined;
   interpolatedValue: boolean;
 }

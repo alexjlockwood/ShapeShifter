@@ -1,9 +1,9 @@
 import { ActionMode, ActionSource, HoverType } from 'app/modules/editor/model/actionmode';
 import { Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import type { CanvasOverlay } from './CanvasOverlay';
 
 // TODO: clean up this class' messy communication w/ the overlay directive
 
@@ -14,7 +14,7 @@ export class PairSubPathHelper {
   private readonly actionSource: ActionSource;
   private readonly actionModeService: ActionModeService;
 
-  constructor(private readonly component: CanvasOverlayDirective) {
+  constructor(private readonly component: CanvasOverlay) {
     this.actionSource = component.actionSource;
     this.actionModeService = component.actionModeService;
   }
@@ -64,10 +64,15 @@ export class PairSubPathHelper {
     }
   }
 
-  private findHitSubPath(hits: ReadonlyArray<{ subIdx: number }>) {
+  private findHitSubPath(hits: ReadonlyArray<{ subIdx: number }> | undefined) {
+    const activePath = this.component.activePath;
+    if (!activePath || !hits?.length) {
+      // Only the active path is hit tested, and a hit flag is only set if its list isn't empty.
+      throw new Error('Expected at least one hit on the active path');
+    }
     const infos = hits.map(index => {
       const { subIdx } = index;
-      return { subIdx, subPath: this.component.activePath.getSubPath(subIdx) };
+      return { subIdx, subPath: activePath.getSubPath(subIdx) };
     });
     const lastSplitIndex = _.findLastIndex(infos, info => info.subPath.isSplit());
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];

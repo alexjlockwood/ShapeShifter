@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <style>
+    .a { fill: #ff0000; }
+    .b { fill: none; stroke: #0000ff; stroke-width: 2; stroke-linecap: round; }
+    #special { fill-opacity: 0.5; }
+  </style>
+  <path class="a" d="M 2 2 L 10 2 L 10 10 Z"/>
+  <path class="b" d="M 12 12 L 22 22"/>
+  <path class="a b" d="M 2 20 L 8 14"/>
+  <path id="special" class="a" style="stroke: #00ff00" d="M 14 2 L 22 2 L 22 10 Z"/>
+</svg>

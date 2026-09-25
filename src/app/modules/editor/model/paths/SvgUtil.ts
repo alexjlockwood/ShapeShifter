@@ -1,6 +1,6 @@
 interface EllipticalArc {
-  startX?: number;
-  startY?: number;
+  startX: number;
+  startY: number;
   rx: number;
   ry: number;
   xAxisRotation: number;

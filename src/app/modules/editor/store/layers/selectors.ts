@@ -1,5 +1,8 @@
-import { createDeepEqualSelector, getEditorState } from 'app/modules/editor/store/selectors';
-import { createSelector } from 'reselect';
+import {
+  createDeepEqualSelector,
+  createSelector,
+  getEditorState,
+} from 'app/modules/editor/store/selectors';
 
 const getLayerState = createSelector(getEditorState, s => s.layers);
 export const getVectorLayer = createSelector(getLayerState, l => l.vectorLayer);

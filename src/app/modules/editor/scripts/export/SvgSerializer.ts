@@ -7,7 +7,7 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import * as XmlSerializer from './XmlSerializer';
 
@@ -18,16 +18,16 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * Serializes an VectorLayer to a SVG string.
  */
 export function toSvgString(vl: VectorLayer, width?: number, height?: number) {
-  const xmlDoc = document.implementation.createDocument(undefined, 'svg', undefined);
+  const xmlDoc = document.implementation.createDocument(null, 'svg', null);
   const rootNode = xmlDoc.documentElement;
   rootNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
-  rootNode.setAttributeNS(undefined, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
+  rootNode.setAttributeNS(null, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
   vectorLayerToSvgNode(vl, rootNode, xmlDoc);
   if (width !== undefined) {
-    rootNode.setAttributeNS(undefined, 'width', width.toString() + 'px');
+    rootNode.setAttributeNS(null, 'width', width.toString() + 'px');
   }
   if (height !== undefined) {
-    rootNode.setAttributeNS(undefined, 'height', height.toString() + 'px');
+    rootNode.setAttributeNS(null, 'height', height.toString() + 'px');
   }
   return serializeXmlNode(rootNode);
 }
@@ -38,10 +38,10 @@ export function toSvgSpriteFrameString(
   translateY = 0,
   frameNumber = '',
 ) {
-  const xmlDoc = document.implementation.createDocument(undefined, 'g', undefined);
+  const xmlDoc = document.implementation.createDocument(null, 'g', null);
   const rootNode = xmlDoc.documentElement;
   vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, false, frameNumber);
-  rootNode.setAttributeNS(undefined, 'transform', `translate(${translateX}, ${translateY})`);
+  rootNode.setAttributeNS(null, 'transform', `translate(${translateX}, ${translateY})`);
   return serializeXmlNode(rootNode);
 }
 
@@ -71,7 +71,7 @@ function vectorLayerToSvgNode(
     layer.children
       .reduce(
         (acc: ReadonlyArray<Entry>, curr) => {
-          const seenClipPaths = acc.length ? [..._.last(acc).seenClipPaths] : [];
+          const seenClipPaths = acc.length ? [...acc[acc.length - 1].seenClipPaths] : [];
           // Ignore clip paths with empty path data strings.
           if (curr instanceof ClipPathLayer && curr.pathData && curr.pathData.getPathString()) {
             clipPathToPathDataMap.set(curr.id, curr.pathData.getPathString());
@@ -100,7 +100,7 @@ function vectorLayerToSvgNode(
   const clippedLayerToClipPathNameMap = new Map<string, string>();
   clippedLayerToSeenClipPathsMap.forEach((seenClipPaths, layerId) => {
     const frameInfo = frameNumber ? `_frame${frameNumber}` : '';
-    const layerInfo = `_${vl.findLayerById(layerId).name}`;
+    const layerInfo = `_${vl.findLayerById(layerId)?.name ?? layerId}`;
     const clipPathName = `clip${frameInfo}${layerInfo}`;
     clippedLayerToClipPathNameMap.set(layerId, clipPathName);
   });
@@ -136,7 +136,7 @@ function vectorLayerToSvgNode(
 
   walk(
     vl,
-    (layer: VectorLayer | GroupLayer | PathLayer, parentNode: Node) => {
+    (layer: Layer, parentNode: Node) => {
       if (layer instanceof VectorLayer) {
         if (withIds) {
           conditionalAttr(destinationNode, 'id', vl.name, '');
@@ -230,7 +230,7 @@ function vectorLayerToSvgNode(
         }
         let nodeToAttachToParent = node;
         if (transformValues.length) {
-          node.setAttributeNS(undefined, 'transform', transformValues.join(' '));
+          node.setAttributeNS(null, 'transform', transformValues.join(' '));
           if (isLayerBeingClippedFn(layer.id)) {
             // Create a wrapper node so that the clip-path is applied before the transformations.
             const wrapperNode = xmlDoc.createElement('g');
@@ -251,11 +251,11 @@ function vectorLayerToSvgNode(
 function conditionalAttr(
   node: HTMLElement,
   attr: string,
-  value: string | number,
+  value: string | number | undefined,
   skipValue?: string | number,
 ) {
   if (!_.isNil(value) && (skipValue === undefined || value !== skipValue)) {
-    node.setAttributeNS(undefined, attr, value.toString());
+    node.setAttributeNS(null, attr, value.toString());
   }
 }
 
@@ -263,10 +263,14 @@ function serializeXmlNode(xmlNode: HTMLElement) {
   return XmlSerializer.serializeToString(xmlNode, { indent: 4, multiAttributeIndent: 4 });
 }
 
-function walk(layer: VectorLayer, fn: (layer: Layer, ctx: Node) => Node, context: Node) {
+function walk(
+  layer: VectorLayer,
+  fn: (layer: Layer, ctx: Node) => Node | undefined,
+  context: Node,
+) {
   const visitFn = (l: Layer, ctx: Node) => {
     const childCtx = fn(l, ctx);
-    if (l.children) {
+    if (childCtx && l.children) {
       l.children.forEach(child => visitFn(child, childCtx));
     }
   };

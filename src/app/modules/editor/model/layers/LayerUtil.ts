@@ -1,7 +1,7 @@
 import { Path } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from './Layer';
 
@@ -14,7 +14,8 @@ const IS_DEV_BUILD = !environment.production;
  * drawing coordinates back to path coordinates.
  */
 export function getCanvasTransformForLayer(root: Layer, layerId: string) {
-  return Matrix.flatten(getCanvasTransformsForLayer(root, layerId));
+  // The transform is the identity if the layer doesn't exist.
+  return Matrix.flatten(getCanvasTransformsForLayer(root, layerId) ?? []);
 }
 
 /**
@@ -23,7 +24,7 @@ export function getCanvasTransformForLayer(root: Layer, layerId: string) {
  * immediate parent will be the very last matrix in the returned list).
  */
 function getCanvasTransformsForLayer(root: Layer, layerId: string) {
-  return (function recurseFn(parents: Layer[], current: Layer): Matrix[] {
+  return (function recurseFn(parents: Layer[], current: Layer): Matrix[] | undefined {
     if (current.id === layerId) {
       return _.flatMap(parents, l => {
         return l instanceof GroupLayer ? getCanvasTransformsForGroupLayer(l) : [];
@@ -198,15 +199,13 @@ export function addLayers(
   })(root) as VectorLayer;
 }
 
+/** Returns a copy of the layer with the specified descendants removed. */
 export function removeLayers<L extends Layer>(layer: L, ...removedLayerIds: string[]) {
   const layerIds = new Set(removedLayerIds);
-  return (function recurseFn(curr: Layer): Layer {
-    if (layerIds.has(curr.id)) {
-      return undefined;
-    }
-    const children = curr.children.map(recurseFn).filter(l => !!l);
+  return (function recurseFn<T extends Layer>(curr: T): T {
+    const children = curr.children.filter(l => !layerIds.has(l.id)).map(recurseFn);
     return setLayerChildren(curr, children);
-  })(layer) as L;
+  })(layer);
 }
 
 export function updateLayer(vl: VectorLayer, layer: Layer) {
@@ -245,7 +244,7 @@ export function findLayerByName(layers: ReadonlyArray<Layer>, layerName: string)
 }
 
 export function findParent(vl: VectorLayer, layerId: string) {
-  return (function recurseFn(curr: Layer, parent?: Layer): Layer {
+  return (function recurseFn(curr: Layer, parent?: Layer): Layer | undefined {
     if (curr.id === layerId) {
       return parent;
     }
@@ -267,7 +266,7 @@ export function findPreviousSibling(vl: VectorLayer, layerId: string) {
   return findSibling(layerId, findParent(vl, layerId), -1);
 }
 
-function findSibling(layerId: string, parent: Layer, offset: number) {
+function findSibling(layerId: string, parent: Layer | undefined, offset: number) {
   if (!parent || !parent.children) {
     return undefined;
   }

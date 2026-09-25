@@ -12,7 +12,7 @@ import {
 import { Path } from 'app/modules/editor/model/paths';
 import { NameProperty } from 'app/modules/editor/model/properties';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 // import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 // import { AnimationBlock } from 'app/modules/editor/model/timeline';
@@ -34,7 +34,7 @@ function loadVectorLayerFromElement(
     return undefined;
   }
   const usedNames = new Set<string>();
-  const makeFinalNodeIdFn = (value: string, prefix: string) => {
+  const makeFinalNodeIdFn = (value: string | null, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
       NameProperty.sanitize(value || prefix),
       n => doesLayerNameExistFn(n) || usedNames.has(n),
@@ -43,7 +43,7 @@ function loadVectorLayerFromElement(
     return finalName;
   };
 
-  const nodeToLayerDataFn = (node: Node): Layer => {
+  const nodeToLayerDataFn = (node: Node): Layer | undefined => {
     if (!isElement(node)) {
       return undefined;
     }
@@ -81,7 +81,7 @@ function loadVectorLayerFromElement(
     if (node.childNodes.length) {
       const children = Array.from(node.childNodes)
         .map(child => nodeToLayerDataFn(child))
-        .filter(child => !!child);
+        .filter((child): child is Layer => !!child);
       if (children && children.length) {
         return new GroupLayer({
           id: _.uniqueId(),
@@ -238,7 +238,7 @@ function getNumber(obj: HTMLElement, attr: string, def: string) {
 
 function getPath(obj: HTMLElement) {
   const androidAttr = 'android:pathData';
-  const pathData = obj.hasAttribute(androidAttr) ? obj.getAttribute(androidAttr) : '';
+  const pathData = obj.getAttribute(androidAttr) ?? '';
   try {
     return new Path(pathData);
   } catch (e) {
@@ -249,6 +249,6 @@ function getPath(obj: HTMLElement) {
 
 function getColor(obj: HTMLElement, attr: string, def = '') {
   const androidAttr = `android:${attr}`;
-  const color = obj.hasAttribute(androidAttr) ? obj.getAttribute(androidAttr) : def;
+  const color = obj.getAttribute(androidAttr) ?? def;
   return !!ColorUtil.parseAndroidColor(color) ? color : def;
 }

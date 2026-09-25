@@ -1,6 +1,6 @@
 import { Layer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 /**
  * Builds a map where the keys are layer IDs and the values are
@@ -27,6 +27,20 @@ export function getOrderedBlocksByPropertyByLayer(animation: Animation) {
   });
 
   return blocksByPropertyByLayer;
+}
+
+/**
+ * Returns true if the specified layer exists and can animate the specified property. Blocks
+ * that don't (e.g. from older files) can't be rendered or exported.
+ */
+export function canAnimate(vectorLayer: VectorLayer, block: AnimationBlockTarget) {
+  const layer = vectorLayer.findLayerById(block.layerId);
+  return !!layer && layer.animatableProperties.has(block.propertyName);
+}
+
+interface AnimationBlockTarget {
+  readonly layerId: string;
+  readonly propertyName: string;
 }
 
 /**

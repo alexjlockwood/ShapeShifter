@@ -1,8 +1,11 @@
+@use 'sass:map';
+@use '../../styles/palette' as *;
+
 @mixin ss-propertyinput-theme($theme) {
-    $foreground: map-get($theme, ss-foreground);
-    $background: map-get($theme, ss-background);
-    $accent: map-get($theme, accent);
-    $is-dark: map-get($theme, is-dark);
+    $foreground: map.get($theme, ss-foreground);
+    $background: map.get($theme, ss-background);
+    $accent: map.get($theme, accent);
+    $is-dark: map.get($theme, is-dark);
     .property-input {
         background-color: mat-color($background, base200);
     }
@@ -13,8 +16,8 @@
         }
         button.spi-secondary-icon {
             color: mat-color($foreground, secondary-text);
-            &[mat-icon-button][disabled] {
-                mat-icon {
+            &.MuiIconButton-root.Mui-disabled {
+                .ss-icon {
                     color: mat-color($foreground, disabled-text);
                 }
             }
@@ -47,7 +50,7 @@
             }
         }
         .spi-property-value-menu-target {
-            &::after {
+            .spi-property-value-menu-arrow {
                 color: mat-color($foreground, disabled-text);
             }
         }

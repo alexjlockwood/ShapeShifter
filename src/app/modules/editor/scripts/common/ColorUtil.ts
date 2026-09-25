@@ -1,7 +1,7 @@
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
-import * as tinycolor from 'tinycolor2';
+import tinycolor from 'tinycolor2';
 
-export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
+export function parseAndroidColor(val: string): tinycolor.ColorFormats.RGBA | undefined {
   if (typeof val !== 'string') {
     bugsnagClient.notify(new TypeError(`Argument has incorrect type (${typeof val}): ` + val), {
       severity: 'warning',
@@ -9,7 +9,7 @@ export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
     return undefined;
   }
   val = (val || '').replace(/^\s*#?|\s*$/g, '');
-  const dict: ColorFormats.RGBA = { a: 0, r: 0, g: 0, b: 0 };
+  const dict: tinycolor.ColorFormats.RGBA = { a: 0, r: 0, g: 0, b: 0 };
 
   if (val.length === 3) {
     dict.a = 255;
@@ -38,7 +38,7 @@ export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
   return isNaN(dict.r) || isNaN(dict.g) || isNaN(dict.b) || isNaN(dict.a) ? undefined : dict;
 }
 
-export function toAndroidString(dict: ColorFormats.RGBA): string {
+export function toAndroidString(dict: tinycolor.ColorFormats.RGBA): string {
   let str = '#';
   if (dict.a !== 255) {
     str += (dict.a < 16 ? '0' : '') + dict.a.toString(16);
@@ -64,10 +64,10 @@ export function svgToAndroidColor(color: string): string | undefined {
 }
 
 export function androidToCssHexColor(androidColor: string | undefined, multAlpha = 1): string {
-  if (!androidColor) {
+  const d = androidColor ? parseAndroidColor(androidColor) : undefined;
+  if (!d) {
     return 'transparent';
   }
-  const d = parseAndroidColor(androidColor);
   let str = '#';
   str +=
     (d.r < 16 ? '0' : '') +
@@ -83,9 +83,9 @@ export function androidToCssHexColor(androidColor: string | undefined, multAlpha
 }
 
 export function androidToCssRgbaColor(androidColor: string | undefined, multAlpha = 1): string {
-  if (!androidColor) {
+  const d = androidColor ? parseAndroidColor(androidColor) : undefined;
+  if (!d) {
     return 'transparent';
   }
-  const d = parseAndroidColor(androidColor);
   return `rgba(${d.r},${d.g},${d.b},${((d.a * multAlpha) / 255).toFixed(2)})`;
 }

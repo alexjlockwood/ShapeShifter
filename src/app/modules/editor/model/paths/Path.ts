@@ -1,6 +1,7 @@
+import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { Projection } from './calculators';
 import { Command } from './Command';
@@ -16,7 +17,7 @@ import { SvgChar } from './SvgChar';
  */
 export class Path {
   private readonly ps: PathState;
-  private pathString: string;
+  private pathString: string | undefined;
 
   constructor(obj: string | Command[] | PathState) {
     this.ps = typeof obj === 'string' || Array.isArray(obj) ? new PathState(obj) : obj;
@@ -207,8 +208,8 @@ export class Path {
 
 /** Represents the options for a hit test. */
 export interface HitOptions {
-  readonly isPointInRangeFn?: (distance: number, cmd?: Command) => boolean;
-  readonly isSegmentInRangeFn?: (distance: number, cmd?: Command) => boolean;
+  readonly isPointInRangeFn?: (distance: number, cmd: Command) => boolean;
+  readonly isSegmentInRangeFn?: (distance: number, cmd: Command) => boolean;
   readonly findShapesInRange?: boolean;
   readonly restrictToSubIdx?: ReadonlyArray<number>;
 }
@@ -219,9 +220,9 @@ export interface HitResult {
   readonly isEndPointHit: boolean;
   readonly isSegmentHit: boolean;
   readonly isShapeHit: boolean;
-  readonly endPointHits?: ReadonlyArray<ProjectionOntoPath>;
-  readonly segmentHits?: ReadonlyArray<ProjectionOntoPath>;
-  readonly shapeHits?: Array<{ subIdx: number }>;
+  readonly endPointHits: ReadonlyArray<ProjectionOntoPath>;
+  readonly segmentHits: ReadonlyArray<ProjectionOntoPath>;
+  readonly shapeHits: Array<{ subIdx: number }>;
 }
 
 export interface ProjectionOntoPath {
@@ -290,7 +291,7 @@ export class PathMutator {
       return this;
     }
     const firstCmd = sps.getCommandStates()[0].getCommands()[0];
-    const lastCmd = _.last(_.last(sps.getCommandStates()).getCommands());
+    const lastCmd = last(last(sps.getCommandStates()).getCommands());
     if (!MathUtil.arePointsEqual(firstCmd.end, lastCmd.end)) {
       // TODO: in some cases there may be rounding errors that cause a closed subpath
       // to show up as non-closed. is there anything we can do to alleviate this?
@@ -578,7 +579,11 @@ export class PathMutator {
   deleteStrokedSubPath(subIdx: number) {
     LOG('unsplitStrokedSubPath', subIdx);
     const parent = this.findSubPathStateParent(subIdx);
-    const splitId = _.last(_.last(parent.getSplitSubPaths()[0].getCommandStates()).getCommands())
+    if (!parent) {
+      console.warn('Ignoring attempt to delete a subpath that was never split');
+      return this;
+    }
+    const splitId = last(last(parent.getSplitSubPaths()[0].getCommandStates()).getCommands())
       .id;
     const mutator = parent.mutate().setSplitSubPaths([]);
     this.deleteSpsSplitPoint(parent.getCommandStates(), splitId, mutator);
@@ -761,10 +766,13 @@ export class PathMutator {
   deleteFilledSubPath(subIdx: number) {
     LOG('deleteFilledSubPath', subIdx);
     const targetCss = this.findSubPathStateLeaf(subIdx).getCommandStates();
+    const parent = this.findSubPathStateParent(subIdx);
+    if (!parent) {
+      console.warn('Ignoring attempt to delete a subpath that was never split');
+      return this;
+    }
     // Get the list of parent split segment IDs.
-    const parentSplitSegIds = _(this.findSubPathStateParent(
-      subIdx,
-    ).getCommandStates() as CommandState[])
+    const parentSplitSegIds = _(parent.getCommandStates() as CommandState[])
       .map(cs => cs.getSplitSegmentId())
       .compact()
       .uniq()
@@ -779,6 +787,9 @@ export class PathMutator {
       .value();
     siblingSplitSegIds.forEach(id => {
       const targetCs = _.find(targetCss, cs => cs.getSplitSegmentId() === id);
+      if (!targetCs) {
+        return;
+      }
       const deletedSubIdxs = this.calculateDeletedSubIdxs(subIdx, targetCs);
       this.deleteFilledSubPathSegmentInternal(subIdx, targetCs);
       subIdx -= _.sumBy(deletedSubIdxs, idx => (idx <= subIdx ? 1 : 0));
@@ -806,6 +817,10 @@ export class PathMutator {
     // Get the split segment ID of the target command state object.
     const targetSplitSegId = targetCs.getSplitSegmentId();
     const psps = this.findSplitSegmentParentNode(targetSplitSegId);
+    if (!psps) {
+      reportMissingSplitSegmentParent();
+      return this;
+    }
     const pssps = psps.getSplitSubPaths();
     const pcss = psps.getCommandStates();
     // Find the first index of the split sub path containing the target.
@@ -819,17 +834,20 @@ export class PathMutator {
     const deletedSubIdxs = this.calculateDeletedSubIdxs(subIdx, targetCs);
     const splitCss1 = pssps[splitSubPathIdx1].getCommandStates();
     const splitCss2 = pssps[splitSubPathIdx2].getCommandStates();
+    const firstParentCs = splitCss2[0].getParentCommandState();
+    const lastParentCs = last(splitCss2).getParentCommandState();
+    if (!firstParentCs || !lastParentCs) {
+      reportMissingSplitSegmentParent();
+      return this;
+    }
     let updatedSplitSubPaths: SubPathState[] = [];
     if (pssps.length > 2) {
       // In addition to deleting the split segment, we will also have to merge its
       // two adjacent sub paths together into one.
-      const parentBackingId2 = _.last(splitCss2)
-        .getParentCommandState()
-        .getBackingId();
-      const parentBackingCmd2 = _.find(pcss, c => parentBackingId2 === c.getBackingId());
+      const parentBackingId2 = lastParentCs.getBackingId();
 
       const newCss: CommandState[] = [];
-      let cs: CommandState;
+      let cs: CommandState | undefined = splitCss1[0];
       let i = 0;
       for (; i < splitCss1.length; i++) {
         cs = splitCss1[i];
@@ -855,7 +873,7 @@ export class PathMutator {
         }
         newCss.push(cs);
       }
-      i = _.findIndex(splitCss1, c => c.getBackingId() === parentBackingCmd2.getBackingId());
+      i = _.findIndex(splitCss1, c => c.getBackingId() === parentBackingId2);
       if (i >= 0) {
         if (cs) {
           if (splitCss1[i].getBackingId() === cs.getBackingId()) {
@@ -886,12 +904,8 @@ export class PathMutator {
       updatedSplitSubPaths = splits;
     }
     const mutator = psps.mutate().setSplitSubPaths(updatedSplitSubPaths);
-    const firstSplitSegId = _.last(splitCss2[0].getParentCommandState().getCommands()).id;
-    const secondSplitSegId = _.last(
-      _.last(splitCss2)
-        .getParentCommandState()
-        .getCommands(),
-    ).id;
+    const firstSplitSegId = last(firstParentCs.getCommands()).id;
+    const secondSplitSegId = last(lastParentCs.getCommands()).id;
     for (const id of [firstSplitSegId, secondSplitSegId]) {
       this.deleteSpsSplitPoint(pcss, id, mutator);
     }
@@ -912,6 +926,9 @@ export class PathMutator {
   private calculateDeletedSubIdxs(subIdx: number, targetCs: CommandState) {
     const splitSegId = targetCs.getSplitSegmentId();
     const psps = this.findSplitSegmentParentNode(splitSegId);
+    if (!psps) {
+      return [];
+    }
     const pssps = psps.getSplitSubPaths();
     const splitSubPathIdx1 = _.findIndex(pssps, sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegId);
@@ -957,7 +974,6 @@ export class PathMutator {
   private updateOrderingAfterUnsplitSubPath(subIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
     this.subPathOrdering.splice(subIdx, 1);
-    // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < this.subPathOrdering.length; i++) {
       if (spsIdx < this.subPathOrdering[i]) {
         this.subPathOrdering[i]--;
@@ -969,7 +985,7 @@ export class PathMutator {
    * Adds a collapsing subpath to the path.
    */
   addCollapsingSubPath(point: Point, numCommands: number) {
-    const prevCmd = _.last(this.buildOrderedCommands());
+    const prevCmd = last(this.buildOrderedCommands());
     const css = [new CommandState(new Command('M', [prevCmd.end, point]))];
     for (let i = 1; i < numCommands; i++) {
       css.push(new CommandState(new Command('L', [point, point])));
@@ -1051,7 +1067,7 @@ export class PathMutator {
             .setPoints(undefined, moveCmd.end)
             .build();
         } else if (subIdx !== 0) {
-          const start = _.last(orderedSubPathCmds[subIdx - 1]).end;
+          const start = last(orderedSubPathCmds[subIdx - 1]).end;
           cmds[0] = moveCmd
             .mutate()
             .setPoints(start, moveCmd.end)
@@ -1084,7 +1100,8 @@ export class PathMutator {
    * Returns the immediate parent of the leaf node at the specified subpath index.
    */
   private findSubPathStateParent(subIdx: number) {
-    const subPathStateParents: SubPathState[] = [];
+    // Undefined for subpaths that haven't been split.
+    const subPathStateParents: Array<SubPathState | undefined> = [];
     (function recurseFn(currentLevel: ReadonlyArray<SubPathState>, parent?: SubPathState) {
       currentLevel.forEach(state => {
         if (!state.getSplitSubPaths().length) {
@@ -1146,7 +1163,7 @@ export class PathMutator {
     nodeToReplace: SubPathState,
     replaceNodeFn: (states: SubPathState[], i: number) => void,
   ) {
-    return (function recurseFn(states: SubPathState[]) {
+    const states = (function recurseFn(states: SubPathState[]): SubPathState[] | undefined {
       if (!states.length) {
         return undefined;
       }
@@ -1168,13 +1185,17 @@ export class PathMutator {
       // Return undefined to signal that the parent was not found.
       return undefined;
     })([...this.subPathStateMap]);
+    if (!states) {
+      throw new Error("Couldn't find the subpath state to replace");
+    }
+    return states;
   }
 
   /**
    * Finds the first node in the tree that contains the specified split segment ID.
    */
-  private findSplitSegmentParentNode(splitSegId: string): SubPathState {
-    return (function recurseFn(...states: SubPathState[]): SubPathState {
+  private findSplitSegmentParentNode(splitSegId: string) {
+    return (function recurseFn(...states: SubPathState[]): SubPathState | undefined {
       for (const state of states) {
         for (const sps of state.getSplitSubPaths()) {
           if (sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegId)) {
@@ -1203,7 +1224,7 @@ function reverseAndShiftCommandStates(
   // If the last command is a 'Z', replace it with a line before we shift.
   // TODO: replacing the 'Z' messes up certain stroke-linejoin values
   const newCss = [...css];
-  newCss[newCss.length - 1] = _.last(css)
+  newCss[newCss.length - 1] = last(css)
     .mutate()
     .forceConvertClosepathsToLines()
     .build();
@@ -1217,7 +1238,7 @@ function reverseCommandStates(css: CommandState[], isReversed: boolean) {
   if (isReversed) {
     const revCss = [
       new CommandState(
-        new Command('M', [css[0].getCommands()[0].start, _.last(_.last(css).getCommands()).end]),
+        new Command('M', [css[0].getCommands()[0].start, last(last(css).getCommands()).end]),
       ),
     ];
     for (let i = css.length - 1; i > 0; i--) {
@@ -1249,9 +1270,9 @@ function shiftCommandStates(css: CommandState[], isReversed: boolean, shiftOffse
   const newCss: CommandState[] = [];
 
   let counter = 0;
-  let targetCsIdx: number;
-  let targetSplitIdx: number;
-  let targetCs: CommandState;
+  let targetCsIdx: number | undefined;
+  let targetSplitIdx: number | undefined;
+  let targetCs: CommandState | undefined;
   for (let i = 0; i < css.length; i++) {
     const cs = css[i];
     const size = cs.getCommands().length;
@@ -1263,6 +1284,10 @@ function shiftCommandStates(css: CommandState[], isReversed: boolean, shiftOffse
     targetCsIdx = i;
     targetSplitIdx = shiftOffset - counter;
     break;
+  }
+  if (!targetCs || targetCsIdx === undefined || targetSplitIdx === undefined) {
+    // The offset is past the end of the subpath.
+    return css;
   }
 
   newCss.push(
@@ -1324,7 +1349,7 @@ function reverseCommands(subPathState: SubPathState) {
 
   // If the last command is a 'Z', replace it with a line before we reverse.
   // TODO: replacing the 'Z' messes up certain stroke-linejoin values
-  const lastCmd = _.last(cmds);
+  const lastCmd = last(cmds);
   if (lastCmd.type === 'Z') {
     cmds[cmds.length - 1] = lastCmd
       .mutate()
@@ -1360,7 +1385,7 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
   if (
     !shiftOffset ||
     cmds.length === 1 ||
-    !MathUtil.arePointsEqual(_.first(cmds).end, _.last(cmds).end)
+    !MathUtil.arePointsEqual(cmds[0].end, last(cmds).end)
   ) {
     // If there is no shift offset, the sub path is one command long,
     // or if the sub path is not closed, then do nothing.
@@ -1374,7 +1399,7 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
   }
 
   // If the last command is a 'Z', replace it with a line before we shift.
-  const lastCmd = _.last(cmds);
+  const lastCmd = last(cmds);
   if (lastCmd.type === 'Z') {
     // TODO: replacing the 'Z' messes up certain stroke-linejoin values
     cmds[numCommands - 1] = lastCmd
@@ -1406,7 +1431,7 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
         .setPoints(cmds[0].start, cmds[numCommands - 2].end)
         .build(),
     );
-    newCmds.push(_.last(cmds));
+    newCmds.push(last(cmds));
     for (let i = 1; i < cmds.length - 1; i++) {
       newCmds.push(cmds[i]);
     }
@@ -1422,11 +1447,11 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
   // The first start point will either be undefined,
   // or the end point of the previous sub path.
   const prevMoveCmd = newCmds.splice(numCommands - shiftOffset, 1)[0];
-  newCmds.push(newCmds.shift());
+  newCmds.push(...newCmds.splice(0, 1));
   newCmds.unshift(
     cmds[0]
       .mutate()
-      .setPoints(prevMoveCmd.start, _.last(newCmds).end)
+      .setPoints(prevMoveCmd.start, last(newCmds).end)
       .build(),
   );
   return newCmds;
@@ -1435,7 +1460,20 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
 function LOG(...args: any[]) {
   if (ENABLE_LOGS) {
     const [obj, ...objs] = args;
-    // tslint:disable-next-line: no-console
+    // oxlint-disable-next-line no-console
     console.info(obj, ...objs);
   }
+}
+
+/** Returns the last element of an array that's never empty (e.g. a command state's commands). */
+function last<T>(array: ReadonlyArray<T>): T {
+  return array[array.length - 1];
+}
+
+// TODO: figure out how a split segment can end up without a parent (reported to Bugsnag as
+// "reading 'getCommands'"). Paths are left as they are instead of crashing.
+function reportMissingSplitSegmentParent() {
+  bugsnagClient.notify(new Error("Couldn't find the split segment's parent command"), {
+    severity: 'warning',
+  });
 }

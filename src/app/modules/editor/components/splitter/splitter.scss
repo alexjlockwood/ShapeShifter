@@ -1,0 +1,32 @@
+$splitterWidth: 4px;
+
+.app-splitter {
+    position: absolute;
+    z-index: 100;
+
+    &.splt-vertical {
+        top: 0;
+        bottom: 0;
+        width: $splitterWidth;
+        cursor: col-resize;
+    }
+
+    &.splt-horizontal {
+        left: 0;
+        right: 0;
+        height: $splitterWidth;
+        cursor: row-resize;
+    }
+
+    &.splt-edge-left {
+        left: 0;
+    }
+
+    &.splt-edge-right {
+        right: 0;
+    }
+
+    &.splt-edge-top {
+        top: 0;
+    }
+}

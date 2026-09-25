@@ -62,12 +62,10 @@ function serializeNamespace(node: any, options: any) {
   return '';
 }
 
-function serializeChildren(node: Element, options: any) {
-  return Array.prototype.map
-    .call(node.childNodes, (childNode: any) => {
-      return nodeTreeToXHTML(childNode, options);
-    })
-    .join('');
+function serializeChildren(node: Element, options: any): string {
+  return Array.from(node.childNodes, childNode =>
+    nodeTreeToXHTML(childNode as Element, options),
+  ).join('');
 }
 
 function serializeTag(node: any, options: any) {
@@ -126,7 +124,7 @@ function serializeCDATA(node: Element) {
   return '<![CDATA[' + node.nodeValue + ']]>';
 }
 
-function nodeTreeToXHTML(node: Element, options: any) {
+function nodeTreeToXHTML(node: Element, options: any): string {
   if (node.nodeName === '#document' || node.nodeName === '#document-fragment') {
     return serializeChildren(node, options);
   } else {
@@ -140,4 +138,6 @@ function nodeTreeToXHTML(node: Element, options: any) {
       return serializeCDATA(node);
     }
   }
+  // E.g. processing instructions, which aren't serialized.
+  return '';
 }

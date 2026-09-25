@@ -1,7 +1,6 @@
-import { Injectable } from '@angular/core';
+import { on } from 'app/modules/editor/scripts/dom';
 import { State, Store } from 'app/modules/editor/store';
 import { environment } from 'environments/environment';
-import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
 import { Subject } from 'rxjs';
 
@@ -13,14 +12,16 @@ export enum Shortcut {
   ZoomToFit = 1,
 }
 
+const TEXT_FIELD_SELECTOR =
+  'input:not([type="checkbox"], [type="radio"], [type="button"]), textarea, [contenteditable]';
+
 interface ModifierKeyEvent {
   readonly metaKey: boolean;
   readonly ctrlKey?: boolean;
 }
 
-@Injectable({ providedIn: 'root' })
 export class ShortcutService {
-  private isInit = false;
+  private removeKeyDownListener: (() => void) | undefined;
   private readonly shortcutSubject = new Subject<Shortcut>();
 
   /** Returns true if the event is a modifier key (meta for Macs, ctrl for others). */
@@ -44,12 +45,18 @@ export class ShortcutService {
   }
 
   init() {
-    if (this.isInit) {
+    if (this.removeKeyDownListener) {
       return;
     }
-    this.isInit = true;
-
-    $(window).on('keydown', event => {
+    this.removeKeyDownListener = on(window, 'keydown', event => {
+      if (event.target instanceof Element && event.target.closest('.MuiModal-root')) {
+        // Leave the keys to the open dialog or menu, but still keep browsers that go back on
+        // backspace (e.g. WebKit without Safari's settings) from leaving the page.
+        if (event.keyCode === 8 && !event.target.matches(TEXT_FIELD_SELECTOR)) {
+          event.preventDefault();
+        }
+        return undefined;
+      }
       if (ShortcutService.isOsDependentModifierKey(event)) {
         if (event.keyCode === 'Z'.charCodeAt(0)) {
           this.store.dispatch(event.shiftKey ? ActionCreators.redo() : ActionCreators.undo());
@@ -68,7 +75,7 @@ export class ShortcutService {
         // Do nothing if the ctrl or meta keys are pressed.
         return undefined;
       }
-      if (document.activeElement.matches('input')) {
+      if (document.activeElement?.matches('input')) {
         // Ignore shortcuts when an input element has focus.
         return true;
       }
@@ -168,11 +175,8 @@ export class ShortcutService {
   }
 
   destroy() {
-    if (!this.isInit) {
-      return;
-    }
-    this.isInit = false;
-    $(window).unbind('keydown');
+    this.removeKeyDownListener?.();
+    this.removeKeyDownListener = undefined;
   }
 
   getZoomToFitText() {

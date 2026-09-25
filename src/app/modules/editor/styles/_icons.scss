@@ -1,0 +1,15 @@
+// Sized like Angular Material's mat-icon. Icons are colored with currentColor.
+.ss-icon {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+    vertical-align: middle;
+
+    > svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+}

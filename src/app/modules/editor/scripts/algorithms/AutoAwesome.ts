@@ -3,7 +3,7 @@
 import { Command, Path, PathUtil } from 'app/modules/editor/model/paths';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil } from 'app/modules/editor/scripts/common';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 
@@ -293,7 +293,7 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
       // Clamp the index between 1 and numCommands - 1 to account for cases
       // where the alignment algorithm attempts to append new commands to the
       // front and back of the sequence.
-      const cmdIdx = _.clamp(_.last(gapGroup).nextCmdIdx, 1, numPaths - 1);
+      const cmdIdx = _.clamp(gapGroup[gapGroup.length - 1].nextCmdIdx, 1, numPaths - 1);
       const ts = gapGroup.map((unused, gapIdx) => (gapIdx + 1) / (gapGroup.length + 1));
       splitOps.push({ subIdx, cmdIdx, ts });
     }

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect id="both" x="10" y="10" width="30" height="20" rx="4" ry="2" fill="#f00"/>
+  <rect id="rx-only" x="50" y="10" width="30" height="20" rx="5" fill="#0f0"/>
+  <rect id="ry-only" x="10" y="40" width="30" height="20" ry="3" fill="#00f"/>
+  <rect id="clamped" x="50" y="40" width="30" height="20" rx="40" ry="40" fill="#ff0"/>
+  <rect id="square" x="10" y="70" width="20" height="20" fill="#0ff"/>
+  <rect id="zero" x="50" y="70" width="20" height="20" rx="0" fill="#f0f"/>
+</svg>

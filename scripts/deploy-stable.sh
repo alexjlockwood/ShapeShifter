@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-npm i
+npm ci
 npm run build
-echo "shapeshifter.design" > dist/CNAME
-ngh --repo git@github.com:alexjlockwood/ShapeShifterStable.git
+npx gh-pages --dist dist --nojekyll --cname shapeshifter.design \
+  --repo git@github.com:alexjlockwood/ShapeShifterStable.git

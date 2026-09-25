@@ -1,9 +1,9 @@
 import { Projection, SvgChar } from 'app/modules/editor/model/paths';
 import { CommandBuilder } from 'app/modules/editor/model/paths/Command';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
-import * as BezierJs from 'bezier-js';
+import BezierJs from 'bezier-js';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { BBox, Calculator, Line } from '.';
 import { LineCalculator } from './LineCalculator';
@@ -14,8 +14,8 @@ import { PointCalculator } from './PointCalculator';
  */
 export class BezierCalculator implements Calculator {
   private readonly points: ReadonlyArray<Point>;
-  private length: number;
-  private bbox: BBox;
+  private length: number | undefined;
+  private bbox: BBox | undefined;
   private bezierJs_: any;
 
   constructor(private readonly id: string, private readonly svgChar: SvgChar, ...points: Point[]) {
@@ -42,7 +42,7 @@ export class BezierCalculator implements Calculator {
 
   getPathLength() {
     if (this.length === undefined) {
-      this.length = this.bezierJs.length();
+      this.length = this.bezierJs.length() as number;
     }
     return this.length;
   }
@@ -61,7 +61,7 @@ export class BezierCalculator implements Calculator {
     const points: ReadonlyArray<Point> = this.bezierJs.split(t1, t2).points;
     const uniquePoints: Point[] = _.uniqWith(points, MathUtil.arePointsEqual);
     if (uniquePoints.length === 2) {
-      return new LineCalculator(this.id, this.svgChar, _.first(points), _.last(points));
+      return new LineCalculator(this.id, this.svgChar, points[0], points[points.length - 1]);
     }
     return new BezierCalculator(this.id, this.svgChar, ...points);
   }
@@ -120,7 +120,7 @@ export class BezierCalculator implements Calculator {
       // TODO: handle degenerate curves!!!!!
       console.warn(
         'Could not find the midpoint for: ',
-        `${this.svgChar} ` + this.points.toString(),
+        `${this.svgChar} ` + JSON.stringify(this.points),
       );
       return originalDistance;
     }
@@ -144,7 +144,7 @@ export class BezierCalculator implements Calculator {
   }
 
   intersects(line: Line): number[] {
-    if (MathUtil.arePointsEqual(_.first(this.points), _.last(this.points))) {
+    if (MathUtil.arePointsEqual(this.points[0], this.points[this.points.length - 1])) {
       // Points can't be intersected.
       return [];
     }
