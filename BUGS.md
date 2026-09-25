@@ -16,6 +16,13 @@ These existed before the migration and are still there.
 - **UI-only state is recorded in the undo history.** Changes to the `paper` slice (cursor, hover,
   zoom) aren't excluded, so they can become undo steps of their own
   (`store/undoredo/metareducer.ts`).
+- **The property panel can't inspect a selected layer that doesn't exist.** `buildPropertyInputModel`
+  maps the selected layer ids to layers without checking for missing ones. It now only takes down
+  the property panel (`components/propertyinput/buildPropertyInputModel.ts`).
+- **Deleting a split segment can find it without a parent command.** It's unclear how the path
+  gets into this state. It used to crash with "Cannot read properties of undefined (reading
+  'getCommands')" (reported to Bugsnag from 1.0.15), and now it leaves the path as it is and
+  reports a warning (`model/paths/Path.ts`, `deleteFilledSubPathSegmentInternal`).
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
 - **Beta only (paper.js, not yet migrated):**
@@ -78,3 +85,17 @@ These existed before the migration and are still there.
 - `<use>` elements with an SVG 2 `href` weren't inlined. Only `xlink:href` was supported.
 - Keyboard shortcuts still fired while a menu or dialog was open, so e.g. Backspace deleted the
   selected layers and Cmd+Z undid edits behind the dialog.
+- The property panel crashed with "Cannot read properties of undefined (reading 'label')" when a
+  layer had an invalid line cap, line join, fill type, or interpolator, e.g. from importing an SVG
+  with the line join bug above. This was the most common error in Bugsnag, and files saved with
+  those values crashed again when reopened. Invalid values are now replaced with the default
+  (`model/properties/EnumProperty.ts`).
+- Animation blocks for layers that no longer exist, or that can't animate the block's property,
+  crashed rendering ("reading 'animatableProperties'") and exporting ("reading 'name'"). Exports
+  only dropped blocks for hidden layers, not for the children of hidden groups. They're now
+  ignored when rendering, exporting, pasting, and loading files.
+- Colors that aren't Android colors (e.g. SVG names like 'red' from older files) crashed while
+  animating, and entering 'none' in the property panel crashed. They're now converted when set
+  (`model/properties/ColorProperty.ts`).
+- Zooming in on a long animation made the timeline canvases too big to draw, which throws in
+  Firefox ("Canvas exceeds max size").
