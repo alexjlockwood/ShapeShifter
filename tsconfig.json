@@ -11,8 +11,10 @@
       "environments/*": ["./src/environments/*"],
       "test/*": ["./src/test/*"]
     },
-    "strict": false,
-    "noImplicitAny": true,
+    "strict": true,
+    // TODO: turn these on too. There are about 550 errors left to fix.
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false,
     "noImplicitReturns": true,
     "isolatedModules": true,
     "esModuleInterop": true,

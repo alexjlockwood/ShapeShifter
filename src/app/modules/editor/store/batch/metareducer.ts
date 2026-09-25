@@ -1,11 +1,11 @@
-import { ActionReducer } from 'app/modules/editor/store';
+import { Action, ActionReducer } from 'app/modules/editor/store';
 import { EditorState } from 'app/modules/editor/store/reducer';
 
-import { BatchActionTypes, BatchActions } from './actions';
+import { BatchAction, BatchActionTypes } from './actions';
 
 export function metaReducer(reducer: ActionReducer<EditorState>): ActionReducer<EditorState> {
-  return (state: EditorState, action: BatchActions) => {
+  return (state: EditorState, action: Action) => {
     const isBatchAction = action.type === BatchActionTypes.BatchAction;
-    return (isBatchAction ? action.payload : [action]).reduce(reducer, state);
+    return (isBatchAction ? (action as BatchAction).payload : [action]).reduce(reducer, state);
   };
 }

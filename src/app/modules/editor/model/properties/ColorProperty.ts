@@ -13,7 +13,7 @@ export class ColorProperty extends Property<string> {
       const color = parseColor(String(value));
       value = color ? ColorUtil.toAndroidString(color) : '';
     }
-    super.setter(model, propertyName, value);
+    super.setter(model, propertyName, value || '');
   }
 
   // @Override

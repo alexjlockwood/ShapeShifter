@@ -294,8 +294,10 @@ export class LayerTimelineService {
       return;
     }
     const layerTransform = Matrix.flatten(LayerUtil.getCanvasTransformsForGroupLayer(layer));
-    const layerChildren = layer.children.map(
-      (l: GroupLayer | PathLayer | ClipPathLayer): Layer => {
+    // A group's children are groups, paths, and clip paths.
+    const groupChildren = layer.children as ReadonlyArray<GroupLayer | PathLayer | ClipPathLayer>;
+    const layerChildren = groupChildren.map(
+      (l): Layer => {
         if (l instanceof GroupLayer) {
           const flattenedTransform = Matrix.flatten([
             layerTransform,

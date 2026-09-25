@@ -22,7 +22,7 @@ export abstract class Layer implements Inspectable, Animatable {
   /**
    * A non-user-visible string that uniquely identifies this layer in the tree.
    */
-  id?: string;
+  id: string;
 
   /**
    * A user-visible string uniquely identifying this layer in the tree. This value
@@ -126,7 +126,7 @@ interface LayerArgs {
   children: ReadonlyArray<Layer>;
 }
 
-export interface Layer extends LayerArgs, Inspectable, Animatable {}
+export interface Layer extends Required<LayerArgs>, Inspectable, Animatable {}
 export interface LayerConstructorArgs extends LayerArgs {}
 
 /** Returns the layer, or builds one from its JSON. */
@@ -164,7 +164,7 @@ export class VectorLayer extends Layer {
 
   constructor(obj = { children: [], name: 'vector' } as VectorConstructorArgs) {
     super(obj);
-    const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
+    const setterFn = (num: number | undefined, def: number) => (_.isNil(num) ? def : num);
     this.canvasColor = obj.canvasColor || VECTOR_DEFAULTS.canvasColor;
     this.width = setterFn(obj.width, 24);
     this.height = setterFn(obj.height, 24);
@@ -221,7 +221,7 @@ interface VectorLayerArgs {
   alpha?: number;
 }
 
-export interface VectorLayer extends Layer, VectorLayerArgs {}
+export interface VectorLayer extends Layer, Required<VectorLayerArgs> {}
 export interface VectorConstructorArgs extends LayerConstructorArgs, VectorLayerArgs {}
 
 const GROUP_DEFAULTS = {
@@ -243,7 +243,7 @@ export class GroupLayer extends Layer {
 
   constructor(obj: GroupConstructorArgs) {
     super(obj);
-    const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
+    const setterFn = (num: number | undefined, def: number) => (_.isNil(num) ? def : num);
     this.pivotX = setterFn(obj.pivotX, GROUP_DEFAULTS.pivotX);
     this.pivotY = setterFn(obj.pivotY, GROUP_DEFAULTS.pivotY);
     this.rotation = setterFn(obj.rotation, GROUP_DEFAULTS.rotation);
@@ -346,7 +346,7 @@ interface GroupLayerArgs {
   translateY?: number;
 }
 
-export interface GroupLayer extends Layer, GroupLayerArgs {}
+export interface GroupLayer extends Layer, Required<GroupLayerArgs> {}
 export interface GroupConstructorArgs extends LayerConstructorArgs, GroupLayerArgs {}
 
 /**
@@ -398,7 +398,7 @@ interface ClipPathLayerArgs {
   pathData: Path;
 }
 
-export interface ClipPathLayer extends Layer, ClipPathLayerArgs {}
+export interface ClipPathLayer extends Layer, Required<ClipPathLayerArgs> {}
 export interface ClipPathConstructorArgs extends LayerConstructorArgs, ClipPathLayerArgs {}
 
 const ENUM_LINECAP_OPTIONS = [
@@ -442,7 +442,7 @@ export class PathLayer extends Layer implements MorphableLayer {
 
   constructor(obj: PathConstructorArgs) {
     super(obj);
-    const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
+    const setterFn = (num: number | undefined, def: number) => (_.isNil(num) ? def : num);
     this.pathData = obj.pathData;
     this.fillColor = obj.fillColor || PATH_DEFAULTS.fillColor;
     this.fillAlpha = setterFn(obj.fillAlpha, PATH_DEFAULTS.fillAlpha);
@@ -539,7 +539,7 @@ interface PathLayerArgs {
   fillType?: FillType;
 }
 
-export interface PathLayer extends Layer, PathLayerArgs {}
+export interface PathLayer extends Layer, Required<PathLayerArgs> {}
 export interface PathConstructorArgs extends LayerConstructorArgs, PathLayerArgs {}
 
 export type StrokeLineCap = 'butt' | 'square' | 'round';

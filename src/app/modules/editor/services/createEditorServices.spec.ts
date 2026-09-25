@@ -30,8 +30,8 @@ describe('createEditorServices', () => {
     store = createEditorStore();
     services = createEditorServices(store);
     downloads = [];
-    vi.spyOn(URL, 'createObjectURL').mockImplementation((blob: Blob) => {
-      downloads.push(blob);
+    vi.spyOn(URL, 'createObjectURL').mockImplementation(blob => {
+      downloads.push(blob as Blob);
       return 'blob:download';
     });
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});

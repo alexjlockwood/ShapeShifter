@@ -67,8 +67,8 @@ export class Command {
   /**
    * Returns the command's ending point.
    */
-  get end() {
-    return _.last(this._points);
+  get end(): Point {
+    return this._points[this._points.length - 1];
   }
 
   /**

@@ -97,7 +97,7 @@ describe('Property.register', () => {
     expect(layer.strokeColor).toBe('');
     const property = layer.inspectableProperties.get('fillColor');
     property.setEditableValue(layer, 'fillColor', 'none');
-    expect(layer.fillColor).toBeFalsy();
+    expect(layer.fillColor).toBe('');
     property.setEditableValue(layer, 'fillColor', 'blue');
     expect(layer.fillColor).toBe('#0000ff');
   });

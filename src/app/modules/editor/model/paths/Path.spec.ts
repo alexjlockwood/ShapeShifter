@@ -27,9 +27,8 @@ describe('Path', () => {
         }
       };
       return new Path(
-        svgChars
-          .split('')
-          .map((svgChar: SvgChar) => {
+        (svgChars.split('') as SvgChar[])
+          .map(svgChar => {
             const args = '5'
               .repeat(numSvgCharArgsFn(svgChar))
               .split('')

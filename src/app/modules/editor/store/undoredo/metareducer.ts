@@ -51,8 +51,9 @@ export function metaReducer(reducer: EditorStateReducer): StateReducer {
   const undoableReducer = undoable(reducer, {
     limit: UNDO_HISTORY_SIZE,
     filter: (action: Action) => isRecorded(action),
-    groupBy: (action: Action, currState: EditorState, prevState: StateWithHistoryAndTimestamp) => {
-      if (Date.now() - prevState.timestamp < UNDO_DEBOUNCE_MILLIS) {
+    groupBy: (action: Action, currState: EditorState, prevState: StateWithHistory<EditorState>) => {
+      const { timestamp } = prevState as StateWithHistoryAndTimestamp;
+      if (Date.now() - timestamp < UNDO_DEBOUNCE_MILLIS) {
         return groupCounter;
       }
       groupCounter++;

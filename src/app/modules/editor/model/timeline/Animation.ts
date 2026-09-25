@@ -49,5 +49,5 @@ interface AnimationArgs {
   blocks?: ReadonlyArray<AnimationBlock>;
 }
 
-export interface Animation extends AnimationArgs, Inspectable {}
+export interface Animation extends Required<AnimationArgs>, Inspectable {}
 export interface ConstructorArgs extends AnimationArgs {}

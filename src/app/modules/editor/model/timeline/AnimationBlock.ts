@@ -134,7 +134,7 @@ interface AnimationBlockArgs {
   type: AnimationBlockType;
 }
 
-export interface AnimationBlock extends AnimationBlockArgs, Inspectable {}
+export interface AnimationBlock extends Required<AnimationBlockArgs>, Inspectable {}
 export interface ConstructorArgs extends AnimationBlockArgs {}
 
 export interface PathAnimationBlock {

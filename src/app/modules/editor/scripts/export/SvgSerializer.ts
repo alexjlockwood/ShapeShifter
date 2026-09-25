@@ -136,7 +136,7 @@ function vectorLayerToSvgNode(
 
   walk(
     vl,
-    (layer: VectorLayer | GroupLayer | PathLayer, parentNode: Node) => {
+    (layer: Layer, parentNode: Node) => {
       if (layer instanceof VectorLayer) {
         if (withIds) {
           conditionalAttr(destinationNode, 'id', vl.name, '');
