@@ -22,13 +22,19 @@ export function startBugsnag() {
  * (e.g. in unit tests).
  */
 export const bugsnagClient = {
-  notify(error: Error | string, opts: { severity?: Severity } = {}) {
+  notify(
+    error: Error | string,
+    opts: { severity?: Severity; metadata?: { [section: string]: object } } = {},
+  ) {
     if (!Bugsnag.isStarted()) {
       return;
     }
     Bugsnag.notify(error, event => {
       if (opts.severity) {
         event.severity = opts.severity;
+      }
+      for (const [section, values] of Object.entries(opts.metadata || {})) {
+        event.addMetadata(section, values);
       }
     });
   },

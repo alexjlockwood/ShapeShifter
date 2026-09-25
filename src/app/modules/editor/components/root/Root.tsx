@@ -25,6 +25,7 @@ import { createSelector } from 'app/modules/editor/store/selectors';
 import { environment } from 'environments/environment';
 import { type MouseEvent, useEffect, useMemo, useRef } from 'react';
 
+import { PanelErrorBoundary } from './PanelErrorBoundary';
 import './root.scss';
 import { useDropTarget } from './useDropTarget';
 
@@ -170,7 +171,9 @@ function Workspace() {
     >
       {/* Toolbar. */}
       <div className="toolbar-container">
-        <Toolbar />
+        <PanelErrorBoundary panel="toolbar">
+          <Toolbar />
+        </PanelErrorBoundary>
       </div>
       <div className="fx-row fx-flex">
         <div className="display-container ss-theme-transition fx-column fx-flex">
@@ -180,25 +183,43 @@ function Workspace() {
             className={`fx-row fx-align-center fx-flex ${cursorClassName}`}
           >
             {isActionMode && (
-              <Canvas
-                className="start"
-                actionSource={ActionSource.From}
-                canvasBounds={canvasBounds}
-              />
+              <PanelErrorBoundary panel="start canvas">
+                <Canvas
+                  className="start"
+                  actionSource={ActionSource.From}
+                  canvasBounds={canvasBounds}
+                />
+              </PanelErrorBoundary>
             )}
-            <Canvas actionSource={ActionSource.Animated} canvasBounds={canvasBounds} />
+            <PanelErrorBoundary panel="canvas">
+              <Canvas actionSource={ActionSource.Animated} canvasBounds={canvasBounds} />
+            </PanelErrorBoundary>
             {isActionMode && (
-              <Canvas className="end" actionSource={ActionSource.To} canvasBounds={canvasBounds} />
+              <PanelErrorBoundary panel="end canvas">
+                <Canvas
+                  className="end"
+                  actionSource={ActionSource.To}
+                  canvasBounds={canvasBounds}
+                />
+              </PanelErrorBoundary>
             )}
           </div>
           {/* Playback controls. */}
-          <Playback />
+          <PanelErrorBoundary panel="playback">
+            <Playback />
+          </PanelErrorBoundary>
         </div>
         {/* Property input panel. */}
-        {!isActionMode && <PropertyInput />}
+        {!isActionMode && (
+          <PanelErrorBoundary panel="property input">
+            <PropertyInput />
+          </PanelErrorBoundary>
+        )}
       </div>
       {/* Layer list & animation timeline. */}
-      <LayerTimeline />
+      <PanelErrorBoundary panel="layer timeline">
+        <LayerTimeline />
+      </PanelErrorBoundary>
     </div>
   );
 }
