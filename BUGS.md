@@ -20,6 +20,21 @@ These existed before the migration and are still there.
   gets into this state. It used to crash with "Cannot read properties of undefined (reading
   'getCommands')" (reported to Bugsnag from 1.0.15), and now it leaves the path as it is and
   reports a warning (`model/paths/Path.ts`, `deleteFilledSubPathSegmentInternal`).
+- **Split subpaths can't be deleted, but the toolbar offers to.** It's not clear whether
+  deleting them is meant to work. After you split a subpath in action mode, selecting either half
+  shows a "Delete subpath" button, but neither it nor Backspace does anything, on this branch or
+  on the live site. The toolbar shows the button for subpaths that `isUnsplittable()`, while
+  `ActionModeService.deleteSelectedActionModeModels` only deletes subpaths that `isSplit()`,
+  which is always false: `PathState` looks up the split state on leaf subpath states
+  (`flattenSubPathStates` only returns leaves), and leaves are never split. Either the button
+  should go, or the service should check `isUnsplittable()`. The pair and selection helpers also
+  prefer "split" subpaths when hits overlap, so that preference never applies either
+  (`model/paths/PathState.ts`, `isSubPathSplit`).
+- **The editor draws strokes in scaled groups at the wrong width.** `CanvasLayers` multiplies
+  the stroke width by the scale of the canvas-to-layer matrix instead of the layer-to-canvas
+  one, so a stroke of width 2 in a group scaled by 2 is drawn 1 unit wide, but Android (and the
+  exported SVGs) draw it 4 units wide. The exports and flattening scale strokes the Android way
+  (`components/canvas/CanvasLayers.ts`).
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
 - **Beta only (paper.js, not yet migrated):**
@@ -32,6 +47,18 @@ These existed before the migration and are still there.
 
 ## Fixed during the migration
 
+- Flattening a group set every stroked child's width to `1 / scale` (so a width of 3 in an
+  untransformed group became 1), because `l.strokeWidth * scaleFactor ? 1 / scaleFactor : 0`
+  was missing parentheses. It now scales the width like the path
+  (`services/layertimeline.service.ts`).
+- Grouping layers from different parents (Cmd+G) only removed them from the first layer's
+  parent, so the others were left in place as well as moved into the new group, with the same
+  ids.
+- Every export except `.shapeshifter` threw when the root layer was hidden, because
+  `LayerUtil.removeLayers` returned `undefined` for the root (despite its type). It now only
+  removes descendants, and hiding the root exports an empty vector layer.
+- R, B, and F threw in action mode when no subpath was selected, e.g. right after adding a point
+  in Add points mode (`services/actionmode.service.ts`).
 - Importing a malformed `.shapeshifter` file showed an error and then reset the workspace
   anyway (`services/fileimport.service.ts`).
 - Google Analytics reported to a Universal Analytics property, which stopped accepting data

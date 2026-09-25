@@ -130,14 +130,23 @@ export class FileExportService {
   }
 
   private getVectorLayerWithoutHiddenLayers() {
-    return LayerUtil.removeLayers(this.getVectorLayer(), ...Array.from(this.getHiddenLayerIds()));
+    const vl = this.getVectorLayer();
+    const hiddenLayerIds = this.getHiddenLayerIds();
+    if (hiddenLayerIds.has(vl.id)) {
+      // Hiding the root hides everything in it, so export an empty vector layer.
+      return LayerUtil.removeLayers(vl, ...vl.children.map(l => l.id));
+    }
+    return LayerUtil.removeLayers(vl, ...Array.from(hiddenLayerIds));
   }
 
   private getAnimationWithoutHiddenBlocks() {
     const anim = this.getAnimation().clone();
+    const hiddenLayerIds = this.getHiddenLayerIds();
     // Hiding a group also hides its children, so check the layers that are left.
     const vl = this.getVectorLayerWithoutHiddenLayers();
-    anim.blocks = anim.blocks.filter(b => ModelUtil.canAnimate(vl, b));
+    anim.blocks = anim.blocks.filter(
+      b => !hiddenLayerIds.has(b.layerId) && ModelUtil.canAnimate(vl, b),
+    );
     return anim;
   }
 }

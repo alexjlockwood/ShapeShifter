@@ -199,15 +199,13 @@ export function addLayers(
   })(root) as VectorLayer;
 }
 
+/** Returns a copy of the layer with the specified descendants removed. */
 export function removeLayers<L extends Layer>(layer: L, ...removedLayerIds: string[]) {
   const layerIds = new Set(removedLayerIds);
-  return (function recurseFn(curr: Layer): Layer | undefined {
-    if (layerIds.has(curr.id)) {
-      return undefined;
-    }
-    const children = curr.children.map(recurseFn).filter((l): l is Layer => !!l);
+  return (function recurseFn<T extends Layer>(curr: T): T {
+    const children = curr.children.filter(l => !layerIds.has(l.id)).map(recurseFn);
     return setLayerChildren(curr, children);
-  })(layer) as L;
+  })(layer);
 }
 
 export function updateLayer(vl: VectorLayer, layer: Layer) {

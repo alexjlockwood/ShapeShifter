@@ -226,6 +226,10 @@ export class ActionModeService {
 
   private mutateSelectedSubPaths(mutatorFn: (pm: PathMutator, subIdx: number) => void) {
     const selections = getSelectionsOfType(this.getSelections(), SelectionType.SubPath);
+    if (!selections.length) {
+      // The shortcuts call this in every action mode, even when no subpath is selected.
+      return;
+    }
     const { source } = selections[0];
     const path = this.getActivePathBlockValue(source);
     if (!path) {
@@ -247,6 +251,9 @@ export class ActionModeService {
 
   shiftPointToFront() {
     const selections = getSelectionsOfType(this.getSelections(), SelectionType.Point);
+    if (!selections.length) {
+      return;
+    }
     const { source, subIdx, cmdIdx } = selections[0];
     const activePath = this.getActivePathBlockValue(source);
     if (!activePath) {
@@ -259,6 +266,9 @@ export class ActionModeService {
 
   splitSelectedPointInHalf() {
     const selections = getSelectionsOfType(this.getSelections(), SelectionType.Point);
+    if (!selections.length) {
+      return;
+    }
     const { source, subIdx, cmdIdx } = selections[0];
     const activePath = this.getActivePathBlockValue(source);
     if (!activePath) {

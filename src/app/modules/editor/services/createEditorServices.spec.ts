@@ -176,5 +176,24 @@ describe('createEditorServices', () => {
       expect(avd).toMatch(/^<animated-vector\s/);
       expect(avd).not.toContain('android:name="path"');
     });
+
+    it('exports an empty vector layer when the root is hidden', async () => {
+      const { vectorLayer, animation } = buildProject();
+      store.dispatch(new ResetWorkspace(vectorLayer, animation, new Set([vectorLayer.id])));
+      services.fileExportService.exportSvg();
+      services.fileExportService.exportVectorDrawable();
+      services.fileExportService.exportAnimatedVectorDrawable();
+      services.fileExportService.exportSvgSpritesheet();
+      await vi.waitFor(() => expect(downloads.length).toBe(4));
+
+      const [svg, vd, avd] = await Promise.all(downloads.slice(0, 3).map(d => d.text()));
+      expect(svg).toMatch(/^<svg\s/);
+      expect(vd).toMatch(/^<vector\s/);
+      expect(avd).toMatch(/^<animated-vector\s/);
+      for (const xml of [svg, vd, avd]) {
+        expect(xml).not.toContain('path');
+      }
+      expect(avd).not.toContain('<target');
+    });
   });
 });

@@ -323,9 +323,9 @@ export class LayerTimelineService {
         }
         l = l.clone();
         if (l instanceof PathLayer && l.strokeWidth) {
-          const scaleFactor = layerTransform.getScaleFactor();
-          const newStrokeWidth = l.strokeWidth * scaleFactor ? 1 / scaleFactor : 0;
-          l.strokeWidth = MathUtil.round(newStrokeWidth);
+          // Group transforms scale strokes too (as they do on Android), so scale the width by the
+          // same amount as the path.
+          l.strokeWidth = MathUtil.round(l.strokeWidth * layerTransform.getScaleFactor());
         }
         const path = l.pathData;
         if (!path || !path.getPathString()) {
@@ -443,7 +443,7 @@ export class LayerTimelineService {
       }
 
       // Find destination parent and insertion point.
-      const firstSelectedLayerParent = LayerUtil.findParent(vl, tempSelLayers[0].id)?.clone();
+      const firstSelectedLayerParent = LayerUtil.findParent(vl, tempSelLayers[0].id);
       if (!firstSelectedLayerParent) {
         return;
       }
@@ -452,18 +452,22 @@ export class LayerTimelineService {
         l => l.id === tempSelLayers[0].id,
       );
 
-      // Remove all selected items from their parents and move them into a new parent.
+      // Remove all selected layers from their parents (which may differ) and move them into a new
+      // group. The layers are in tree order, so no other selected layer comes before the first one
+      // in its parent, and removing them doesn't change its index.
       const newGroup = new GroupLayer({
         name: LayerUtil.getUniqueLayerName([vl], 'group'),
         children: tempSelLayers,
       });
-      const parentChildren = [...firstSelectedLayerParent.children];
+      vl = LayerUtil.removeLayers(vl, ...tempSelLayers.map(l => l.id));
+      const parent = vl.findLayerById(firstSelectedLayerParent.id)?.clone();
+      if (!parent) {
+        return;
+      }
+      const parentChildren = [...parent.children];
       parentChildren.splice(firstSelectedLayerIndexInParent, 0, newGroup);
-      _.remove(parentChildren, child =>
-        _.find(tempSelLayers, selectedLayer => selectedLayer.id === child.id),
-      );
-      firstSelectedLayerParent.children = parentChildren;
-      vl = LayerUtil.updateLayer(vl, firstSelectedLayerParent);
+      parent.children = parentChildren;
+      vl = LayerUtil.updateLayer(vl, parent);
       selectedLayerIds = new Set([newGroup.id]);
     } else {
       // Ungroup selected groups layers.
