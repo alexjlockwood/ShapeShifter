@@ -1,6 +1,7 @@
 import Bugsnag from '@bugsnag/js';
 import BugsnagPluginReact from '@bugsnag/plugin-react';
 import { environment } from 'environments/environment';
+import { isShapeShifterSite } from 'environments/site';
 import { version } from 'environments/version';
 
 type Severity = 'error' | 'warning' | 'info';
@@ -24,14 +25,10 @@ export function startBugsnag() {
  * cross-origin scripts, which browsers strip of any details.
  */
 export function isReportable(
-  { protocol, hostname }: { readonly protocol: string; readonly hostname: string },
+  location: { readonly protocol: string; readonly hostname: string },
   errorMessage: string | undefined,
 ) {
-  return (
-    protocol === 'https:' &&
-    /(^|\.)shapeshifter\.design$/.test(hostname) &&
-    errorMessage !== 'Script error.'
-  );
+  return isShapeShifterSite(location) && errorMessage !== 'Script error.';
 }
 
 /**

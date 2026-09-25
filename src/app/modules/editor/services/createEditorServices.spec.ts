@@ -54,7 +54,8 @@ describe('createEditorServices', () => {
 
   for (const [path, json] of Object.entries(demos)) {
     describe(path, () => {
-      it('auto fixes each path animation', () => {
+      // Auto fixing morphinganimals takes about a second locally, but over 5 on GitHub's runners.
+      it('auto fixes each path animation', { timeout: 30_000 }, () => {
         const { animation } = loadDemo(json);
         const pathBlocks = animation.blocks.filter(b => b instanceof PathAnimationBlock);
         for (const { id } of pathBlocks) {

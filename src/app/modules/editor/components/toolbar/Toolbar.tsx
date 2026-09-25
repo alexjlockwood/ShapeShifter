@@ -78,7 +78,7 @@ export function Toolbar() {
           title="Auto fix"
           icon="autofix"
           onClick={onClick(() => {
-            trackEvent('Action mode', 'Auto fix click');
+            trackEvent('action_mode_auto_fix');
             actionModeService.autoFix();
           })}
         />
@@ -91,7 +91,7 @@ export function Toolbar() {
           icon="add_circle_outline"
           isActivated={toolbarData.isAddPointsMode()}
           onClick={onClick(() => {
-            trackEvent('Action mode', 'Add points');
+            trackEvent('action_mode_add_points');
             actionModeService.toggleSplitCommandsMode();
           })}
         />
@@ -102,7 +102,7 @@ export function Toolbar() {
           icon="content_cut"
           isActivated={toolbarData.isSplitSubPathsMode()}
           onClick={onClick(() => {
-            trackEvent('Action mode', 'Split sub paths');
+            trackEvent('action_mode_split_subpaths');
             actionModeService.toggleSplitSubPathsMode();
           })}
         />
@@ -113,7 +113,7 @@ export function Toolbar() {
           icon="compare_arrows"
           isActivated={toolbarData.isPairSubPathsMode()}
           onClick={onClick(() => {
-            trackEvent('Action mode', 'Pair sub paths');
+            trackEvent('action_mode_pair_subpaths');
             actionModeService.togglePairSubPathsMode();
           })}
         />
@@ -224,7 +224,7 @@ export function Toolbar() {
           icon="info"
           label="Getting started"
           onClick={() => {
-            trackEvent('Miscellaneous', 'Getting started click');
+            trackEvent('open_getting_started');
             overflowMenu.closeMenu();
           }}
         />
@@ -233,7 +233,7 @@ export function Toolbar() {
           icon="contribute"
           label="Contribute"
           onClick={() => {
-            trackEvent('Miscellaneous', 'Contribute click');
+            trackEvent('open_contribute');
             overflowMenu.closeMenu();
           }}
         />
@@ -242,7 +242,7 @@ export function Toolbar() {
           icon="bug_report"
           label="Send feedback"
           onClick={() => {
-            trackEvent('Miscellaneous', 'Send feedback click');
+            trackEvent('send_feedback');
             overflowMenu.closeMenu();
           }}
         />

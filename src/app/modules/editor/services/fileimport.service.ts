@@ -148,13 +148,13 @@ export class FileImportService {
     hiddenLayerIds?: ReadonlySet<string>,
   ) {
     if (importType === ImportType.Json) {
-      trackEvent('Import', 'JSON');
+      trackEvent('import_shapeshifter');
       this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds));
     } else {
       if (importType === ImportType.Svg) {
-        trackEvent('Import', 'SVG');
+        trackEvent('import_svg');
       } else if (importType === ImportType.VectorDrawable) {
-        trackEvent('Import', 'Vector Drawable');
+        trackEvent('import_vector_drawable');
       }
       if (resetWorkspace) {
         this.store.dispatch(new ResetWorkspace());
