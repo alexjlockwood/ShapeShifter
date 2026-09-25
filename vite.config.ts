@@ -45,6 +45,10 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
+  build: {
+    // Bugsnag uses the deployed source maps to show the original code in stack traces.
+    sourcemap: true,
+  },
   test: {
     globals: true,
     projects: [

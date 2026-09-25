@@ -5,15 +5,17 @@ import { Property } from './Property';
 
 export class ColorProperty extends Property<string> {
   // @Override
-  protected setter(model: any, propertyName: string, value: string) {
-    // Colors are stored as Android color strings, or empty strings for no color. Convert anything
-    // else (e.g. an SVG color like 'red' from an older file) so that it can be drawn and animated.
+  protected setter(model: any, propertyName: string, value: string | undefined) {
+    // Colors are stored as Android color strings, and '' or undefined means no color. Convert
+    // anything else (e.g. an SVG color like 'red' from an older file) so that it can be drawn and
+    // animated. Undefined stays undefined, since exporters leave out undefined values (such as a
+    // cleared block value) but write out empty strings.
     const isValid = !value || (typeof value === 'string' && !!ColorUtil.parseAndroidColor(value));
     if (!isValid) {
       const color = parseColor(String(value));
       value = color ? ColorUtil.toAndroidString(color) : '';
     }
-    super.setter(model, propertyName, value || '');
+    super.setter(model, propertyName, value);
   }
 
   // @Override
