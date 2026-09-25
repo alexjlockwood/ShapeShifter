@@ -1,4 +1,4 @@
-import { test as base, expect, type Locator } from '@playwright/test';
+import { test as base, expect, type Locator, type Page } from '@playwright/test';
 
 /** Fails the test if the page logs any errors. */
 export const test = base.extend<{ consoleErrors: string[] }>({
@@ -27,4 +27,11 @@ export async function boundingBox(locator: Locator) {
     throw new Error(`${locator} isn't visible`);
   }
   return box;
+}
+
+/** Evaluates fn against the store's present state in the page. */
+export function getState<T>(page: Page, fn: (state: any) => T) {
+  return page.evaluate(
+    `(${fn.toString()})(window.shapeshifter.store.getState().present)`,
+  ) as Promise<T>;
 }

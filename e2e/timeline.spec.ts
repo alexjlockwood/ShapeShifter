@@ -1,12 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { boundingBox, expect, test } from './fixtures';
-
-function getState<T>(page: Page, fn: (state: any) => T) {
-  return page.evaluate(
-    `(${fn.toString()})(window.shapeshifter.store.getState().present)`,
-  ) as Promise<T>;
-}
+import { boundingBox, expect, getState, test } from './fixtures';
 
 async function loadDemo(page: Page, id = 'playtopause') {
   await page.goto(`/?project=demos/${id}.shapeshifter`);
@@ -194,4 +188,57 @@ test('limits the size of the timeline canvases when zoomed in', async ({ page })
     elements.map(e => Math.max((e as HTMLCanvasElement).width, (e as HTMLCanvasElement).height)),
   );
   expect(Math.max(...sizes)).toBeLessThanOrEqual(16384);
+});
+
+test('groups, flattens, and converts layers', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData(
+      'text/plain',
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path id="line" d="M2 6h8" fill="none" stroke="#000" stroke-width="1"/></svg>',
+    );
+    window.dispatchEvent(new ClipboardEvent('paste', { clipboardData }));
+  });
+  const layers = page.locator('.slt-layer');
+  await expect(layers).toHaveText(['vector', 'line']);
+  const getLine = () =>
+    getState(page, s => {
+      const line = s.layers.vectorLayer.findLayerByName('line');
+      return { pathData: line.pathData.getPathString(), strokeWidth: line.strokeWidth };
+    });
+  const openLayerMenu = async (name: string) => {
+    const layer = layers.filter({ hasText: name });
+    await layer.hover();
+    await layer.locator('.slt-layer-more-actions').click();
+  };
+
+  // Group the line, and then ungroup it.
+  await layers.filter({ hasText: 'line' }).click();
+  await page.keyboard.press('Control+g');
+  await expect(layers).toHaveText(['vector', 'group', 'line']);
+  await page.keyboard.press('Control+Shift+g');
+  await expect(layers).toHaveText(['vector', 'line']);
+
+  // Scale a group up, and then flatten it. The line and its stroke get twice as big.
+  await page.keyboard.press('Control+g');
+  await layers.filter({ hasText: 'group' }).click();
+  for (const name of ['scaleX', 'scaleY']) {
+    const input = page.locator(`.spi-property input[name="${name}"]`);
+    await input.fill('2');
+    await input.blur();
+  }
+  await openLayerMenu('group');
+  await page.getByRole('menuitem', { name: 'Flatten group' }).click();
+  await expect(layers).toHaveText(['vector', 'line']);
+  expect(await getLine()).toEqual({ pathData: 'M 4 12 L 20 12', strokeWidth: 2 });
+
+  // Convert the line to a clip path and back.
+  await openLayerMenu('line');
+  await page.getByRole('menuitem', { name: 'Convert to clip path' }).click();
+  await expect(layers.filter({ hasText: 'line' })).toHaveClass(/slt-layer-type-mask/);
+  await openLayerMenu('line');
+  await page.getByRole('menuitem', { name: 'Convert to path' }).click();
+  await expect(layers.filter({ hasText: 'line' })).toHaveClass(/slt-layer-type-path/);
+  expect((await getLine()).pathData).toBe('M 4 12 L 20 12');
 });

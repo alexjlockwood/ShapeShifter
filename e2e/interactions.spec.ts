@@ -1,12 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { boundingBox, expect, test } from './fixtures';
-
-function getState<T>(page: Page, fn: (state: any) => T) {
-  return page.evaluate(
-    `(${fn.toString()})(window.shapeshifter.store.getState().present)`,
-  ) as Promise<T>;
-}
+import { boundingBox, expect, getState, test } from './fixtures';
 
 async function loadDemo(page: Page, id = 'playtopause') {
   await page.goto(`/?project=demos/${id}.shapeshifter`);

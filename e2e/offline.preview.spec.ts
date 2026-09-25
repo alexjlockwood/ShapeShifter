@@ -26,22 +26,63 @@ test('loads projects from the URL offline', async ({ page, context }) => {
   await expect(page.locator('.slt-layer').first()).toHaveText('visibilitystrike');
 });
 
-test('replaces the old Angular service worker with one that removes itself', async ({ page }) => {
-  await page.goto('/');
-  // Register it under its own scope so that it doesn't replace the app's service worker.
-  await page.evaluate(async () => {
-    await caches.open('ngsw:/:db:control');
-    await navigator.serviceWorker.register('/ngsw-worker.js', { scope: '/old-app/' });
+// The Angular version of the app registered /ngsw-worker.js for the whole site, and it served
+// the app from its cache. This stands in for it.
+const OLD_ANGULAR_WORKER = `
+  self.addEventListener('install', event => {
+    event.waitUntil((async () => {
+      const cache = await caches.open('ngsw:/:1:assets:app:cache');
+      const html = '<title>Shape Shifter</title><p>Old Angular app</p>';
+      await cache.put('/index.html', new Response(html, { headers: { 'Content-Type': 'text/html' } }));
+      await self.skipWaiting();
+    })());
   });
+  self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+  self.addEventListener('fetch', event => {
+    if (event.request.mode === 'navigate') {
+      event.respondWith(caches.match('/index.html'));
+    }
+  });
+`;
+
+test('replaces the old Angular app for returning users', async ({ page, context }) => {
+  await context.route('**/ngsw-worker.js', route =>
+    route.fulfill({ contentType: 'text/javascript', body: OLD_ANGULAR_WORKER }),
+  );
+  // Install it from a page that isn't the new app, which would register its own worker.
+  await page.goto('/manifest.json');
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.register('/ngsw-worker.js');
+    await navigator.serviceWorker.ready;
+  });
+  await page.goto('/');
+  await expect(page.getByText('Old Angular app')).toBeVisible();
+
+  // Deploy the new app. The old worker still serves the old app, but the browser checks for a new
+  // version of it, which removes the old worker and its caches.
+  await context.unroute('**/ngsw-worker.js');
+  await page.goto('/');
+  await expect(page.getByText('Old Angular app')).toBeVisible();
   await expect
     .poll(() =>
-      page.evaluate(async () => {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        return registrations.map(r => new URL(r.scope).pathname);
-      }),
+      page.evaluate(async () => ({
+        caches: (await caches.keys()).filter(key => key.startsWith('ngsw:')),
+        workers: (await navigator.serviceWorker.getRegistrations()).map(
+          r => (r.active ?? r.waiting ?? r.installing)?.scriptURL,
+        ),
+      })),
     )
-    .not.toContain('/old-app/');
-  expect(await page.evaluate(() => caches.keys())).not.toContain('ngsw:/:db:control');
+    .toEqual({ caches: [], workers: [] });
+
+  // The next visit gets the new app, which installs its own worker.
+  await page.reload();
+  await expect(page.locator('.toolbar')).toContainText('Shape Shifter');
+  await expect(page.getByText('Ready to work offline')).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => new URL(navigator.serviceWorker.controller?.scriptURL ?? '').pathname,
+    ),
+  ).toBe('/sw.js');
 });
 
 test('activates a new version without reloading open pages', async ({ page }) => {
