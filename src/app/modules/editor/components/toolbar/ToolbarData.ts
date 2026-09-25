@@ -1,4 +1,3 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import {
   ActionMode,
   ActionSource,
@@ -8,174 +7,12 @@ import {
 import { MorphableLayer } from 'app/modules/editor/model/layers';
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { ActionModeUtil } from 'app/modules/editor/scripts/actionmode';
-import { ActionModeService, ThemeService } from 'app/modules/editor/services';
-import { State, Store } from 'app/modules/editor/store';
-import { getToolbarState } from 'app/modules/editor/store/actionmode/selectors';
-import { ThemeType } from 'app/modules/editor/store/theme/reducer';
-import { environment } from 'environments/environment';
 import _ from 'lodash';
-import { Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
 
-declare const ga: Function;
-
-@Component({
-  selector: 'app-toolbar',
-  templateUrl: './toolbar.component.html',
-  styleUrls: ['./toolbar.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class ToolbarComponent implements OnInit {
-  toolbarData$: Observable<ToolbarData>;
-  themeState$: Observable<{
-    prevThemeType: ThemeType;
-    currThemeType: ThemeType;
-    prevIsActionMode: boolean;
-    currIsActionMode: boolean;
-  }>;
-
-  constructor(
-    private readonly actionModeService: ActionModeService,
-    readonly themeService: ThemeService,
-    private readonly store: Store<State>,
-  ) {}
-
-  ngOnInit() {
-    let hasActionModeBeenEnabled = false;
-    let prevThemeType: ThemeType;
-    let currThemeType = this.themeService.getThemeType().themeType;
-    let prevIsActionMode: boolean;
-    let currIsActionMode = this.actionModeService.getActionMode() !== ActionMode.None;
-    const toolbarState = this.store.select(getToolbarState);
-    this.toolbarData$ = toolbarState.pipe(
-      map(({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
-        return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
-      }),
-    );
-    this.themeState$ = combineLatest(
-      toolbarState,
-      this.themeService.asObservable().pipe(map(t => t.themeType)),
-    ).pipe(
-      map(([{ mode }, themeType]) => {
-        hasActionModeBeenEnabled = hasActionModeBeenEnabled || mode !== ActionMode.None;
-        prevThemeType = currThemeType;
-        currThemeType = themeType;
-        prevIsActionMode = currIsActionMode;
-        currIsActionMode = mode !== ActionMode.None;
-        return {
-          hasActionModeBeenEnabled,
-          prevThemeType,
-          currThemeType,
-          prevIsActionMode,
-          currIsActionMode,
-        };
-      }),
-    );
-  }
-
-  get darkTheme() {
-    return this.themeService.getThemeType().themeType === 'dark';
-  }
-
-  set darkTheme(isDark: boolean) {
-    this.themeService.setTheme(isDark ? 'dark' : 'light');
-  }
-
-  onSendFeedbackClick(event: MouseEvent) {
-    ga('send', 'event', 'Miscellaneous', 'Send feedback click');
-  }
-
-  onContributeClick(event: MouseEvent) {
-    ga('send', 'event', 'Miscellaneous', 'Contribute click');
-  }
-
-  onGettingStartedClick(event: MouseEvent) {
-    ga('send', 'event', 'Miscellaneous', 'Getting started click');
-  }
-
-  onAutoFixClick(event: MouseEvent) {
-    ga('send', 'event', 'Action mode', 'Auto fix click');
-    event.stopPropagation();
-    this.actionModeService.autoFix();
-  }
-
-  onCloseActionModeClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.actionModeService.closeActionMode();
-  }
-
-  onAddPointsClick(event: MouseEvent) {
-    ga('send', 'event', 'Action mode', 'Add points');
-    event.stopPropagation();
-    this.actionModeService.toggleSplitCommandsMode();
-  }
-
-  onSplitSubPathsClick(event: MouseEvent) {
-    ga('send', 'event', 'Action mode', 'Split sub paths');
-    event.stopPropagation();
-    this.actionModeService.toggleSplitSubPathsMode();
-  }
-
-  onPairSubPathsClick(event: MouseEvent) {
-    ga('send', 'event', 'Action mode', 'Pair sub paths');
-    event.stopPropagation();
-    this.actionModeService.togglePairSubPathsMode();
-  }
-
-  onReversePointsClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.actionModeService.reverseSelectedSubPaths();
-  }
-
-  onShiftBackPointsClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.actionModeService.shiftBackSelectedSubPaths();
-  }
-
-  onShiftForwardPointsClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.actionModeService.shiftForwardSelectedSubPaths();
-  }
-
-  onDeleteSubPathsClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.actionModeService.deleteSelectedActionModeModels();
-  }
-
-  onDeleteSegmentsClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.actionModeService.deleteSelectedActionModeModels();
-  }
-
-  onSetFirstPositionClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.actionModeService.shiftPointToFront();
-  }
-
-  onSplitInHalfHoverEvent(isHovering: boolean) {
-    if (isHovering) {
-      this.actionModeService.splitInHalfHover();
-    } else {
-      this.actionModeService.clearHover();
-    }
-  }
-
-  onSplitInHalfClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.actionModeService.splitSelectedPointInHalf();
-  }
-
-  onDeletePointsClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.actionModeService.deleteSelectedActionModeModels();
-  }
-
-  isBeta() {
-    return environment.beta;
-  }
-}
-
-class ToolbarData {
+/**
+ * Determines what to show in the toolbar for the current action mode and selections.
+ */
+export class ToolbarData {
   private readonly subPaths: ReadonlyArray<number> = [];
   private readonly segments: ReadonlyArray<{ subIdx: number; cmdIdx: number }> = [];
   private readonly points: ReadonlyArray<{ subIdx: number; cmdIdx: number }> = [];
@@ -224,10 +61,12 @@ class ToolbarData {
         const { subIdx, cmdIdx } = s;
         return { subIdx, cmdIdx };
       });
-    this.points = selections.filter(s => s.type === SelectionType.Point).map(s => {
-      const { subIdx, cmdIdx } = s;
-      return { subIdx, cmdIdx };
-    });
+    this.points = selections
+      .filter(s => s.type === SelectionType.Point)
+      .map(s => {
+        const { subIdx, cmdIdx } = s;
+        return { subIdx, cmdIdx };
+      });
 
     this.numSplitSubPaths = _.sumBy(this.subPaths, subIdx => {
       return activePath.getSubPath(subIdx).isUnsplittable() ? 1 : 0;

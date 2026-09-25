@@ -1,1 +1,1 @@
-export { PropertyInputComponent } from './propertyinput.component';
+export { PropertyInput } from './PropertyInput';

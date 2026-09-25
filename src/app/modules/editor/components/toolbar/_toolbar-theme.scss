@@ -9,10 +9,16 @@
     .toolbar {
         background-color: mat-color($primary);
         color: mat-color($primary, default-contrast);
+        &.is-action-mode {
+            background-color: mat-color(map.get($theme, accent));
+        }
         button {
             &.MuiIconButton-root.Mui-disabled {
                 .ss-icon {
-                    color: mat-color($foreground, if(sass($is-dark): disabled-text; else: disabled-text-inverse));
+                    color: mat-color(
+                        $foreground,
+                        if(sass($is-dark): disabled-text; else: disabled-text-inverse)
+                    );
                 }
             }
         }

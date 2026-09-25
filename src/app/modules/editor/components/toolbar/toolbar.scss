@@ -1,0 +1,31 @@
+.toolbar {
+    padding: 8px 16px;
+    z-index: 1;
+    .toolbar-logo {
+        width: 40px;
+        height: 40px;
+        margin-right: 8px;
+    }
+    .toolbar-title {
+        font-size: 18px;
+    }
+    .toolbar-subtitle {
+        margin-top: 4px;
+        font-size: 13px;
+    }
+    .action-mode-close-icon {
+        margin-right: 8px;
+    }
+    .toolbar-action-button {
+        margin-left: 16px;
+    }
+}
+
+.toolbar-overflow-menu {
+    .MuiListItemIcon-root {
+        min-width: 44px;
+    }
+    .toolbar-dark-theme-switch {
+        margin-right: 8px;
+    }
+}

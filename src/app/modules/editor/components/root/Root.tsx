@@ -1,7 +1,9 @@
 import { Canvas } from 'app/modules/editor/components/canvas';
 import { DropFilesAction } from 'app/modules/editor/components/dialogs';
 import { Playback } from 'app/modules/editor/components/playback';
+import { PropertyInput } from 'app/modules/editor/components/propertyinput';
 import { SplashScreen } from 'app/modules/editor/components/splashscreen/SplashScreen';
+import { Toolbar } from 'app/modules/editor/components/toolbar/Toolbar';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useElementSize } from 'app/modules/editor/hooks/useElementSize';
@@ -164,7 +166,9 @@ function Workspace() {
       {...dropTargetHandlers}
     >
       {/* Toolbar. */}
-      <div className="toolbar-container" />
+      <div className="toolbar-container">
+        <Toolbar />
+      </div>
       <div className="fx-row fx-flex">
         <div className="display-container ss-theme-transition fx-column fx-flex">
           {/* Canvas. */}
@@ -188,6 +192,7 @@ function Workspace() {
           <Playback />
         </div>
         {/* Property input panel. */}
+        {!isActionMode && <PropertyInput />}
       </div>
       {/* Layer list & animation timeline. */}
     </div>

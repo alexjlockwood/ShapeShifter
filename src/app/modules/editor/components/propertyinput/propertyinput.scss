@@ -1,4 +1,4 @@
-@import '../../styles/material-icons';
+@use 'sass:math';
 
 .property-input {
     width: 320px;
@@ -18,7 +18,7 @@
         height: 32px;
     }
     .spi-selection-description-container {
-        padding: (32px - 24px) / 2 0;
+        padding: math.div(32px - 24px, 2) 0;
     }
     .spi-selection-description {
         font-weight: 500;
@@ -82,11 +82,8 @@
         text-align: left;
         position: relative;
         padding-right: 24px;
-        &::after {
-            @include material-icons;
-            content: 'arrow_drop_down';
+        .spi-property-value-menu-arrow {
             position: absolute;
-            font-size: 24px;
             right: 0;
             top: 50%;
             transform: translate(0, -50%);

@@ -50,7 +50,7 @@
             }
         }
         .spi-property-value-menu-target {
-            &::after {
+            .spi-property-value-menu-arrow {
                 color: mat-color($foreground, disabled-text);
             }
         }
