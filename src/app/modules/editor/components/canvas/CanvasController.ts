@@ -130,9 +130,14 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
     const { left, top } = this.elements.root.getBoundingClientRect();
     const zoom = this.getZoom();
     const { tx, ty } = this.getTranslation();
+    const inverseZoomPanMatrix = new Matrix(zoom, 0, 0, zoom, tx, ty).invert();
+    if (!inverseZoomPanMatrix) {
+      // Do nothing if matrix is non-invertible.
+      return;
+    }
     const point = MathUtil.transformPoint(
       { x: event.clientX - left, y: event.clientY - top },
-      new Matrix(zoom, 0, 0, zoom, tx, ty).invert(),
+      inverseZoomPanMatrix,
     );
     const x = point.x / Math.max(1, this.cssScale);
     const y = point.y / Math.max(1, this.cssScale);

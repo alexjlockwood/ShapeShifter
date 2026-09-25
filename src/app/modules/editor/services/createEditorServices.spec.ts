@@ -63,7 +63,7 @@ describe('createEditorServices', () => {
           const block = services.layerTimelineService
             .getAnimation()
             .blocks.find(b => b.id === id) as PathAnimationBlock;
-          expect(block.fromValue.isMorphableWith(block.toValue)).toBe(true);
+          expect(block.fromValue!.isMorphableWith(block.toValue!)).toBe(true);
         }
       });
 

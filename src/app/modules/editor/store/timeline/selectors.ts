@@ -24,8 +24,8 @@ export const getSingleSelectedPathBlock = createSelector(
     }
     return _.find(
       anim.blocks,
-      b => b.id === blockId && b instanceof PathAnimationBlock,
-    ) as PathAnimationBlock;
+      (b): b is PathAnimationBlock => b.id === blockId && b instanceof PathAnimationBlock,
+    );
   },
 );
 export const getSelectedBlockLayerIds = createDeepEqualSelector(

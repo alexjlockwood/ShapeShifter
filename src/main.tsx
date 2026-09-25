@@ -16,7 +16,11 @@ import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 
 startBugsnag();
-const ErrorBoundary = Bugsnag.getPlugin('react').createErrorBoundary(React);
+const bugsnagReactPlugin = Bugsnag.getPlugin('react');
+if (!bugsnagReactPlugin) {
+  throw new Error("Bugsnag's React plugin wasn't added when Bugsnag started");
+}
+const ErrorBoundary = bugsnagReactPlugin.createErrorBoundary(React);
 
 // Created once, outside of React, since the services subscribe to the store for the lifetime
 // of the app.
@@ -48,7 +52,11 @@ if (!environment.production) {
   Object.assign(window, { shapeshifter: { store, services } });
 }
 
-createRoot(document.getElementById('root')).render(
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('The page is missing its root element');
+}
+createRoot(rootElement).render(
   <StrictMode>
     <App store={store} services={services} ErrorBoundary={ErrorBoundary} />
   </StrictMode>,

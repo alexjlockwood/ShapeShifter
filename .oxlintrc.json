@@ -57,7 +57,6 @@
     "no-unused-vars": "off",
     "typescript/no-non-null-assertion": "error",
     "typescript/no-unsafe-declaration-merging": "off",
-    "typescript/no-useless-default-assignment": "off",
     "unicorn/no-new-array": "off",
     "unicorn/no-useless-spread": "off",
     "react/rules-of-hooks": "error",
@@ -71,44 +70,6 @@
         "vitest/no-conditional-tests": "off",
         "vitest/require-to-throw-message": "off",
         "vitest/valid-title": "off"
-      }
-    },
-    {
-      // Strict mode code (see tsconfig.strict.json) can't depend on the rest of the app.
-      "files": [
-        "src/app/modules/editor/model/**",
-        "src/app/modules/editor/scripts/**",
-        "src/app/modules/editor/store/**"
-      ],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "jquery",
-                "message": "Use the DOM APIs (or the helpers in scripts/dom) instead."
-              }
-            ],
-            "patterns": [
-              {
-                "group": ["@angular/*", "@ngrx/*"],
-                "message": "The app no longer uses Angular or ngrx."
-              },
-              {
-                "group": [
-                  "app/modules/editor/components",
-                  "app/modules/editor/components/**",
-                  "app/modules/editor/context/**",
-                  "app/modules/editor/hooks/**",
-                  "app/modules/editor/services",
-                  "app/modules/editor/services/**"
-                ],
-                "message": "model/, scripts/, and store/ are checked in strict mode (see tsconfig.strict.json), so they can't import the rest of the app."
-              }
-            ]
-          }
-        ]
       }
     },
     {

@@ -6,5 +6,9 @@ export const LayerTimelineContext = createContext<LayerTimelineController | unde
 
 /** Returns the controller that handles events from the layer list and timeline rows. */
 export function useLayerTimelineController() {
-  return use(LayerTimelineContext);
+  const controller = use(LayerTimelineContext);
+  if (!controller) {
+    throw new Error('useLayerTimelineController() must be used inside of a LayerTimeline');
+  }
+  return controller;
 }

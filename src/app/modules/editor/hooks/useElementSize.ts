@@ -1,5 +1,7 @@
 import { type RefObject, useLayoutEffect, useState } from 'react';
 
+import { requireRef } from './requireRef';
+
 export interface Size {
   readonly w: number;
   readonly h: number;
@@ -13,7 +15,7 @@ export function useElementSize(ref: RefObject<HTMLElement | null>) {
       const { width: w, height: h } = entry.contentRect;
       setSize(prevSize => (prevSize.w === w && prevSize.h === h ? prevSize : { w, h }));
     });
-    observer.observe(ref.current);
+    observer.observe(requireRef(ref));
     return () => observer.disconnect();
   }, [ref]);
   return size;

@@ -208,8 +208,8 @@ export class Path {
 
 /** Represents the options for a hit test. */
 export interface HitOptions {
-  readonly isPointInRangeFn?: (distance: number, cmd?: Command) => boolean;
-  readonly isSegmentInRangeFn?: (distance: number, cmd?: Command) => boolean;
+  readonly isPointInRangeFn?: (distance: number, cmd: Command) => boolean;
+  readonly isSegmentInRangeFn?: (distance: number, cmd: Command) => boolean;
   readonly findShapesInRange?: boolean;
   readonly restrictToSubIdx?: ReadonlyArray<number>;
 }
@@ -220,9 +220,9 @@ export interface HitResult {
   readonly isEndPointHit: boolean;
   readonly isSegmentHit: boolean;
   readonly isShapeHit: boolean;
-  readonly endPointHits?: ReadonlyArray<ProjectionOntoPath>;
-  readonly segmentHits?: ReadonlyArray<ProjectionOntoPath>;
-  readonly shapeHits?: Array<{ subIdx: number }>;
+  readonly endPointHits: ReadonlyArray<ProjectionOntoPath>;
+  readonly segmentHits: ReadonlyArray<ProjectionOntoPath>;
+  readonly shapeHits: Array<{ subIdx: number }>;
 }
 
 export interface ProjectionOntoPath {

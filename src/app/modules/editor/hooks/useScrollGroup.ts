@@ -1,11 +1,13 @@
 import { type RefObject, useLayoutEffect } from 'react';
 
+import { requireRef } from './requireRef';
+
 const GROUPS = new Map<string, Set<HTMLElement>>();
 
 /** Keeps the vertical scroll position of every element in the group in sync. */
 export function useScrollGroup(ref: RefObject<HTMLElement | null>, group: string) {
   useLayoutEffect(() => {
-    const element = ref.current;
+    const element = requireRef(ref);
     const elements = GROUPS.get(group) || new Set<HTMLElement>();
     GROUPS.set(group, elements);
     elements.add(element);

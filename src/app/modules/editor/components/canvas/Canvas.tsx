@@ -1,4 +1,5 @@
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
+import { requireRef } from 'app/modules/editor/hooks/requireRef';
 import type { Size } from 'app/modules/editor/hooks/useElementSize';
 import { ActionSource } from 'app/modules/editor/model/actionmode';
 import { useEffectEvent, useLayoutEffect, useRef } from 'react';
@@ -30,12 +31,12 @@ export function Canvas({ actionSource, canvasBounds, className }: CanvasProps) {
   useLayoutEffect(() => {
     const controller = new CanvasController(
       {
-        root: rootRef.current,
-        horizontalRuler: horizontalRulerRef.current,
-        verticalRuler: verticalRulerRef.current,
-        container: containerRef.current,
-        layers: layersRef.current,
-        overlay: overlayRef.current,
+        root: requireRef(rootRef),
+        horizontalRuler: requireRef(horizontalRulerRef),
+        verticalRuler: requireRef(verticalRulerRef),
+        container: requireRef(containerRef),
+        layers: requireRef(layersRef),
+        overlay: requireRef(overlayRef),
       },
       actionSource,
       store,

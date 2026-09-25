@@ -5,6 +5,7 @@ import { Tip } from 'app/modules/editor/components/common/Tip';
 import { Icon } from 'app/modules/editor/components/icons/Icon';
 import { Splitter } from 'app/modules/editor/components/splitter';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
+import { requireRef } from 'app/modules/editor/hooks/requireRef';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useMenu } from 'app/modules/editor/hooks/useMenu';
 import { useScrollGroup } from 'app/modules/editor/hooks/useScrollGroup';
@@ -61,7 +62,7 @@ export function LayerTimeline() {
 
   // React's wheel listeners are passive, so they can't prevent the page from scrolling.
   useLayoutEffect(() => {
-    return on(timelineRef.current, 'wheel', event => controller.onWheelEvent(event), {
+    return on(requireRef(timelineRef), 'wheel', event => controller.onWheelEvent(event), {
       passive: false,
     });
   }, [controller]);
@@ -88,9 +89,14 @@ export function LayerTimeline() {
     fn();
   };
 
-  const launchFilePicker = (menu: ReturnType<typeof useMenu>, ref: RefObject<HTMLInputElement>) => {
+  const launchFilePicker = (
+    menu: ReturnType<typeof useMenu>,
+    ref: RefObject<HTMLInputElement | null>,
+  ) => {
     menu.closeMenu();
-    controller.onLaunchFilePickerClick(ref.current);
+    if (ref.current) {
+      controller.onLaunchFilePickerClick(ref.current);
+    }
   };
 
   return (

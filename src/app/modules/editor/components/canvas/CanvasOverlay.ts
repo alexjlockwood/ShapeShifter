@@ -1,6 +1,7 @@
 import {
   ActionMode,
   ActionSource,
+  getSelectionsOfType,
   Hover,
   HoverType,
   Selection,
@@ -15,8 +16,9 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
-import { Command, HitResult, Path, SubPath } from 'app/modules/editor/model/paths';
+import { Command, HitOptions, HitResult, Path, SubPath } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
+import { getContext2d } from 'app/modules/editor/scripts/dom';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
 import {
   ActionModeService,
@@ -67,6 +69,16 @@ const POINT_BORDER_COLOR = '#000';
 const POINT_TEXT_COLOR = '#fff';
 const ERROR_COLOR = '#F44336';
 
+const NO_HIT: HitResult = {
+  isHit: false,
+  isEndPointHit: false,
+  isSegmentHit: false,
+  isShapeHit: false,
+  endPointHits: [],
+  segmentHits: [],
+  shapeHits: [],
+};
+
 // TODO: make shape shifter mode work with clip paths
 // TODO: make segment splitter work with trim paths
 // TODO: make trim paths work with shifts/reversals
@@ -80,21 +92,21 @@ type Context = CanvasRenderingContext2D;
  * Draws overlay selections and other content on top of the currently active vector layer.
  */
 export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
-  vectorLayer: VectorLayer;
+  vectorLayer: VectorLayer | undefined;
   // Normal mode variables.
   private hiddenLayerIds: ReadonlySet<string> = new Set<string>();
   private selectedLayerIds: ReadonlySet<string> = new Set<string>();
   // Shape Shifter mode variables.
-  private blockLayerId: string;
-  actionMode: ActionMode;
-  private actionHover: Hover;
-  actionSelections: ReadonlyArray<Selection>;
+  private blockLayerId: string | undefined;
+  actionMode = ActionMode.None;
+  private actionHover: Hover | undefined;
+  actionSelections: ReadonlyArray<Selection> = [];
   private currentHoverPreviewPath: Path | undefined;
-  pairedSubPaths: Set<number>;
-  unpairedSubPath: { source: ActionSource; subIdx: number };
-  private isActionMode: boolean;
+  pairedSubPaths = new Set<number>();
+  unpairedSubPath: { source: ActionSource; subIdx: number } | undefined;
+  private isActionMode = false;
   private selectedBlockLayerIds: ReadonlySet<string> = new Set<string>();
-  private subIdxWithError: number;
+  private subIdxWithError: number | undefined;
 
   private selectionHelper: SelectionHelper | undefined;
   private pairSubPathHelper: PairSubPathHelper | undefined;
@@ -207,8 +219,8 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         }),
       );
       const updateCurrentHoverFn = (hover: Hover | undefined) => {
-        let previewPath: Path;
-        if (this.vectorLayer && this.activePath && hover) {
+        let previewPath: Path | undefined;
+        if (this.vectorLayer && this.activePath && hover && hover.cmdIdx !== undefined) {
           // If the user is hovering over the inspector split button, then build
           // a snapshot of what the path would look like after the action
           // and display the result.
@@ -245,7 +257,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
   }
 
   private get overlayCtx() {
-    return this.canvas.getContext('2d');
+    return getContext2d(this.canvas);
   }
 
   private get highlightLineWidth() {
@@ -286,10 +298,11 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
 
   // NOTE: only use this for action mode
   get activePathLayer() {
-    if (!this.vectorLayer) {
+    if (!this.vectorLayer || !this.blockLayerId) {
       return undefined;
     }
-    return this.vectorLayer.findLayerById(this.blockLayerId) as MorphableLayer;
+    const layer = this.vectorLayer.findLayerById(this.blockLayerId);
+    return layer instanceof PathLayer || layer instanceof ClipPathLayer ? layer : undefined;
   }
 
   // NOTE: only use this for action mode
@@ -299,6 +312,15 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       return undefined;
     }
     return layer.pathData;
+  }
+
+  // Stroked paths that aren't filled are split by segment, and all other paths by shape.
+  private get subPathSplitter() {
+    const layer = this.activePathLayer;
+    if (!layer) {
+      return undefined;
+    }
+    return !layer.isFilled() && layer.isStroked() ? this.segmentSplitter : this.shapeSplitter;
   }
 
   // @Override
@@ -318,7 +340,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       ctx.save();
       ctx.scale(this.attrScale, this.attrScale);
       ctx.clearRect(0, 0, w, h);
-      this.drawLayerSelections(ctx, this.vectorLayer);
+      this.drawLayerSelections(ctx, this.vectorLayer, this.vectorLayer);
       this.drawHighlights(ctx);
       ctx.restore();
       // Draw points in terms of physical pixels, not viewport pixels.
@@ -331,13 +353,12 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
   }
 
   // Recursively draws all layer selections to the canvas.
-  private drawLayerSelections(ctx: Context, curr: Layer) {
+  private drawLayerSelections(ctx: Context, root: VectorLayer, curr: Layer) {
     if (this.isActionMode) {
       // Don't draw selections for hidden layers or while in action mode.
       return;
     }
     if (this.selectedLayerIds.has(curr.id) || this.selectedBlockLayerIds.has(curr.id)) {
-      const root = this.vectorLayer;
       const flattenedTransform = LayerUtil.getCanvasTransformForLayer(root, curr.id);
       if (curr instanceof ClipPathLayer) {
         if (curr.pathData && curr.pathData.getCommands().length) {
@@ -365,12 +386,19 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         }
       }
     }
-    curr.children.forEach(child => this.drawLayerSelections(ctx, child));
+    curr.children.forEach(child => this.drawLayerSelections(ctx, root, child));
   }
 
   // Draw any highlighted segments.
   private drawHighlights(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
+    const activePath = this.activePath;
+    if (
+      !this.isActionMode ||
+      this.actionSource === ActionSource.Animated ||
+      !this.vectorLayer ||
+      !this.blockLayerId ||
+      !activePath
+    ) {
       return;
     }
 
@@ -378,8 +406,6 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       this.vectorLayer,
       this.blockLayerId,
     );
-    const pathLayer = this.activePathLayer;
-    const activePath = pathLayer.pathData;
     const currentHover = this.actionHover;
 
     if (this.selectionHelper) {
@@ -407,14 +433,18 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         executeHighlights(ctx, highlightColor, this.selectedSegmentLineWidth);
       }
 
-      const segmentSelections = this.actionSelections
-        .filter(s => s.type === SelectionType.Segment)
+      const segmentSelections = getSelectionsOfType(this.actionSelections, SelectionType.Segment)
         .filter(s => s.source === this.actionSource)
         .map(s => {
           return { subIdx: s.subIdx, cmdIdx: s.cmdIdx };
         });
       const hover = currentHover;
-      if (hover && hover.source === this.actionSource && hover.type === HoverType.Segment) {
+      if (
+        hover &&
+        hover.source === this.actionSource &&
+        hover.type === HoverType.Segment &&
+        hover.cmdIdx !== undefined
+      ) {
         segmentSelections.push({
           subIdx: hover.subIdx,
           cmdIdx: hover.cmdIdx,
@@ -432,14 +462,11 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         CanvasUtil.executeCommands(ctx, cmds, flattenedTransform);
         executeHighlights(ctx, ERROR_COLOR, this.highlightLineWidth, this.highlightLineDash);
       }
-    } else if (this.segmentSplitter && this.segmentSplitter.getProjectionOntoPath()) {
+    } else if (this.segmentSplitter) {
       // Highlight the segment as the user hovers over it.
-      const {
-        subIdx,
-        cmdIdx,
-        projection: { d },
-      } = this.segmentSplitter.getProjectionOntoPath();
-      if (d < this.minSnapThreshold) {
+      const projectionOntoPath = this.segmentSplitter.getProjectionOntoPath();
+      if (projectionOntoPath && projectionOntoPath.projection.d < this.minSnapThreshold) {
+        const { subIdx, cmdIdx } = projectionOntoPath;
         CanvasUtil.executeCommands(
           ctx,
           [activePath.getCommand(subIdx, cmdIdx)],
@@ -469,7 +496,8 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
           executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
         }
       }
-      const pairedSubPaths = this.pairedSubPaths;
+      // Copy the set, since the hovered subpath is removed from it below.
+      const pairedSubPaths = new Set(this.pairedSubPaths);
       const hasHover =
         currentHover &&
         currentHover.source === this.actionSource &&
@@ -503,10 +531,12 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         const endPoint = proj2
           ? applyGroupTransform(proj2.projection, flattenedTransform)
           : this.shapeSplitter.getLastKnownMouseLocation();
-        ctx.beginPath();
-        ctx.moveTo(startPoint.x, startPoint.y);
-        ctx.lineTo(endPoint.x, endPoint.y);
-        executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+        if (endPoint) {
+          ctx.beginPath();
+          ctx.moveTo(startPoint.x, startPoint.y);
+          ctx.lineTo(endPoint.x, endPoint.y);
+          executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+        }
       }
       if (!proj1 || proj2) {
         // Highlight the segment as the user hovers over it.
@@ -529,12 +559,18 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
+    const activePath = this.activePath;
+    if (
+      !this.isActionMode ||
+      this.actionSource === ActionSource.Animated ||
+      !this.vectorLayer ||
+      !this.blockLayerId ||
+      !activePath
+    ) {
       return;
     }
 
-    const pathLayer = this.activePathLayer;
-    let path = pathLayer.pathData;
+    let path = activePath;
     if (this.currentHoverPreviewPath) {
       path = this.currentHoverPreviewPath;
     }
@@ -613,7 +649,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         continue;
       }
       let radius = this.smallPointRadius;
-      let text: string;
+      let text: string | undefined;
       const isHovering = isPointInfoHoveringFn({ cmd, subIdx, cmdIdx });
       const isAtLeastMedium = isPointInfoAtLeastMediumFn({ cmd, subIdx, cmdIdx });
       if ((isAtLeastMedium || isHovering) && this.actionMode === ActionMode.Selection) {
@@ -624,7 +660,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
           });
         };
         if (
-          (isHovering && cmdIdx === currentHover.cmdIdx) ||
+          (isHovering && cmdIdx === currentHover?.cmdIdx) ||
           isPointEnlargedFn(ActionSource.From, subIdx, cmdIdx) ||
           isPointEnlargedFn(ActionSource.To, subIdx, cmdIdx)
         ) {
@@ -646,7 +682,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       executeLabeledPoint(
         ctx,
         this.attrScale,
-        applyGroupTransform(_.last(cmd.points), flattenedTransform),
+        applyGroupTransform(cmd.end, flattenedTransform),
         radius,
         color,
         text,
@@ -656,7 +692,13 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
 
   // Draw any actively dragged points along the path in selection mode.
   private drawDraggingPoints(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
+    if (
+      !this.isActionMode ||
+      this.actionSource === ActionSource.Animated ||
+      !this.vectorLayer ||
+      !this.blockLayerId ||
+      !this.activePath
+    ) {
       return;
     }
 
@@ -671,32 +713,42 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       this.vectorLayer,
       this.blockLayerId,
     );
-    const projection = this.selectionHelper.getProjectionOntoPath().projection;
+    const projection = this.selectionHelper.getProjectionOntoPath()?.projection;
+    if (!projection) {
+      return;
+    }
     const point =
       projection.d < this.minSnapThreshold
         ? applyGroupTransform(projection, flattenedTransform)
         : this.selectionHelper.getLastKnownMouseLocation();
-    executeLabeledPoint(ctx, this.attrScale, point, this.splitPointRadius, SPLIT_POINT_COLOR);
+    if (point) {
+      executeLabeledPoint(ctx, this.attrScale, point, this.splitPointRadius, SPLIT_POINT_COLOR);
+    }
   }
 
   // Draw a floating point preview over the canvas in split commands mode
   // and split subpaths mode for stroked paths.
   private drawFloatingPreviewPoint(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
+    if (
+      !this.isActionMode ||
+      this.actionSource === ActionSource.Animated ||
+      !this.vectorLayer ||
+      !this.blockLayerId ||
+      !this.activePath
+    ) {
       return;
     }
 
     const pathLayer = this.activePathLayer;
+    const projection = this.segmentSplitter?.getProjectionOntoPath()?.projection;
     if (
       (this.actionMode !== ActionMode.SplitCommands &&
         this.actionMode !== ActionMode.SplitSubPaths &&
-        !pathLayer.isStroked()) ||
-      !this.segmentSplitter ||
-      !this.segmentSplitter.getProjectionOntoPath()
+        !pathLayer?.isStroked()) ||
+      !projection
     ) {
       return;
     }
-    const projection = this.segmentSplitter.getProjectionOntoPath().projection;
     if (projection.d < this.minSnapThreshold) {
       const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
         this.vectorLayer,
@@ -714,7 +766,13 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
 
   // Draw the floating points on top of the drag line in split filled subpath mode.
   private drawFloatingSplitFilledPathPreviewPoints(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
+    if (
+      !this.isActionMode ||
+      this.actionSource === ActionSource.Animated ||
+      !this.vectorLayer ||
+      !this.blockLayerId ||
+      !this.activePath
+    ) {
       return;
     }
     if (this.actionMode !== ActionMode.SplitSubPaths || !this.shapeSplitter) {
@@ -738,17 +796,19 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         const endPoint = proj2
           ? applyGroupTransform(proj2.projection, flattenedTransform)
           : this.shapeSplitter.getLastKnownMouseLocation();
-        executeLabeledPoint(
-          ctx,
-          this.attrScale,
-          endPoint,
-          this.splitPointRadius,
-          SPLIT_POINT_COLOR,
-        );
+        if (endPoint) {
+          executeLabeledPoint(
+            ctx,
+            this.attrScale,
+            endPoint,
+            this.splitPointRadius,
+            SPLIT_POINT_COLOR,
+          );
+        }
       }
-    } else if (this.shapeSplitter.getCurrentProjectionOntoPath()) {
-      const projection = this.shapeSplitter.getCurrentProjectionOntoPath().projection;
-      if (projection.d < this.minSnapThreshold) {
+    } else {
+      const projection = this.shapeSplitter.getCurrentProjectionOntoPath()?.projection;
+      if (projection && projection.d < this.minSnapThreshold) {
         executeLabeledPoint(
           ctx,
           this.attrScale,
@@ -809,24 +869,19 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       return;
     }
     if (this.actionMode === ActionMode.Selection) {
-      this.selectionHelper.onMouseDown(
+      this.selectionHelper?.onMouseDown(
         mouseDown,
         event.shiftKey || ShortcutService.isOsDependentModifierKey(event),
       );
     } else if (this.actionMode === ActionMode.PairSubPaths) {
-      this.pairSubPathHelper.onMouseDown(
+      this.pairSubPathHelper?.onMouseDown(
         mouseDown,
         event.shiftKey || ShortcutService.isOsDependentModifierKey(event),
       );
     } else if (this.actionMode === ActionMode.SplitCommands) {
-      this.segmentSplitter.onMouseDown(mouseDown);
+      this.segmentSplitter?.onMouseDown(mouseDown);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
-      const pathLayer = this.activePathLayer;
-      if (!pathLayer.isFilled() && pathLayer.isStroked()) {
-        this.segmentSplitter.onMouseDown(mouseDown);
-      } else {
-        this.shapeSplitter.onMouseDown(mouseDown);
-      }
+      this.subPathSplitter?.onMouseDown(mouseDown);
     }
   }
 
@@ -837,18 +892,13 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     }
     const mouseMove = this.mouseEventToViewportCoords(event);
     if (this.actionMode === ActionMode.Selection) {
-      this.selectionHelper.onMouseMove(mouseMove);
+      this.selectionHelper?.onMouseMove(mouseMove);
     } else if (this.actionMode === ActionMode.PairSubPaths) {
-      this.pairSubPathHelper.onMouseMove(mouseMove);
+      this.pairSubPathHelper?.onMouseMove(mouseMove);
     } else if (this.actionMode === ActionMode.SplitCommands) {
-      this.segmentSplitter.onMouseMove(mouseMove);
+      this.segmentSplitter?.onMouseMove(mouseMove);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
-      const pathLayer = this.activePathLayer;
-      if (!pathLayer.isFilled() && pathLayer.isStroked()) {
-        this.segmentSplitter.onMouseMove(mouseMove);
-      } else {
-        this.shapeSplitter.onMouseMove(mouseMove);
-      }
+      this.subPathSplitter?.onMouseMove(mouseMove);
     }
   }
 
@@ -859,21 +909,16 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     }
     const mouseUp = this.mouseEventToViewportCoords(event);
     if (this.actionMode === ActionMode.Selection) {
-      this.selectionHelper.onMouseUp(
+      this.selectionHelper?.onMouseUp(
         mouseUp,
         event.shiftKey || ShortcutService.isOsDependentModifierKey(event),
       );
     } else if (this.actionMode === ActionMode.PairSubPaths) {
-      this.pairSubPathHelper.onMouseUp(mouseUp);
+      this.pairSubPathHelper?.onMouseUp(mouseUp);
     } else if (this.actionMode === ActionMode.SplitCommands) {
-      this.segmentSplitter.onMouseUp(mouseUp);
+      this.segmentSplitter?.onMouseUp(mouseUp);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
-      const pathLayer = this.activePathLayer;
-      if (!pathLayer.isFilled() && pathLayer.isStroked()) {
-        this.segmentSplitter.onMouseUp(mouseUp);
-      } else {
-        this.shapeSplitter.onMouseUp(mouseUp);
-      }
+      this.subPathSplitter?.onMouseUp(mouseUp);
     }
   }
 
@@ -885,18 +930,13 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     const mouseLeave = this.mouseEventToViewportCoords(event);
     if (this.actionMode === ActionMode.Selection) {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
-      this.selectionHelper.onMouseLeave(mouseLeave);
+      this.selectionHelper?.onMouseLeave(mouseLeave);
     } else if (this.actionMode === ActionMode.PairSubPaths) {
-      this.pairSubPathHelper.onMouseLeave(mouseLeave);
+      this.pairSubPathHelper?.onMouseLeave(mouseLeave);
     } else if (this.actionMode === ActionMode.SplitCommands) {
-      this.segmentSplitter.onMouseLeave(mouseLeave);
+      this.segmentSplitter?.onMouseLeave(mouseLeave);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
-      const pathLayer = this.activePathLayer;
-      if (!pathLayer.isFilled() && pathLayer.isStroked()) {
-        this.segmentSplitter.onMouseLeave(mouseLeave);
-      } else {
-        this.shapeSplitter.onMouseLeave(mouseLeave);
-      }
+      this.subPathSplitter?.onMouseLeave(mouseLeave);
     }
     this.actionModeService.clearHover();
   }
@@ -913,7 +953,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     if (!root) {
       return undefined;
     }
-    const recurseFn = (layer: Layer): Layer => {
+    const recurseFn = (layer: Layer): MorphableLayer | undefined => {
       if (this.hiddenLayerIds.has(layer.id)) {
         return undefined;
       }
@@ -940,30 +980,37 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         return hitResult.isHit ? layer : undefined;
       }
       // Use 'hitTestLayer || h' and not the other way around because of reverse z-order.
-      return layer.children.reduce((h, l) => recurseFn(l) || h, undefined);
+      return layer.children.reduce<MorphableLayer | undefined>(
+        (h, l) => recurseFn(l) || h,
+        undefined,
+      );
     };
-    return recurseFn(root) as MorphableLayer;
+    return recurseFn(root);
   }
 
   // NOTE: this should only be used in action mode
   performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
+    const pathLayer = this.activePathLayer;
+    if (!this.vectorLayer || !this.blockLayerId || !pathLayer?.pathData) {
+      return NO_HIT;
+    }
     const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
       this.vectorLayer,
       this.blockLayerId,
     ).invert();
+    if (!flattenedTransform) {
+      // Do nothing if matrix is non-invertible.
+      return NO_HIT;
+    }
     const transformedMousePoint = MathUtil.transformPoint(mousePoint, flattenedTransform);
-    let isPointInRangeFn: (distance: number, cmd: Command) => boolean;
+    let isPointInRangeFn: HitOptions['isPointInRangeFn'];
     if (!opts.noPoints) {
       isPointInRangeFn = (distance, cmd) => {
-        const multiplyFactor = cmd.isSplitPoint() ? SPLIT_POINT_RADIUS_FACTOR : 1;
+        const multiplyFactor = cmd?.isSplitPoint() ? SPLIT_POINT_RADIUS_FACTOR : 1;
         return distance <= this.mediumPointRadius * multiplyFactor;
       };
     }
-    const pathLayer = this.vectorLayer.findLayerById(this.blockLayerId) as MorphableLayer;
-    if (!pathLayer.pathData) {
-      return { isHit: false } as HitResult;
-    }
-    let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
+    let isSegmentInRangeFn: HitOptions['isSegmentInRangeFn'];
     if (!opts.noSegments) {
       isSegmentInRangeFn = distance => {
         let maxDistance = opts.withExtraSegmentPadding ? this.minSnapThreshold : 0;

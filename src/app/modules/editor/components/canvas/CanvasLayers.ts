@@ -7,6 +7,7 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
+import { getContext2d } from 'app/modules/editor/scripts/dom';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
 import { State, Store } from 'app/modules/editor/store';
 import {
@@ -28,7 +29,7 @@ type Context = CanvasRenderingContext2D;
  */
 export class CanvasLayers extends CanvasLayoutMixin(DestroyableMixin()) {
   private readonly offscreenCanvas = document.createElement('canvas');
-  private vectorLayer: VectorLayer;
+  private vectorLayer: VectorLayer | undefined;
   private hiddenLayerIds: ReadonlySet<string> = new Set<string>();
 
   constructor(
@@ -67,11 +68,11 @@ export class CanvasLayers extends CanvasLayoutMixin(DestroyableMixin()) {
   }
 
   private get renderingCtx() {
-    return this.renderingCanvas.getContext('2d');
+    return getContext2d(this.renderingCanvas);
   }
 
   private get offscreenCtx() {
-    return this.offscreenCanvas.getContext('2d');
+    return getContext2d(this.offscreenCanvas);
   }
 
   // @Override

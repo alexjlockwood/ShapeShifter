@@ -68,7 +68,7 @@ export class ShortcutService {
         // Do nothing if the ctrl or meta keys are pressed.
         return undefined;
       }
-      if (document.activeElement.matches('input')) {
+      if (document.activeElement?.matches('input')) {
         // Ignore shortcuts when an input element has focus.
         return true;
       }

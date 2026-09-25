@@ -22,7 +22,8 @@ export class ClipboardService {
       return;
     }
     const cutCopyHandlerFn = (event: ClipboardEvent, shouldCut: boolean) => {
-      if (document.activeElement.matches('input')) {
+      const { clipboardData } = event;
+      if (!clipboardData || document.activeElement?.matches('input')) {
         return true;
       }
 
@@ -30,7 +31,7 @@ export class ClipboardService {
       if (!blocks.length) {
         return false;
       }
-      event.clipboardData.setData('text/plain', JSON.stringify({ blocks }, undefined, 2));
+      clipboardData.setData('text/plain', JSON.stringify({ blocks }, undefined, 2));
 
       if (shouldCut) {
         this.layerTimelineService.deleteSelectedModels();
@@ -47,11 +48,12 @@ export class ClipboardService {
         });
         return false;
       }
-      if (document.activeElement.matches('input')) {
+      const { clipboardData } = event;
+      if (!clipboardData || document.activeElement?.matches('input')) {
         return true;
       }
 
-      const str = event.clipboardData.getData('text');
+      const str = clipboardData.getData('text');
       const existingVl = this.layerTimelineService.getVectorLayer();
 
       if (str.match(/<\/svg>\s*$/)) {

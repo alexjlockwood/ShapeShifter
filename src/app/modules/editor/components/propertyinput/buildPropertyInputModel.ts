@@ -35,6 +35,12 @@ interface Dependencies {
   readonly enteredValueMap: Map<string, any>;
 }
 
+const NO_SELECTIONS: PropertyInputModel = {
+  numSelections: 0,
+  inspectedProperties: [],
+  availablePropertyNames: [],
+};
+
 /**
  * Builds the properties to show for the selected layers, blocks, or animation.
  */
@@ -55,11 +61,7 @@ export function buildPropertyInputModel(
   } else if (isAnimationSelected) {
     return buildInspectedAnimationProperties(deps, animation);
   }
-  return {
-    numSelections: 0,
-    inspectedProperties: [],
-    availablePropertyNames: [],
-  };
+  return NO_SELECTIONS;
 }
 
 export function shouldShowStartActionModeButton(pim: PropertyInputModel) {
@@ -121,6 +123,10 @@ function buildInspectedLayerProperties(
   // Edit a single layer.
   const enteredValueMap = deps.enteredValueMap;
   const layer = selectedLayers[0];
+  if (!layer) {
+    // The selected layer no longer exists.
+    return NO_SELECTIONS;
+  }
   const icon = layer.type;
   const description = layer.name;
   const inspectedProperties: InspectedProperty<any>[] = [];
@@ -186,10 +192,14 @@ function buildInspectedBlockProperties(
   }
   const enteredValueMap = deps.enteredValueMap;
   const block = selectedBlocks[0];
+  if (!block) {
+    // The selected block no longer exists.
+    return NO_SELECTIONS;
+  }
   const icon = 'animationblock';
   const description = block.propertyName;
   const blockLayer = vl.findLayerById(block.layerId);
-  const subDescription = `for '${blockLayer.name}'`;
+  const subDescription = blockLayer ? `for '${blockLayer.name}'` : undefined;
   const inspectedProperties: InspectedProperty<any>[] = [];
   block.inspectableProperties.forEach((property, propertyName) => {
     inspectedProperties.push(

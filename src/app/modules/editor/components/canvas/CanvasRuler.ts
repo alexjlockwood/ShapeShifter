@@ -1,4 +1,5 @@
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
+import { getContext2d } from 'app/modules/editor/scripts/dom';
 import { ThemeService } from 'app/modules/editor/services';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
@@ -15,7 +16,7 @@ const TICK_SIZE = 6;
  */
 export class CanvasRuler extends CanvasLayoutMixin() {
   // The current mouse point in viewport coordinates.
-  private vpMousePoint: Point;
+  private vpMousePoint: Point | undefined;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -67,7 +68,7 @@ export class CanvasRuler extends CanvasLayoutMixin() {
     this.canvas.setAttribute('width', `${width * devicePixelRatio}`);
     this.canvas.setAttribute('height', `${height * devicePixelRatio}`);
 
-    const ctx = this.canvas.getContext('2d');
+    const ctx = getContext2d(this.canvas);
     ctx.scale(devicePixelRatio, devicePixelRatio);
     const { tx, ty } = this.getTranslation();
     ctx.translate(

@@ -12,10 +12,6 @@
       "test/*": ["./src/test/*"]
     },
     "strict": true,
-    // TODO: turn these on too. model/, scripts/, and store/ already pass them (see
-    // tsconfig.strict.json), and there are about 400 errors left in the rest of the app.
-    "strictNullChecks": false,
-    "strictPropertyInitialization": false,
     "noImplicitReturns": true,
     "isolatedModules": true,
     "esModuleInterop": true,

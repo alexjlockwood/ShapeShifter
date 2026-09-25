@@ -16,9 +16,6 @@ These existed before the migration and are still there.
 - **UI-only state is recorded in the undo history.** Changes to the `paper` slice (cursor, hover,
   zoom) aren't excluded, so they can become undo steps of their own
   (`store/undoredo/metareducer.ts`).
-- **The property panel can't inspect a selected layer that doesn't exist.** `buildPropertyInputModel`
-  maps the selected layer ids to layers without checking for missing ones. It now only takes down
-  the property panel (`components/propertyinput/buildPropertyInputModel.ts`).
 - **Deleting a split segment can find it without a parent command.** It's unclear how the path
   gets into this state. It used to crash with "Cannot read properties of undefined (reading
   'getCommands')" (reported to Bugsnag from 1.0.15), and now it leaves the path as it is and
@@ -99,3 +96,13 @@ These existed before the migration and are still there.
   (`model/properties/ColorProperty.ts`).
 - Zooming in on a long animation made the timeline canvases too big to draw, which throws in
   Firefox ("Canvas exceeds max size").
+- The property panel crashed if a selected layer or animation block no longer existed
+  (`components/propertyinput/buildPropertyInputModel.ts`).
+- The timeline froze the page when it was zoomed out far enough that even the largest grid
+  interval was narrower than 40 pixels, e.g. a 60 second animation in a timeline narrower than
+  about 90 pixels, because the loop that picks the interval never ended. A timeline narrower than
+  its padding made the zoom negative, which froze it too
+  (`components/layertimeline/TimelineGridRenderer.ts`).
+- In pair subpaths mode, hovering over a subpath that was already paired stopped it from being
+  drawn as paired afterward, since drawing removed it from the canvas's copy of the paired
+  subpaths (`components/canvas/CanvasOverlay.ts`).

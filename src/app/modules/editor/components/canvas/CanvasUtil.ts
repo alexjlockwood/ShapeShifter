@@ -12,16 +12,16 @@ export function executeCommands(ctx: Context, commands: ReadonlyArray<Command>, 
   ctx.transform(a, b, c, d, e, f);
   ctx.beginPath();
 
-  if (commands.length === 1 && commands[0].type !== 'M') {
+  if (commands.length === 1 && commands[0].type !== 'M' && commands[0].start) {
     ctx.moveTo(commands[0].start.x, commands[0].start.y);
   }
 
-  let previousEndPoint: Point;
+  let previousEndPoint: Point | undefined;
   commands.forEach(cmd => {
     const start = cmd.start;
     const end = cmd.end;
 
-    if (start && !MathUtil.arePointsEqual(start, previousEndPoint)) {
+    if (start && (!previousEndPoint || !MathUtil.arePointsEqual(start, previousEndPoint))) {
       // This is to support the case where the list of commands
       // is size fragmented.
       ctx.moveTo(start.x, start.y);
@@ -32,18 +32,18 @@ export function executeCommands(ctx: Context, commands: ReadonlyArray<Command>, 
     } else if (cmd.type === 'L') {
       ctx.lineTo(end.x, end.y);
     } else if (cmd.type === 'Q') {
-      ctx.quadraticCurveTo(cmd.points[1].x, cmd.points[1].y, cmd.points[2].x, cmd.points[2].y);
+      const cp = cmd.points[1];
+      if (cp) {
+        ctx.quadraticCurveTo(cp.x, cp.y, end.x, end.y);
+      }
     } else if (cmd.type === 'C') {
-      ctx.bezierCurveTo(
-        cmd.points[1].x,
-        cmd.points[1].y,
-        cmd.points[2].x,
-        cmd.points[2].y,
-        cmd.points[3].x,
-        cmd.points[3].y,
-      );
+      const cp1 = cmd.points[1];
+      const cp2 = cmd.points[2];
+      if (cp1 && cp2) {
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, end.x, end.y);
+      }
     } else if (cmd.type === 'Z') {
-      if (MathUtil.arePointsEqual(start, previousEndPoint)) {
+      if (start && previousEndPoint && MathUtil.arePointsEqual(start, previousEndPoint)) {
         ctx.closePath();
       } else {
         // This is to support the case where the list of commands

@@ -72,20 +72,20 @@ export class LayerTimelineController extends DestroyableMixin() {
   private horizZoom_ = DEFAULT_HORIZ_ZOOM;
 
   private shouldSuppressRebuildSnapTimes = false;
-  private snapTimes: Map<string, number[]>;
+  private snapTimes = new Map<string, number[]>();
 
   private animation: Animation;
   private vectorLayer: VectorLayer;
   private selectedBlockIds: ReadonlySet<string>;
-  private currActionMode: ActionMode;
-  private autoZoomTimeout: number = undefined;
+  private currActionMode: ActionMode | undefined;
+  private autoZoomTimeout: number | undefined;
 
   // Mouse wheel zoom variables.
-  private zoomStartActiveAnimation: HTMLElement;
-  private targetHorizZoom: number;
-  private performZoomRAF: number = undefined;
-  private endZoomTimeout: number = undefined;
-  private zoomStartTimeCursorPos: number;
+  private zoomStartActiveAnimation: HTMLElement | undefined;
+  private targetHorizZoom = 0;
+  private performZoomRAF: number | undefined;
+  private endZoomTimeout: number | undefined;
+  private zoomStartTimeCursorPos = 0;
 
   constructor(
     private readonly elements: LayerTimelineElements,
@@ -94,6 +94,11 @@ export class LayerTimelineController extends DestroyableMixin() {
     private readonly services: EditorServices,
   ) {
     super();
+    // The subscription in init() keeps these up to date.
+    const { animation, vectorLayer, selectedBlockIds } = getLayerTimelineState(store.getState());
+    this.animation = animation;
+    this.vectorLayer = vectorLayer;
+    this.selectedBlockIds = selectedBlockIds;
   }
 
   init() {
@@ -119,7 +124,11 @@ export class LayerTimelineController extends DestroyableMixin() {
             }
             const prevActionMode = this.currActionMode;
             this.currActionMode = actionMode;
-            if (prevActionMode === ActionMode.None && actionMode === ActionMode.Selection) {
+            if (
+              prevActionMode === ActionMode.None &&
+              actionMode === ActionMode.Selection &&
+              singleSelectedPathBlock
+            ) {
               // Move the current time to the beginning of the selected block when
               // entering action mode.
               this.services.playbackService.setCurrentTime(singleSelectedPathBlock.startTime);
@@ -142,7 +151,9 @@ export class LayerTimelineController extends DestroyableMixin() {
     super.dispose();
     window.clearTimeout(this.autoZoomTimeout);
     window.clearTimeout(this.endZoomTimeout);
-    window.cancelAnimationFrame(this.performZoomRAF);
+    if (this.performZoomRAF) {
+      window.cancelAnimationFrame(this.performZoomRAF);
+    }
   }
 
   private get horizZoom() {
@@ -279,8 +290,13 @@ export class LayerTimelineController extends DestroyableMixin() {
     const animation = this.animation;
     const target = mouseDownEvent.target as Element;
 
+    const property = target.closest('.slt-property');
+    if (!property) {
+      return;
+    }
+
     // Some geometry and hit-testing basics.
-    const animRect = target.closest('.slt-property').getBoundingClientRect();
+    const animRect = property.getBoundingClientRect();
     const xToTimeFn = (x: number) => ((x - animRect.left) / animRect.width) * animation.duration;
     const downTime = xToTimeFn(mouseDownEvent.clientX);
 
@@ -340,10 +356,10 @@ export class LayerTimelineController extends DestroyableMixin() {
       readonly block: AnimationBlock;
       readonly downStartTime: number;
       readonly downEndTime: number;
-      readonly startBound?: number;
-      readonly endBound?: number;
-      newStartTime?: number;
-      newEndTime?: number;
+      readonly startBound: number;
+      readonly endBound: number;
+      newStartTime: number;
+      newEndTime: number;
     }
 
     const blockInfos: BlockInfo[] = draggingBlocks.map(block => {
@@ -388,6 +404,8 @@ export class LayerTimelineController extends DestroyableMixin() {
         endBound,
         downStartTime: block.startTime,
         downEndTime: block.endTime,
+        newStartTime: block.startTime,
+        newEndTime: block.endTime,
       };
     });
 
@@ -642,7 +660,7 @@ export class LayerTimelineController extends DestroyableMixin() {
    */
   private snapTime(time: number, includeActiveTime = true) {
     const animation = this.animation;
-    const snapTimes = this.snapTimes.get(animation.id);
+    const snapTimes = this.snapTimes.get(animation.id) ?? [];
     const snapDelta = SNAP_PIXELS / this.horizZoom;
     const reducerFn = (best: number, snapTime: number) => {
       const dist = Math.abs(time - snapTime);
@@ -665,9 +683,11 @@ export class LayerTimelineController extends DestroyableMixin() {
   }
 
   onAddTimelineBlockClick(layer: Layer, propertyName: string) {
-    const clonedValue = layer.inspectableProperties
-      .get(propertyName)
-      .cloneValue((layer as any)[propertyName]);
+    const property = layer.inspectableProperties.get(propertyName);
+    if (!property) {
+      return;
+    }
+    const clonedValue = property.cloneValue((layer as any)[propertyName]);
     this.services.layerTimelineService.addBlocks([
       {
         layerId: layer.id,
@@ -768,6 +788,9 @@ export class LayerTimelineController extends DestroyableMixin() {
   onLayerMouseDown(mouseDownEvent: MouseEvent, mouseDownDragLayer: Layer) {
     const layersList = (mouseDownEvent.target as Element).closest('.slt-layers-list');
     const scroller = (mouseDownEvent.target as Element).closest('.slt-layers-list-scroller');
+    if (!layersList || !scroller) {
+      return;
+    }
 
     interface LayerInfo {
       layer: Layer;
@@ -778,7 +801,7 @@ export class LayerTimelineController extends DestroyableMixin() {
 
     let orderedLayerInfos: LayerInfo[] = [];
     let scrollerRect: DOMRect;
-    let targetLayerInfo: LayerInfo;
+    let targetLayerInfo: LayerInfo | undefined;
     let targetEdge: string;
 
     const dragLayers: ReadonlyArray<Layer> = (function (
@@ -822,6 +845,9 @@ export class LayerTimelineController extends DestroyableMixin() {
           };
 
           const layer = this.vectorLayer.findLayerById(layerId);
+          if (!layer) {
+            return;
+          }
           orderedLayerInfos.push({ layer, element, localRect: rect });
 
           // Add a fake target for empty groups.
@@ -871,13 +897,14 @@ export class LayerTimelineController extends DestroyableMixin() {
 
         // Disallow dragging a layer into itself or its children.
         if (targetLayerInfo) {
-          let { layer } = targetLayerInfo;
+          let layer: Layer | undefined = targetLayerInfo.layer;
           while (layer) {
-            if (_.find(dragLayers, l => l.id === layer.id)) {
+            const layerId = layer.id;
+            if (_.find(dragLayers, l => l.id === layerId)) {
               targetLayerInfo = undefined;
               break;
             }
-            layer = LayerUtil.findParent(this.vectorLayer, layer.id);
+            layer = LayerUtil.findParent(this.vectorLayer, layerId);
           }
         }
 
@@ -920,17 +947,18 @@ export class LayerTimelineController extends DestroyableMixin() {
         const removeDragLayersFn = (vl: VectorLayer) => LayerUtil.removeLayers(vl, ...dragLayerIds);
 
         const initialVl = this.vectorLayer;
-        let replacementVl: VectorLayer;
+        const targetLayer = targetLayerInfo.layer;
+        let replacementVl: VectorLayer | undefined;
 
         if (targetLayerInfo.moveIntoEmptyLayerGroup) {
           // Moving into an empty layer group.
-          replacementVl = addDragLayersFn(removeDragLayersFn(initialVl), targetLayerInfo.layer);
-        } else if (LayerUtil.findParent(initialVl, targetLayerInfo.layer.id)) {
+          replacementVl = addDragLayersFn(removeDragLayersFn(initialVl), targetLayer);
+        } else if (LayerUtil.findParent(initialVl, targetLayer.id)) {
           // Moving next to another layer.
           const tempVl = removeDragLayersFn(initialVl);
-          const parent = LayerUtil.findParent(tempVl, targetLayerInfo.layer.id);
-          const index = _.findIndex(parent.children, l => l.id === targetLayerInfo.layer.id);
-          if (index >= 0) {
+          const parent = LayerUtil.findParent(tempVl, targetLayer.id);
+          const index = parent ? _.findIndex(parent.children, l => l.id === targetLayer.id) : -1;
+          if (parent && index >= 0) {
             replacementVl = addDragLayersFn(tempVl, parent, index + (targetEdge === 'top' ? 0 : 1));
           }
         }
@@ -957,9 +985,13 @@ export class LayerTimelineController extends DestroyableMixin() {
    */
   onWheelEvent(event: WheelEvent) {
     const startZoomFn = () => {
-      this.zoomStartActiveAnimation = this.elements.timelineAnimation.current;
+      const timelineAnimation = this.elements.timelineAnimation.current;
+      if (!timelineAnimation) {
+        return;
+      }
+      this.zoomStartActiveAnimation = timelineAnimation;
       this.zoomStartTimeCursorPos =
-        getPosition(this.zoomStartActiveAnimation).left +
+        getPosition(timelineAnimation).left +
         this.currentTime * this.horizZoom +
         TimelineConsts.TIMELINE_ANIMATION_PADDING;
     };
@@ -968,14 +1000,15 @@ export class LayerTimelineController extends DestroyableMixin() {
       this.horizZoom = this.targetHorizZoom;
 
       // Set the scroll offset such that the time cursor remains at zoomStartTimeCursorPos
-      if (this.zoomStartActiveAnimation) {
+      const { timeline } = this;
+      if (this.zoomStartActiveAnimation && timeline) {
         const newScrollLeft =
           getPosition(this.zoomStartActiveAnimation).left +
-          this.timeline.scrollLeft +
+          timeline.scrollLeft +
           this.currentTime * this.horizZoom +
           TimelineConsts.TIMELINE_ANIMATION_PADDING -
           this.zoomStartTimeCursorPos;
-        this.timeline.scrollLeft = newScrollLeft;
+        timeline.scrollLeft = newScrollLeft;
       }
     };
 
@@ -1022,8 +1055,13 @@ export class LayerTimelineController extends DestroyableMixin() {
    * Zooms the timeline to fit the first animation.
    */
   autoZoomToAnimation() {
+    const { timeline } = this;
+    if (!timeline) {
+      return;
+    }
     // Shave off 48 pixels for safety.
-    this.horizZoom = (getContentSize(this.timeline, 'width') - 48) / this.animation.duration;
+    const horizZoom = (getContentSize(timeline, 'width') - 48) / this.animation.duration;
+    this.horizZoom = _.clamp(horizZoom, MIN_ZOOM, MAX_ZOOM);
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.
@@ -1034,8 +1072,10 @@ export class LayerTimelineController extends DestroyableMixin() {
     input.click();
   }
 
-  onImportedFilesPicked(fileList: FileList) {
-    this.services.fileImportService.import(fileList);
+  onImportedFilesPicked(fileList: FileList | null) {
+    if (fileList) {
+      this.services.fileImportService.import(fileList);
+    }
   }
 }
 

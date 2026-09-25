@@ -1,6 +1,7 @@
 import {
   ActionMode,
   ActionSource,
+  getSelectionsOfType,
   Selection,
   SelectionType,
 } from 'app/modules/editor/model/actionmode';
@@ -16,22 +17,22 @@ export class ToolbarData {
   private readonly subPaths: ReadonlyArray<number> = [];
   private readonly segments: ReadonlyArray<{ subIdx: number; cmdIdx: number }> = [];
   private readonly points: ReadonlyArray<{ subIdx: number; cmdIdx: number }> = [];
-  private readonly numSplitSubPaths: number;
-  private readonly numSplitPoints: number;
-  private readonly showSetFirstPosition: boolean;
-  private readonly showShiftSubPath: boolean;
-  private readonly isFilled: boolean;
-  private readonly isStroked: boolean;
-  private readonly showSplitInHalf: boolean;
-  private readonly unpairedSubPathSource: ActionSource;
-  private readonly showPairSubPaths: boolean;
+  private readonly numSplitSubPaths: number = 0;
+  private readonly numSplitPoints: number = 0;
+  private readonly showSetFirstPosition: boolean = false;
+  private readonly showShiftSubPath: boolean = false;
+  private readonly isFilled: boolean = false;
+  private readonly isStroked: boolean = false;
+  private readonly showSplitInHalf: boolean = false;
+  private readonly unpairedSubPathSource: ActionSource | undefined;
+  private readonly showPairSubPaths: boolean = false;
 
   constructor(
     readonly mode: ActionMode,
-    startMorphableLayer: MorphableLayer,
-    endMorphableLayer: MorphableLayer,
+    startMorphableLayer: MorphableLayer | undefined,
+    endMorphableLayer: MorphableLayer | undefined,
     readonly selections: ReadonlyArray<Selection>,
-    unpair: { source: ActionSource; subIdx: number },
+    unpair: { source: ActionSource; subIdx: number } | undefined,
     private readonly block: PathAnimationBlock | undefined,
   ) {
     // Precondition: assume all selections are for the same canvas type
@@ -41,32 +42,22 @@ export class ToolbarData {
     const canvasType = selections[0].source;
     const morphableLayer =
       canvasType === ActionSource.From ? startMorphableLayer : endMorphableLayer;
-    if (!morphableLayer) {
+    const activePath = morphableLayer?.pathData;
+    if (!morphableLayer || !activePath) {
       return;
     }
-    const activePath = morphableLayer.pathData;
     this.isFilled = morphableLayer.isFilled();
     this.isStroked = morphableLayer.isStroked();
-    this.subPaths = selections.filter(s => s.type === SelectionType.SubPath).map(s => s.subIdx);
-    this.segments = selections
-      .filter(s => {
-        const { subIdx, cmdIdx } = s;
-        return (
-          s.type === SelectionType.Segment &&
-          morphableLayer.isFilled() &&
-          activePath.getCommand(subIdx, cmdIdx).isSplitSegment()
-        );
-      })
-      .map(s => {
-        const { subIdx, cmdIdx } = s;
-        return { subIdx, cmdIdx };
-      });
-    this.points = selections
-      .filter(s => s.type === SelectionType.Point)
-      .map(s => {
-        const { subIdx, cmdIdx } = s;
-        return { subIdx, cmdIdx };
-      });
+    this.subPaths = getSelectionsOfType(selections, SelectionType.SubPath).map(s => s.subIdx);
+    this.segments = getSelectionsOfType(selections, SelectionType.Segment)
+      .filter(
+        ({ subIdx, cmdIdx }) =>
+          morphableLayer.isFilled() && activePath.getCommand(subIdx, cmdIdx).isSplitSegment(),
+      )
+      .map(({ subIdx, cmdIdx }) => ({ subIdx, cmdIdx }));
+    this.points = getSelectionsOfType(selections, SelectionType.Point).map(
+      ({ subIdx, cmdIdx }) => ({ subIdx, cmdIdx }),
+    );
 
     this.numSplitSubPaths = _.sumBy(this.subPaths, subIdx => {
       return activePath.getSubPath(subIdx).isUnsplittable() ? 1 : 0;
@@ -77,7 +68,7 @@ export class ToolbarData {
     });
     this.showSetFirstPosition =
       this.points.length === 1 &&
-      this.points[0].cmdIdx &&
+      !!this.points[0].cmdIdx &&
       activePath.getSubPath(this.points[0].subIdx).isClosed();
     this.showShiftSubPath =
       this.subPaths.length > 0 && activePath.getSubPath(this.subPaths[0]).isClosed();
@@ -88,8 +79,8 @@ export class ToolbarData {
       }
     }
     this.showPairSubPaths =
-      startMorphableLayer.pathData.getSubPaths().length === 1 &&
-      endMorphableLayer.pathData.getSubPaths().length === 1
+      startMorphableLayer?.pathData?.getSubPaths().length === 1 &&
+      endMorphableLayer?.pathData?.getSubPaths().length === 1
         ? false
         : this.getNumSubPaths() === 1 || this.getNumSegments() > 0 || !this.isSelectionMode();
   }

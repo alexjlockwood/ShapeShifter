@@ -64,7 +64,7 @@ export class FileExportService {
       const numSteps = Math.ceil((anim.duration / 1000) * fps);
       const svgs = SpriteSerializer.createSvgFrames(vl, anim, numSteps);
       const length = (numSteps - 1).toString().length;
-      const fpsFolder = zip.folder(`${fps}fps`);
+      const fpsFolder = getFolder(zip, `${fps}fps`);
       svgs.forEach((s, i) => {
         fpsFolder.file(`frame${_.padStart(i.toString(), length, '0')}.svg`, s);
       });
@@ -103,7 +103,7 @@ export class FileExportService {
         const cssSprite = SpriteSerializer.createCss(vl.width, vl.height, anim.duration, numSteps);
         const fileName = `sprite_${fps}fps`;
         const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
-        const spriteFolder = zip.folder(`${fps}fps`);
+        const spriteFolder = getFolder(zip, `${fps}fps`);
         spriteFolder.file(`${fileName}.html`, htmlSprite);
         spriteFolder.file(`${fileName}.css`, cssSprite);
         spriteFolder.file(`${fileName}.svg`, svgSprite);
@@ -153,6 +153,15 @@ function downloadFile(content: string | Blob, fileName: string) {
   anchor.click();
   anchor.remove();
   window.URL.revokeObjectURL(url);
+}
+
+/** Returns the zip's folder with the specified name, creating it if it doesn't exist. */
+function getFolder(zip: JSZip, name: string) {
+  const folder = zip.folder(name);
+  if (!folder) {
+    throw new Error(`Couldn't create the ${name} folder`);
+  }
+  return folder;
 }
 
 async function asyncForEach(

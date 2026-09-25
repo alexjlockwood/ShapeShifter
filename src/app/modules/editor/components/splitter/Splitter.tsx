@@ -1,3 +1,4 @@
+import { requireRef } from 'app/modules/editor/hooks/requireRef';
 import { getContentSize, setContentSize } from 'app/modules/editor/scripts/dom';
 import { Dragger } from 'app/modules/editor/scripts/dragger';
 import { type MouseEvent, useEffectEvent, useLayoutEffect, useRef, useState } from 'react';
@@ -25,11 +26,19 @@ export function Splitter({ edge, min = 100, persistId }: SplitterProps) {
   const dimension = orientation === 'vertical' ? 'width' : 'height';
   const persistKey = persistId ? `$$splitter::${persistId}` : undefined;
 
+  const getParent = () => {
+    const parent = requireRef(ref).parentElement;
+    if (!parent) {
+      throw new Error('Splitters must be placed inside of the element they resize');
+    }
+    return parent;
+  };
+
   const setSize = (size: number) => {
     if (persistKey) {
       localStorage[persistKey] = size;
     }
-    setContentSize(ref.current.parentElement, dimension, size);
+    setContentSize(getParent(), dimension, size);
   };
 
   // Restore the size from the last session, if there is one.
@@ -41,7 +50,7 @@ export function Splitter({ edge, min = 100, persistId }: SplitterProps) {
   useLayoutEffect(() => restoreSize(), []);
 
   const onMouseDown = (event: MouseEvent) => {
-    const downSize = getContentSize(ref.current.parentElement, dimension);
+    const downSize = getContentSize(getParent(), dimension);
     event.preventDefault();
     new Dragger({
       downX: event.clientX,

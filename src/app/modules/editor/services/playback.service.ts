@@ -139,8 +139,8 @@ const SLOW_MOTION_PLAYBACK_SPEED = 5;
 
 /** A simple class that simulates an animation loop. */
 class Animator {
-  private timeoutId: number;
-  private animationFrameId: number;
+  private timeoutId: number | undefined;
+  private animationFrameId: number | undefined;
   private playbackSpeed = DEFAULT_PLAYBACK_SPEED;
   private isRepeating = false;
 

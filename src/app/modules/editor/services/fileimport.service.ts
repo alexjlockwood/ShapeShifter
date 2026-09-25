@@ -61,7 +61,7 @@ export class FileImportService {
 
       fileReader.onload = event => {
         const text = (event.target as any).result;
-        const callbackFn = (vectorLayer: VectorLayer) => {
+        const callbackFn = (vectorLayer: VectorLayer | undefined) => {
           if (!vectorLayer) {
             numErrors++;
             maybeAddVectorLayersFn();
@@ -83,10 +83,8 @@ export class FileImportService {
             });
         } else if (file.type.includes('xml')) {
           importType = ImportType.VectorDrawable;
-          let vl: VectorLayer;
           try {
-            vl = VectorDrawableLoader.loadVectorLayerFromXmlString(text, doesNameExistFn);
-            callbackFn(vl);
+            callbackFn(VectorDrawableLoader.loadVectorLayerFromXmlString(text, doesNameExistFn));
           } catch (e) {
             console.warn('Failed to parse the file', e);
             callbackFn(undefined);

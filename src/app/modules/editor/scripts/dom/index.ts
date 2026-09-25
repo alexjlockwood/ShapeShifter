@@ -82,3 +82,12 @@ export function getPosition(element: HTMLElement) {
 export function isVisible(element: HTMLElement) {
   return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
 }
+
+/** Returns the canvas's 2D context. It's only null if the canvas already has another kind. */
+export function getContext2d(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error("Couldn't get the canvas's 2D context");
+  }
+  return ctx;
+}

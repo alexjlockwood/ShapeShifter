@@ -56,9 +56,11 @@ export function PropertyInput() {
   );
 
   const onAnimateLayerClick = (layer: Layer, propertyName: string) => {
-    const clonedValue = layer.inspectableProperties
-      .get(propertyName)
-      .cloneValue((layer as any)[propertyName]);
+    const property = layer.inspectableProperties.get(propertyName);
+    if (!property) {
+      return;
+    }
+    const clonedValue = property.cloneValue((layer as any)[propertyName]);
     const currentTime = playbackService.getCurrentTime();
     layerTimelineService.addBlocks([
       {

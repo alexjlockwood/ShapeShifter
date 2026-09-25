@@ -21,8 +21,8 @@ export class ShapeSplitter {
   private readonly actionModeService: ActionModeService;
   private initProjInfos: ProjInfo[] = [];
   private finalProjInfos: ProjInfo[] = [];
-  private hitResult: HitResult;
-  private lastKnownMouseLocation: Point;
+  private hitResult: HitResult | undefined;
+  private lastKnownMouseLocation: Point | undefined;
 
   constructor(private readonly component: CanvasOverlay) {
     this.actionModeService = component.actionModeService;
@@ -96,8 +96,8 @@ export class ShapeSplitter {
     sortProjInfosFn(this.initProjInfos);
     sortProjInfosFn(this.finalProjInfos);
 
-    let initProjInfo: ProjInfo;
-    let finalProjInfo: ProjInfo;
+    let initProjInfo: ProjInfo | undefined;
+    let finalProjInfo: ProjInfo | undefined;
     for (const p1 of this.initProjInfos) {
       for (const p2 of this.finalProjInfos) {
         const {
@@ -120,9 +120,9 @@ export class ShapeSplitter {
       }
     }
 
-    if (initProjInfo && finalProjInfo) {
-      const activeLayer = this.component.activePathLayer;
-      const pathMutator = activeLayer.pathData.mutate();
+    const activePath = this.component.activePath;
+    if (initProjInfo && finalProjInfo && activePath) {
+      const pathMutator = activePath.mutate();
       const {
         proj: { subIdx: initSubIdx, cmdIdx: initCmdIdx },
         isEndPt: isInitEndPt,
@@ -192,6 +192,9 @@ export class ShapeSplitter {
   }
 
   private populateFinalProjInfos(mousePoint: Point) {
+    if (!this.hitResult) {
+      return;
+    }
     const { isEndPointHit, isSegmentHit, endPointHits, segmentHits } = this.hitResult;
     if (isEndPointHit || isSegmentHit) {
       for (const proj of endPointHits) {

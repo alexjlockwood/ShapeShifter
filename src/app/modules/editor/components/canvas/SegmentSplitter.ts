@@ -19,8 +19,8 @@ interface ProjInfo {
 export class SegmentSplitter {
   private readonly actionSource: ActionSource;
   private readonly actionModeService: ActionModeService;
-  private currProjInfo: ProjInfo;
-  private lastKnownMouseLocation: Point;
+  private currProjInfo: ProjInfo | undefined;
+  private lastKnownMouseLocation: Point | undefined;
 
   constructor(private readonly component: CanvasOverlay) {
     this.actionSource = component.actionSource;
@@ -30,14 +30,14 @@ export class SegmentSplitter {
   onMouseDown(mouseDown: Point) {
     this.lastKnownMouseLocation = mouseDown;
     this.currProjInfo = this.findProjInfo(mouseDown);
-    const activePathLayer = this.component.activePathLayer;
-    if (this.currProjInfo) {
+    const activePath = this.component.activePath;
+    if (this.currProjInfo && activePath) {
       const {
         proj: { subIdx, cmdIdx, projection },
         isEndPt,
       } = this.currProjInfo;
       const mode = this.component.actionMode;
-      const pathMutator = activePathLayer.pathData.mutate();
+      const pathMutator = activePath.mutate();
       if (mode === ActionMode.SplitCommands) {
         pathMutator.splitCommand(subIdx, cmdIdx, projection.t);
       } else if (mode === ActionMode.SplitSubPaths) {

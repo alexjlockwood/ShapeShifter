@@ -64,10 +64,15 @@ export class PairSubPathHelper {
     }
   }
 
-  private findHitSubPath(hits: ReadonlyArray<{ subIdx: number }>) {
+  private findHitSubPath(hits: ReadonlyArray<{ subIdx: number }> | undefined) {
+    const activePath = this.component.activePath;
+    if (!activePath || !hits?.length) {
+      // Only the active path is hit tested, and a hit flag is only set if its list isn't empty.
+      throw new Error('Expected at least one hit on the active path');
+    }
     const infos = hits.map(index => {
       const { subIdx } = index;
-      return { subIdx, subPath: this.component.activePath.getSubPath(subIdx) };
+      return { subIdx, subPath: activePath.getSubPath(subIdx) };
     });
     const lastSplitIndex = _.findLastIndex(infos, info => info.subPath.isSplit());
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];

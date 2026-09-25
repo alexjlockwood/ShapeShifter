@@ -1,11 +1,29 @@
 /**
  * A selection represents an action that is the result of a mouse click.
  */
-export interface Selection {
-  readonly type: SelectionType;
+export type Selection = SubPathSelection | CommandSelection;
+
+interface SubPathSelection {
+  readonly type: SelectionType.SubPath;
   readonly source: ActionSource;
   readonly subIdx: number;
-  readonly cmdIdx?: number;
+  readonly cmdIdx?: undefined;
+}
+
+/** Selects a segment or a point. */
+interface CommandSelection {
+  readonly type: SelectionType.Segment | SelectionType.Point;
+  readonly source: ActionSource;
+  readonly subIdx: number;
+  readonly cmdIdx: number;
+}
+
+/** Returns the selections of the specified type. */
+export function getSelectionsOfType<T extends SelectionType>(
+  selections: ReadonlyArray<Selection>,
+  type: T,
+) {
+  return selections.filter((s): s is Selection & { readonly type: T } => s.type === type);
 }
 
 /**

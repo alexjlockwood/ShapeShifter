@@ -219,10 +219,12 @@ export class LayerTimelineService {
       const selectedLayer = selectedLayers[0];
       if (!(selectedLayer instanceof VectorLayer)) {
         // Add the new layer as a sibling to the currently selected layer.
-        const parent = LayerUtil.findParent(vl, selectedLayer.id).clone();
-        parent.children = [...parent.children, layer];
-        this.updateLayer(parent);
-        return;
+        const parent = LayerUtil.findParent(vl, selectedLayer.id)?.clone();
+        if (parent) {
+          parent.children = [...parent.children, layer];
+          this.updateLayer(parent);
+          return;
+        }
       }
     }
     const vectorLayer = vl.clone();
@@ -254,7 +256,10 @@ export class LayerTimelineService {
       return;
     }
     const vl = this.getVectorLayer();
-    const parent = LayerUtil.findParent(vl, layerId).clone();
+    const parent = LayerUtil.findParent(vl, layerId)?.clone();
+    if (!parent) {
+      return;
+    }
     const layerIndex = _.findIndex(parent.children, l => l.id === layerId);
     const children = [...parent.children];
     children.splice(layerIndex, 1, newLayer);
@@ -323,7 +328,7 @@ export class LayerTimelineService {
           l.strokeWidth = MathUtil.round(newStrokeWidth);
         }
         const path = l.pathData;
-        if (!path || !l.pathData.getPathString()) {
+        if (!path || !path.getPathString()) {
           return l;
         }
         l.pathData = path
@@ -334,7 +339,10 @@ export class LayerTimelineService {
       },
     );
     const layerChildrenIds = new Set(layerChildren.map(l => l.id));
-    const parent = LayerUtil.findParent(vl, layerId).clone();
+    const parent = LayerUtil.findParent(vl, layerId)?.clone();
+    if (!parent) {
+      return;
+    }
     const children = [...parent.children];
     children.splice(_.findIndex(parent.children, l => l.id === layerId), 1, ...layerChildren);
     parent.children = children;
@@ -399,7 +407,9 @@ export class LayerTimelineService {
     let vl = this.getVectorLayer();
 
     // Sort selected layers by order they appear in tree.
-    let tempSelLayers = Array.from(selectedLayerIds).map(id => vl.findLayerById(id));
+    let tempSelLayers = Array.from(selectedLayerIds)
+      .map(id => vl.findLayerById(id))
+      .filter((l): l is Layer => !!l);
     const selLayerOrdersMap: Dictionary<number> = {};
     let n = 0;
     vl.walk(layer => {
@@ -419,10 +429,11 @@ export class LayerTimelineService {
         }
         let p = LayerUtil.findParent(vl, layer.id);
         while (p) {
-          if (_.find(tempSelLayers, l => l.id === p.id)) {
+          const parentId = p.id;
+          if (tempSelLayers.some(l => l.id === parentId)) {
             return false;
           }
-          p = LayerUtil.findParent(vl, p.id);
+          p = LayerUtil.findParent(vl, parentId);
         }
         return true;
       });
@@ -432,7 +443,10 @@ export class LayerTimelineService {
       }
 
       // Find destination parent and insertion point.
-      const firstSelectedLayerParent = LayerUtil.findParent(vl, tempSelLayers[0].id).clone();
+      const firstSelectedLayerParent = LayerUtil.findParent(vl, tempSelLayers[0].id)?.clone();
+      if (!firstSelectedLayerParent) {
+        return;
+      }
       const firstSelectedLayerIndexInParent = _.findIndex(
         firstSelectedLayerParent.children,
         l => l.id === tempSelLayers[0].id,
@@ -456,7 +470,10 @@ export class LayerTimelineService {
       const newSelectedLayers: Layer[] = [];
       tempSelLayers.filter(layer => layer instanceof GroupLayer).forEach(groupLayer => {
         // Move children into parent.
-        const parent = LayerUtil.findParent(vl, groupLayer.id).clone();
+        const parent = LayerUtil.findParent(vl, groupLayer.id)?.clone();
+        if (!parent) {
+          return;
+        }
         const indexInParent = Math.max(
           0,
           _.findIndex(parent.children, l => l.id === groupLayer.id),
@@ -552,14 +569,9 @@ export class LayerTimelineService {
     }>,
     autoSelectBlocks = true,
   ) {
-    blocks.forEach(b => {
-      if (!b.id) {
-        b.id = _.uniqueId();
-      }
-    });
     let animation = this.getAnimation();
-    const addedBlocks: { id?: string }[] = [];
-    for (const block of blocks) {
+    const addedBlocks: { id: string }[] = [];
+    for (const block of blocks.map(b => ({ ...b, id: b.id || _.uniqueId() }))) {
       const anim = this.addBlockToAnimation(animation, block);
       if (animation !== anim) {
         animation = anim;
@@ -590,7 +602,8 @@ export class LayerTimelineService {
     },
   ) {
     const layer = this.getVectorLayer().findLayerById(block.layerId);
-    if (!layer || !layer.animatableProperties.has(block.propertyName)) {
+    const property = layer?.animatableProperties.get(block.propertyName);
+    if (!layer || !property) {
       return animation;
     }
     const newBlockDuration = block.duration || 100;
@@ -635,7 +648,6 @@ export class LayerTimelineService {
     }
 
     // Generate the new block.
-    const property = layer.animatableProperties.get(propertyName);
     let type: 'path' | 'color' | 'number';
     if (property.getTypeName() === 'PathProperty') {
       type = 'path';
@@ -676,7 +688,9 @@ export class LayerTimelineService {
 
   getSelectedLayers() {
     const vl = this.getVectorLayer();
-    return Array.from(this.getSelectedLayerIds()).map(id => vl.findLayerById(id));
+    return Array.from(this.getSelectedLayerIds())
+      .map(id => vl.findLayerById(id))
+      .filter((l): l is Layer => !!l);
   }
 
   private getHiddenLayerIds() {
@@ -694,7 +708,9 @@ export class LayerTimelineService {
   getSelectedBlocks() {
     const anim = this.getAnimation();
     const blockIds = this.getSelectedBlockIds();
-    return Array.from(blockIds).map(id => _.find(anim.blocks, b => b.id === id));
+    return Array.from(blockIds)
+      .map(id => _.find(anim.blocks, b => b.id === id))
+      .filter((b): b is AnimationBlock => !!b);
   }
 
   getAnimation() {

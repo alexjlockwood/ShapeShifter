@@ -1,4 +1,5 @@
 import { useServices } from 'app/modules/editor/context/EditorContext';
+import { requireRef } from 'app/modules/editor/hooks/requireRef';
 import { useStoreEffect } from 'app/modules/editor/hooks/useStoreEffect';
 import type { Animation } from 'app/modules/editor/model/timeline';
 import { getCurrentTime } from 'app/modules/editor/store/playback/selectors';
@@ -27,7 +28,7 @@ export function TimelineGrid({
   const rendererRef = useRef<TimelineGridRenderer>(undefined);
 
   useLayoutEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = requireRef(canvasRef);
     const renderer = new TimelineGridRenderer(canvas, isHeader, themeService);
     rendererRef.current = renderer;
     // Redraw whenever the canvas is resized (e.g. by the timeline's splitter).
@@ -36,16 +37,23 @@ export function TimelineGrid({
     return () => observer.disconnect();
   }, [isHeader, themeService]);
 
+  // The effect above creates the renderer before any of the code below runs.
   useLayoutEffect(() => {
-    rendererRef.current.animation = animation;
-    rendererRef.current.horizZoom = horizZoom;
+    const renderer = rendererRef.current;
+    if (renderer) {
+      renderer.animation = animation;
+      renderer.horizZoom = horizZoom;
+    }
   }, [animation, horizZoom]);
 
   useStoreEffect(getCurrentTime, currentTime => {
-    rendererRef.current.currentTime = currentTime;
+    const renderer = rendererRef.current;
+    if (renderer) {
+      renderer.currentTime = currentTime;
+    }
   });
 
-  useStoreEffect(getThemeType, () => rendererRef.current.redraw());
+  useStoreEffect(getThemeType, () => rendererRef.current?.redraw());
 
   return (
     <canvas
@@ -55,7 +63,7 @@ export function TimelineGrid({
         onScrub &&
         (event => {
           event.preventDefault();
-          rendererRef.current.startScrubbing(event.nativeEvent, onScrub);
+          rendererRef.current?.startScrubbing(event.nativeEvent, onScrub);
         })
       }
       // Clicks on the grid shouldn't clear the current selection.
