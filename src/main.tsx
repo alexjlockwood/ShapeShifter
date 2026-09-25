@@ -7,11 +7,13 @@ import Bugsnag from '@bugsnag/js';
 import { App } from 'app/modules/editor/components/root/App';
 import { startBugsnag } from 'app/modules/editor/scripts/bugsnag';
 import { createEditorServices } from 'app/modules/editor/services/createEditorServices';
+import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { createEditorStore } from 'app/modules/editor/store';
 import { getThemeType } from 'app/modules/editor/store/theme/selectors';
 import { environment } from 'environments/environment';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { registerSW } from 'virtual:pwa-register';
 
 startBugsnag();
 const ErrorBoundary = Bugsnag.getPlugin('react').createErrorBoundary(React);
@@ -26,6 +28,12 @@ document.body.classList.toggle(
   'ss-dark-theme',
   getThemeType(store.getState()).themeType === 'dark',
 );
+
+registerSW({
+  onOfflineReady() {
+    services.snackBarService.show('Ready to work offline', 'Dismiss', Duration.Long);
+  },
+});
 
 if (!environment.production) {
   // Handy for debugging from the console.

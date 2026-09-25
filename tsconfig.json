@@ -21,37 +21,12 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": [
-    "src/app/modules/editor/components/canvas",
-    "src/app/modules/editor/components/common",
-    "src/app/modules/editor/components/dialogs",
-    "src/app/modules/editor/components/icons",
-    "src/app/modules/editor/components/layertimeline",
-    "src/app/modules/editor/components/playback",
-    "src/app/modules/editor/components/project",
-    "src/app/modules/editor/components/propertyinput",
-    "src/app/modules/editor/components/root",
-    "src/app/modules/editor/components/snackbar",
-    "src/app/modules/editor/components/splashscreen",
-    "src/app/modules/editor/components/splitter",
-    "src/app/modules/editor/components/toolbar",
-    "src/app/modules/editor/context",
-    "src/app/modules/editor/hooks",
-    "src/app/modules/editor/model",
-    "src/app/modules/editor/scripts",
-    "src/app/modules/editor/services",
-    "src/app/modules/editor/store",
-    "src/app/modules/editor/styles",
-    "src/environments",
-    "src/test",
-    "src/typings",
-    "src/main.tsx",
-    "src/vite-env.d.ts"
-  ],
+  "include": ["src"],
   "exclude": [
+    "src/app/modules/editor/components/canvas/canvaspaper.directive.ts",
+    "src/app/modules/editor/components/toolpanel",
     "src/app/modules/editor/scripts/paper",
     "src/app/modules/editor/services/paper.service.ts",
-    "src/typings/paper",
-    "src/app/modules/editor/components/canvas/canvaspaper.directive.ts"
+    "src/typings/paper"
   ]
 }

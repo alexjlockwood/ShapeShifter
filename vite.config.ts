@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
+import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 
 import pkg from './package.json' with { type: 'json' };
@@ -13,7 +14,27 @@ const srcAlias = (name: string) => ({
 });
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Makes the app work offline. The service worker is only registered in production builds.
+    VitePWA({
+      // The web manifest is already in public/.
+      manifest: false,
+      injectRegister: false,
+      workbox: {
+        globPatterns: ['**/*.{css,html,ico,js,json,png,shapeshifter,svg,woff2}'],
+        globIgnores: [
+          // Only used by the paper.js beta editor.
+          'assets/paper/**',
+          'assets/tools/**',
+          // Replaces the old Angular service worker (see public/ngsw-worker.js).
+          'ngsw-worker.js',
+        ],
+        navigateFallback: 'index.html',
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+      },
+    }),
+  ],
   resolve: {
     alias: [srcAlias('app'), srcAlias('environments'), srcAlias('test')],
   },

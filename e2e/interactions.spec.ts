@@ -95,3 +95,76 @@ test('imports dropped files', async ({ page }) => {
   await page.getByRole('button', { name: 'Add layers' }).click();
   await expect(page.locator('.slt-layer')).toHaveCount(numLayers + 1);
 });
+
+test('imports vector drawables', async ({ page }) => {
+  await loadDemo(page);
+  const numLayers = await page.locator('.slt-layer').count();
+  await page.getByRole('button', { name: 'Import' }).click();
+  const fileChooserPromise = page.waitForEvent('filechooser');
+  await page.getByRole('menuitem', { name: 'Vector Drawable' }).click();
+  const fileChooser = await fileChooserPromise;
+  await fileChooser.setFiles({
+    name: 'square.xml',
+    mimeType: 'text/xml',
+    buffer: Buffer.from(`
+      <vector xmlns:android="http://schemas.android.com/apk/res/android"
+          android:width="24dp" android:height="24dp"
+          android:viewportWidth="24" android:viewportHeight="24">
+        <path android:name="square" android:fillColor="#000" android:pathData="M 4 4 H 20 V 20 H 4 Z" />
+      </vector>`),
+  });
+  await expect(page.locator('.slt-layer')).toHaveCount(numLayers + 1);
+  await expect(page.locator('.slt-layer', { hasText: 'square' })).toBeVisible();
+});
+
+test('cuts and pastes animation blocks', async ({ page }) => {
+  await loadDemo(page);
+  await page.locator('.slt-timeline-block').last().click();
+  const numBlocks = await getState(page, s => s.timeline.animation.blocks.length);
+  const cut = await page.evaluate(() => {
+    const clipboardData = new DataTransfer();
+    window.dispatchEvent(new ClipboardEvent('cut', { clipboardData }));
+    return clipboardData.getData('text/plain');
+  });
+  expect(JSON.parse(cut).blocks).toHaveLength(1);
+  await expect
+    .poll(() => getState(page, s => s.timeline.animation.blocks.length))
+    .toBe(numBlocks - 1);
+  // Blocks are pasted wherever there's room for them, so paste the block back where it was.
+  await page.evaluate(text => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData('text/plain', text);
+    window.dispatchEvent(new ClipboardEvent('paste', { clipboardData }));
+  }, cut);
+  await expect.poll(() => getState(page, s => s.timeline.animation.blocks.length)).toBe(numBlocks);
+});
+
+test('remembers the theme', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'More options' }).click();
+  await page.getByRole('menuitem', { name: 'Dark theme' }).click();
+  await expect(page.locator('body')).toHaveClass(/ss-dark-theme/);
+  await page.reload();
+  await expect(page.locator('body')).toHaveClass(/ss-dark-theme/);
+});
+
+test('reverses subpaths in action mode', async ({ page }) => {
+  await loadDemo(page);
+  const getFromValue = () =>
+    getState(page, s => {
+      const block = s.timeline.animation.blocks.find(
+        (b: { propertyName: string }) => b.propertyName === 'pathData',
+      );
+      return block.fromValue.getPathString() as string;
+    });
+  const initialFromValue = await getFromValue();
+  await page.locator('.slt-timeline-block').last().click();
+  await page.getByRole('button', { name: 'Edit path morphing animation' }).click();
+  const box = await boundingBox(page.locator('.app-canvas.start canvas.overlay-canvas'));
+  await page.mouse.click(box.x + (box.width * 10) / 24, box.y + (box.height * 9) / 24);
+  await expect(page.locator('.toolbar')).toContainText('1 subpath selected');
+  await page.getByRole('button', { name: 'Reverse points (R)' }).click();
+  await expect.poll(getFromValue).not.toBe(initialFromValue);
+  await page.keyboard.press('r');
+  await expect.poll(getFromValue).toBe(initialFromValue);
+});

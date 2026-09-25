@@ -21,10 +21,6 @@ These existed before the migration and are still there.
   rewinding dispatches `BatchAction(SetCurrentTime, SetIsPlaying)`, which becomes an undo step.
   UI-only state in the `paper` slice (cursor, hover, zoom) is recorded as well
   (`store/undoredo/metareducer.ts`).
-- **The layer timeline sets the time before updating its action mode.** In
-  `components/layertimeline/layertimeline.component.ts`, the state subscription calls
-  `setCurrentTime` before assigning `currActionMode`. It's harmless today only because
-  `setCurrentTime` does nothing when the time is unchanged.
 - **Imported layers aren't named after their SVG ids.** `SvgLoader` names layers using each
   element's `id`, but svgo's `cleanupIds` plugin removes every id that isn't referenced before
   `SvgLoader` sees them, so imported layers end up named `path`, `path_1`, and so on.
@@ -46,7 +42,8 @@ These existed before the migration and are still there.
 
 - Importing a malformed `.shapeshifter` file showed an error and then reset the workspace
   anyway (`services/fileimport.service.ts`).
-- Google Analytics reported to a Universal Analytics property, which stopped accepting data in 2023. The calls are now a no-op `trackEvent()`.
+- Google Analytics reported to a Universal Analytics property, which stopped accepting data
+  in 2023. The calls are now a no-op `trackEvent()`.
 - `ShortcutService.destroy()` removed every jQuery `keydown` handler on the window, not just its
   own. `ClipboardService.init()` could bind its handlers twice.
 - Downloads left a hidden `<a>` element in the page for every exported file.
@@ -56,7 +53,11 @@ These existed before the migration and are still there.
   zooming now works in Firefox too.
 - After editing the vector layer, the preview canvas briefly drew the un-animated layer instead
   of the layer at the current time.
+- The layer timeline moved the current time to the start of the selected block (when entering
+  action mode) before recording the new action mode, which could run twice. It was harmless
+  only because setting the same time does nothing.
 - The playback theme's disabled button selector had a typo (`[maticon-button]`) and never
   matched, and the dialog styles used an invalid `:mat-dialog-close` selector.
 - The service worker didn't cache the Google Fonts stylesheets or the demos, so fonts and icons
-  were missing offline. Fonts and icons are now bundled.
+  were missing offline and demos couldn't be loaded. Fonts and icons are now bundled, and the
+  demos are precached.
