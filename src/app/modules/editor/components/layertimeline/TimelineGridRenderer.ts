@@ -7,6 +7,8 @@ import _ from 'lodash';
 import { TIMELINE_ANIMATION_PADDING } from './constants';
 
 const HEADER_HEIGHT = 40;
+// Browsers fail to draw canvases that are larger than this (and Firefox throws).
+const MAX_CANVAS_SIZE = 16384;
 const GRID_INTERVALS_MS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000];
 
 /**
@@ -86,11 +88,17 @@ export class TimelineGridRenderer {
 
     const width = getContentSize(this.canvas, 'width');
     const height = getContentSize(this.canvas, 'height');
-    this.canvas.setAttribute('width', `${width * window.devicePixelRatio}`);
-    this.canvas.setAttribute('height', `${height * window.devicePixelRatio}`);
+    // Zooming in on a long animation can make the canvas too big to draw at full resolution.
+    const scale = Math.min(
+      window.devicePixelRatio,
+      MAX_CANVAS_SIZE / width,
+      MAX_CANVAS_SIZE / height,
+    );
+    this.canvas.setAttribute('width', `${width * scale}`);
+    this.canvas.setAttribute('height', `${height * scale}`);
 
     const ctx = this.canvas.getContext('2d');
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    ctx.scale(scale, scale);
     ctx.translate(TIMELINE_ANIMATION_PADDING, 0);
 
     // Compute grid spacing (40 = minimum grid spacing in pixels).

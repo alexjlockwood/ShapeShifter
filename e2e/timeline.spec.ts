@@ -168,3 +168,30 @@ test('lines up the layer list with the timeline rows', async ({ page }) => {
     await getRowCenters('.slt-layers-list .slt-property'),
   );
 });
+
+test('limits the size of the timeline canvases when zoomed in', async ({ page }) => {
+  await loadDemo(page);
+  await page.locator('.slt-timeline-animation-meta').click();
+  const duration = page.locator('.spi-property input[name="duration"]');
+  await duration.fill('60000');
+  await duration.press('Enter');
+  await expect.poll(() => getState(page, s => s.timeline.animation.duration)).toBe(60000);
+  await duration.blur();
+
+  // Zoom all the way in.
+  const timeline = await boundingBox(page.locator('.slt-timeline'));
+  await page.mouse.move(timeline.x + 100, timeline.y + 100);
+  await page.keyboard.down('Control');
+  for (let i = 0; i < 40; i++) {
+    await page.mouse.wheel(0, -500);
+  }
+  await page.keyboard.up('Control');
+  const canvases = page.locator('.slt-timeline canvas');
+  await expect
+    .poll(async () => (await boundingBox(canvases.first())).width)
+    .toBeGreaterThan(100000);
+  const sizes = await canvases.evaluateAll(elements =>
+    elements.map(e => Math.max((e as HTMLCanvasElement).width, (e as HTMLCanvasElement).height)),
+  );
+  expect(Math.max(...sizes)).toBeLessThanOrEqual(16384);
+});
