@@ -136,12 +136,16 @@ If you want to contribute, you can build and serve the web app locally as follow
   4. To run the tests, run:
 
      ```
-     npx playwright install chromium  # Only needed once.
+     npx playwright install chromium firefox webkit  # Only needed once.
      npm run typecheck
      npm run lint
      npm run test:run
      npm run e2e
      ```
+
+     The end-to-end tests run in Chromium, Firefox, and WebKit. To run them in one browser, pass
+     its project name, e.g. `npm run e2e -- --project=chromium` (or `chromium-preview` for the
+     tests that need a production build).
 
 The app is built with [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/),
 and [Vite](https://vite.dev/).

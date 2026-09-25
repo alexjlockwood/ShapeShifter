@@ -1,6 +1,27 @@
 import { expect, test } from './fixtures';
 
-test('works offline once the service worker is installed', async ({ page, context }) => {
+// The app itself should work offline in every browser, but Playwright's WebKit can't load any page
+// while it's offline, even from a service worker. The next test checks the caches instead.
+const OFFLINE_NAVIGATION_SKIP_REASON = "Playwright's WebKit can't navigate while offline";
+
+test('caches the app and the demos', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('Ready to work offline')).toBeVisible();
+  const urls = ['/', '/index.html', '/manifest.json', '/demos/playtopause.shapeshifter'];
+  const cachedUrls = await page.evaluate(async urls => {
+    const matches = await Promise.all(urls.map(url => caches.match(url, { ignoreSearch: true })));
+    return urls.filter((url, i) => matches[i]);
+  }, urls);
+  // The service worker serves index.html for navigations to '/'.
+  expect(cachedUrls).toEqual(['/index.html', '/manifest.json', '/demos/playtopause.shapeshifter']);
+});
+
+test('works offline once the service worker is installed', async ({
+  page,
+  context,
+  browserName,
+}) => {
+  test.skip(browserName === 'webkit', OFFLINE_NAVIGATION_SKIP_REASON);
   await page.goto('/');
   await expect(page.getByText('Ready to work offline')).toBeVisible();
   await context.setOffline(true);
@@ -18,7 +39,8 @@ test('works offline once the service worker is installed', async ({ page, contex
   await expect(page.locator('.slt-layer').first()).toHaveText('morphinganimals');
 });
 
-test('loads projects from the URL offline', async ({ page, context }) => {
+test('loads projects from the URL offline', async ({ page, context, browserName }) => {
+  test.skip(browserName === 'webkit', OFFLINE_NAVIGATION_SKIP_REASON);
   await page.goto('/');
   await expect(page.getByText('Ready to work offline')).toBeVisible();
   await context.setOffline(true);
@@ -45,7 +67,11 @@ const OLD_ANGULAR_WORKER = `
   });
 `;
 
-test('replaces the old Angular app for returning users', async ({ page, context }) => {
+test('replaces the old Angular app for returning users', async ({ page, context, browserName }) => {
+  test.skip(
+    browserName === 'firefox',
+    "Playwright can't intercept Firefox's service worker scripts",
+  );
   await context.route('**/ngsw-worker.js', route =>
     route.fulfill({ contentType: 'text/javascript', body: OLD_ANGULAR_WORKER }),
   );

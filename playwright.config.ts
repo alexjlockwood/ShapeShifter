@@ -3,6 +3,12 @@ import { defineConfig, devices } from '@playwright/test';
 const DEV_PORT = 4280;
 const PREVIEW_PORT = 4281;
 
+const BROWSERS = [
+  { name: 'chromium', device: 'Desktop Chrome' },
+  { name: 'firefox', device: 'Desktop Firefox' },
+  { name: 'webkit', device: 'Desktop Safari' },
+];
+
 export default defineConfig({
   testDir: 'e2e',
   forbidOnly: !!process.env.CI,
@@ -10,19 +16,19 @@ export default defineConfig({
   use: {
     trace: 'retain-on-failure',
   },
-  projects: [
+  projects: BROWSERS.flatMap(({ name, device }) => [
     {
-      name: 'chromium',
+      name,
       testIgnore: '*.preview.spec.ts',
-      use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${DEV_PORT}` },
+      use: { ...devices[device], baseURL: `http://localhost:${DEV_PORT}` },
     },
     {
       // Tests that need a production build (e.g. the service worker).
-      name: 'preview',
+      name: `${name}-preview`,
       testMatch: '*.preview.spec.ts',
-      use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${PREVIEW_PORT}` },
+      use: { ...devices[device], baseURL: `http://localhost:${PREVIEW_PORT}` },
     },
-  ],
+  ]),
   webServer: [
     {
       command: `npx vite --port ${DEV_PORT} --strictPort`,

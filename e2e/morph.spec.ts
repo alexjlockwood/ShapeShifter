@@ -12,9 +12,6 @@ const PAUSE_SVG =
 const LINE_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path id="line" d="M4 12h16" fill="none" stroke="#000" stroke-width="2"/></svg>';
 
-// The Desktop Chrome device reports a Windows user agent, so the app's shortcuts use Control.
-const MODIFIER = 'Control';
-
 type Canvas = 'start' | 'end';
 
 async function readDownload(download: Download) {
@@ -118,7 +115,7 @@ async function startActionMode(page: Page) {
   await expect(page.locator('.app-canvas')).toHaveCount(3);
 }
 
-test('creates a play-to-pause morph from scratch', async ({ page }) => {
+test('creates a play-to-pause morph from scratch', async ({ page, modifier }) => {
   await page.goto('/');
   await importSvg(page, 'play.svg', PLAY_SVG);
   await importSvg(page, 'pause.svg', PAUSE_SVG);
@@ -221,7 +218,7 @@ test('creates a play-to-pause morph from scratch', async ({ page }) => {
 
   // Group the path and rotate the group by 90 degrees about the center.
   await page.locator('.slt-layer', { hasText: 'play' }).click();
-  await page.keyboard.press(`${MODIFIER}+g`);
+  await page.keyboard.press(`${modifier}+g`);
   await expect(page.locator('.slt-layer')).toHaveText(['vector', 'group', 'play']);
   await page.locator('.slt-layer', { hasText: 'group' }).click();
   await setProperty(page, 'pivotX', '12');
@@ -263,7 +260,16 @@ test('creates a play-to-pause morph from scratch', async ({ page }) => {
   expect(avd).toContain('android:propertyName="pathData"');
   expect(avd).toContain('android:propertyName="rotation"');
   expect(avd).toContain('android:valueTo="90"');
-  expect(avd).toMatch(/android:valueFrom="M 8 12 L 8 19 .* M 8 5 L 8 12 /);
+  const fromPathString = await getState(
+    page,
+    s =>
+      s.timeline.animation.blocks
+        .find((b: { propertyName: string }) => b.propertyName === 'pathData')
+        .fromValue.getPathString() as string,
+  );
+  // The bottom half of the triangle comes first, since it was paired with the left bar.
+  expect(fromPathString).toMatch(/^M 8 1[12][.\d]* L 8 19 .* M 8 5 /);
+  expect(avd).toContain(`android:valueFrom="${fromPathString}"`);
 
   // Save the project, and then open it in a new workspace.
   const paths = await getMorphPaths(page);
@@ -286,6 +292,8 @@ test('creates a play-to-pause morph from scratch', async ({ page }) => {
   });
   await expect(page.locator('.slt-layer')).toHaveText(['vector', 'group', 'play']);
   expect(await getMorphPaths(page)).toEqual(paths);
+  // Shortcuts are ignored until the menu has finished closing (Safari leaves the focus in it).
+  await expect(page.locator('.MuiModal-root')).toHaveCount(0);
   await page.keyboard.press('Space');
   await expect.poll(() => getState(page, s => s.playback.isPlaying)).toBe(false);
   await expectPixels(PAUSE_ONLY, PLAY_ONLY);

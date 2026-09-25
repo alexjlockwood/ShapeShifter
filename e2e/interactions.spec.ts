@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { boundingBox, expect, getState, test } from './fixtures';
+import { boundingBox, dispatchClipboardEvent, expect, getState, test } from './fixtures';
 
 async function loadDemo(page: Page, id = 'playtopause') {
   await page.goto(`/?project=demos/${id}.shapeshifter`);
@@ -9,39 +9,36 @@ async function loadDemo(page: Page, id = 'playtopause') {
     .toBeGreaterThan(0);
 }
 
-// The Desktop Chrome device reports a Windows user agent, so the app's shortcuts use Control.
-const MODIFIER = 'Control';
-
 const SQUARE_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M 4 4 H 20 V 20 H 4 Z"/></svg>';
 
-test('undoes and redoes changes', async ({ page }) => {
+test('undoes and redoes changes', async ({ page, modifier }) => {
   await loadDemo(page);
   await page.locator('.slt-layer', { hasText: 'path' }).click();
   await page.locator('.spi-property input[name="name"]').fill('renamed');
   await expect(page.locator('.slt-layer', { hasText: 'renamed' })).toBeVisible();
   // Keyboard shortcuts are ignored while a text field has focus.
   await page.locator('.spi-property input[name="name"]').blur();
-  await page.keyboard.press(`${MODIFIER}+z`);
+  await page.keyboard.press(`${modifier}+z`);
   await expect(page.locator('.slt-layer', { hasText: 'renamed' })).toHaveCount(0);
-  await page.keyboard.press(`${MODIFIER}+Shift+z`);
+  await page.keyboard.press(`${modifier}+Shift+z`);
   await expect(page.locator('.slt-layer', { hasText: 'renamed' })).toBeVisible();
 });
 
-test('zooms the timeline', async ({ page }) => {
+test('zooms the timeline', async ({ page, modifier }) => {
   await loadDemo(page);
   const animation = page.locator('.slt-timeline-animation');
   const { width } = await boundingBox(animation);
   const timeline = await boundingBox(page.locator('.slt-timeline'));
   await page.mouse.move(timeline.x + 100, timeline.y + 100);
-  await page.keyboard.down(MODIFIER);
+  await page.keyboard.down(modifier);
   await page.mouse.wheel(0, -100);
-  await page.keyboard.up(MODIFIER);
+  await page.keyboard.up(modifier);
   await expect.poll(async () => (await boundingBox(animation)).width).toBeGreaterThan(width);
   // The page itself shouldn't scroll or zoom.
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
-  await page.keyboard.press(`${MODIFIER}+o`);
+  await page.keyboard.press(`${modifier}+o`);
   await expect.poll(async () => (await boundingBox(animation)).width).toBeCloseTo(width, 0);
 });
 
@@ -65,11 +62,7 @@ test('reorders layers by dragging them', async ({ page }) => {
 test('pastes an SVG', async ({ page }) => {
   await loadDemo(page);
   const numLayers = await page.locator('.slt-layer').count();
-  await page.evaluate(svg => {
-    const clipboardData = new DataTransfer();
-    clipboardData.setData('text/plain', svg);
-    window.dispatchEvent(new ClipboardEvent('paste', { clipboardData }));
-  }, SQUARE_SVG);
+  await dispatchClipboardEvent(page, 'paste', SQUARE_SVG);
   await expect(page.locator('.slt-layer')).toHaveCount(numLayers + 1);
 });
 
@@ -115,21 +108,13 @@ test('cuts and pastes animation blocks', async ({ page }) => {
   await loadDemo(page);
   await page.locator('.slt-timeline-block').last().click();
   const numBlocks = await getState(page, s => s.timeline.animation.blocks.length);
-  const cut = await page.evaluate(() => {
-    const clipboardData = new DataTransfer();
-    window.dispatchEvent(new ClipboardEvent('cut', { clipboardData }));
-    return clipboardData.getData('text/plain');
-  });
+  const cut = await dispatchClipboardEvent(page, 'cut');
   expect(JSON.parse(cut).blocks).toHaveLength(1);
   await expect
     .poll(() => getState(page, s => s.timeline.animation.blocks.length))
     .toBe(numBlocks - 1);
   // Blocks are pasted wherever there's room for them, so paste the block back where it was.
-  await page.evaluate(text => {
-    const clipboardData = new DataTransfer();
-    clipboardData.setData('text/plain', text);
-    window.dispatchEvent(new ClipboardEvent('paste', { clipboardData }));
-  }, cut);
+  await dispatchClipboardEvent(page, 'paste', cut);
   await expect.poll(() => getState(page, s => s.timeline.animation.blocks.length)).toBe(numBlocks);
 });
 
@@ -163,7 +148,7 @@ test('reverses subpaths in action mode', async ({ page }) => {
   await expect.poll(getFromValue).toBe(initialFromValue);
 });
 
-test('ignores shortcuts while a menu or dialog is open', async ({ page }) => {
+test('ignores shortcuts while a menu or dialog is open', async ({ page, modifier }) => {
   await loadDemo(page);
   const getSnapshot = () =>
     getState(page, s => ({
@@ -183,10 +168,10 @@ test('ignores shortcuts while a menu or dialog is open', async ({ page }) => {
 
   await page.getByRole('button', { name: 'File' }).click();
   await expect(page.getByRole('menu')).toBeVisible();
-  await expectKeysIgnored(['s', 'Backspace', `${MODIFIER}+z`]);
+  await expectKeysIgnored(['s', 'Backspace', `${modifier}+z`]);
   await page.getByRole('menuitem', { name: 'Demo' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
-  await expectKeysIgnored(['s', 'Space', 'Backspace', `${MODIFIER}+z`]);
+  await expectKeysIgnored(['s', 'Space', 'Backspace', `${modifier}+z`]);
   await page.getByRole('button', { name: 'Cancel' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 

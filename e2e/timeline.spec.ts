@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { boundingBox, expect, getState, test } from './fixtures';
+import { boundingBox, dispatchClipboardEvent, expect, getState, test } from './fixtures';
 
 async function loadDemo(page: Page, id = 'playtopause') {
   await page.goto(`/?project=demos/${id}.shapeshifter`);
@@ -163,7 +163,7 @@ test('lines up the layer list with the timeline rows', async ({ page }) => {
   );
 });
 
-test('limits the size of the timeline canvases when zoomed in', async ({ page }) => {
+test('limits the size of the timeline canvases when zoomed in', async ({ page, modifier }) => {
   await loadDemo(page);
   await page.locator('.slt-timeline-animation-meta').click();
   const duration = page.locator('.spi-property input[name="duration"]');
@@ -175,11 +175,11 @@ test('limits the size of the timeline canvases when zoomed in', async ({ page })
   // Zoom all the way in.
   const timeline = await boundingBox(page.locator('.slt-timeline'));
   await page.mouse.move(timeline.x + 100, timeline.y + 100);
-  await page.keyboard.down('Control');
+  await page.keyboard.down(modifier);
   for (let i = 0; i < 40; i++) {
     await page.mouse.wheel(0, -500);
   }
-  await page.keyboard.up('Control');
+  await page.keyboard.up(modifier);
   const canvases = page.locator('.slt-timeline canvas');
   await expect
     .poll(async () => (await boundingBox(canvases.first())).width)
@@ -190,16 +190,13 @@ test('limits the size of the timeline canvases when zoomed in', async ({ page })
   expect(Math.max(...sizes)).toBeLessThanOrEqual(16384);
 });
 
-test('groups, flattens, and converts layers', async ({ page }) => {
+test('groups, flattens, and converts layers', async ({ page, modifier }) => {
   await page.goto('/');
-  await page.evaluate(() => {
-    const clipboardData = new DataTransfer();
-    clipboardData.setData(
-      'text/plain',
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path id="line" d="M2 6h8" fill="none" stroke="#000" stroke-width="1"/></svg>',
-    );
-    window.dispatchEvent(new ClipboardEvent('paste', { clipboardData }));
-  });
+  await dispatchClipboardEvent(
+    page,
+    'paste',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path id="line" d="M2 6h8" fill="none" stroke="#000" stroke-width="1"/></svg>',
+  );
   const layers = page.locator('.slt-layer');
   await expect(layers).toHaveText(['vector', 'line']);
   const getLine = () =>
@@ -215,13 +212,13 @@ test('groups, flattens, and converts layers', async ({ page }) => {
 
   // Group the line, and then ungroup it.
   await layers.filter({ hasText: 'line' }).click();
-  await page.keyboard.press('Control+g');
+  await page.keyboard.press(`${modifier}+g`);
   await expect(layers).toHaveText(['vector', 'group', 'line']);
-  await page.keyboard.press('Control+Shift+g');
+  await page.keyboard.press(`${modifier}+Shift+g`);
   await expect(layers).toHaveText(['vector', 'line']);
 
   // Scale a group up, and then flatten it. The line and its stroke get twice as big.
-  await page.keyboard.press('Control+g');
+  await page.keyboard.press(`${modifier}+g`);
   await layers.filter({ hasText: 'group' }).click();
   for (const name of ['scaleX', 'scaleY']) {
     const input = page.locator(`.spi-property input[name="${name}"]`);

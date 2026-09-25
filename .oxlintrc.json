@@ -79,6 +79,13 @@
         "typescript/no-non-null-assertion": "off",
         "typescript/restrict-template-expressions": "off"
       }
+    },
+    {
+      // Playwright fixtures call a function named use(), which isn't React's use().
+      "files": ["e2e/**"],
+      "rules": {
+        "react-hooks/rules-of-hooks": "off"
+      }
     }
   ]
 }

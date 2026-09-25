@@ -12,6 +12,9 @@ export enum Shortcut {
   ZoomToFit = 1,
 }
 
+const TEXT_FIELD_SELECTOR =
+  'input:not([type="checkbox"], [type="radio"], [type="button"]), textarea, [contenteditable]';
+
 interface ModifierKeyEvent {
   readonly metaKey: boolean;
   readonly ctrlKey?: boolean;
@@ -47,7 +50,11 @@ export class ShortcutService {
     }
     this.removeKeyDownListener = on(window, 'keydown', event => {
       if (event.target instanceof Element && event.target.closest('.MuiModal-root')) {
-        // Leave the keys to the open dialog or menu.
+        // Leave the keys to the open dialog or menu, but still keep browsers that go back on
+        // backspace (e.g. WebKit without Safari's settings) from leaving the page.
+        if (event.keyCode === 8 && !event.target.matches(TEXT_FIELD_SELECTOR)) {
+          event.preventDefault();
+        }
         return undefined;
       }
       if (ShortcutService.isOsDependentModifierKey(event)) {
