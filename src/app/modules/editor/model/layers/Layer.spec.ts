@@ -1,7 +1,7 @@
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
 
-import { GroupLayer, PathLayer, VectorLayer } from '.';
+import { type FillType, GroupLayer, PathLayer, type StrokeLineJoin, VectorLayer } from '.';
 
 // Registered properties are stored behind prototype accessors, so class fields with the
 // same name must not shadow them (and bypass their setters).
@@ -55,5 +55,50 @@ describe('Property.register', () => {
       'fromValue',
       'toValue',
     ]);
+  });
+
+  it('replaces invalid enum values with their defaults', () => {
+    const layer = new PathLayer({
+      name: 'path',
+      children: [],
+      pathData: new Path('M 0 0 L 10 10'),
+      strokeLinecap: 'round',
+      // Older versions imported the line cap as the line join.
+      strokeLinejoin: 'square' as StrokeLineJoin,
+      fillType: 'evenodd' as FillType,
+    });
+    expect(layer.strokeLinecap).toBe('round');
+    expect(layer.strokeLinejoin).toBe('miter');
+    expect(layer.fillType).toBe('nonZero');
+    const property = layer.inspectableProperties.get('strokeLinejoin');
+    expect(property.displayValueForValue(layer.strokeLinejoin)).toBe('Miter');
+    expect(property.displayValueForValue('square')).toBe('square');
+
+    const block = AnimationBlock.from({
+      type: 'number',
+      layerId: layer.id,
+      propertyName: 'strokeWidth',
+      fromValue: 1,
+      toValue: 2,
+      interpolator: 'NOT_AN_INTERPOLATOR',
+    });
+    expect(block.interpolator).toBe('FAST_OUT_SLOW_IN');
+  });
+
+  it('converts colors that Android does not support', () => {
+    const layer = new PathLayer({
+      name: 'path',
+      children: [],
+      pathData: new Path('M 0 0 L 10 10'),
+      fillColor: 'red',
+      strokeColor: 'none',
+    });
+    expect(layer.fillColor).toBe('#ff0000');
+    expect(layer.strokeColor).toBe('');
+    const property = layer.inspectableProperties.get('fillColor');
+    property.setEditableValue(layer, 'fillColor', 'none');
+    expect(layer.fillColor).toBeFalsy();
+    property.setEditableValue(layer, 'fillColor', 'blue');
+    expect(layer.fillColor).toBe('#0000ff');
   });
 });

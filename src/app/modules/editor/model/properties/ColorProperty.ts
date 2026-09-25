@@ -5,16 +5,21 @@ import { Property } from './Property';
 
 export class ColorProperty extends Property<string> {
   // @Override
+  protected setter(model: any, propertyName: string, value: string) {
+    // Colors are stored as Android color strings, or empty strings for no color. Convert anything
+    // else (e.g. an SVG color like 'red' from an older file) so that it can be drawn and animated.
+    const isValid = !value || (typeof value === 'string' && !!ColorUtil.parseAndroidColor(value));
+    if (!isValid) {
+      const color = parseColor(String(value));
+      value = color ? ColorUtil.toAndroidString(color) : '';
+    }
+    super.setter(model, propertyName, value);
+  }
+
+  // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
-    if (!value) {
-      model[propertyName] = undefined;
-      return;
-    }
-    let processedValue = ColorUtil.parseAndroidColor(value);
-    if (!processedValue) {
-      processedValue = ColorUtil.parseAndroidColor(ColorUtil.svgToAndroidColor(value));
-    }
-    model[propertyName] = ColorUtil.toAndroidString(processedValue);
+    const color = value ? parseColor(value) : undefined;
+    model[propertyName] = color ? ColorUtil.toAndroidString(color) : undefined;
   }
 
   // @Override
@@ -41,4 +46,15 @@ export class ColorProperty extends Property<string> {
   getTypeName() {
     return 'ColorProperty';
   }
+}
+
+/** Parses an Android color, or an SVG color (which may be a name like 'red'). */
+function parseColor(value: string) {
+  const color = ColorUtil.parseAndroidColor(value);
+  if (color) {
+    return color;
+  }
+  // This is undefined for 'none'.
+  const androidColor = ColorUtil.svgToAndroidColor(value);
+  return androidColor ? ColorUtil.parseAndroidColor(androidColor) : undefined;
 }
