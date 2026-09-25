@@ -154,6 +154,10 @@ export class ToolbarData {
       }
       return 'Select a subpath';
     } else if (this.mode === ActionMode.Selection) {
+      if (!this.block) {
+        // The block can be deselected before action mode is closed.
+        return '';
+      }
       const { areCompatible, errorPath, numPointsMissing } = ActionModeUtil.checkPathsCompatible(
         this.block,
       );

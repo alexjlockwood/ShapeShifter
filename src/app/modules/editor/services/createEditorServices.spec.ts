@@ -1,7 +1,15 @@
+import { ActionMode } from 'app/modules/editor/model/actionmode';
+import { PathLayer } from 'app/modules/editor/model/layers';
+import { Path } from 'app/modules/editor/model/paths';
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { createEditorStore, type State, type Store } from 'app/modules/editor/store';
+import {
+  getActionModeEndState,
+  getActionModeStartState,
+} from 'app/modules/editor/store/actionmode/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
+import { ActionCreators } from 'redux-undo';
 
 import { createEditorServices, type EditorServices } from './createEditorServices';
 import { FileExportService } from './fileexport.service';
@@ -35,9 +43,7 @@ describe('createEditorServices', () => {
   });
 
   function loadDemo(json: string) {
-    const { vectorLayer, animation, hiddenLayerIds } = FileExportService.fromJSON(
-      JSON.parse(json),
-    );
+    const { vectorLayer, animation, hiddenLayerIds } = FileExportService.fromJSON(JSON.parse(json));
     const project = ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds);
     store.dispatch(
       new ResetWorkspace(project.vectorLayer, project.animation, project.hiddenLayerIds),
@@ -82,4 +88,43 @@ describe('createEditorServices', () => {
       });
     });
   }
+
+  it('can undo setting the paths of the selected block in action mode', () => {
+    vi.useFakeTimers();
+    try {
+      const { actionModeService, layerTimelineService } = services;
+      const layer = new PathLayer({ name: 'path', children: [], pathData: undefined });
+      layerTimelineService.addLayer(layer);
+      vi.advanceTimersByTime(2000);
+      layerTimelineService.addBlocks([
+        {
+          layerId: layer.id,
+          propertyName: 'pathData',
+          fromValue: undefined,
+          toValue: undefined,
+          currentTime: 0,
+        },
+      ]);
+      const [emptyBlock] = layerTimelineService.getSelectedBlocks() as PathAnimationBlock[];
+      vi.advanceTimersByTime(2000);
+      const block = emptyBlock.clone() as PathAnimationBlock;
+      block.fromValue = new Path('M 8 5 L 8 19 L 19 12 Z');
+      block.toValue = new Path('M 6 5 L 10 5 L 10 19 L 6 19 Z');
+      layerTimelineService.updateBlocks([block]);
+      actionModeService.setActionMode(ActionMode.Selection);
+
+      // The action mode canvases are still subscribed when the undone state is emitted.
+      const errors: unknown[] = [];
+      for (const selector of [getActionModeStartState, getActionModeEndState]) {
+        store.select(selector).subscribe({ error: e => errors.push(e) });
+      }
+      vi.advanceTimersByTime(2000);
+      store.dispatch(ActionCreators.undo());
+
+      expect(layerTimelineService.getSelectedBlocks()).toEqual([emptyBlock]);
+      expect(errors).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
