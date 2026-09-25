@@ -10,6 +10,8 @@ import { SetCurrentTime, SetIsPlaying } from './playback/actions';
 import { getCurrentTime } from './playback/selectors';
 import { ResetWorkspace } from './reset/actions';
 import { isBeingReset } from './reset/selectors';
+import { SetTheme } from './theme/actions';
+import { getThemeType } from './theme/selectors';
 import { getAnimation } from './timeline/selectors';
 
 describe('createEditorStore', () => {
@@ -58,6 +60,50 @@ describe('createEditorStore', () => {
     store.dispatch(new SetCurrentTime(10));
     store.dispatch(new SetIsPlaying(true));
     expect(store.getState().past.length).toBe(numPastStates);
+  });
+
+  it('does not group changes with ones made before playback started', () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    vi.advanceTimersByTime(300);
+    store.dispatch(new SetSelectedLayers(new Set(['b'])));
+    // Playback dispatches the current time every frame.
+    for (let i = 0; i < 20; i++) {
+      vi.advanceTimersByTime(100);
+      store.dispatch(new SetCurrentTime(i));
+    }
+    store.dispatch(new SetSelectedLayers(new Set(['c'])));
+    store.dispatch(ActionCreators.undo());
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['b']));
+  });
+
+  it('does not record a batch of playback changes in the undo history', () => {
+    const store = createEditorStore();
+    const numPastStates = store.getState().past.length;
+    store.dispatch(new BatchAction(new SetCurrentTime(10), new SetIsPlaying(true)));
+    expect(getCurrentTime(store.getState())).toBe(10);
+    expect(store.getState().past.length).toBe(numPastStates);
+  });
+
+  it('does not change the theme on undo or redo', () => {
+    const store = createEditorStore();
+    store.dispatch(new SetTheme('light'));
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetTheme('dark'));
+    const numPastStates = store.getState().past.length;
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['b'])));
+    expect(store.getState().past.length).toBe(numPastStates + 1);
+    store.dispatch(ActionCreators.undo());
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
+    expect(getThemeType(store.getState()).themeType).toBe('dark');
+    store.dispatch(new SetTheme('light'));
+    store.dispatch(ActionCreators.redo());
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['b']));
+    expect(getThemeType(store.getState()).themeType).toBe('light');
   });
 
   it('records a batch of actions as one undo step', () => {
