@@ -18,7 +18,7 @@ export const createSelector = createSelectorCreator({
 
 export const createDeepEqualSelector = createSelectorCreator({
   memoize: lruMemoize,
-  memoizeOptions: { equalityCheck: _.isEqual },
+  memoizeOptions: { equalityCheck: (a: unknown, b: unknown) => _.isEqual(a, b) },
   argsMemoize: lruMemoize,
 });
 

@@ -65,7 +65,7 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
 
     const activeViewport$ = this.store.select(getVectorLayer).pipe(
       map(vl => ({ w: vl.width, h: vl.height })),
-      distinctUntilChanged(_.isEqual),
+      distinctUntilChanged((a, b) => _.isEqual(a, b)),
     );
     this.registerSubscription(
       combineLatest([this.canvasBounds$, activeViewport$]).subscribe(([bounds, viewport]) => {

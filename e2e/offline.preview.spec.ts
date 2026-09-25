@@ -56,7 +56,7 @@ test('activates a new version without reloading open pages', async ({ page }) =>
         navigator.serviceWorker.addEventListener('controllerchange', () =>
           resolve(navigator.serviceWorker.controller?.scriptURL ?? ''),
         );
-        navigator.serviceWorker.register('/sw.js?v=2');
+        void navigator.serviceWorker.register('/sw.js?v=2');
       }),
   );
   expect(await newScriptUrl).toMatch(/\/sw\.js\?v=2$/);

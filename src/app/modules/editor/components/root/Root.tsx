@@ -135,7 +135,7 @@ function Workspace() {
       fileImportService.import(fileList, true /* resetWorkspace */);
       return;
     }
-    dialogService.dropFiles().then(action => {
+    void dialogService.dropFiles().then(action => {
       if (action === DropFilesAction.AddToWorkspace) {
         fileImportService.import(fileList);
       } else if (action === DropFilesAction.ResetWorkspace) {

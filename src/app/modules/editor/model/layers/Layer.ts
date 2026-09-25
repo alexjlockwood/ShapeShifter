@@ -129,7 +129,8 @@ interface LayerArgs {
 export interface Layer extends LayerArgs, Inspectable, Animatable {}
 export interface LayerConstructorArgs extends LayerArgs {}
 
-function load(obj: Layer | any): Layer {
+/** Returns the layer, or builds one from its JSON. */
+function load(obj: any): Layer {
   if (obj instanceof Layer) {
     return obj;
   }

@@ -55,7 +55,9 @@
     "no-extra-boolean-cast": "off",
     "no-unused-expressions": "off",
     "no-unused-vars": "off",
+    "typescript/no-non-null-assertion": "error",
     "typescript/no-unsafe-declaration-merging": "off",
+    "typescript/no-useless-default-assignment": "off",
     "unicorn/no-new-array": "off",
     "unicorn/no-useless-spread": "off",
     "react/rules-of-hooks": "error",
@@ -69,6 +71,14 @@
         "vitest/no-conditional-tests": "off",
         "vitest/require-to-throw-message": "off",
         "vitest/valid-title": "off"
+      }
+    },
+    {
+      "files": ["**/*.spec.ts", "e2e/**"],
+      "rules": {
+        "typescript/no-base-to-string": "off",
+        "typescript/no-non-null-assertion": "off",
+        "typescript/restrict-template-expressions": "off"
       }
     }
   ]

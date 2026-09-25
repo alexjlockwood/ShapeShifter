@@ -69,7 +69,7 @@ export class FileExportService {
         fpsFolder.file(`frame${_.padStart(i.toString(), length, '0')}.svg`, s);
       });
     });
-    zip.generateAsync({ type: 'blob' }).then((content: Blob) => {
+    void zip.generateAsync({ type: 'blob' }).then((content: Blob) => {
       downloadFile(content, `frames_${vl.name}.zip`);
     });
   }
@@ -96,7 +96,7 @@ export class FileExportService {
     const anim = this.getAnimationWithoutHiddenBlocks();
     // TODO: figure out how to add better jszip typings
     const zip = new JSZip();
-    (async () => {
+    void (async () => {
       await asyncForEach(EXPORTED_FPS, async fps => {
         const numSteps = Math.ceil((anim.duration / 1000) * fps);
         const svgSprite = await SpriteSerializer.createSvgSprite(vl, anim, numSteps);
@@ -108,9 +108,8 @@ export class FileExportService {
         spriteFolder.file(`${fileName}.css`, cssSprite);
         spriteFolder.file(`${fileName}.svg`, svgSprite);
       });
-      zip.generateAsync({ type: 'blob' }).then((content: Blob) => {
-        downloadFile(content, `spritesheet_${vl.name}.zip`);
-      });
+      const content = await zip.generateAsync({ type: 'blob' });
+      downloadFile(content, `spritesheet_${vl.name}.zip`);
     })();
   }
 
@@ -158,7 +157,7 @@ function downloadFile(content: string | Blob, fileName: string) {
 
 async function asyncForEach(
   array: number[],
-  callback: (value: number, index: number, array: number[]) => void,
+  callback: (value: number, index: number, array: number[]) => Promise<void>,
 ) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);

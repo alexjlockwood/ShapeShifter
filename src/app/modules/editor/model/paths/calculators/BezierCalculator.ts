@@ -120,7 +120,7 @@ export class BezierCalculator implements Calculator {
       // TODO: handle degenerate curves!!!!!
       console.warn(
         'Could not find the midpoint for: ',
-        `${this.svgChar} ` + this.points.toString(),
+        `${this.svgChar} ` + JSON.stringify(this.points),
       );
       return originalDistance;
     }

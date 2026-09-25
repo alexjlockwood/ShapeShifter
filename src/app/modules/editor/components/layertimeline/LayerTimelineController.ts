@@ -168,7 +168,7 @@ export class LayerTimelineController extends DestroyableMixin() {
       this.store.dispatch(new ResetWorkspace());
     };
     if (isWorkspaceDirty(this.store.getState()) && !IS_DEV_BUILD) {
-      this.services.dialogService
+      void this.services.dialogService
         .confirm('Start over?', `You'll lose any unsaved changes.`)
         .then(result => {
           if (result) {
@@ -187,7 +187,7 @@ export class LayerTimelineController extends DestroyableMixin() {
 
   onLoadDemoClick() {
     trackEvent('File', 'Demo');
-    this.services.dialogService.pickDemo().then(selectedDemoInfo => {
+    void this.services.dialogService.pickDemo().then(selectedDemoInfo => {
       if (!selectedDemoInfo) {
         return;
       }
