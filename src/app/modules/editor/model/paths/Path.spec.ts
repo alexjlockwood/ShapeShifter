@@ -3,6 +3,7 @@ import _ from 'lodash';
 import * as PathUtil from 'test/PathUtil';
 
 import { Command } from './Command';
+import { CommandState } from './CommandState';
 import { Path, ProjectionOntoPath } from './Path';
 import { SvgChar } from './SvgChar';
 
@@ -988,3 +989,35 @@ function checkCommandsEqual(actual: ReadonlyArray<Command>, expected: ReadonlyAr
 function newPoint(x: number, y: number) {
   return { x, y };
 }
+
+describe('Path.deleteFilledSubPathSegment', () => {
+  function splitSquare() {
+    const path = new Path('M 0 0 L 10 0 L 10 10 L 0 10 Z')
+      .mutate()
+      .splitFilledSubPath(0, 1, 3)
+      .build();
+    const cmdIdx = path
+      .getSubPath(0)
+      .getCommands()
+      .findIndex(cmd => cmd.isSplitSegment());
+    return { path, cmdIdx };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('merges the split subpaths', () => {
+    const { path, cmdIdx } = splitSquare();
+    expect(path.getSubPaths().length).toBe(2);
+    const merged = path.mutate().deleteFilledSubPathSegment(0, cmdIdx).build();
+    expect(merged.getSubPaths().length).toBe(1);
+  });
+
+  it('leaves the path unchanged if the split segment is missing its parent command', () => {
+    const { path, cmdIdx } = splitSquare();
+    vi.spyOn(CommandState.prototype, 'getParentCommandState').mockReturnValue(undefined);
+    const result = path.mutate().deleteFilledSubPathSegment(0, cmdIdx).build();
+    expect(result.getPathString()).toBe(path.getPathString());
+  });
+});

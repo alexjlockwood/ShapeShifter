@@ -1,3 +1,4 @@
+import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
 import { environment } from 'environments/environment';
 import _ from 'lodash';
@@ -819,6 +820,14 @@ export class PathMutator {
     const deletedSubIdxs = this.calculateDeletedSubIdxs(subIdx, targetCs);
     const splitCss1 = pssps[splitSubPathIdx1].getCommandStates();
     const splitCss2 = pssps[splitSubPathIdx2].getCommandStates();
+    if (!splitCss2[0].getParentCommandState() || !_.last(splitCss2).getParentCommandState()) {
+      // TODO: figure out how a split segment can end up without a parent command (reported to
+      // Bugsnag as "reading 'getCommands'"). Leave the path as it is instead of crashing.
+      bugsnagClient.notify(new Error("Couldn't find the split segment's parent command"), {
+        severity: 'warning',
+      });
+      return this;
+    }
     let updatedSplitSubPaths: SubPathState[] = [];
     if (pssps.length > 2) {
       // In addition to deleting the split segment, we will also have to merge its
