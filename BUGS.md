@@ -62,7 +62,8 @@ These existed before the migration and are still there.
 - Importing a malformed `.shapeshifter` file showed an error and then reset the workspace
   anyway (`services/fileimport.service.ts`).
 - Google Analytics reported to a Universal Analytics property, which stopped accepting data
-  in 2023. The calls are now a no-op `trackEvent()`.
+  in 2023. `trackEvent()` now sends GA4 events to `G-0NNYX18R3S`, only from
+  `shapeshifter.design` (`scripts/analytics`).
 - `ShortcutService.destroy()` removed every jQuery `keydown` handler on the window, not just its
   own. `ClipboardService.init()` could bind its handlers twice.
 - Downloads left a hidden `<a>` element in the page for every exported file.

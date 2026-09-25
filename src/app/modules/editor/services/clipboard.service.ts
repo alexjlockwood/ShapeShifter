@@ -58,13 +58,13 @@ export class ClipboardService {
 
       if (str.match(/<\/svg>\s*$/)) {
         // Paste SVG.
-        trackEvent('paste', 'svg');
+        trackEvent('paste_svg');
         SvgLoader.loadVectorLayerFromSvgString(str, name => !!existingVl.findLayerByName(name))
           .then(vl => this.layerTimelineService.importLayers([vl]))
           .catch(() => console.warn('failed to import SVG'));
       } else if (str.match(/<\/vector>\s*$/)) {
         // Paste VD.
-        trackEvent('paste', 'vd');
+        trackEvent('paste_vector_drawable');
         const importedVl = VectorDrawableLoader.loadVectorLayerFromXmlString(
           str,
           name => !!existingVl.findLayerByName(name),
@@ -81,7 +81,7 @@ export class ClipboardService {
           return false;
         }
         if (parsed.blocks) {
-          trackEvent('paste', 'json.blocks');
+          trackEvent('paste_blocks');
           this.layerTimelineService.addBlocks(
             parsed.blocks.map((b: any) => {
               const block = AnimationBlock.from(b);
@@ -108,7 +108,7 @@ export class ClipboardService {
             false,
           );
         } else {
-          trackEvent('paste', 'json.unknown');
+          trackEvent('paste_unknown_json');
         }
         return false;
       }

@@ -119,7 +119,7 @@ export function PropertyInput() {
               model={model}
               onAnimateLayerClick={onAnimateLayerClick}
               onStartActionModeClick={() => {
-                trackEvent('Action mode', 'Started');
+                trackEvent('action_mode_start');
                 actionModeService.setActionMode(ActionMode.Selection);
               }}
             />

@@ -5,6 +5,7 @@ import './styles.scss';
 
 import Bugsnag from '@bugsnag/js';
 import { App } from 'app/modules/editor/components/root/App';
+import { startAnalytics } from 'app/modules/editor/scripts/analytics';
 import { bugsnagClient, startBugsnag } from 'app/modules/editor/scripts/bugsnag';
 import { createEditorServices } from 'app/modules/editor/services/createEditorServices';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
@@ -21,6 +22,7 @@ if (!bugsnagReactPlugin) {
   throw new Error("Bugsnag's React plugin wasn't added when Bugsnag started");
 }
 const ErrorBoundary = bugsnagReactPlugin.createErrorBoundary(React);
+startAnalytics();
 
 // Created once, outside of React, since the services subscribe to the store for the lifetime
 // of the app.

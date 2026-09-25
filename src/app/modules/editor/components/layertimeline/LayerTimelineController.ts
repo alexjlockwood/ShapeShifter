@@ -175,7 +175,7 @@ export class LayerTimelineController extends DestroyableMixin() {
 
   onNewWorkspaceClick() {
     const resetWorkspaceFn = () => {
-      trackEvent('File', 'New');
+      trackEvent('new_file');
       this.store.dispatch(new ResetWorkspace());
     };
     if (isWorkspaceDirty(this.store.getState()) && !IS_DEV_BUILD) {
@@ -192,17 +192,17 @@ export class LayerTimelineController extends DestroyableMixin() {
   }
 
   onSaveToFileClick() {
-    trackEvent('File', 'Save');
+    trackEvent('save_file');
     this.services.fileExportService.exportJSON();
   }
 
   onLoadDemoClick() {
-    trackEvent('File', 'Demo');
+    trackEvent('open_demos');
     void this.services.dialogService.pickDemo().then(selectedDemoInfo => {
       if (!selectedDemoInfo) {
         return;
       }
-      trackEvent('Demos', 'Demo selected', selectedDemoInfo.title);
+      trackEvent('select_demo', { demo_title: selectedDemoInfo.title });
       this.services.projectService
         .getProject(`demos/${selectedDemoInfo.id}.shapeshifter`)
         .then(({ vectorLayer, animation, hiddenLayerIds }) => {
@@ -219,28 +219,28 @@ export class LayerTimelineController extends DestroyableMixin() {
   }
 
   onExportSvgClick() {
-    trackEvent('Export', 'SVG');
+    trackEvent('export_svg');
     this.services.fileExportService.exportSvg();
   }
 
   onExportVectorDrawableClick() {
-    trackEvent('Export', 'Vector Drawable');
+    trackEvent('export_vector_drawable');
     this.services.fileExportService.exportVectorDrawable();
   }
 
   onExportAnimatedVectorDrawableClick() {
-    trackEvent('Export', 'Animated Vector Drawable');
+    trackEvent('export_animated_vector_drawable');
     this.services.fileExportService.exportAnimatedVectorDrawable();
   }
 
   onExportSvgSpritesheetClick() {
-    trackEvent('Export', 'SVG Spritesheet');
+    trackEvent('export_svg_spritesheet');
     this.services.fileExportService.exportSvgSpritesheet();
   }
 
   onExportCssKeyframesClick() {
     // TODO: implement this feature
-    trackEvent('Export', 'CSS Keyframes');
+    trackEvent('export_css_keyframes');
     this.services.fileExportService.exportCssKeyframes();
   }
 
