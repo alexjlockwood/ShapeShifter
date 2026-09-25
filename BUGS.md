@@ -13,21 +13,9 @@ These existed before the migration and are still there.
   geometry. svgo 4 no longer compacts flags, which fixes imports, but pasting or typing a
   compact path string (common in optimized icons) still breaks. See
   `model/paths/PathParser.ts`.
-- **Imported stroke line joins use the line cap.** `SvgLoader` sets `strokeLinejoin` from
-  `attrMap['strokeLinecap']` instead of `attrMap['strokeLinejoin']`
-  (`scripts/import/SvgLoader.ts`, where `strokeLinejoin` is declared).
-- **Batched playback changes are recorded in the undo history.** The undo meta reducer wraps the
-  batch meta reducer, so its `excludeAction` filter only ever sees `__batch__BATCH`. For example,
-  rewinding dispatches `BatchAction(SetCurrentTime, SetIsPlaying)`, which becomes an undo step.
-  UI-only state in the `paper` slice (cursor, hover, zoom) is recorded as well
+- **UI-only state is recorded in the undo history.** Changes to the `paper` slice (cursor, hover,
+  zoom) aren't excluded, so they can become undo steps of their own
   (`store/undoredo/metareducer.ts`).
-- **Imported layers aren't named after their SVG ids.** `SvgLoader` names layers using each
-  element's `id`, but svgo's `cleanupIds` plugin removes every id that isn't referenced before
-  `SvgLoader` sees them, so imported layers end up named `path`, `path_1`, and so on.
-  `SvgLoader.spec` only passes because its test id happens to be `path`
-  (`scripts/svgo/index.ts`).
-- **`<use>` elements with an SVG 2 `href` aren't inlined.** Only `xlink:href` is supported
-  (`scripts/svgo/plugins/replaceUseElems.ts`).
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
 - **Beta only (paper.js, not yet migrated):**
@@ -61,3 +49,32 @@ These existed before the migration and are still there.
 - The service worker didn't cache the Google Fonts stylesheets or the demos, so fonts and icons
   were missing offline and demos couldn't be loaded. Fonts and icons are now bundled, and the
   demos are precached.
+- Undoing in action mode could crash with "Cannot read properties of undefined (reading
+  'getSubPaths')". A path animation block's `fromValue` or `toValue` can be empty (e.g. after
+  animating a path layer that has no path data yet), and `checkPathsCompatible` assumed both
+  existed whenever the block wasn't animatable. Undo could restore such a state while the action
+  mode canvases were still subscribed. Reported to Bugsnag from the 1.0.15 release
+  (`scripts/actionmode/ActionModeUtil.ts`).
+- The toolbar could crash with "Cannot read properties of undefined (reading 'fromValue')" in
+  selection mode when no path block was selected. Also reported to Bugsnag from 1.0.15
+  (`components/toolbar/ToolbarData.ts`).
+- Batched playback changes were recorded in the undo history. The undo meta reducer wraps the
+  batch meta reducer, so its filter only saw `__batch__BATCH`. For example, rewinding dispatches
+  `BatchAction(SetCurrentTime, SetIsPlaying)`, which became an undo step.
+- Actions that aren't recorded in the undo history (e.g. the current time changing on every frame
+  of playback) still reset the one second timer that groups edits, so an edit made after
+  playback could be merged into the edit made before it.
+- Undo and redo could change the theme, since it's part of the recorded state (and then it no
+  longer matched the saved preference).
+- Imported stroke line joins used the line cap. `SvgLoader` read `strokeLinejoin` from
+  `attrMap['strokeLinecap']`.
+- Imported layers weren't named after their SVG ids. svgo's `cleanupIds` plugin removed every id
+  that wasn't referenced before `SvgLoader` saw them, so imported layers ended up named `path`,
+  `path_1`, and so on.
+- Imported paths lost paint set on their groups. `SvgLoader` only read `fill`, `stroke`, and the
+  other presentation attributes from the path itself, and svgo only moves a group's attributes
+  onto its children in some cases (not when the group has more than one child). For example,
+  Sketch exports put `fill-rule="evenodd"` on a group.
+- `<use>` elements with an SVG 2 `href` weren't inlined. Only `xlink:href` was supported.
+- Keyboard shortcuts still fired while a menu or dialog was open, so e.g. Backspace deleted the
+  selected layers and Cmd+Z undid edits behind the dialog.
