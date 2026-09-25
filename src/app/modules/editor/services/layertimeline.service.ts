@@ -588,7 +588,7 @@ export class LayerTimelineService {
     },
   ) {
     const layer = this.getVectorLayer().findLayerById(block.layerId);
-    if (!layer) {
+    if (!layer || !layer.animatableProperties.has(block.propertyName)) {
       return animation;
     }
     const newBlockDuration = block.duration || 100;

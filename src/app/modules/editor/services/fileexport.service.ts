@@ -1,5 +1,6 @@
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation } from 'app/modules/editor/model/timeline';
+import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { AvdSerializer, SpriteSerializer, SvgSerializer } from 'app/modules/editor/scripts/export';
 import { State, Store } from 'app/modules/editor/store';
 import { getHiddenLayerIds, getVectorLayer } from 'app/modules/editor/store/layers/selectors';
@@ -21,6 +22,7 @@ export class FileExportService {
     const vectorLayer = new VectorLayer(layers.vectorLayer);
     const hiddenLayerIds = new Set<string>(layers.hiddenLayerIds);
     const animation = new Animation(timeline.animation);
+    animation.blocks = animation.blocks.filter(b => ModelUtil.canAnimate(vectorLayer, b));
     return { vectorLayer, hiddenLayerIds, animation };
   }
 
@@ -134,8 +136,9 @@ export class FileExportService {
 
   private getAnimationWithoutHiddenBlocks() {
     const anim = this.getAnimation().clone();
-    const hiddenLayerIds = this.getHiddenLayerIds();
-    anim.blocks = anim.blocks.filter(b => !hiddenLayerIds.has(b.layerId));
+    // Hiding a group also hides its children, so check the layers that are left.
+    const vl = this.getVectorLayerWithoutHiddenLayers();
+    anim.blocks = anim.blocks.filter(b => ModelUtil.canAnimate(vl, b));
     return anim;
   }
 }

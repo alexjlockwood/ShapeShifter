@@ -30,6 +30,20 @@ export function getOrderedBlocksByPropertyByLayer(animation: Animation) {
 }
 
 /**
+ * Returns true if the specified layer exists and can animate the specified property. Blocks
+ * that don't (e.g. from older files) can't be rendered or exported.
+ */
+export function canAnimate(vectorLayer: VectorLayer, block: AnimationBlockTarget) {
+  const layer = vectorLayer.findLayerById(block.layerId);
+  return !!layer && layer.animatableProperties.has(block.propertyName);
+}
+
+interface AnimationBlockTarget {
+  readonly layerId: string;
+  readonly propertyName: string;
+}
+
+/**
  * Returns a set of property names that have not yet been animated.
  */
 export function getAvailablePropertyNamesForLayer(layer: Layer, animation: Animation) {

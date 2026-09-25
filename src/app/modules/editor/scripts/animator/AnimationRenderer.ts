@@ -24,8 +24,13 @@ export class AnimationRenderer {
     this.renderedVectorLayer = originalVectorLayer.deepClone();
     const animDataByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(activeAnimation);
     Object.keys(animDataByLayer).forEach(layerId => {
+      const originalLayer = originalVectorLayer.findLayerById(layerId);
+      if (!originalLayer) {
+        // Skip blocks for layers that no longer exist.
+        return;
+      }
       this.animDataByLayer[layerId] = {
-        originalLayer: originalVectorLayer.findLayerById(layerId),
+        originalLayer,
         renderedLayer: this.renderedVectorLayer.findLayerById(layerId),
         orderedBlocks: animDataByLayer[layerId],
       };
@@ -50,6 +55,9 @@ export class AnimationRenderer {
 
         // Compute the rendered value at the given time.
         const property = animData.originalLayer.animatableProperties.get(propertyName);
+        if (!property) {
+          return;
+        }
         let value = (animData.originalLayer as any)[propertyName];
         for (const block of blocks) {
           if (timeMillis < block.startTime) {

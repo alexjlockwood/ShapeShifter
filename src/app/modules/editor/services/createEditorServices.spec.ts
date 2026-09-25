@@ -1,7 +1,8 @@
 import { ActionMode } from 'app/modules/editor/model/actionmode';
-import { PathLayer } from 'app/modules/editor/model/layers';
+import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
-import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { createEditorStore, type State, type Store } from 'app/modules/editor/store';
 import {
@@ -126,5 +127,54 @@ describe('createEditorServices', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe('with blocks that animate hidden or missing layers', () => {
+    function buildProject() {
+      const path = new PathLayer({
+        name: 'path',
+        children: [],
+        pathData: new Path('M 0 0 L 10 10'),
+        strokeColor: '#000',
+      });
+      const group = new GroupLayer({ name: 'group', children: [path] });
+      const vectorLayer = new VectorLayer({ name: 'vector', children: [group] });
+      const newBlock = (layerId: string, propertyName: string) =>
+        AnimationBlock.from({ type: 'number', layerId, propertyName, fromValue: 1, toValue: 2 });
+      const animation = new Animation({
+        blocks: [
+          newBlock(path.id, 'strokeWidth'),
+          newBlock('missing', 'strokeWidth'),
+          newBlock(group.id, 'strokeWidth'),
+        ],
+      });
+      return { path, group, vectorLayer, animation };
+    }
+
+    it('drops them when loading a project', () => {
+      const { path, vectorLayer, animation } = buildProject();
+      const project = FileExportService.fromJSON({
+        layers: { vectorLayer: vectorLayer.toJSON(), hiddenLayerIds: [] },
+        timeline: { animation: animation.toJSON() },
+      });
+      expect(project.animation.blocks.map(b => b.layerId)).toEqual([path.id]);
+    });
+
+    it('renders the other blocks', () => {
+      const { path, vectorLayer, animation } = buildProject();
+      const rendered = new AnimationRenderer(vectorLayer, animation).setCurrentTime(50);
+      const { strokeWidth } = rendered.findLayerById(path.id) as PathLayer;
+      expect(strokeWidth).toBeGreaterThan(1);
+      expect(strokeWidth).toBeLessThan(2);
+    });
+
+    it('exports without the hidden layers', async () => {
+      const { group, vectorLayer, animation } = buildProject();
+      store.dispatch(new ResetWorkspace(vectorLayer, animation, new Set([group.id])));
+      services.fileExportService.exportAnimatedVectorDrawable();
+      const avd = await downloads[0].text();
+      expect(avd).toMatch(/^<animated-vector\s/);
+      expect(avd).not.toContain('android:name="path"');
+    });
   });
 });
