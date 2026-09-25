@@ -43,12 +43,13 @@ export function Splitter({ edge, min = 100, persistId }: SplitterProps) {
   const onMouseDown = (event: MouseEvent) => {
     const downSize = getContentSize(ref.current.parentElement, dimension);
     event.preventDefault();
-    setIsDragging(true);
     new Dragger({
       downX: event.clientX,
       downY: event.clientY,
       direction: orientation === 'vertical' ? 'horizontal' : 'vertical',
       draggingCursor: orientation === 'vertical' ? 'col-resize' : 'row-resize',
+      // The drop callback only runs if the mouse moved far enough to start a drag.
+      onBeginDragFn: () => setIsDragging(true),
       onDragFn: (_, p) => {
         const sign = edge === 'left' || edge === 'top' ? -1 : 1;
         const d = orientation === 'vertical' ? p.x : p.y;

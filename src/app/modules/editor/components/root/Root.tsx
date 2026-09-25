@@ -81,8 +81,10 @@ function Workspace() {
   useEffect(() => {
     return on(window, 'beforeunload', event => {
       if (!IS_DEV_BUILD && isWorkspaceDirty(store.getState())) {
-        // Asks the user to confirm that they want to leave the page.
+        // Asks the user to confirm that they want to leave the page. Older browsers only check
+        // returnValue.
         event.preventDefault();
+        event.returnValue = true;
       }
     });
   }, [store]);

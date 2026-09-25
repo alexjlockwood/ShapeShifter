@@ -43,3 +43,25 @@ test('replaces the old Angular service worker with one that removes itself', asy
     .not.toContain('/old-app/');
   expect(await page.evaluate(() => caches.keys())).not.toContain('ngsw:/:db:control');
 });
+
+test('activates a new version without reloading open pages', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('Ready to work offline')).toBeVisible();
+  await page.evaluate(() => Object.assign(window, { isOriginalPage: true }));
+
+  // Changing the script URL installs a new worker, like deploying a new version does.
+  const newScriptUrl = page.evaluate(
+    () =>
+      new Promise<string>(resolve => {
+        navigator.serviceWorker.addEventListener('controllerchange', () =>
+          resolve(navigator.serviceWorker.controller?.scriptURL ?? ''),
+        );
+        navigator.serviceWorker.register('/sw.js?v=2');
+      }),
+  );
+  expect(await newScriptUrl).toMatch(/\/sw\.js\?v=2$/);
+  expect(await page.evaluate(async () => !!(await navigator.serviceWorker.ready).waiting)).toBe(
+    false,
+  );
+  expect(await page.evaluate(() => 'isOriginalPage' in window)).toBe(true);
+});

@@ -33,6 +33,9 @@ registerSW({
   onOfflineReady() {
     services.snackBarService.show('Ready to work offline', 'Dismiss', Duration.Long);
   },
+  // New versions activate right away (see vite.config.ts), and the next page load gets them.
+  // Reloading an open page could lose the user's work.
+  onNeedReload() {},
 });
 
 if (!environment.production) {

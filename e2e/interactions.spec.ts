@@ -168,3 +168,35 @@ test('reverses subpaths in action mode', async ({ page }) => {
   await page.keyboard.press('r');
   await expect.poll(getFromValue).toBe(initialFromValue);
 });
+
+test('ignores shortcuts while a menu or dialog is open', async ({ page }) => {
+  await loadDemo(page);
+  const getSnapshot = () =>
+    getState(page, s => ({
+      isSlowMotion: s.playback.isSlowMotion,
+      isPlaying: s.playback.isPlaying,
+      selectedLayerIds: [...s.layers.selectedLayerIds],
+      vectorLayer: JSON.stringify(s.layers.vectorLayer),
+    }));
+  await page.locator('.slt-layer', { hasText: 'path' }).click();
+  const snapshot = await getSnapshot();
+  const expectKeysIgnored = async (keys: string[]) => {
+    for (const key of keys) {
+      await page.keyboard.press(key);
+      expect(await getSnapshot(), key).toEqual(snapshot);
+    }
+  };
+
+  await page.getByRole('button', { name: 'File' }).click();
+  await expect(page.getByRole('menu')).toBeVisible();
+  await expectKeysIgnored(['s', 'Backspace', `${MODIFIER}+z`]);
+  await page.getByRole('menuitem', { name: 'Demo' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expectKeysIgnored(['s', 'Space', 'Backspace', `${MODIFIER}+z`]);
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  // The shortcuts work again once the dialog is closed.
+  await page.keyboard.press('s');
+  await expect.poll(async () => (await getSnapshot()).isSlowMotion).toBe(true);
+});

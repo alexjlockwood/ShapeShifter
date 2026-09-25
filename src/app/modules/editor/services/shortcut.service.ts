@@ -46,6 +46,10 @@ export class ShortcutService {
       return;
     }
     this.removeKeyDownListener = on(window, 'keydown', event => {
+      if (event.target instanceof Element && event.target.closest('.MuiModal-root')) {
+        // Leave the keys to the open dialog or menu.
+        return undefined;
+      }
       if (ShortcutService.isOsDependentModifierKey(event)) {
         if (event.keyCode === 'Z'.charCodeAt(0)) {
           this.store.dispatch(event.shiftKey ? ActionCreators.redo() : ActionCreators.undo());

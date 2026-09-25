@@ -142,6 +142,18 @@ test('remembers the size of the layer timeline', async ({ page }) => {
     .toBe(height + 51);
 });
 
+test('stops highlighting the splitter after clicking it', async ({ page }) => {
+  await page.goto('/');
+  const splitter = page.locator('.studio-layer-timeline > .app-splitter');
+  const box = await boundingBox(splitter);
+  await page.mouse.move(box.x + box.width / 2, box.y + 1);
+  await expect(splitter).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await page.mouse.down();
+  await page.mouse.up();
+  await page.mouse.move(box.x + box.width / 2, box.y + 100);
+  await expect(splitter).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+});
+
 test('lines up the layer list with the timeline rows', async ({ page }) => {
   await loadDemo(page, 'searchtoclose');
   await expect(page.locator('.slt-timeline-block')).toHaveCount(6);

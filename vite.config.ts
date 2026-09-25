@@ -32,6 +32,10 @@ export default defineConfig({
         ],
         navigateFallback: 'index.html',
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // Serve a new version as soon as it's installed, so that the next page load gets it
+        // (like the old Angular service worker). Open pages aren't reloaded, so no work is lost.
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ],
