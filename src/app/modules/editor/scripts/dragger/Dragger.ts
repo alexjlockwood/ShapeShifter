@@ -10,11 +10,11 @@ export class Dragger {
   private readonly onBeginDragFn: (event: MouseEvent) => void;
   private readonly onDragFn: (event: MouseEvent, point: Point) => void;
   private readonly onDropFn: () => void;
-  private draggingCursor_: string;
+  private draggingCursor_ = '';
   private isDragging: boolean;
-  private draggingScrim: HTMLDivElement;
+  private draggingScrim: HTMLDivElement | undefined;
 
-  constructor(opts: ConstructorArgs = {}) {
+  constructor(opts: ConstructorArgs) {
     this.direction = opts.direction || 'both';
     this.downX = opts.downX;
     this.downY = opts.downY;
@@ -52,7 +52,7 @@ export class Dragger {
 
         this.onDropFn();
 
-        this.draggingScrim.remove();
+        this.draggingScrim?.remove();
         this.draggingScrim = undefined;
         this.isDragging = false;
 
@@ -104,8 +104,8 @@ type Direction = 'horizontal' | 'vertical' | 'both';
 
 interface ConstructorArgs {
   direction?: Direction;
-  downX?: number;
-  downY?: number;
+  downX: number;
+  downY: number;
   shouldSkipSlopCheck?: boolean;
   onBeginDragFn?: (event: MouseEvent) => void;
   onDragFn?: (event: MouseEvent, point: Point) => void;

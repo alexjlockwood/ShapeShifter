@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 // Needleman-Wunsch scoring function constants.
 export const MATCH = 1;
 export const MISMATCH = -1;
@@ -24,8 +22,8 @@ export function align<T>(
   const alignedListB: Alignment<T>[] = [];
 
   // Add dummy nodes at the first position of each list.
-  listA.unshift(undefined);
-  listB.unshift(undefined);
+  listA.unshift({});
+  listB.unshift({});
 
   let i: number, j: number;
 
@@ -42,7 +40,7 @@ export function align<T>(
   // Process the scoring matrix.
   for (i = 1; i < listA.length; i++) {
     for (j = 1; j < listB.length; j++) {
-      const match = matrix[i - 1][j - 1] + scoringFn(listA[i].obj, listB[j].obj);
+      const match = matrix[i - 1][j - 1] + scoringFn(from[i - 1], to[j - 1]);
       const ins = matrix[i][j - 1] + INDEL;
       const del = matrix[i - 1][j] + INDEL;
       matrix[i][j] = Math.max(match, ins, del);
@@ -57,7 +55,7 @@ export function align<T>(
     if (
       i > 0 &&
       j > 0 &&
-      matrix[i][j] === matrix[i - 1][j - 1] + scoringFn(listA[i].obj, listB[j].obj)
+      matrix[i][j] === matrix[i - 1][j - 1] + scoringFn(from[i - 1], to[j - 1])
     ) {
       alignedListA.unshift(listA[i--]);
       alignedListB.unshift(listB[j--]);
@@ -72,6 +70,6 @@ export function align<T>(
   return {
     from: alignedListA as ReadonlyArray<Alignment<T>>,
     to: alignedListB as ReadonlyArray<Alignment<T>>,
-    score: _.last(_.last(matrix)),
+    score: matrix[listA.length - 1][listB.length - 1],
   };
 }

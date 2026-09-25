@@ -255,7 +255,7 @@ export class GroupLayer extends Layer {
 
   // @Override
   get bounds() {
-    let bounds: { l: number; t: number; r: number; b: number };
+    let bounds: { l: number; t: number; r: number; b: number } | undefined;
     this.children.forEach(child => {
       const childBounds = child.bounds;
       if (!childBounds) {
@@ -395,7 +395,8 @@ export class ClipPathLayer extends Layer implements MorphableLayer {
 Property.register(new PathProperty('pathData', { isAnimatable: true }))(ClipPathLayer);
 
 interface ClipPathLayerArgs {
-  pathData: Path;
+  // Undefined for a new layer that hasn't been given a path yet.
+  pathData: Path | undefined;
 }
 
 export interface ClipPathLayer extends Layer, Required<ClipPathLayerArgs> {}
@@ -524,7 +525,8 @@ Property.register(
 )(PathLayer);
 
 interface PathLayerArgs {
-  pathData: Path;
+  // Undefined for a new layer that hasn't been given a path yet.
+  pathData: Path | undefined;
   fillColor?: string;
   fillAlpha?: number;
   strokeColor?: string;
@@ -548,7 +550,8 @@ export type FillType = 'nonZero' | 'evenOdd';
 
 /** Common interface for Layers with pathData properties. */
 export interface MorphableLayer extends Layer {
-  pathData: Path;
+  // Undefined for a new layer that hasn't been given a path yet.
+  pathData: Path | undefined;
   isStroked(): boolean;
   isFilled(): boolean;
 }

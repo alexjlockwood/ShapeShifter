@@ -13,7 +13,7 @@ import { optimizeSvg } from '.';
 // were also captured with cleanupIDs' remove param disabled, matching the svgo 4 pipeline, which
 // keeps ids so that layers are named after them.
 function toComparableJson(svg: string) {
-  const vl = loadVectorLayerFromSvgStringInternal(svg, () => false);
+  const vl = loadVectorLayerFromSvgStringInternal(svg, () => false)!;
   return JSON.parse(JSON.stringify(vl.toJSON()), (key, value) => {
     if (key === 'id') {
       return undefined;

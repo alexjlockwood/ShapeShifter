@@ -102,7 +102,7 @@ export class CommandState {
     const left = this.mutate()
       .sliceLeft(splitIdx)
       .build();
-    let right: CommandState;
+    let right: CommandState | undefined;
     if (this.isSplitAtIndex(splitIdx)) {
       right = this.mutate()
         .sliceRight(splitIdx)
@@ -174,7 +174,7 @@ class CommandStateMutator {
     private minT: number,
     private maxT: number,
     private splitSegmentId: string,
-    private parentCommandState: CommandState,
+    private parentCommandState: CommandState | undefined,
   ) {}
 
   /**
@@ -183,7 +183,7 @@ class CommandStateMutator {
    */
   sliceLeft(splitIdx: number) {
     this.mutations = this.mutations.slice(0, splitIdx + 1).map(m => _.clone(m));
-    this.maxT = _.last(this.mutations).t;
+    this.maxT = this.lastMutation().t;
     return this;
   }
 
@@ -211,6 +211,11 @@ class CommandStateMutator {
    * Sets this command state object as a split segment with a unique ID.
    * The parent state object represents the origin command state.
    */
+  // There's always at least one mutation.
+  private lastMutation() {
+    return this.mutations[this.mutations.length - 1];
+  }
+
   setSplitSegmentInfo(parentCommandState: CommandState, id: string) {
     this.splitSegmentId = id;
     this.parentCommandState = parentCommandState;
@@ -226,8 +231,9 @@ class CommandStateMutator {
       .reverse()
       .build();
     this.calculator = newCalculator(this.backingCommand);
-    const lastMutation = this.mutations.pop();
+    const lastMutation = this.lastMutation();
     this.mutations = this.mutations
+      .slice(0, -1)
       .map(m => {
         const { id, svgChar } = m;
         return { id, svgChar, t: MathUtil.lerp(this.maxT, this.minT, m.t) };
@@ -369,8 +375,8 @@ class CommandStateMutator {
   revert() {
     this.mutations = [
       {
-        id: _.last(this.mutations).id,
-        t: _.last(this.mutations).t,
+        id: this.lastMutation().id,
+        t: this.lastMutation().t,
         svgChar: this.backingCommand.type,
       },
     ];

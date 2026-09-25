@@ -10,7 +10,7 @@ import { SvgChar } from '.';
 export class Command {
   constructor(
     private readonly _type: SvgChar,
-    private readonly _points: ReadonlyArray<Point>,
+    private readonly _points: ReadonlyArray<Point | undefined>,
     private readonly _isSplitPoint = false,
     private readonly _id = _.uniqueId(),
     private readonly _isSplitSegment = false,
@@ -35,7 +35,8 @@ export class Command {
   }
 
   /**
-   * Returns the points for this command.
+   * Returns the points for this command. The first point is the start point, which is undefined
+   * for the first command of the first subpath.
    */
   get points() {
     return this._points;
@@ -68,7 +69,11 @@ export class Command {
    * Returns the command's ending point.
    */
   get end(): Point {
-    return this._points[this._points.length - 1];
+    const end = this._points[this._points.length - 1];
+    if (!end) {
+      throw new Error('Commands always have an end point');
+    }
+    return end;
   }
 
   /**
@@ -86,11 +91,11 @@ export class Command {
       case 'Z':
         return ch === 'L' || ch === 'Q' || ch === 'C';
       case 'Q': {
-        const uniquePoints = _.uniqWith(this._points, MathUtil.arePointsEqual);
+        const uniquePoints = _.uniqWith(this._points.filter(isPoint), MathUtil.arePointsEqual);
         return ch === 'C' || (ch === 'L' && uniquePoints.length <= 2);
       }
       case 'C': {
-        const uniquePoints = _.uniqWith(this._points, MathUtil.arePointsEqual);
+        const uniquePoints = _.uniqWith(this._points.filter(isPoint), MathUtil.arePointsEqual);
         return ch === 'L' && uniquePoints.length <= 2;
       }
     }
@@ -114,7 +119,7 @@ export class Command {
     if (this._type === 'Z') {
       return `${this._type}`;
     } else {
-      const p = _.last(this._points);
+      const p = this.end;
       const x = _.round(p.x, 3);
       const y = _.round(p.y, 3);
       return `${this._type} ${x}, ${y}`;
@@ -127,7 +132,7 @@ export class CommandBuilder {
 
   constructor(
     private svgChar: SvgChar,
-    private points: Point[],
+    private points: Array<Point | undefined>,
     private isSplitPoint = false,
     private id = '',
     private isSplitSegment = false,
@@ -143,7 +148,7 @@ export class CommandBuilder {
     return this;
   }
 
-  setPoints(...points: Point[]) {
+  setPoints(...points: Array<Point | undefined>) {
     this.points = points;
     return this;
   }
@@ -185,4 +190,9 @@ export class CommandBuilder {
       this.isSplitSegment,
     );
   }
+}
+
+/** Filters out the undefined start point of the first command of the first subpath. */
+export function isPoint(point: Point | undefined): point is Point {
+  return !!point;
 }

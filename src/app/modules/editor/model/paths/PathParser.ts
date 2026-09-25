@@ -1,6 +1,6 @@
 import { Point } from 'app/modules/editor/scripts/common';
 
-import { Command } from './Command';
+import { Command, isPoint } from './Command';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
@@ -594,13 +594,16 @@ export function commandsToString(commands: ReadonlyArray<Command>) {
     const isClosePathCommand = cmd.type === 'Z';
     const pointsToNumberListFunc = (...points: { x: number; y: number }[]) =>
       points.reduce((list, p) => [...list, p.x, p.y], [] as number[]);
-    const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.points.slice(1)));
+    // The first point is the start point, which is the previous command's end point.
+    const args = pointsToNumberListFunc(
+      ...(isClosePathCommand ? [] : cmd.points.slice(1).filter(isPoint)),
+    );
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
   return tokens.join(' ');
 }
 
-function newMove(start: Point, end: Point) {
+function newMove(start: Point | undefined, end: Point) {
   return new Command('M', [start, end]);
 }
 

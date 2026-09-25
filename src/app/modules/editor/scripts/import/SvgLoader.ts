@@ -40,13 +40,13 @@ export function loadVectorLayerFromSvgString(
   doesNameExistFn: (name: string) => boolean,
 ) {
   return optimizeSvg(svgString).then(optimizedSvgString => {
-    return new Promise<VectorLayer>((resolve, reject) => {
-      if (!optimizedSvgString) {
-        reject();
-        return;
-      }
-      resolve(loadVectorLayerFromSvgStringInternal(optimizedSvgString, doesNameExistFn));
-    });
+    const vl = optimizedSvgString
+      ? loadVectorLayerFromSvgStringInternal(optimizedSvgString, doesNameExistFn)
+      : undefined;
+    if (!vl) {
+      throw new Error("Couldn't import the SVG");
+    }
+    return vl;
   });
 }
 
@@ -54,9 +54,9 @@ export function loadVectorLayerFromSvgString(
 export function loadVectorLayerFromSvgStringInternal(
   svgString: string,
   doesNameExistFn: (name: string) => boolean,
-): VectorLayer {
+): VectorLayer | undefined {
   const usedIds = new Set<string>();
-  const makeFinalNodeIdFn = (nodeId: string, prefix: string) => {
+  const makeFinalNodeIdFn = (nodeId: string | null, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
       NameProperty.sanitize(nodeId || prefix),
       name => doesNameExistFn(name) || usedIds.has(name),
@@ -82,7 +82,7 @@ export function loadVectorLayerFromSvgStringInternal(
     node: Element,
     transforms: ReadonlyArray<Matrix>,
     inheritedAttrs: Readonly<Dictionary<string>> = {},
-  ): Layer => {
+  ): Layer | undefined => {
     if (
       !node ||
       node.nodeType === Node.TEXT_NODE ||
@@ -141,8 +141,8 @@ export function loadVectorLayerFromSvgStringInternal(
       });
     };
 
-    if (node instanceof SVGPathElement && node.getAttribute('d')) {
-      const path = node.getAttribute('d');
+    const path = node.getAttribute('d');
+    if (node instanceof SVGPathElement && path) {
       const attrMap: Dictionary<any> = {};
       const simpleAttrFn = (nodeAttr: string, contextAttr: string) => {
         if (nodeAttr in attrs) {
@@ -251,7 +251,7 @@ export function loadVectorLayerFromSvgStringInternal(
   return new VectorLayer({
     id: _.uniqueId(),
     name: makeFinalNodeIdFn(documentElement.getAttribute('id'), 'vector'),
-    children: rootLayer ? rootLayer.children : undefined,
+    children: rootLayer ? rootLayer.children : [],
     width,
     height,
     alpha,
@@ -284,12 +284,13 @@ function parsePath(pathStr: string, isDrawnAsDot = false) {
     return path;
   }
   const cmds = path.getCommands();
-  const nonZeroLengthCmds = cmds.filter(
-    cmd =>
-      cmd.type === 'M' ||
-      cmd.type === 'Z' ||
-      cmd.points.some(p => !MathUtil.arePointsEqual(p, cmd.start)),
-  );
+  const nonZeroLengthCmds = cmds.filter(cmd => {
+    const { start } = cmd;
+    if (cmd.type === 'M' || cmd.type === 'Z' || !start) {
+      return true;
+    }
+    return cmd.points.some(p => !!p && !MathUtil.arePointsEqual(p, start));
+  });
   return nonZeroLengthCmds.length === cmds.length ? path : new Path(nonZeroLengthCmds);
 }
 
@@ -314,10 +315,7 @@ function getNodeTransforms(node: SVGGraphicsElement | SVGClipPathElement) {
  * if one exists.
  */
 function getReferencedClipPathId(node: Element) {
-  if (!node.getAttribute('clip-path')) {
-    return undefined;
-  }
-  const clipPathAttr = node.getAttribute('clip-path').trim();
+  const clipPathAttr = node.getAttribute('clip-path')?.trim();
   if (!clipPathAttr || !clipPathAttr.startsWith('url(#')) {
     return undefined;
   }
@@ -370,23 +368,27 @@ function buildPathInfosForClipPath(node: SVGClipPathElement) {
   const pathInfos: PathInfo[] = [];
   if (node.childNodes) {
     for (let i = 0; i < node.childNodes.length; i++) {
-      const childNode = node.childNodes.item(i) as Element;
-      if (childNode instanceof SVGPathElement && childNode.getAttribute('d')) {
-        const pathStr = childNode.getAttribute('d');
-        const pathTransforms = getNodeTransforms(childNode).reverse();
-        const transforms = [...pathTransforms, ...clipPathTransforms];
-        const refClipPathId = getReferencedClipPathId(childNode);
-        pathInfos.push({
-          refClipPathId,
-          path: new Path(
-            parsePath(pathStr)
-              .mutate()
-              .transform(Matrix.flatten(transforms))
-              .build()
-              .getPathString(),
-          ),
-        });
+      const childNode = node.childNodes.item(i);
+      if (!(childNode instanceof SVGPathElement)) {
+        continue;
       }
+      const pathStr = childNode.getAttribute('d');
+      if (!pathStr) {
+        continue;
+      }
+      const pathTransforms = getNodeTransforms(childNode).reverse();
+      const transforms = [...pathTransforms, ...clipPathTransforms];
+      const refClipPathId = getReferencedClipPathId(childNode);
+      pathInfos.push({
+        refClipPathId,
+        path: new Path(
+          parsePath(pathStr)
+            .mutate()
+            .transform(Matrix.flatten(transforms))
+            .build()
+            .getPathString(),
+        ),
+      });
     }
   }
   return pathInfos;

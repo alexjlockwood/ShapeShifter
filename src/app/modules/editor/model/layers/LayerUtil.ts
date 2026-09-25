@@ -14,7 +14,8 @@ const IS_DEV_BUILD = !environment.production;
  * drawing coordinates back to path coordinates.
  */
 export function getCanvasTransformForLayer(root: Layer, layerId: string) {
-  return Matrix.flatten(getCanvasTransformsForLayer(root, layerId));
+  // The transform is the identity if the layer doesn't exist.
+  return Matrix.flatten(getCanvasTransformsForLayer(root, layerId) ?? []);
 }
 
 /**
@@ -23,7 +24,7 @@ export function getCanvasTransformForLayer(root: Layer, layerId: string) {
  * immediate parent will be the very last matrix in the returned list).
  */
 function getCanvasTransformsForLayer(root: Layer, layerId: string) {
-  return (function recurseFn(parents: Layer[], current: Layer): Matrix[] {
+  return (function recurseFn(parents: Layer[], current: Layer): Matrix[] | undefined {
     if (current.id === layerId) {
       return _.flatMap(parents, l => {
         return l instanceof GroupLayer ? getCanvasTransformsForGroupLayer(l) : [];
@@ -200,11 +201,11 @@ export function addLayers(
 
 export function removeLayers<L extends Layer>(layer: L, ...removedLayerIds: string[]) {
   const layerIds = new Set(removedLayerIds);
-  return (function recurseFn(curr: Layer): Layer {
+  return (function recurseFn(curr: Layer): Layer | undefined {
     if (layerIds.has(curr.id)) {
       return undefined;
     }
-    const children = curr.children.map(recurseFn).filter(l => !!l);
+    const children = curr.children.map(recurseFn).filter((l): l is Layer => !!l);
     return setLayerChildren(curr, children);
   })(layer) as L;
 }
@@ -245,7 +246,7 @@ export function findLayerByName(layers: ReadonlyArray<Layer>, layerName: string)
 }
 
 export function findParent(vl: VectorLayer, layerId: string) {
-  return (function recurseFn(curr: Layer, parent?: Layer): Layer {
+  return (function recurseFn(curr: Layer, parent?: Layer): Layer | undefined {
     if (curr.id === layerId) {
       return parent;
     }
@@ -267,7 +268,7 @@ export function findPreviousSibling(vl: VectorLayer, layerId: string) {
   return findSibling(layerId, findParent(vl, layerId), -1);
 }
 
-function findSibling(layerId: string, parent: Layer, offset: number) {
+function findSibling(layerId: string, parent: Layer | undefined, offset: number) {
   if (!parent || !parent.children) {
     return undefined;
   }

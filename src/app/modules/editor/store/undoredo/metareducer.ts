@@ -60,7 +60,7 @@ export function metaReducer(reducer: EditorStateReducer): StateReducer {
       return undefined;
     },
   } as UndoableOptions);
-  return (state: StateWithHistoryAndTimestamp, action: Action) => {
+  return (state: StateWithHistoryAndTimestamp | undefined, action: Action) => {
     const history = undoableReducer(state, action as UnknownAction);
     let { present } = history;
     if (state && UNDO_REDO_ACTIONS.has(action.type)) {

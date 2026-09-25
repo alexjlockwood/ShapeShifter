@@ -31,7 +31,7 @@ export const getSingleSelectedPathBlock = createSelector(
 export const getSelectedBlockLayerIds = createDeepEqualSelector(
   [getAnimation, getSelectedBlockIds],
   (anim, blockIds) => {
-    return new Set(Array.from(blockIds).map(id => _.find(anim.blocks, b => b.id === id).layerId));
+    return new Set(anim.blocks.filter(b => blockIds.has(b.id)).map(b => b.layerId));
   },
 );
 export const getSingleSelectedBlockLayerId = createSelector(

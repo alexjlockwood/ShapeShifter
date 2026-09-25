@@ -2,7 +2,7 @@ import { Path, PathUtil } from 'app/modules/editor/model/paths';
 
 import { Property } from './Property';
 
-export class PathProperty extends Property<Path> {
+export class PathProperty extends Property<Path | undefined> {
   // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
     let path: Path;
@@ -22,7 +22,7 @@ export class PathProperty extends Property<Path> {
   }
 
   // @Override
-  protected getter(model: any, propertyName: string): Path {
+  protected getter(model: any, propertyName: string): Path | undefined {
     return model[`${propertyName}_`];
   }
 
@@ -36,12 +36,12 @@ export class PathProperty extends Property<Path> {
   }
 
   // @Override
-  displayValueForValue(value: Path) {
+  displayValueForValue(value: Path | undefined) {
     return value ? value.getPathString() : '';
   }
 
   // @Override
-  interpolateValue(start: Path, end: Path, fraction: number) {
+  interpolateValue(start: Path | undefined, end: Path | undefined, fraction: number) {
     if (!start || !end || !start.isMorphableWith(end) || !fraction) {
       return start;
     }
@@ -52,7 +52,7 @@ export class PathProperty extends Property<Path> {
   }
 
   // @Override
-  cloneValue(value: Path) {
+  cloneValue(value: Path | undefined) {
     return value ? value.mutate().build() : undefined;
   }
 

@@ -19,7 +19,7 @@ const AAPT_NS = 'http://schemas.android.com/aapt';
  * Serializes a VectorLayer to a vector drawable XML string.
  */
 export function toVectorDrawableXmlString(vl: VectorLayer) {
-  const xmlDoc = document.implementation.createDocument(undefined, 'vector', undefined);
+  const xmlDoc = document.implementation.createDocument(null, 'vector', null);
   const rootNode = xmlDoc.documentElement;
   vectorLayerToXmlNode(vl, rootNode, xmlDoc);
   return serializeXmlNode(rootNode);
@@ -29,7 +29,7 @@ export function toVectorDrawableXmlString(vl: VectorLayer) {
  * Serializes a given VectorLayer and Animation to an animatedvector drawable XML file.
  */
 export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: Animation) {
-  const xmlDoc = document.implementation.createDocument(undefined, 'animated-vector', undefined);
+  const xmlDoc = document.implementation.createDocument(null, 'animated-vector', null);
   const rootNode = xmlDoc.documentElement;
   rootNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
   rootNode.setAttributeNS(XMLNS_NS, 'xmlns:aapt', AAPT_NS);
@@ -52,8 +52,11 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
   });
 
   animBlocksByLayer.forEach((blocksForLayer, layerId) => {
-    const targetNode = xmlDoc.createElement('target');
     const layer = vl.findLayerById(layerId);
+    if (!layer) {
+      return;
+    }
+    const targetNode = xmlDoc.createElement('target');
     targetNode.setAttributeNS(ANDROID_NS, 'android:name', layer.name);
     rootNode.appendChild(targetNode);
 
@@ -71,6 +74,10 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
     const animatableProperties = layer.animatableProperties;
 
     blocksForLayer.forEach(block => {
+      const property = animatableProperties.get(block.propertyName);
+      if (!property) {
+        return;
+      }
       const blockNode = xmlDoc.createElement('objectAnimator');
       blockNode.setAttributeNS(ANDROID_NS, 'android:propertyName', block.propertyName);
       conditionalAttrFn(blockNode, 'android:startOffset', block.startTime, 0);
@@ -84,12 +91,9 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
         conditionalAttrFn(blockNode, 'android:valueFrom', block.fromValue);
         conditionalAttrFn(blockNode, 'android:valueTo', block.toValue);
       }
-      conditionalAttrFn(
-        blockNode,
-        'android:valueType',
-        animatableProperties.get(block.propertyName).getAnimatorValueType(),
-      );
-      const interpolator = _.find(INTERPOLATORS, i => i.value === block.interpolator);
+      conditionalAttrFn(blockNode, 'android:valueType', property.getAnimatorValueType());
+      const interpolator =
+        _.find(INTERPOLATORS, i => i.value === block.interpolator) ?? INTERPOLATORS[0];
       conditionalAttrFn(blockNode, 'android:interpolator', interpolator.androidRef);
       blockContainerNode.appendChild(blockNode);
     });

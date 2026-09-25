@@ -1,0 +1,17 @@
+{
+  // Code that has been made to pass strict mode, which the rest of the app should catch up to.
+  // It can't import from outside of these directories (see .oxlintrc.json).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true
+  },
+  "include": [
+    "src/app/modules/editor/model",
+    "src/app/modules/editor/scripts",
+    "src/app/modules/editor/store",
+    "src/test",
+    "src/typings",
+    "src/vite-env.d.ts"
+  ]
+}

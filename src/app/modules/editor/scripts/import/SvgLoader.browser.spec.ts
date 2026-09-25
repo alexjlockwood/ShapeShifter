@@ -16,7 +16,7 @@ describe('SvgLoader', () => {
     const pathLayer = vl.children[0] as PathLayer;
     expect(pathLayer.name).toBe('path');
     expect(pathLayer.fillColor).toBe('#000000');
-    expect(pathLayer.pathData.getPathString()).toBe('M 0 0 L 10 10 L 20 20 L 30 30');
+    expect(pathLayer.pathData!.getPathString()).toBe('M 0 0 L 10 10 L 20 20 L 30 30');
   });
 
   it(`can import simple SVG with viewBox translation`, async () => {
@@ -32,7 +32,7 @@ describe('SvgLoader', () => {
     const pathLayer = vl.children[0] as PathLayer;
     expect(pathLayer.name).toBe('path');
     expect(pathLayer.fillColor).toBe('#000000');
-    expect(pathLayer.pathData.getPathString()).toBe('M -5 10 L 5 20 L 15 30 L 25 40');
+    expect(pathLayer.pathData!.getPathString()).toBe('M -5 10 L 5 20 L 15 30 L 25 40');
   });
 
   it(`names layers after their ids`, async () => {
@@ -116,7 +116,7 @@ describe('SvgLoader', () => {
     const pathLayers: PathLayer[] = [];
     vl.walk(l => l instanceof PathLayer && pathLayers.push(l));
     expect(pathLayers.map(l => l.fillColor)).toEqual(['#ff0000', '#0000ff']);
-    expect(pathLayers.map(l => l.pathData.getPathString())).toEqual([
+    expect(pathLayers.map(l => l.pathData!.getPathString())).toEqual([
       'M 0 0 L 10 0 L 5 8 Z',
       'M 12 0 L 22 0 L 17 8 Z',
     ]);
@@ -144,7 +144,7 @@ describe('SvgLoader', () => {
       'M -20 -40 L -40 -60 L -60 -80 L -80 -100',
       'M 20 40 L 40 60 L 60 80 L 80 100',
     ];
-    const actualPath = (vl.children[0] as PathLayer).pathData.getPathString();
+    const actualPath = (vl.children[0] as PathLayer).pathData!.getPathString();
     expect(actualPath).toBe(paths.join(' '));
   });
 

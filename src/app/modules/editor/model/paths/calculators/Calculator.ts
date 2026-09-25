@@ -2,6 +2,7 @@ import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import _ from 'lodash';
 
 import { Command, SvgChar } from '..';
+import { isPoint } from '../Command';
 import { BezierCalculator } from './BezierCalculator';
 import { LineCalculator } from './LineCalculator';
 import { MoveCalculator } from './MoveCalculator';
@@ -24,23 +25,23 @@ export interface Calculator {
 }
 
 export function newCalculator(cmd: Command): Calculator {
-  const points = cmd.points;
   if (cmd.type === 'M') {
-    return new MoveCalculator(cmd.id, points[0], points[1]);
+    return new MoveCalculator(cmd.id, cmd.start, cmd.end);
   }
+  // Only a move can be missing its start point.
+  const points = cmd.points.filter(isPoint);
   const uniquePoints: Point[] = _.uniqWith(points, MathUtil.arePointsEqual);
   if (uniquePoints.length === 1) {
     return new PointCalculator(cmd.id, cmd.type, points[0]);
   }
   if (cmd.type === 'L' || cmd.type === 'Z' || uniquePoints.length === 2) {
-    return new LineCalculator(cmd.id, cmd.type, _.first(points), _.last(points));
+    return new LineCalculator(cmd.id, cmd.type, points[0], points[points.length - 1]);
   }
   if (cmd.type === 'Q') {
     return new BezierCalculator(cmd.id, cmd.type, points[0], points[1], points[2]);
   }
   if (cmd.type === 'C') {
-    const pts = cmd.points;
-    return new BezierCalculator(cmd.id, cmd.type, pts[0], pts[1], pts[2], pts[3]);
+    return new BezierCalculator(cmd.id, cmd.type, points[0], points[1], points[2], points[3]);
   }
   throw new Error('Invalid command type: ' + cmd.type);
 }

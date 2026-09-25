@@ -14,8 +14,8 @@ import { PointCalculator } from './PointCalculator';
  */
 export class BezierCalculator implements Calculator {
   private readonly points: ReadonlyArray<Point>;
-  private length: number;
-  private bbox: BBox;
+  private length: number | undefined;
+  private bbox: BBox | undefined;
   private bezierJs_: any;
 
   constructor(private readonly id: string, private readonly svgChar: SvgChar, ...points: Point[]) {
@@ -42,7 +42,7 @@ export class BezierCalculator implements Calculator {
 
   getPathLength() {
     if (this.length === undefined) {
-      this.length = this.bezierJs.length();
+      this.length = this.bezierJs.length() as number;
     }
     return this.length;
   }
@@ -61,7 +61,7 @@ export class BezierCalculator implements Calculator {
     const points: ReadonlyArray<Point> = this.bezierJs.split(t1, t2).points;
     const uniquePoints: Point[] = _.uniqWith(points, MathUtil.arePointsEqual);
     if (uniquePoints.length === 2) {
-      return new LineCalculator(this.id, this.svgChar, _.first(points), _.last(points));
+      return new LineCalculator(this.id, this.svgChar, points[0], points[points.length - 1]);
     }
     return new BezierCalculator(this.id, this.svgChar, ...points);
   }
@@ -144,7 +144,7 @@ export class BezierCalculator implements Calculator {
   }
 
   intersects(line: Line): number[] {
-    if (MathUtil.arePointsEqual(_.first(this.points), _.last(this.points))) {
+    if (MathUtil.arePointsEqual(this.points[0], this.points[this.points.length - 1])) {
       // Points can't be intersected.
       return [];
     }

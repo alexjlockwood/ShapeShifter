@@ -70,7 +70,11 @@ function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
       const renderedVl = renderer.setCurrentTime(timeMillis);
       // TODO: this is hacky! the real solution is to not clear path state after interpolations
       // Replace the interpolated value with the block's to/from value.
-      const layer = vl.findLayerById(block.layerId).clone() as MorphableLayer;
+      const blockLayer = vl.findLayerById(block.layerId);
+      if (!blockLayer) {
+        return undefined;
+      }
+      const layer = blockLayer.clone() as MorphableLayer;
       layer.pathData = timeMillis === block.startTime ? block.fromValue : block.toValue;
       return LayerUtil.updateLayer(renderedVl, layer);
     },
@@ -80,7 +84,7 @@ function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
 const getVectorLayerFromValue = getVectorLayerValue(block => block.startTime);
 const getVectorLayerToValue = getVectorLayerValue(block => block.endTime);
 
-function getMorphableLayerValue(selector: (state: State) => VectorLayer) {
+function getMorphableLayerValue(selector: (state: State) => VectorLayer | undefined) {
   return createSelector([selector, getSingleSelectedBlockLayerId], (vl, blockLayerId) => {
     if (!vl || !blockLayerId) {
       return undefined;

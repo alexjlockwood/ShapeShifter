@@ -18,7 +18,7 @@ export class NumberProperty extends Property<number> {
   // @Override
   setEditableValue(model: any, propertyName: string, value: string | number | undefined) {
     if (typeof value !== 'number') {
-      value = parseFloat(value);
+      value = parseFloat(value ?? '');
     }
     if (isNaN(value)) {
       return;

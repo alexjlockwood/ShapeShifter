@@ -33,8 +33,8 @@ const queueNestedDispatches: StoreEnhancer = createStore => (reducer, preloadedS
     isNotifying = true;
     try {
       store.dispatch(action);
-      while (queue.length) {
-        store.dispatch(queue.shift());
+      for (let next = queue.shift(); next; next = queue.shift()) {
+        store.dispatch(next);
       }
     } finally {
       isNotifying = false;

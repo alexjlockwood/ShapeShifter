@@ -16,7 +16,7 @@ describe('Property.register', () => {
     expect(Object.getOwnPropertyNames(layer)).not.toContain('pathData');
     expect(layer.name).toBe('path');
     expect(layer.pathData).toBeInstanceOf(Path);
-    expect(layer.pathData.getPathString()).toBe('M 0 0 L 10 10');
+    expect(layer.pathData!.getPathString()).toBe('M 0 0 L 10 10');
   });
 
   it('runs property setters', () => {
@@ -70,7 +70,7 @@ describe('Property.register', () => {
     expect(layer.strokeLinecap).toBe('round');
     expect(layer.strokeLinejoin).toBe('miter');
     expect(layer.fillType).toBe('nonZero');
-    const property = layer.inspectableProperties.get('strokeLinejoin');
+    const property = layer.inspectableProperties.get('strokeLinejoin')!;
     expect(property.displayValueForValue(layer.strokeLinejoin)).toBe('Miter');
     expect(property.displayValueForValue('square')).toBe('square');
 
@@ -95,7 +95,7 @@ describe('Property.register', () => {
     });
     expect(layer.fillColor).toBe('#ff0000');
     expect(layer.strokeColor).toBe('');
-    const property = layer.inspectableProperties.get('fillColor');
+    const property = layer.inspectableProperties.get('fillColor')!;
     property.setEditableValue(layer, 'fillColor', 'none');
     expect(layer.fillColor).toBe('');
     property.setEditableValue(layer, 'fillColor', 'blue');

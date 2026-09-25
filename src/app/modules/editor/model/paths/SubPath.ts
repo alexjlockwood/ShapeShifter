@@ -71,8 +71,9 @@ export class SubPath {
    * Returns true iff the sub path's start point is equal to its end point.
    */
   isClosed() {
-    const start = _.first(this.getCommands()).end;
-    const end = _.last(this.getCommands()).end;
+    const cmds = this.getCommands();
+    const start = cmds[0].end;
+    const end = cmds[cmds.length - 1].end;
     return MathUtil.arePointsEqual(start, end);
   }
 
@@ -99,7 +100,7 @@ export function createSubPaths(commands: ReadonlyArray<Command>) {
   }
 
   let currentCmdList: Command[] = [];
-  let lastSeenMove: Command;
+  let lastSeenMove = commands[0];
   const subPathCmds: SubPath[] = [];
   for (const cmd of commands) {
     if (cmd.type === 'M') {

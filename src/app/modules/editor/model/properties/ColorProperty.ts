@@ -25,10 +25,13 @@ export class ColorProperty extends Property<string> {
   // @Override
   interpolateValue(start: string, end: string, f: number) {
     if (!start || !end) {
-      return undefined;
+      return '';
     }
     const s = ColorUtil.parseAndroidColor(start);
     const e = ColorUtil.parseAndroidColor(end);
+    if (!s || !e) {
+      return start;
+    }
     return ColorUtil.toAndroidString({
       r: _.clamp(Math.round(MathUtil.lerp(s.r, e.r, f)), 0, 0xff),
       g: _.clamp(Math.round(MathUtil.lerp(s.g, e.g, f)), 0, 0xff),

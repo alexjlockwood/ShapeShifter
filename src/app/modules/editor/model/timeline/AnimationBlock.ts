@@ -138,8 +138,9 @@ export interface AnimationBlock extends Required<AnimationBlockArgs>, Inspectabl
 export interface ConstructorArgs extends AnimationBlockArgs {}
 
 export interface PathAnimationBlock {
-  fromValue: Path;
-  toValue: Path;
+  // Undefined when the block was added to a layer that hasn't been given a path yet.
+  fromValue: Path | undefined;
+  toValue: Path | undefined;
   clone(): PathAnimationBlock;
 }
 

@@ -4,7 +4,7 @@ import { EditorState } from 'app/modules/editor/store/reducer';
 import { ResetActionTypes, ResetWorkspace } from './actions';
 
 export function metaReducer(reducer: ActionReducer<EditorState>): ActionReducer<EditorState> {
-  return (state: EditorState, action: Action) => {
+  return (state: EditorState | undefined, action: Action) => {
     if (action.type === ResetActionTypes.ResetWorkspace) {
       state = undefined;
     }
@@ -18,7 +18,7 @@ export function metaReducer(reducer: ActionReducer<EditorState>): ActionReducer<
           layers: {
             ...layers,
             vectorLayer,
-            hiddenLayerIds,
+            hiddenLayerIds: hiddenLayerIds ?? new Set<string>(),
           },
         };
       }

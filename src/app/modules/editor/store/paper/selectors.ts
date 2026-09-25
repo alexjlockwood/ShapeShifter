@@ -31,10 +31,10 @@ const getSingleSelectedChildlessLayer = createSelector(
     if (layerIds.size !== 1) {
       return undefined;
     }
-    const layerId = layerIds.values().next().value;
+    const [layerId] = layerIds;
     const layer = vl.findLayerById(layerId);
     // TODO: consolidate this logic in a single place (the layer.children.length check is used in gestures too)
-    return layer.children.length ? undefined : layer;
+    return !layer || layer.children.length ? undefined : layer;
   },
 );
 

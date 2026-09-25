@@ -877,7 +877,7 @@ describe('Path', () => {
       it(`projecting '(${point.x},${
         point.y
       })' onto '${path.getPathString()}' yields ${JSON.stringify(a.proj)}`, () => {
-        const result = path.project(point, a.subIdx);
+        const result = path.project(point, a.subIdx)!;
         result.projection.t = _.round(result.projection.t, 10);
         expect(result).toEqual(a.proj as ProjectionOntoPath);
       });
