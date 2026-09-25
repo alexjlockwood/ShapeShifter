@@ -5,6 +5,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Switch from '@mui/material/Switch';
 import Tooltip from '@mui/material/Tooltip';
+import { Tip } from 'app/modules/editor/components/common/Tip';
 import { Icon, type IconName } from 'app/modules/editor/components/icons/Icon';
 import { useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
@@ -269,9 +270,10 @@ function ActionButton({ title, icon, onClick, isActivated, isDisabled }: ActionB
       <Icon name={icon} />
     </IconButton>
   );
-  // Tooltips need a wrapper element to show up on disabled buttons.
   return (
-    <Tooltip title={title}>{isDisabled === undefined ? button : <span>{button}</span>}</Tooltip>
+    <Tip title={title} disabled={isDisabled}>
+      {button}
+    </Tip>
   );
 }
 

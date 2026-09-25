@@ -44,7 +44,9 @@
         }
         .slt-timeline {
             .slt-timeline-animation {
-                box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
+                box-shadow:
+                    4px 0 0 mat-color(mat-palette($mat-grey, 500)),
+                    -4px 0 0 mat-color(mat-palette($mat-grey, 500));
                 &.is-selected {
                     background-color: mat-color($accent);
                 }

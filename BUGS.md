@@ -25,11 +25,11 @@ These existed before the migration and are still there.
   `components/layertimeline/layertimeline.component.ts`, the state subscription calls
   `setCurrentTime` before assigning `currActionMode`. It's harmless today only because
   `setCurrentTime` does nothing when the time is unchanged.
-- **Scroll groups aren't keyed.** `ScrollGroupDirective` reads its `@Input` in the constructor,
-  before inputs are bound, so every group is keyed as `undefined`. It works only because there
-  is a single group (`components/scrollgroup/scrollgroup.directive.ts`).
-- **Timeline zoom uses the nonstandard `mousewheel` event,** which Firefox doesn't fire
-  (`components/layertimeline/layertimeline.component.html`).
+- **Imported layers aren't named after their SVG ids.** `SvgLoader` names layers using each
+  element's `id`, but svgo's `cleanupIds` plugin removes every id that isn't referenced before
+  `SvgLoader` sees them, so imported layers end up named `path`, `path_1`, and so on.
+  `SvgLoader.spec` only passes because its test id happens to be `path`
+  (`scripts/svgo/index.ts`).
 - **`<use>` elements with an SVG 2 `href` aren't inlined.** Only `xlink:href` is supported
   (`scripts/svgo/plugins/replaceUseElems.ts`).
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
@@ -50,6 +50,10 @@ These existed before the migration and are still there.
 - `ShortcutService.destroy()` removed every jQuery `keydown` handler on the window, not just its
   own. `ClipboardService.init()` could bind its handlers twice.
 - Downloads left a hidden `<a>` element in the page for every exported file.
+- Adding another animation from a property's "+" button in the layer list selected the new
+  block, and then the click bubbled up to the workspace, which deselected it.
+- Scroll groups are keyed by name, and the timeline zooms with the standard `wheel` event, so
+  zooming now works in Firefox too.
 - After editing the vector layer, the preview canvas briefly drew the un-animated layer instead
   of the layer at the current time.
 - The playback theme's disabled button selector had a typo (`[maticon-button]`) and never

@@ -23,8 +23,10 @@
   },
   "include": [
     "src/app/modules/editor/components/canvas",
+    "src/app/modules/editor/components/common",
     "src/app/modules/editor/components/dialogs",
     "src/app/modules/editor/components/icons",
+    "src/app/modules/editor/components/layertimeline",
     "src/app/modules/editor/components/playback",
     "src/app/modules/editor/components/project",
     "src/app/modules/editor/components/propertyinput",

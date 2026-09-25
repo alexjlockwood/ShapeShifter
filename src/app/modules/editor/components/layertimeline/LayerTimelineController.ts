@@ -1,15 +1,3 @@
-import {
-  AfterViewInit,
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  OnInit,
-  QueryList,
-  ViewChild,
-  ViewChildren,
-} from '@angular/core';
-import { DialogService } from 'app/modules/editor/components/dialogs';
-import { ProjectService } from 'app/modules/editor/components/project';
 import { ActionMode } from 'app/modules/editor/model/actionmode';
 import {
   ClipPathLayer,
@@ -20,20 +8,15 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
+import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
+import { getContentSize, getPosition } from 'app/modules/editor/scripts/dom';
 import { Dragger } from 'app/modules/editor/scripts/dragger';
 import { IntervalTree } from 'app/modules/editor/scripts/intervals';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
-import {
-  ActionModeService,
-  FileExportService,
-  FileImportService,
-  LayerTimelineService,
-  PlaybackService,
-  ThemeService,
-} from 'app/modules/editor/services';
+import type { EditorServices } from 'app/modules/editor/services/createEditorServices';
 import { Shortcut, ShortcutService } from 'app/modules/editor/services/shortcut.service';
-import { Duration, SnackBarService } from 'app/modules/editor/services/snackbar.service';
+import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { State, Store } from 'app/modules/editor/store';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import { getLayerTimelineState, isWorkspaceDirty } from 'app/modules/editor/store/common/selectors';
@@ -42,15 +25,11 @@ import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
-import * as $ from 'jquery';
 import _ from 'lodash';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { filter, first, map } from 'rxjs/operators';
+import type { RefObject } from 'react';
 
 import * as TimelineConsts from './constants';
-import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { LayerTimelineGridDirective, ScrubEvent } from './layertimelinegrid.directive';
-import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
+import type { ScrubEvent } from './TimelineGridRenderer';
 
 const IS_DEV_BUILD = !environment.production;
 
@@ -60,7 +39,7 @@ const LAYER_INDENT_PIXELS = 20;
 const MIN_BLOCK_DURATION = 10;
 const MAX_ZOOM = 10;
 const MIN_ZOOM = 0.01;
-const DEFAULT_HORIZ_ZOOM = 2; // 1ms = 2px.
+export const DEFAULT_HORIZ_ZOOM = 2; // 1ms = 2px.
 
 enum MouseActions {
   // We are dragging a block to a different location on the timeline.
@@ -73,34 +52,24 @@ enum MouseActions {
   ScalingTogetherEnd,
 }
 
-declare const ga: Function;
+export interface LayerTimelineElements {
+  readonly timeline: RefObject<HTMLElement | null>;
+  readonly timelineAnimation: RefObject<HTMLElement | null>;
+}
 
-@Component({
-  selector: 'app-layertimeline',
-  templateUrl: './layertimeline.component.html',
-  styleUrls: ['./layertimeline.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class LayerTimelineComponent extends DestroyableMixin()
-  implements OnInit, AfterViewInit, TimelineAnimationRowCallbacks, LayerListTreeCallbacks {
-  @ViewChild('timeline')
-  private timelineRef: ElementRef;
-  private $timeline: JQuery;
+/** Updates the layer timeline's React state. */
+export interface LayerTimelineView {
+  setHorizZoom(horizZoom: number): void;
+  setDragIndicator(info: DragIndicatorInfo): void;
+}
 
-  @ViewChild('timelineAnimation')
-  private timelineAnimationRef: ElementRef;
-  @ViewChildren(LayerTimelineGridDirective)
-  timelineDirectives: QueryList<LayerTimelineGridDirective>;
-
-  private readonly dragIndicatorSubject = new BehaviorSubject<DragIndicatorInfo>({
-    isVisible: false,
-    left: 0,
-    top: 0,
-  });
-  dragIndicatorObservable = this.dragIndicatorSubject.asObservable();
-  private readonly horizZoomSubject = new BehaviorSubject<number>(DEFAULT_HORIZ_ZOOM);
-  horizZoomObservable = this.horizZoomSubject.asObservable();
-  private currentTime_ = 0;
+/**
+ * Handles the layer timeline's mouse gestures (dragging blocks and layers, scrubbing, and
+ * zooming) along with the actions in its menus.
+ */
+export class LayerTimelineController extends DestroyableMixin() {
+  private dragIndicator: DragIndicatorInfo = { isVisible: false, left: 0, top: 0 };
+  private horizZoom_ = DEFAULT_HORIZ_ZOOM;
 
   private shouldSuppressRebuildSnapTimes = false;
   private snapTimes: Map<string, number[]>;
@@ -108,274 +77,222 @@ export class LayerTimelineComponent extends DestroyableMixin()
   private animation: Animation;
   private vectorLayer: VectorLayer;
   private selectedBlockIds: ReadonlySet<string>;
-
-  layerTimelineModel$: Observable<LayerTimelineModel>;
+  private currActionMode: ActionMode;
+  private autoZoomTimeout: number = undefined;
 
   // Mouse wheel zoom variables.
-  private $zoomStartActiveAnimation: JQuery;
+  private zoomStartActiveAnimation: HTMLElement;
   private targetHorizZoom: number;
   private performZoomRAF: number = undefined;
   private endZoomTimeout: number = undefined;
   private zoomStartTimeCursorPos: number;
 
   constructor(
-    private readonly fileImportService: FileImportService,
-    private readonly fileExportService: FileExportService,
-    private readonly snackBarService: SnackBarService,
-    private readonly playbackService: PlaybackService,
+    private readonly elements: LayerTimelineElements,
+    private readonly view: LayerTimelineView,
     private readonly store: Store<State>,
-    private readonly dialogService: DialogService,
-    private readonly projectService: ProjectService,
-    private readonly actionModeService: ActionModeService,
-    readonly shortcutService: ShortcutService,
-    private readonly layerTimelineService: LayerTimelineService,
-    readonly themeService: ThemeService,
+    private readonly services: EditorServices,
   ) {
     super();
   }
 
-  ngOnInit() {
-    let currActionMode: ActionMode;
-    this.layerTimelineModel$ = this.store.select(getLayerTimelineState).pipe(
-      map(
-        ({
-          animation,
-          vectorLayer,
-          isAnimationSelected,
-          selectedBlockIds,
-          isBeingReset,
-          isActionMode,
-          actionMode,
-          singleSelectedPathBlock,
-        }) => {
-          this.animation = animation;
-          this.rebuildSnapTimes();
-          this.vectorLayer = vectorLayer;
-          this.selectedBlockIds = selectedBlockIds;
-          if (isBeingReset) {
-            // TODO: store the 'zoom' info in the store to avoid using this isBeingReset flag
-            this.autoZoomToAnimation();
-          }
-          if (currActionMode === ActionMode.None && actionMode === ActionMode.Selection) {
-            // Move the current time to the beginning of the selected block when
-            // entering action mode.
-            this.playbackService.setCurrentTime(singleSelectedPathBlock.startTime);
-          }
-          currActionMode = actionMode;
-          return {
+  init() {
+    this.registerSubscription(
+      this.store
+        .select(getLayerTimelineState)
+        .subscribe(
+          ({
             animation,
             vectorLayer,
-            isAnimationSelected,
-            isActionMode,
-          };
-        },
-      ),
+            selectedBlockIds,
+            isBeingReset,
+            actionMode,
+            singleSelectedPathBlock,
+          }) => {
+            this.animation = animation;
+            this.rebuildSnapTimes();
+            this.vectorLayer = vectorLayer;
+            this.selectedBlockIds = selectedBlockIds;
+            if (isBeingReset) {
+              // TODO: store the 'zoom' info in the store to avoid using this isBeingReset flag
+              this.autoZoomToAnimation();
+            }
+            const prevActionMode = this.currActionMode;
+            this.currActionMode = actionMode;
+            if (prevActionMode === ActionMode.None && actionMode === ActionMode.Selection) {
+              // Move the current time to the beginning of the selected block when
+              // entering action mode.
+              this.services.playbackService.setCurrentTime(singleSelectedPathBlock.startTime);
+            }
+          },
+        ),
     );
     this.registerSubscription(
-      this.shortcutService.asObservable().subscribe(shortcut => {
+      this.services.shortcutService.asObservable().subscribe(shortcut => {
         if (shortcut === Shortcut.ZoomToFit) {
           this.autoZoomToAnimation();
         }
       }),
     );
+    this.autoZoomTimeout = window.setTimeout(() => this.autoZoomToAnimation());
   }
 
-  ngAfterViewInit() {
-    this.$timeline = $(this.timelineRef.nativeElement);
-    this.registerSubscription(
-      this.playbackService.asObservable().subscribe(event => {
-        // TODO: make this reactive/avoid storing current time locally
-        this.currentTime = event.currentTime;
-      }),
-    );
-    setTimeout(() => this.autoZoomToAnimation());
+  // @Override
+  dispose() {
+    super.dispose();
+    window.clearTimeout(this.autoZoomTimeout);
+    window.clearTimeout(this.endZoomTimeout);
+    window.cancelAnimationFrame(this.performZoomRAF);
   }
 
   private get horizZoom() {
-    return this.horizZoomSubject.getValue();
+    return this.horizZoom_;
   }
 
   private set horizZoom(horizZoom: number) {
-    this.horizZoomSubject.next(horizZoom);
+    this.horizZoom_ = horizZoom;
+    this.view.setHorizZoom(horizZoom);
   }
 
   private get currentTime() {
-    return this.currentTime_;
+    return this.services.playbackService.getCurrentTime();
   }
 
-  private set currentTime(currentTime: number) {
-    this.currentTime_ = currentTime;
-    this.timelineDirectives.forEach(dir => (dir.currentTime = currentTime));
+  private get timeline() {
+    return this.elements.timeline.current;
   }
 
-  // Called from the LayerTimelineComponent template.
   onNewWorkspaceClick() {
     const resetWorkspaceFn = () => {
-      ga('send', 'event', 'File', 'New');
+      trackEvent('File', 'New');
       this.store.dispatch(new ResetWorkspace());
     };
-    this.store
-      .select(isWorkspaceDirty)
-      .pipe(first())
-      .subscribe(isDirty => {
-        if (isDirty && !IS_DEV_BUILD) {
-          this.dialogService
-            .confirm('Start over?', `You'll lose any unsaved changes.`)
-            .pipe(filter(result => result))
-            .subscribe(resetWorkspaceFn);
-        } else {
-          resetWorkspaceFn();
-        }
-      });
-  }
-
-  // Called from the LayerTimelineComponent template.
-  onSaveToFileClick() {
-    ga('send', 'event', 'File', 'Save');
-    this.fileExportService.exportJSON();
-  }
-
-  // Called from the LayerTimelineComponent template.
-  onLoadDemoClick() {
-    ga('send', 'event', 'File', 'Demo');
-    this.dialogService
-      .pickDemo()
-      .pipe(filter(demoInfo => !!demoInfo))
-      .subscribe(selectedDemoInfo => {
-        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoInfo.title);
-
-        this.projectService
-          .getProject(`demos/${selectedDemoInfo.id}.shapeshifter`)
-          .then(({ vectorLayer, animation, hiddenLayerIds }) => {
-            this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
-          })
-          .catch(error => {
-            const msg =
-              'serviceWorker' in navigator && navigator.serviceWorker.controller
-                ? 'Demo not available offline'
-                : `Couldn't fetch demo`;
-            this.snackBarService.show(msg, 'Dismiss', Duration.Long);
-            return Promise.reject(error.message || error);
-          });
-      });
-  }
-
-  // Called from the LayerTimelineComponent template.
-  onExportSvgClick() {
-    ga('send', 'event', 'Export', 'SVG');
-    this.fileExportService.exportSvg();
-  }
-
-  // Called from the LayerTimelineComponent template.
-  onExportVectorDrawableClick() {
-    ga('send', 'event', 'Export', 'Vector Drawable');
-    this.fileExportService.exportVectorDrawable();
-  }
-
-  // Called from the LayerTimelineComponent template.
-  onExportAnimatedVectorDrawableClick() {
-    ga('send', 'event', 'Export', 'Animated Vector Drawable');
-    this.fileExportService.exportAnimatedVectorDrawable();
-  }
-
-  // Called from the LayerTimelineComponent template.
-  onExportSvgSpritesheetClick() {
-    ga('send', 'event', 'Export', 'SVG Spritesheet');
-    this.fileExportService.exportSvgSpritesheet();
-  }
-
-  // Called from the LayerTimelineComponent template.
-  onExportCssKeyframesClick() {
-    // TODO: implement this feature
-    ga('send', 'event', 'Export', 'CSS Keyframes');
-    this.fileExportService.exportCssKeyframes();
-  }
-
-  // Called from the LayerTimelineComponent template.
-  onAnimationHeaderTextClick(event: MouseEvent) {
-    // Stop propagation to ensure that animationTimelineClick() isn't called.
-    event.stopPropagation();
-    if (!this.actionModeService.isActionMode()) {
-      const isSelected = !ShortcutService.isOsDependentModifierKey(event) && !event.shiftKey;
-      this.layerTimelineService.selectAnimation(isSelected);
+    if (isWorkspaceDirty(this.store.getState()) && !IS_DEV_BUILD) {
+      this.services.dialogService
+        .confirm('Start over?', `You'll lose any unsaved changes.`)
+        .then(result => {
+          if (result) {
+            resetWorkspaceFn();
+          }
+        });
+    } else {
+      resetWorkspaceFn();
     }
   }
 
-  // Called from the LayerTimelineComponent template.
+  onSaveToFileClick() {
+    trackEvent('File', 'Save');
+    this.services.fileExportService.exportJSON();
+  }
+
+  onLoadDemoClick() {
+    trackEvent('File', 'Demo');
+    this.services.dialogService.pickDemo().then(selectedDemoInfo => {
+      if (!selectedDemoInfo) {
+        return;
+      }
+      trackEvent('Demos', 'Demo selected', selectedDemoInfo.title);
+      this.services.projectService
+        .getProject(`demos/${selectedDemoInfo.id}.shapeshifter`)
+        .then(({ vectorLayer, animation, hiddenLayerIds }) => {
+          this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
+        })
+        .catch(() => {
+          const msg =
+            'serviceWorker' in navigator && navigator.serviceWorker.controller
+              ? 'Demo not available offline'
+              : `Couldn't fetch demo`;
+          this.services.snackBarService.show(msg, 'Dismiss', Duration.Long);
+        });
+    });
+  }
+
+  onExportSvgClick() {
+    trackEvent('Export', 'SVG');
+    this.services.fileExportService.exportSvg();
+  }
+
+  onExportVectorDrawableClick() {
+    trackEvent('Export', 'Vector Drawable');
+    this.services.fileExportService.exportVectorDrawable();
+  }
+
+  onExportAnimatedVectorDrawableClick() {
+    trackEvent('Export', 'Animated Vector Drawable');
+    this.services.fileExportService.exportAnimatedVectorDrawable();
+  }
+
+  onExportSvgSpritesheetClick() {
+    trackEvent('Export', 'SVG Spritesheet');
+    this.services.fileExportService.exportSvgSpritesheet();
+  }
+
+  onExportCssKeyframesClick() {
+    // TODO: implement this feature
+    trackEvent('Export', 'CSS Keyframes');
+    this.services.fileExportService.exportCssKeyframes();
+  }
+
+  onAnimationHeaderTextClick(event: MouseEvent) {
+    if (!this.services.actionModeService.isActionMode()) {
+      const isSelected = !ShortcutService.isOsDependentModifierKey(event) && !event.shiftKey;
+      this.services.layerTimelineService.selectAnimation(isSelected);
+    }
+  }
+
   onTimelineHeaderScrub(event: ScrubEvent) {
     let time = event.time;
     if (!event.disableSnap) {
       time = this.snapTime(time, false);
     }
-    this.currentTime = time;
-    this.playbackService.setCurrentTime(time);
+    this.services.playbackService.setCurrentTime(time);
   }
 
-  // Called from the LayerTimelineComponent template.
   onAddPathLayerClick() {
-    this.store
-      .select(getVectorLayer)
-      .pipe(first())
-      .subscribe(vl => {
-        const layer = new PathLayer({
-          name: LayerUtil.getUniqueLayerName([vl], 'path'),
-          children: [],
-          pathData: undefined,
-        });
-        this.layerTimelineService.addLayer(layer);
-      });
+    const vl = getVectorLayer(this.store.getState());
+    const layer = new PathLayer({
+      name: LayerUtil.getUniqueLayerName([vl], 'path'),
+      children: [],
+      pathData: undefined,
+    });
+    this.services.layerTimelineService.addLayer(layer);
   }
 
-  // Called from the LayerTimelineComponent template.
   onAddClipPathLayerClick() {
-    this.store
-      .select(getVectorLayer)
-      .pipe(first())
-      .subscribe(vl => {
-        const layer = new ClipPathLayer({
-          name: LayerUtil.getUniqueLayerName([vl], 'mask'),
-          children: [],
-          pathData: undefined,
-        });
-        this.layerTimelineService.addLayer(layer);
-      });
+    const vl = getVectorLayer(this.store.getState());
+    const layer = new ClipPathLayer({
+      name: LayerUtil.getUniqueLayerName([vl], 'mask'),
+      children: [],
+      pathData: undefined,
+    });
+    this.services.layerTimelineService.addLayer(layer);
   }
 
-  // Called from the LayerTimelineComponent template.
   onAddGroupLayerClick() {
-    this.store
-      .select(getVectorLayer)
-      .pipe(first())
-      .subscribe(vl => {
-        const name = LayerUtil.getUniqueLayerName([vl], 'group');
-        const layer = new GroupLayer({ name, children: [] });
-        this.layerTimelineService.addLayer(layer);
-      });
+    const vl = getVectorLayer(this.store.getState());
+    const name = LayerUtil.getUniqueLayerName([vl], 'group');
+    const layer = new GroupLayer({ name, children: [] });
+    this.services.layerTimelineService.addLayer(layer);
   }
 
-  // @Override TimelineAnimationRowCallbacks
   onTimelineBlockMouseDown(mouseDownEvent: MouseEvent, dragBlock: AnimationBlock) {
     const animation = this.animation;
-    // TODO: this JQuery 'class' stuff may not work with view encapsulation enabled
-    const $target = $(mouseDownEvent.target);
+    const target = mouseDownEvent.target as Element;
 
     // Some geometry and hit-testing basics.
-    const animRect = $(mouseDownEvent.target as Element)
-      .parents('.slt-property')
-      .get(0)
-      .getBoundingClientRect();
+    const animRect = target.closest('.slt-property').getBoundingClientRect();
     const xToTimeFn = (x: number) => ((x - animRect.left) / animRect.width) * animation.duration;
     const downTime = xToTimeFn(mouseDownEvent.clientX);
 
     // Determine the action based on where the user clicked and the modifier keys.
     const metaKey = ShortcutService.isOsDependentModifierKey(mouseDownEvent);
     let action = MouseActions.Moving;
-    if ($target.hasClass('slt-timeline-block-edge-end')) {
+    if (target.classList.contains('slt-timeline-block-edge-end')) {
       action =
         mouseDownEvent.shiftKey || metaKey
           ? MouseActions.ScalingTogetherEnd
           : MouseActions.ScalingUniformEnd;
-    } else if ($target.hasClass('slt-timeline-block-edge-start')) {
+    } else if (target.classList.contains('slt-timeline-block-edge-start')) {
       action =
         mouseDownEvent.shiftKey || metaKey
           ? MouseActions.ScalingTogetherStart
@@ -498,7 +415,6 @@ export class LayerTimelineComponent extends DestroyableMixin()
       );
     };
 
-    // tslint:disable-next-line: no-unused-expression
     new Dragger({
       direction: 'horizontal',
       downX: mouseDownEvent.clientX,
@@ -687,22 +603,18 @@ export class LayerTimelineComponent extends DestroyableMixin()
             break;
           }
         }
-        this.store
-          .select(getAnimation)
-          .pipe(first())
-          .subscribe(anim => {
-            const blocks = replacementBlocks.filter(replacementBlock => {
-              // Note that existingBlock may not be found if changes were made to the animation
-              // (i.e. a block was deleted during a drag).
-              const existingBlock = _.find(anim.blocks, b => replacementBlock.id === b.id);
-              return (
-                existingBlock &&
-                (replacementBlock.startTime !== existingBlock.startTime ||
-                  replacementBlock.endTime !== existingBlock.endTime)
-              );
-            });
-            this.layerTimelineService.updateBlocks(blocks);
-          });
+        const anim = getAnimation(this.store.getState());
+        const blocks = replacementBlocks.filter(replacementBlock => {
+          // Note that existingBlock may not be found if changes were made to the animation
+          // (i.e. a block was deleted during a drag).
+          const existingBlock = _.find(anim.blocks, b => replacementBlock.id === b.id);
+          return (
+            existingBlock &&
+            (replacementBlock.startTime !== existingBlock.startTime ||
+              replacementBlock.endTime !== existingBlock.endTime)
+          );
+        });
+        this.services.layerTimelineService.updateBlocks(blocks);
       },
     });
   }
@@ -743,23 +655,20 @@ export class LayerTimelineComponent extends DestroyableMixin()
     return isFinite(bestSnapTime) ? bestSnapTime : time;
   }
 
-  // @Override TimelineAnimationRowCallbacks
   onTimelineBlockClick(event: MouseEvent, block: AnimationBlock) {
     const clearExisting = !ShortcutService.isOsDependentModifierKey(event) && !event.shiftKey;
-    this.layerTimelineService.selectBlock(block.id, clearExisting);
+    this.services.layerTimelineService.selectBlock(block.id, clearExisting);
   }
 
-  // @Override TimelineAnimationRowCallbacks
   onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
-    this.playbackService.setCurrentTime(block.startTime);
+    this.services.playbackService.setCurrentTime(block.startTime);
   }
 
-  // @Override LayerListTreeComponentCallbacks
-  onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
+  onAddTimelineBlockClick(layer: Layer, propertyName: string) {
     const clonedValue = layer.inspectableProperties
       .get(propertyName)
       .cloneValue((layer as any)[propertyName]);
-    this.layerTimelineService.addBlocks([
+    this.services.layerTimelineService.addBlocks([
       {
         layerId: layer.id,
         propertyName,
@@ -770,47 +679,43 @@ export class LayerTimelineComponent extends DestroyableMixin()
     ]);
   }
 
-  // @Override LayerListTreeComponentCallbacks
-  onConvertToClipPathClick(event: MouseEvent, layer: Layer) {
+  onConvertToClipPathClick(layer: Layer) {
     const clipPathLayer = new ClipPathLayer(layer as PathLayer);
     clipPathLayer.id = _.uniqueId();
-    this.layerTimelineService.swapLayers(layer.id, clipPathLayer);
+    this.services.layerTimelineService.swapLayers(layer.id, clipPathLayer);
   }
 
-  // @Override LayerListTreeComponentCallbacks
-  onConvertToPathClick(event: MouseEvent, layer: Layer) {
+  onConvertToPathClick(layer: Layer) {
     const pathLayer = new PathLayer(layer as ClipPathLayer);
     pathLayer.id = _.uniqueId();
-    this.layerTimelineService.swapLayers(layer.id, pathLayer);
+    this.services.layerTimelineService.swapLayers(layer.id, pathLayer);
   }
 
-  // @Override LayerListTreeComponentCallbacks
-  onFlattenGroupClick(event: MouseEvent, layer: Layer) {
-    this.layerTimelineService.flattenGroupLayer(layer.id);
+  onFlattenGroupClick(layer: Layer) {
+    this.services.layerTimelineService.flattenGroupLayer(layer.id);
   }
 
-  // @Override LayerListTreeComponentCallbacks
   onLayerClick(event: MouseEvent, clickedLayer: Layer) {
     const isMeta = ShortcutService.isOsDependentModifierKey(event);
     const isShift = event.shiftKey;
     if (!isMeta && !isShift) {
       // Clear the existing selections.
-      this.layerTimelineService.selectLayer(clickedLayer.id, true);
+      this.services.layerTimelineService.selectLayer(clickedLayer.id, true);
       return;
     }
 
     if (isMeta && !isShift) {
       // Add the single layer to the existing selections, toggling the
       // layer if it is already selected.
-      this.layerTimelineService.selectLayer(clickedLayer.id, false);
+      this.services.layerTimelineService.selectLayer(clickedLayer.id, false);
       return;
     }
 
     if (isMeta && isShift) {
       // Add the single layer to the existing selections.
-      const layerIds = this.layerTimelineService.getSelectedLayerIds();
+      const layerIds = this.services.layerTimelineService.getSelectedLayerIds();
       layerIds.add(clickedLayer.id);
-      this.layerTimelineService.setSelectedLayers(layerIds);
+      this.services.layerTimelineService.setSelectedLayers(layerIds);
       return;
     }
 
@@ -818,10 +723,10 @@ export class LayerTimelineComponent extends DestroyableMixin()
     const { vectorLayer } = this;
     const topDownSortedLayers = LayerUtil.runPreorderTraversal(vectorLayer);
     const clickedLayerIndex = _.findIndex(topDownSortedLayers, l => l.id === clickedLayer.id);
-    const selectedLayerIds = this.layerTimelineService.getSelectedLayerIds();
+    const selectedLayerIds = this.services.layerTimelineService.getSelectedLayerIds();
     // TODO: re-implement this behavior to match the behavior of Sketch
     // TODO will need to store most recently selected layer ID in order to implement this behavior
-    const { startIndex, endIndex } = (function() {
+    const { startIndex, endIndex } = (function () {
       // Find the first selected layer before clickedLayerIndex.
       const beforeLayerIndex = _.findLastIndex(
         topDownSortedLayers,
@@ -848,38 +753,37 @@ export class LayerTimelineComponent extends DestroyableMixin()
     for (let i = startIndex; i <= endIndex; i++) {
       selectedLayerIds.add(topDownSortedLayers[i].id);
     }
-    this.layerTimelineService.setSelectedLayers(selectedLayerIds);
+    this.services.layerTimelineService.setSelectedLayers(selectedLayerIds);
   }
 
-  // @Override LayerListTreeComponentCallbacks
   onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
     const recursive = ShortcutService.isOsDependentModifierKey(event) || event.shiftKey;
-    this.layerTimelineService.toggleExpandedLayer(layer.id, recursive);
+    this.services.layerTimelineService.toggleExpandedLayer(layer.id, recursive);
   }
 
-  // @Override LayerListTreeComponentCallbacks
-  onLayerToggleVisibility(event: MouseEvent, layer: Layer) {
-    this.layerTimelineService.toggleVisibleLayer(layer.id);
+  onLayerToggleVisibility(layer: Layer) {
+    this.services.layerTimelineService.toggleVisibleLayer(layer.id);
   }
 
-  // @Override LayerListTreeComponentCallbacks
   onLayerMouseDown(mouseDownEvent: MouseEvent, mouseDownDragLayer: Layer) {
-    const $layersList = $(mouseDownEvent.target as Element).parents('.slt-layers-list');
-    const $scroller = $(mouseDownEvent.target as Element).parents('.slt-layers-list-scroller');
+    const layersList = (mouseDownEvent.target as Element).closest('.slt-layers-list');
+    const scroller = (mouseDownEvent.target as Element).closest('.slt-layers-list-scroller');
 
     interface LayerInfo {
       layer: Layer;
       element: Element;
-      localRect: ClientRect;
+      localRect: Rect;
       moveIntoEmptyLayerGroup?: boolean;
     }
 
     let orderedLayerInfos: LayerInfo[] = [];
-    let scrollerRect: ClientRect;
+    let scrollerRect: DOMRect;
     let targetLayerInfo: LayerInfo;
     let targetEdge: string;
 
-    const dragLayers: ReadonlyArray<Layer> = (function(lts: LayerTimelineService) {
+    const dragLayers: ReadonlyArray<Layer> = (function (
+      lts: EditorServices['layerTimelineService'],
+    ) {
       const selectedLayerIds = lts.getSelectedLayerIds();
       // Don't drag any other selected layers if the drag layer isn't selected itself.
       // At the end of the drag, we will select the drag layer and deselect the others.
@@ -888,9 +792,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
         : new Set([mouseDownDragLayer.id]);
       const topDownSortedLayers = LayerUtil.runPreorderTraversal(lts.getVectorLayer());
       return topDownSortedLayers.filter(l => dragLayerIdSet.has(l.id));
-    })(this.layerTimelineService);
+    })(this.services.layerTimelineService);
 
-    // tslint:disable-next-line: no-unused-expression
     new Dragger({
       direction: 'both',
       downX: mouseDownEvent.clientX,
@@ -899,17 +802,16 @@ export class LayerTimelineComponent extends DestroyableMixin()
       onBeginDragFn: () => {
         // Build up a list of all layers ordered by Y position.
         orderedLayerInfos = [];
-        scrollerRect = $scroller.get(0).getBoundingClientRect();
-        const scrollTop = $scroller.scrollTop();
-        $layersList.find('.slt-layer-container').each((__, element) => {
-          // toString() is necessary because JQuery converts the ID into a number.
-          const layerId: string = ($(element).data('layer-id') || '').toString();
+        scrollerRect = scroller.getBoundingClientRect();
+        const scrollTop = scroller.scrollTop;
+        layersList.querySelectorAll<HTMLElement>('.slt-layer-container').forEach(element => {
+          const layerId = element.dataset.layerId;
           if (!layerId) {
             // The root layer doesn't have an ID set.
             return;
           }
 
-          let rect = element.getBoundingClientRect();
+          let rect: Rect = element.getBoundingClientRect();
           rect = {
             left: rect.left,
             top: rect.top + scrollTop - scrollerRect.top,
@@ -941,7 +843,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
       },
 
       onDragFn: event => {
-        const localEventY = event.clientY - scrollerRect.top + $scroller.scrollTop();
+        const localEventY = event.clientY - scrollerRect.top + scroller.scrollTop;
         // Find the target layer and edge (top or bottom).
         targetLayerInfo = undefined;
         let minDistance = Infinity;
@@ -1046,8 +948,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
   }
 
   private updateDragIndicator(info: DragIndicatorInfo) {
-    const curr = this.dragIndicatorSubject.getValue();
-    this.dragIndicatorSubject.next({ ...curr, ...info });
+    this.dragIndicator = { ...this.dragIndicator, ...info };
+    this.view.setDragIndicator(this.dragIndicator);
   }
 
   /**
@@ -1055,9 +957,9 @@ export class LayerTimelineComponent extends DestroyableMixin()
    */
   onWheelEvent(event: WheelEvent) {
     const startZoomFn = () => {
-      this.$zoomStartActiveAnimation = $(this.timelineAnimationRef.nativeElement);
+      this.zoomStartActiveAnimation = this.elements.timelineAnimation.current;
       this.zoomStartTimeCursorPos =
-        this.$zoomStartActiveAnimation.position().left +
+        getPosition(this.zoomStartActiveAnimation).left +
         this.currentTime * this.horizZoom +
         TimelineConsts.TIMELINE_ANIMATION_PADDING;
     };
@@ -1066,20 +968,20 @@ export class LayerTimelineComponent extends DestroyableMixin()
       this.horizZoom = this.targetHorizZoom;
 
       // Set the scroll offset such that the time cursor remains at zoomStartTimeCursorPos
-      if (this.$zoomStartActiveAnimation) {
+      if (this.zoomStartActiveAnimation) {
         const newScrollLeft =
-          this.$zoomStartActiveAnimation.position().left +
-          this.$timeline.scrollLeft() +
+          getPosition(this.zoomStartActiveAnimation).left +
+          this.timeline.scrollLeft +
           this.currentTime * this.horizZoom +
           TimelineConsts.TIMELINE_ANIMATION_PADDING -
           this.zoomStartTimeCursorPos;
-        this.$timeline.scrollLeft(newScrollLeft);
+        this.timeline.scrollLeft = newScrollLeft;
       }
     };
 
     const endZoomFn = () => {
       this.zoomStartTimeCursorPos = 0;
-      this.$zoomStartActiveAnimation = undefined;
+      this.zoomStartActiveAnimation = undefined;
       this.endZoomTimeout = undefined;
       this.targetHorizZoom = 0;
     };
@@ -1093,7 +995,10 @@ export class LayerTimelineComponent extends DestroyableMixin()
       }
 
       event.preventDefault();
-      this.targetHorizZoom *= 1.01 ** -event.deltaY;
+      // Firefox scrolls by lines instead of pixels.
+      const deltaY =
+        event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * 16 : event.deltaY;
+      this.targetHorizZoom *= 1.01 ** -deltaY;
       this.targetHorizZoom = _.clamp(this.targetHorizZoom, MIN_ZOOM, MAX_ZOOM);
       if (this.targetHorizZoom !== this.horizZoom) {
         // Zoom has changed.
@@ -1113,56 +1018,37 @@ export class LayerTimelineComponent extends DestroyableMixin()
     return undefined;
   }
 
-  // Called from the LayerTimelineComponent template.
-  onZoomToFitClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.autoZoomToAnimation();
-  }
-
   /**
    * Zooms the timeline to fit the first animation.
    */
-  private autoZoomToAnimation() {
+  autoZoomToAnimation() {
     // Shave off 48 pixels for safety.
-    this.horizZoom = (this.$timeline.width() - 48) / this.animation.duration;
+    this.horizZoom = (getContentSize(this.timeline, 'width') - 48) / this.animation.duration;
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.
   // We clear the element's value to make it possible to import the same file
   // more than once.
-  onLaunchFilePickerClick(event: MouseEvent, sourceElementId: string) {
-    $(`#${sourceElementId}`)
-      .val('')
-      .trigger('click');
+  onLaunchFilePickerClick(input: HTMLInputElement) {
+    input.value = '';
+    input.click();
   }
 
-  // Called from the LayerTimelineComponent template.
-  onImportedFilesPicked(event: MouseEvent, fileList: FileList) {
-    // TODO: determine if calling stopPropogation() is needed?
-    event.stopPropagation();
-    this.fileImportService.import(fileList);
-  }
-
-  onTopSplitterChanged() {
-    if (this.timelineDirectives) {
-      this.timelineDirectives.forEach(d => d.redraw());
-    }
-  }
-
-  // Used by *ngFor loop.
-  trackLayerFn(index: number, layer: Layer) {
-    return layer.id;
+  onImportedFilesPicked(fileList: FileList) {
+    this.services.fileImportService.import(fileList);
   }
 }
 
-interface LayerTimelineModel {
-  readonly animation: Animation;
-  readonly vectorLayer: VectorLayer;
-  readonly isAnimationSelected: boolean;
-  readonly isActionMode: boolean;
+interface Rect {
+  readonly left: number;
+  readonly top: number;
+  readonly bottom: number;
+  readonly height: number;
+  readonly right: number;
+  readonly width: number;
 }
 
-interface DragIndicatorInfo {
+export interface DragIndicatorInfo {
   left?: number;
   top?: number;
   isVisible?: boolean;

@@ -14,7 +14,9 @@
                 box-shadow: 0 -1px 0 mat-color($foreground, divider) inset;
             }
             .slt-timeline-block {
-                background-color: mat-color(mat-palette(if(sass($is-dark): $mat-indigo; else: $mat-green), 200));
+                background-color: mat-color(
+                    mat-palette(if(sass($is-dark): $mat-indigo; else: $mat-green), 200)
+                );
                 &.is-selected {
                     background-color: mat-color($accent);
                 }

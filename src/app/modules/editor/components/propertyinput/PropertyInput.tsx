@@ -2,6 +2,7 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
+import { Tip } from 'app/modules/editor/components/common/Tip';
 import { Icon, type IconName } from 'app/modules/editor/components/icons/Icon';
 import { Splitter } from 'app/modules/editor/components/splitter';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
@@ -232,19 +233,20 @@ function PropertyInputHeader({
         </>
       )}
       {shouldShowStartActionModeButton(model) && (
-        <Tooltip title="Edit path morphing animation" placement="left">
-          {/* Tooltips need a wrapper element to show up on disabled buttons. */}
-          <span>
-            <IconButton
-              className="spi-secondary-icon"
-              aria-label="Edit path morphing animation"
-              disabled={isStartActionModeDisabled}
-              onClick={onStartActionModeClick}
-            >
-              <Icon name="edit" />
-            </IconButton>
-          </span>
-        </Tooltip>
+        <Tip
+          title="Edit path morphing animation"
+          placement="left"
+          disabled={isStartActionModeDisabled}
+        >
+          <IconButton
+            className="spi-secondary-icon"
+            aria-label="Edit path morphing animation"
+            disabled={isStartActionModeDisabled}
+            onClick={onStartActionModeClick}
+          >
+            <Icon name="edit" />
+          </IconButton>
+        </Tip>
       )}
     </div>
   );

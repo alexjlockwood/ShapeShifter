@@ -11,14 +11,13 @@ interface SplitterProps {
   readonly min?: number;
   // Used to save the size across page loads.
   readonly persistId?: string;
-  readonly onSplit?: (size: number) => void;
 }
 
 /**
  * Resizes its parent element when dragged. The splitter should be placed along the parent's
  * specified edge.
  */
-export function Splitter({ edge, min = 100, persistId, onSplit }: SplitterProps) {
+export function Splitter({ edge, min = 100, persistId }: SplitterProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -31,7 +30,6 @@ export function Splitter({ edge, min = 100, persistId, onSplit }: SplitterProps)
       localStorage[persistKey] = size;
     }
     setContentSize(ref.current.parentElement, dimension, size);
-    onSplit?.(size);
   };
 
   // Restore the size from the last session, if there is one.

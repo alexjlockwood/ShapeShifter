@@ -9,6 +9,8 @@ const sharedOptions: ThemeOptions = {
   components: {
     MuiIconButton: {
       defaultProps: { color: 'inherit' },
+      // Angular Material's icon buttons didn't have a hover background.
+      styleOverrides: { root: { '&:hover': { backgroundColor: 'transparent' } } },
     },
     MuiMenuItem: {
       styleOverrides: {
@@ -19,7 +21,12 @@ const sharedOptions: ThemeOptions = {
       defaultProps: { anchorOrigin: { vertical: 'bottom', horizontal: 'center' } },
     },
     MuiTooltip: {
-      defaultProps: { enterDelay: 500, enterNextDelay: 500, placement: 'bottom' },
+      defaultProps: {
+        enterDelay: 500,
+        enterNextDelay: 500,
+        placement: 'bottom',
+        disableInteractive: true,
+      },
     },
   },
 };

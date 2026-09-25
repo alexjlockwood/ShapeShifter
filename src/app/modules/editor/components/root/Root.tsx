@@ -1,5 +1,6 @@
 import { Canvas } from 'app/modules/editor/components/canvas';
 import { DropFilesAction } from 'app/modules/editor/components/dialogs';
+import { LayerTimeline } from 'app/modules/editor/components/layertimeline';
 import { Playback } from 'app/modules/editor/components/playback';
 import { PropertyInput } from 'app/modules/editor/components/propertyinput';
 import { SplashScreen } from 'app/modules/editor/components/splashscreen/SplashScreen';
@@ -195,6 +196,7 @@ function Workspace() {
         {!isActionMode && <PropertyInput />}
       </div>
       {/* Layer list & animation timeline. */}
+      <LayerTimeline />
     </div>
   );
 }

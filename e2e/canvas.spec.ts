@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { expect, test } from './fixtures';
+import { boundingBox, expect, test } from './fixtures';
 
 function getCurrentTime(page: Page) {
   return page.evaluate(() => {
@@ -69,8 +69,10 @@ test('shows the start and end of the morph in action mode', async ({ page }) => 
   }
   await page.screenshot({ path: 'test-results/action-mode.png' });
 
-  // Clicking inside of the triangle in the start canvas selects it.
-  await page.mouse.click(230, 330);
+  // Clicking inside of the triangle's top half in the start canvas selects it. The subpath's
+  // points are at (8, 5), (8, 12), and (19, 12) in the 24x24 viewport.
+  const box = await boundingBox(page.locator('.app-canvas.start canvas.overlay-canvas'));
+  await page.mouse.click(box.x + (box.width * 10) / 24, box.y + (box.height * 9) / 24);
   const selections = await page.evaluate(() => {
     const { store } = (window as any).shapeshifter;
     return store.getState().present.actionmode.selections;

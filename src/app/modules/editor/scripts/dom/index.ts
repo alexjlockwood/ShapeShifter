@@ -52,3 +52,33 @@ function getPaddingAndBorder(style: CSSStyleDeclaration, dimension: Dimension) {
     0,
   );
 }
+
+/**
+ * Returns the position of the element's margin box relative to its offset parent's padding
+ * box, like jQuery's position(). Unlike offsetLeft and offsetTop, this changes as the element's
+ * ancestors scroll.
+ */
+export function getPosition(element: HTMLElement) {
+  const offsetParent = (element.offsetParent as HTMLElement) || document.documentElement;
+  const rect = element.getBoundingClientRect();
+  const parentRect = offsetParent.getBoundingClientRect();
+  const style = getComputedStyle(element);
+  const parentStyle = getComputedStyle(offsetParent);
+  return {
+    left:
+      rect.left -
+      parentRect.left -
+      parseFloat(parentStyle.borderLeftWidth) -
+      parseFloat(style.marginLeft),
+    top:
+      rect.top -
+      parentRect.top -
+      parseFloat(parentStyle.borderTopWidth) -
+      parseFloat(style.marginTop),
+  };
+}
+
+/** Returns whether the element is rendered, like jQuery's is(':visible'). */
+export function isVisible(element: HTMLElement) {
+  return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+}

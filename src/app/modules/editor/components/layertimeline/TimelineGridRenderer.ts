@@ -1,58 +1,32 @@
-import {
-  Directive,
-  ElementRef,
-  EventEmitter,
-  HostListener,
-  Input,
-  OnInit,
-  Output,
-} from '@angular/core';
 import { Animation } from 'app/modules/editor/model/timeline';
+import { getContentSize, isVisible } from 'app/modules/editor/scripts/dom';
 import { Dragger } from 'app/modules/editor/scripts/dragger';
-import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
 import { ShortcutService, ThemeService } from 'app/modules/editor/services';
-import * as $ from 'jquery';
 import _ from 'lodash';
-import { filter } from 'rxjs/operators';
 
 import { TIMELINE_ANIMATION_PADDING } from './constants';
 
 const HEADER_HEIGHT = 40;
 const GRID_INTERVALS_MS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000];
 
-@Directive({ selector: '[appLayerTimelineGrid]' })
-export class LayerTimelineGridDirective extends DestroyableMixin() implements OnInit {
-  @Input()
-  isHeader: boolean;
-  @Output()
-  scrub = new EventEmitter<ScrubEvent>();
-
-  private readonly canvas: HTMLCanvasElement;
-  private readonly $canvas: JQuery;
+/**
+ * Draws the timeline's time labels (for the header) or grid lines, along with the current time.
+ */
+export class TimelineGridRenderer {
   private animation_: Animation;
   private currentTime_: number;
   private horizZoom_: number;
 
-  constructor(elementRef: ElementRef, private readonly themeService: ThemeService) {
-    super();
-    this.canvas = elementRef.nativeElement;
-    this.$canvas = $(this.canvas);
-  }
-
-  ngOnInit() {
-    this.registerSubscription(
-      this.themeService
-        .asObservable()
-        .pipe(filter(t => !t.isInitialPageLoad))
-        .subscribe(t => this.redraw()),
-    );
-  }
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    private readonly isHeader: boolean,
+    private readonly themeService: ThemeService,
+  ) {}
 
   get horizZoom() {
     return this.horizZoom_;
   }
 
-  @Input()
   set horizZoom(horizZoom: number) {
     if (this.horizZoom_ !== horizZoom) {
       this.horizZoom_ = horizZoom;
@@ -75,45 +49,45 @@ export class LayerTimelineGridDirective extends DestroyableMixin() implements On
     return this.animation_;
   }
 
-  @Input()
   set animation(animation: Animation) {
     this.animation_ = animation;
     this.redraw();
   }
 
-  @HostListener('mousedown', ['$event'])
-  onMouseDown(event: MouseEvent) {
-    this.handleScrubEvent(event.clientX, ShortcutService.isOsDependentModifierKey(event));
-    // tslint:disable-next-line: no-unused-expression
+  /** Starts scrubbing through the animation, reporting the time as the mouse moves. */
+  startScrubbing(event: MouseEvent, onScrub: (event: ScrubEvent) => void) {
+    const scrubFn = (e: MouseEvent) => {
+      onScrub(this.getScrubEvent(e.clientX, ShortcutService.isOsDependentModifierKey(e)));
+    };
+    scrubFn(event);
     new Dragger({
       direction: 'horizontal',
       downX: event.clientX,
       downY: event.clientY,
       shouldSkipSlopCheck: true,
-      onDragFn: e => this.handleScrubEvent(e.clientX, ShortcutService.isOsDependentModifierKey(e)),
+      onDragFn: scrubFn,
     });
-    event.preventDefault();
-    return false;
   }
 
-  private handleScrubEvent(clientX: number, disableSnap: boolean) {
-    const x = clientX - this.$canvas.offset().left;
+  private getScrubEvent(clientX: number, disableSnap: boolean): ScrubEvent {
+    const x = clientX - this.canvas.getBoundingClientRect().left;
     let time =
-      ((x - TIMELINE_ANIMATION_PADDING) / (this.$canvas.width() - TIMELINE_ANIMATION_PADDING * 2)) *
+      ((x - TIMELINE_ANIMATION_PADDING) /
+        (getContentSize(this.canvas, 'width') - TIMELINE_ANIMATION_PADDING * 2)) *
       this.animation.duration;
     time = _.clamp(time, 0, this.animation.duration);
-    this.scrub.emit({ time, disableSnap });
+    return { time, disableSnap };
   }
 
   redraw() {
-    if (!this.$canvas.is(':visible')) {
+    if (!this.animation || !isVisible(this.canvas)) {
       return;
     }
 
-    const width = this.$canvas.width();
-    const height = this.$canvas.height();
-    this.$canvas.attr('width', width * window.devicePixelRatio);
-    this.$canvas.attr('height', height * window.devicePixelRatio);
+    const width = getContentSize(this.canvas, 'width');
+    const height = getContentSize(this.canvas, 'height');
+    this.canvas.setAttribute('width', `${width * window.devicePixelRatio}`);
+    this.canvas.setAttribute('height', `${height * window.devicePixelRatio}`);
 
     const ctx = this.canvas.getContext('2d');
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
@@ -157,13 +131,6 @@ export class LayerTimelineGridDirective extends DestroyableMixin() implements On
       ctx.fillStyle = 'rgba(244, 67, 54, .7)';
       ctx.fillRect(this.currentTime * this.horizZoom - 1, HEADER_HEIGHT, 2, height - HEADER_HEIGHT);
     }
-  }
-
-  @HostListener('click', ['$event'])
-  onClick(event: MouseEvent) {
-    // This ensures that click events originating on top of the
-    // host element aren't triggered in the component.
-    event.stopPropagation();
   }
 }
 
