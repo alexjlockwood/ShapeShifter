@@ -49,10 +49,6 @@
   current time when the duration shrinks, so the first press only jumps to the end without
   starting playback (`services/playback.service.ts`). (STORE-9, confirmed by a test; a candidate
   fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
-- **Pasting JSON with a malformed `blocks` field throws.** Pasting `{"blocks": {"a": 1}}` or
-  `{"blocks": [null]}` throws an uncaught `TypeError`, reported to Bugsnag. Check `Array.isArray`,
-  and drop blocks that `AnimationBlock.from` can't read (`services/clipboard.service.ts`).
-  (STORE-10, low, confirmed by a test)
 - **Pairing subpaths gets the paired set and the selection wrong.** After a few pairings the wrong
   subpaths are drawn as paired, and the selection can move to another subpath, so R, B, and F act
   on the wrong one. The code assumes the paired subpaths come first, and ignores that

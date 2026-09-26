@@ -59,7 +59,7 @@ plausible. None of these are triaged yet. They're grouped by area in `docs/bugs/
 area, in the same style as the rest of this file:
 
 - **Path model** (18 bugs): `docs/bugs/path-model.md`
-- **Store and services** (18 bugs): `docs/bugs/store-and-services.md`
+- **Store and services** (17 bugs): `docs/bugs/store-and-services.md`
 - **Layers and properties** (10 bugs): `docs/bugs/layers-and-properties.md`
 - **Import** (15 bugs): `docs/bugs/import.md`
 - **Export** (7 bugs): `docs/bugs/export.md`

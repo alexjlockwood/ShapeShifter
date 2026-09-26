@@ -1,5 +1,8 @@
 export function serializeToString(node: any, options: any): string {
   options = options || {};
+  // Note this doesn't set isRootNode, so the root's namespace is never written. The serializers
+  // create their roots without one (and add the SVG namespace as an attribute), but some browsers
+  // gave them one anyway, which shouldn't end up in the exports.
   options.rootNode = true;
   return removeInvalidCharacters(nodeTreeToXHTML(node, options));
 }
@@ -71,7 +74,7 @@ function serializeTag(node: any, options: any) {
     output += Array(options._indentLevel * options.indent + 1).join(' ');
   }
   output += '<' + getTagName(node);
-  output += serializeNamespace(node, options.isRootNode);
+  output += serializeNamespace(node, options);
 
   const attributes = node.attributes || node.attrs;
   Array.prototype.forEach.call(attributes, (attr: any) => {
