@@ -10,7 +10,10 @@ was ported from ngrx. `store/createEditorStore.ts` builds it.
 - `store.getState()` returns redux-undo's history: `{ past, present, future, timestamp }`. The
   editor state is `present`, with one slice per directory: `layers`, `timeline`, `playback`,
   `actionmode`, `reset`, `theme`, and `paper` (`store/reducer.ts`).
-- `paper` is only written by the paper.js beta editor, which isn't compiled, so it never changes.
+- `paper` is written by the paper.js beta editor, which isn't compiled, and by
+  `services/StoreUtil.ts` and `services/layertimeline.service.ts` only when `environment.beta` is
+  true, which it never is. So it doesn't change in the shipped app, but it's still used by compiled
+  code, so don't delete it.
 - `store.select(selector)` returns an rxjs observable that emits the current value right away and
   then each change (by reference). Services and imperative controllers subscribe with it. There's
   no `store.subscribe`.
@@ -31,9 +34,10 @@ was ported from ngrx. `store/createEditorStore.ts` builds it.
 From the outside in: the action logger (dev only), freeze (dev and tests), undo, batch, reset.
 
 - **Undo** (`store/undoredo/metareducer.ts`) keeps 30 states. An action less than 1 second after
-  the previous recorded one joins its undo step. Actions in `UNDO_EXCLUDED_ACTIONS` (playback,
-  action mode, and theme) update the state without recording a step. Everything else is recorded,
-  including selections and hidden and collapsed layers (a known bug in `BUGS.md`). Undo and redo
+  the previous recorded one joins its undo step. Actions in `UNDO_EXCLUDED_ACTIONS` (the playback
+  actions, `SetActionMode`, `SetActionModeHover`, and `SetTheme`) update the state without
+  recording a step. Everything else is recorded, including selections, hidden and collapsed layers
+  (a known bug in `BUGS.md`), and action mode selections and pairings. Undo and redo
   keep the current theme.
 - **Batch:** `new BatchAction(a, b)` applies several actions as one undo step. Only one level is
   unpacked, so don't nest batches.

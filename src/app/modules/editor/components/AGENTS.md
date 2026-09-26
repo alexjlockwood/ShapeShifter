@@ -5,10 +5,10 @@ Paths are relative to `src/app/modules/editor/`.
 - Components are React 19 function components in PascalCase `.tsx` files, each importing its own
   lowercase `.scss`. The imperative classes that draw and handle gestures are PascalCase `.ts` files
   next to them (e.g. `components/canvas/CanvasController.ts`).
-- `components/root/App.tsx` renders `components/root/Root.tsx`, whose workspace holds the toolbar, the canvas (three
-  of them in action mode: current, start, and end), playback controls, the property inspector
-  (hidden in action mode), and the layer list and timeline. Mobile user agents get
-  `components/splashscreen/` instead.
+- `components/root/App.tsx` renders `components/root/Root.tsx`, whose workspace holds the toolbar,
+  the canvas (three of them in action mode: current, start, and end), playback controls, the
+  property inspector (hidden in action mode), and the layer list and timeline. Mobile user agents
+  get `components/splashscreen/` instead.
 
 ## State and actions
 
@@ -20,7 +20,8 @@ Paths are relative to `src/app/modules/editor/`.
   frame, like the current time. The selector is an effect dependency, so define it outside the
   component.
 - `useEditorStore()` returns the store, e.g. to hand to an imperative controller.
-- `hooks/` also has `requireRef`, `useElementSize`, `useMenu`, and `useScrollGroup`.
+- `useServices()` and `useEditorStore()` are in `context/EditorContext.tsx`. The other hooks are in
+  `hooks/`, which also has `requireRef`, `useElementSize`, `useMenu`, and `useScrollGroup`.
 
 ## Canvas and timeline drawing
 
@@ -33,8 +34,8 @@ so playback never re-renders React. Mouse gestures on the canvas go to
 ## Styling
 
 - Styles are SCSS. MUI components are themed in `styles/muiTheme.ts` and restyled with SCSS that
-  targets their `.Mui*` classes (`components/root/App.tsx` puts the app's styles after MUI's). Nothing uses `sx`,
-  `styled()`, or emotion directly.
+  targets their `.Mui*` classes (`components/root/App.tsx` puts the app's styles after MUI's).
+  Nothing uses `sx`, `styled()`, or emotion directly.
 - Theme colors are in `_<name>-theme.scss` partials with an `ss-<name>-theme` mixin. They're
   included in `styles/theme.scss`, which applies them for the light theme and under
   `.ss-dark-theme` (set on `body`, so portals get it too). A new themed component needs its partial
@@ -44,8 +45,10 @@ so playback never re-renders React. Mouse gestures on the canvas go to
 
 ## Gotchas
 
-- Clicking the workspace clears the selection, and clicks in portals bubble up to it, so panels
-  stop propagation.
+- Clicking the workspace background clears the selection. Clicks inside the panels bubble up to
+  it too, so panels stop propagation. Clicks in menus and dialogs also bubble up through their
+  React portals, but `components/root/Root.tsx` ignores those, since their targets are outside the
+  workspace element.
 - StrictMode runs effects twice in dev. Service `init()` methods guard against it, and controllers
   are created without side effects and started in a layout effect.
 - React's wheel listeners are passive, so the timeline adds a native listener to prevent

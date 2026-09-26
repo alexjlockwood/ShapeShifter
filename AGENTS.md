@@ -104,8 +104,9 @@ are compiled.
 
 ## Bugs and improvements
 
-- `BUGS.md` lists known bugs. Add bugs you find but don't fix under "Open", and move bugs you fix
-  to "Fixed".
+- `BUGS.md` lists known bugs. Add the bugs you find but don't fix, and remove a bug's entry when
+  you fix it (the commit says what fixed it). Don't add to "Fixed during the migration", which
+  records the port from Angular.
 - `IMPROVEMENTS.md` surveys possible improvements, with rough estimates.
 
 ## Commits and pull requests

@@ -59,9 +59,9 @@ splitting, deleting, and index mapping in `model/paths/Path.ts`. Read the tests 
 ## Tests
 
 `model/paths/Path.spec.ts` has tables of mutation tests (`makeTest(path, ops, expected)`), plus
-TODOs for combinations of edits that aren't covered yet. `fromPathOpString` in `src/test/PathUtil.ts`
-applies edits written as ops, e.g. `RV 0` reverses subpath 0 and `SIH 0 1` splits command 1 of
-subpath 0 in half (the file lists the rest):
+TODOs for combinations of edits that aren't covered yet. `fromPathOpString` in
+`src/test/PathUtil.ts` applies edits written as ops, e.g. `RV 0` reverses subpath 0 and `SIH 0 1`
+splits command 1 of subpath 0 in half (the file lists the rest):
 
 ```ts
 import { Path } from 'app/modules/editor/model/paths';
