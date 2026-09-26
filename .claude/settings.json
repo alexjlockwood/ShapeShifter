@@ -21,9 +21,9 @@
     ],
     "deny": [
       "Bash(npm run deploy*)",
-      "Bash(./scripts/deploy-stable.sh*)",
-      "Bash(scripts/deploy-stable.sh*)",
-      "Bash(npx gh-pages *)"
+      "Bash(npm run-script deploy*)",
+      "Bash(*deploy-stable.sh*)",
+      "Bash(*gh-pages*)"
     ]
   }
 }
