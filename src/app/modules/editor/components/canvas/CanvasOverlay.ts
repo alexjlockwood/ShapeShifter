@@ -164,6 +164,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
               selectedLayerIds,
               subIdxWithError,
             }) => {
+              const previousPath = this.activePath;
               this.vectorLayer = vectorLayer;
               this.blockLayerId = blockLayerId;
               this.isActionMode = isActionMode;
@@ -174,6 +175,15 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
               this.hiddenLayerIds = hiddenLayerIds;
               this.selectedLayerIds = selectedLayerIds;
               this.subIdxWithError = subIdxWithError;
+              if (this.activePath !== previousPath) {
+                // The helpers only update on mouse events, so after an undo (for example) they
+                // would still point at subpaths and commands the path no longer has. The hover
+                // preview was built from the old path too.
+                this.selectionHelper?.reset();
+                this.segmentSplitter?.reset();
+                this.shapeSplitter?.reset();
+                this.updateHoverPreview(hover);
+              }
               this.draw();
             },
           ),
@@ -218,42 +228,40 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
           this.draw();
         }),
       );
-      const updateCurrentHoverFn = (hover: Hover | undefined) => {
-        let previewPath: Path | undefined;
-        if (this.vectorLayer && this.activePath && hover && hover.cmdIdx !== undefined) {
-          // If the user is hovering over the inspector split button, then build
-          // a snapshot of what the path would look like after the action
-          // and display the result.
-          const mutator = this.activePath.mutate();
-          const { type, subIdx, cmdIdx } = hover;
-          switch (type) {
-            case HoverType.Split:
-              previewPath = mutator.splitCommandInHalf(subIdx, cmdIdx).build();
-              break;
-            case HoverType.Unsplit:
-              previewPath = mutator.unsplitCommand(subIdx, cmdIdx).build();
-              break;
-          }
-        }
-        this.currentHoverPreviewPath = previewPath;
-        this.draw();
-      };
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       this.registerSubscription(
         this.store.select(getActionModeHover).subscribe(hover => {
-          if (!hover) {
-            // Clear the current hover.
-            updateCurrentHoverFn(undefined);
-            return;
-          }
-          if (hover.source !== this.actionSource && hover.type !== HoverType.Point) {
-            updateCurrentHoverFn(undefined);
-            return;
-          }
-          updateCurrentHoverFn(hover);
+          this.updateHoverPreview(hover);
+          this.draw();
         }),
       );
     }
+  }
+
+  private updateHoverPreview(hover: Hover | undefined) {
+    let previewPath: Path | undefined;
+    if (
+      this.vectorLayer &&
+      this.activePath &&
+      hover &&
+      hover.source === this.actionSource &&
+      hover.cmdIdx !== undefined
+    ) {
+      // If the user is hovering over the inspector split button, then build
+      // a snapshot of what the path would look like after the action
+      // and display the result.
+      const mutator = this.activePath.mutate();
+      const { type, subIdx, cmdIdx } = hover;
+      switch (type) {
+        case HoverType.Split:
+          previewPath = mutator.splitCommandInHalf(subIdx, cmdIdx).build();
+          break;
+        case HoverType.Unsplit:
+          previewPath = mutator.unsplitCommand(subIdx, cmdIdx).build();
+          break;
+      }
+    }
+    this.currentHoverPreviewPath = previewPath;
   }
 
   private get overlayCtx() {

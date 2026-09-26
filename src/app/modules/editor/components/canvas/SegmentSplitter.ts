@@ -75,6 +75,11 @@ export class SegmentSplitter {
     this.component.draw();
   }
 
+  /** Forgets the hovered segment, e.g. because the path changed and its indices are stale. */
+  reset() {
+    this.currProjInfo = undefined;
+  }
+
   getProjectionOntoPath() {
     if (!this.currProjInfo) {
       return undefined;
