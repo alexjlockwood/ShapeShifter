@@ -181,13 +181,9 @@ export class ShapeSplitter {
   }
 
   onMouseLeave(mouseLeave: Point) {
-    this.finalProjInfos = [];
-    this.lastKnownMouseLocation = mouseLeave;
-    this.hitResult = this.performHitTest(mouseLeave);
-    if (!this.initProjInfos.length) {
-      return;
-    }
+    // Clear the hover highlight as well as any split in progress.
     this.reset();
+    this.lastKnownMouseLocation = mouseLeave;
     this.component.draw();
   }
 
