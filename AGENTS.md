@@ -96,7 +96,8 @@ The paper.js beta editor hasn't been ported, so it isn't compiled, typechecked, 
 `components/canvas/canvaspaper.directive.ts`, `components/toolpanel/`, `scripts/paper/`,
 `services/paper.service.ts`, and `src/typings/paper/`. Don't edit it unless the task is to port
 it (see `IMPROVEMENTS.md`), and ignore it when looking for usages. `model/paper/` and `store/paper/`
-are compiled.
+are compiled. `src/test/paperExclusions.spec.ts` checks that this list matches `tsconfig.json`,
+`.oxlintrc.json`, and `.prettierignore`.
 
 ## Debugging
 
