@@ -139,14 +139,8 @@ function addCommand(
   val: number[],
 ) {
   let increment = 2;
-  let [
-    currentX,
-    currentY,
-    ctrlPointX,
-    ctrlPointY,
-    currentSegmentStartX,
-    currentSegmentStartY,
-  ] = current;
+  let [currentX, currentY, ctrlPointX, ctrlPointY, currentSegmentStartX, currentSegmentStartY] =
+    current;
   let reflectiveCtrlPointX: number;
   let reflectiveCtrlPointY: number;
   switch (cmd) {

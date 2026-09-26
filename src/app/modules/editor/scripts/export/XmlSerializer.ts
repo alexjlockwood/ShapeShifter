@@ -19,10 +19,7 @@ function serializeAttributeValue(value: string) {
 }
 
 function serializeTextContent(content: string) {
-  return content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function serializeAttribute(attr: any) {

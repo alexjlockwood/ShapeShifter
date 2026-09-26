@@ -7,9 +7,7 @@ body {
     overflow: hidden;
 }
 
-$mdFontFamily: Roboto,
-'Helvetica Neue',
-sans-serif !default;
+$mdFontFamily: Roboto, 'Helvetica Neue', sans-serif !default;
 html {
     font-family: $mdFontFamily;
 }

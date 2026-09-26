@@ -69,18 +69,15 @@ function vectorLayerToSvgNode(
       readonly seenClipPaths: ReadonlyArray<ClipPathLayer>;
     }
     layer.children
-      .reduce(
-        (acc: ReadonlyArray<Entry>, curr) => {
-          const seenClipPaths = acc.length ? [...acc[acc.length - 1].seenClipPaths] : [];
-          // Ignore clip paths with empty path data strings.
-          if (curr instanceof ClipPathLayer && curr.pathData && curr.pathData.getPathString()) {
-            clipPathToPathDataMap.set(curr.id, curr.pathData.getPathString());
-            seenClipPaths.push(curr);
-          }
-          return [...acc, { layer: curr, seenClipPaths }];
-        },
-        [] as ReadonlyArray<Entry>,
-      )
+      .reduce((acc: ReadonlyArray<Entry>, curr) => {
+        const seenClipPaths = acc.length ? [...acc[acc.length - 1].seenClipPaths] : [];
+        // Ignore clip paths with empty path data strings.
+        if (curr instanceof ClipPathLayer && curr.pathData && curr.pathData.getPathString()) {
+          clipPathToPathDataMap.set(curr.id, curr.pathData.getPathString());
+          seenClipPaths.push(curr);
+        }
+        return [...acc, { layer: curr, seenClipPaths }];
+      }, [] as ReadonlyArray<Entry>)
       .filter(({ layer: l, seenClipPaths }) => {
         // Keep the entry if the key isn't a ClipPathLayer and its
         // associated list of seen clip paths isn't empty.

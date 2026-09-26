@@ -7,6 +7,12 @@
 # dependencies
 /node_modules
 
+# Coding agents: personal settings, and the worktrees that Claude Code and Flotilla create
+/.claude/settings.local.json
+/.claude/worktrees/
+CLAUDE.local.md
+/.flotilla/
+
 # IDEs and editors
 /.idea
 .project

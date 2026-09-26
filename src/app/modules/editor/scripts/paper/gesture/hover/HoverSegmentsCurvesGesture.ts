@@ -31,10 +31,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // TODO: currently necessary (if the previous gesture was the create/drag/draw segments gesture)
     this.ps.setCreatePathInfo(undefined);
 
-    const editPathId = this.ps
-      .getSelectedLayerIds()
-      .values()
-      .next().value;
+    const editPathId = this.ps.getSelectedLayerIds().values().next().value;
     const editPath = this.pl.findItemByLayerId(editPathId) as paper.Path;
     const segmentsAndHandlesHitResult = HitTests.editPathModeSegmentsAndHandles(event.point);
     if (segmentsAndHandlesHitResult) {
@@ -60,14 +57,16 @@ export class HoverSegmentsCurvesGesture extends Gesture {
         ? hitCurve.getLocationAt(hitCurve.length / 2)
         : editPathHitResult.location;
       const vpSplitPoint = this.localToVpPoint(editPath, location.point);
-      const { point: p1, handleIn: in1, handleOut: out1 } = this.localToVpSegment(
-        editPath,
-        location.curve.segment1,
-      );
-      const { point: p2, handleIn: in2, handleOut: out2 } = this.localToVpSegment(
-        editPath,
-        location.curve.segment2,
-      );
+      const {
+        point: p1,
+        handleIn: in1,
+        handleOut: out1,
+      } = this.localToVpSegment(editPath, location.curve.segment1);
+      const {
+        point: p2,
+        handleIn: in2,
+        handleOut: out2,
+      } = this.localToVpSegment(editPath, location.curve.segment2);
       this.ps.setSplitCurveInfo({
         splitPoint: vpSplitPoint,
         segment1: { point: p1, handleIn: in1, handleOut: out1 },
@@ -152,10 +151,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
   }
 
   private deleteSelectedSegmentsAndHandles() {
-    const layerId = this.ps
-      .getSelectedLayerIds()
-      .values()
-      .next().value;
+    const layerId = this.ps.getSelectedLayerIds().values().next().value;
     const { selectedHandleIn, selectedHandleOut, selectedSegments } = this.ps.getEditPathInfo();
     if (
       selectedHandleIn === undefined &&

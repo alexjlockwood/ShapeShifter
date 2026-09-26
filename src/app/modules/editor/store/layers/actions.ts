@@ -41,7 +41,4 @@ export class SetCollapsedLayers implements Action {
 }
 
 export type LayerActions =
-  | SetVectorLayer
-  | SetSelectedLayers
-  | SetHiddenLayers
-  | SetCollapsedLayers;
+  SetVectorLayer | SetSelectedLayers | SetHiddenLayers | SetCollapsedLayers;

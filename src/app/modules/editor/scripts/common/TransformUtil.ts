@@ -5,8 +5,8 @@ export function distort(sourcePoints: [number, number][], targetPoints: [number,
   for (let i = 0, n = sourcePoints.length; i < n; ++i) {
     const s = sourcePoints[i];
     const t = targetPoints[i];
-    a.push([s[0], s[1], 1, 0, 0, 0, -s[0] * t[0], -s[1] * t[0]]), b.push(t[0]);
-    a.push([0, 0, 0, s[0], s[1], 1, -s[0] * t[1], -s[1] * t[1]]), b.push(t[1]);
+    (a.push([s[0], s[1], 1, 0, 0, 0, -s[0] * t[0], -s[1] * t[0]]), b.push(t[0]));
+    (a.push([0, 0, 0, s[0], s[1], 1, -s[0] * t[1], -s[1] * t[1]]), b.push(t[1]));
   }
 
   const X = solve(a, b, true);
@@ -63,7 +63,7 @@ function _foreach2(x: any, s: any, k: any, f: any) {
 function _dim(x: any) {
   const ret = [];
   while (typeof x === 'object') {
-    ret.push(x.length), (x = x[0]);
+    (ret.push(x.length), (x = x[0]));
   }
   return ret;
 }
@@ -171,7 +171,7 @@ function LUsolve(LUP: any, b: any) {
   for (i = 0; i < n; ++i) {
     Pi = P[i];
     if (P[i] !== i) {
-      (tmp = x[i]), (x[i] = x[Pi]), (x[Pi] = tmp);
+      ((tmp = x[i]), (x[i] = x[Pi]), (x[Pi] = tmp));
     }
     LUi = lu[i];
     for (j = 0; j < i; ++j) {

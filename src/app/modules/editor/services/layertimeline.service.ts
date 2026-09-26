@@ -301,50 +301,49 @@ export class LayerTimelineService {
     const layerTransform = Matrix.flatten(LayerUtil.getCanvasTransformsForGroupLayer(layer));
     // A group's children are groups, paths, and clip paths.
     const groupChildren = layer.children as ReadonlyArray<GroupLayer | PathLayer | ClipPathLayer>;
-    const layerChildren = groupChildren.map(
-      (l): Layer => {
-        if (l instanceof GroupLayer) {
-          const flattenedTransform = Matrix.flatten([
-            layerTransform,
-            ...LayerUtil.getCanvasTransformsForGroupLayer(l),
-          ]);
-          const { sx, sy } = flattenedTransform.getScaling();
-          const degrees = flattenedTransform.getRotation();
-          const { tx, ty } = flattenedTransform.getTranslation();
-          l = l.clone();
-          l.pivotX = 0;
-          l.pivotY = 0;
-          l.translateX = tx;
-          l.translateY = ty;
-          l.rotation = degrees;
-          l.scaleX = sx;
-          l.scaleY = sy;
-          return l;
-        }
+    const layerChildren = groupChildren.map((l): Layer => {
+      if (l instanceof GroupLayer) {
+        const flattenedTransform = Matrix.flatten([
+          layerTransform,
+          ...LayerUtil.getCanvasTransformsForGroupLayer(l),
+        ]);
+        const { sx, sy } = flattenedTransform.getScaling();
+        const degrees = flattenedTransform.getRotation();
+        const { tx, ty } = flattenedTransform.getTranslation();
         l = l.clone();
-        if (l instanceof PathLayer && l.strokeWidth) {
-          // Group transforms scale strokes too (as they do on Android), so scale the width by the
-          // same amount as the path.
-          l.strokeWidth = MathUtil.round(l.strokeWidth * layerTransform.getScaleFactor());
-        }
-        const path = l.pathData;
-        if (!path || !path.getPathString()) {
-          return l;
-        }
-        l.pathData = path
-          .mutate()
-          .transform(layerTransform)
-          .build();
+        l.pivotX = 0;
+        l.pivotY = 0;
+        l.translateX = tx;
+        l.translateY = ty;
+        l.rotation = degrees;
+        l.scaleX = sx;
+        l.scaleY = sy;
         return l;
-      },
-    );
+      }
+      l = l.clone();
+      if (l instanceof PathLayer && l.strokeWidth) {
+        // Group transforms scale strokes too (as they do on Android), so scale the width by the
+        // same amount as the path.
+        l.strokeWidth = MathUtil.round(l.strokeWidth * layerTransform.getScaleFactor());
+      }
+      const path = l.pathData;
+      if (!path || !path.getPathString()) {
+        return l;
+      }
+      l.pathData = path.mutate().transform(layerTransform).build();
+      return l;
+    });
     const layerChildrenIds = new Set(layerChildren.map(l => l.id));
     const parent = LayerUtil.findParent(vl, layerId)?.clone();
     if (!parent) {
       return;
     }
     const children = [...parent.children];
-    children.splice(_.findIndex(parent.children, l => l.id === layerId), 1, ...layerChildren);
+    children.splice(
+      _.findIndex(parent.children, l => l.id === layerId),
+      1,
+      ...layerChildren,
+    );
     parent.children = children;
     const actions: Action[] = [
       new SetVectorLayer(LayerUtil.updateLayer(vl, parent)),
@@ -360,16 +359,10 @@ export class LayerTimelineService {
       }
       const block = b.clone();
       if (block.fromValue) {
-        block.fromValue = block.fromValue
-          .mutate()
-          .transform(layerTransform)
-          .build();
+        block.fromValue = block.fromValue.mutate().transform(layerTransform).build();
       }
       if (block.toValue) {
-        block.toValue = block.toValue
-          .mutate()
-          .transform(layerTransform)
-          .build();
+        block.toValue = block.toValue.mutate().transform(layerTransform).build();
       }
       return block;
     });
@@ -472,24 +465,26 @@ export class LayerTimelineService {
     } else {
       // Ungroup selected groups layers.
       const newSelectedLayers: Layer[] = [];
-      tempSelLayers.filter(layer => layer instanceof GroupLayer).forEach(groupLayer => {
-        // Move children into parent.
-        const parent = LayerUtil.findParent(vl, groupLayer.id)?.clone();
-        if (!parent) {
-          return;
-        }
-        const indexInParent = Math.max(
-          0,
-          _.findIndex(parent.children, l => l.id === groupLayer.id),
-        );
-        const newChildren = [...parent.children];
-        newChildren.splice(indexInParent, 0, ...groupLayer.children);
-        parent.children = newChildren;
-        vl = LayerUtil.updateLayer(vl, parent);
-        newSelectedLayers.splice(0, 0, ...groupLayer.children);
-        // Delete the parent.
-        vl = LayerUtil.removeLayers(vl, groupLayer.id);
-      });
+      tempSelLayers
+        .filter(layer => layer instanceof GroupLayer)
+        .forEach(groupLayer => {
+          // Move children into parent.
+          const parent = LayerUtil.findParent(vl, groupLayer.id)?.clone();
+          if (!parent) {
+            return;
+          }
+          const indexInParent = Math.max(
+            0,
+            _.findIndex(parent.children, l => l.id === groupLayer.id),
+          );
+          const newChildren = [...parent.children];
+          newChildren.splice(indexInParent, 0, ...groupLayer.children);
+          parent.children = newChildren;
+          vl = LayerUtil.updateLayer(vl, parent);
+          newSelectedLayers.splice(0, 0, ...groupLayer.children);
+          // Delete the parent.
+          vl = LayerUtil.removeLayers(vl, groupLayer.id);
+        });
       selectedLayerIds = new Set(newSelectedLayers.map(l => l.id));
     }
     this.store.dispatch(

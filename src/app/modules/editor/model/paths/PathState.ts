@@ -39,10 +39,7 @@ export class PathState {
     this.subPaths = subPaths.map((subPath, subIdx) => {
       const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
         const { cs, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
-        return cmd
-          .mutate()
-          .setId(cs.getIdAtIndex(splitIdx))
-          .build();
+        return cmd.mutate().setId(cs.getIdAtIndex(splitIdx)).build();
       });
       const spsIdx = this.subPathOrdering[subIdx];
       const isCollapsing = this.subPathOrdering.length - this.numCollapsingSubPaths <= spsIdx;
@@ -126,9 +123,12 @@ export class PathState {
       .filter((obj): obj is ReduceArg => !!obj.projection)
       // Reverse so that commands drawn with higher z-orders are preferred.
       .reverse()
-      .reduce((prev: ReduceArg | undefined, curr: ReduceArg) => {
-        return prev && prev.projection.d < curr.projection.d ? prev : curr;
-      }, undefined as ReduceArg | undefined);
+      .reduce(
+        (prev: ReduceArg | undefined, curr: ReduceArg) => {
+          return prev && prev.projection.d < curr.projection.d ? prev : curr;
+        },
+        undefined as ReduceArg | undefined,
+      );
     if (!minProjectionResultInfo) {
       return undefined;
     }
@@ -273,12 +273,20 @@ export class PathState {
     const polygon = _.flatMap(cmds, cmd => {
       const { x: p1x, y: p1y } = cmd.start ?? cmd.end;
       const { x: p2x, y: p2y } = cmd.end;
-      return [[p1x, p1y], [p2x, p2y]];
+      return [
+        [p1x, p1y],
+        [p2x, p2y],
+      ];
     });
     if (cmds.length && !this.subPaths[subIdx].isClosed()) {
       const { x: p1x, y: p1y } = cmds[0].start ?? cmds[0].end;
       const { x: p2x, y: p2y } = cmds[cmds.length - 1].end;
-      polygon.push(...[[p1x, p1y], [p2x, p2y]]);
+      polygon.push(
+        ...[
+          [p1x, p1y],
+          [p2x, p2y],
+        ],
+      );
     }
     const pole = polylabel([polygon as [number, number][]]);
     return { x: pole[0], y: pole[1] };

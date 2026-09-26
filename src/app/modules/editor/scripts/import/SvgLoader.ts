@@ -115,13 +115,7 @@ export function loadVectorLayerFromSvgStringInternal(
         return layer;
       }
       const paths = (clipPathMap[refClipPathId] || []).map(p => {
-        return new Path(
-          p
-            .mutate()
-            .transform(flattenedTransforms)
-            .build()
-            .getPathString(),
-        );
+        return new Path(p.mutate().transform(flattenedTransforms).build().getPathString());
       });
       if (!paths.length) {
         // If the clipPath has no children, then clip the entire layer.
@@ -184,11 +178,7 @@ export function loadVectorLayerFromSvgStringInternal(
       let pathData = parsePath(path, !!strokeColor && strokeLinecap !== 'butt');
       if (transforms.length) {
         pathData = new Path(
-          pathData
-            .mutate()
-            .transform(flattenedTransforms)
-            .build()
-            .getPathString(),
+          pathData.mutate().transform(flattenedTransforms).build().getPathString(),
         );
         strokeWidth = MathUtil.round(strokeWidth * flattenedTransforms.getScaleFactor());
       }
@@ -382,11 +372,7 @@ function buildPathInfosForClipPath(node: SVGClipPathElement) {
       pathInfos.push({
         refClipPathId,
         path: new Path(
-          parsePath(pathStr)
-            .mutate()
-            .transform(Matrix.flatten(transforms))
-            .build()
-            .getPathString(),
+          parsePath(pathStr).mutate().transform(Matrix.flatten(transforms)).build().getPathString(),
         ),
       });
     }

@@ -41,53 +41,53 @@ One of the trickiest aspects of using the library is dealing with different coor
 
 #### `Point`
 
-* `transform(m: paper.Matrix): paper.Point` - Transforms the point by the matrix as a new point.
+- `transform(m: paper.Matrix): paper.Point` - Transforms the point by the matrix as a new point.
 
 #### `Matrix`
 
-* `transform(p: paper.Point): paper.Point` - Transforms a point and returns the result.
-* `inverseTransform(p: paper.Point): paper.Point` - Inverse transforms a point and returns the result.
-* `appended(m: paper.Matrix): paper.Matrix` - Returns a new matrix as the result of appending the
+- `transform(p: paper.Point): paper.Point` - Transforms a point and returns the result.
+- `inverseTransform(p: paper.Point): paper.Point` - Inverse transforms a point and returns the result.
+- `appended(m: paper.Matrix): paper.Matrix` - Returns a new matrix as the result of appending the
   specified matrix to this matrix. This is the equivalent of multiplying `(this matrix) * (specified matrix)`.
-* `prepended(m: paper.Matrix): paper.Matrix` - Returns a new matrix as the result of prepending the
+- `prepended(m: paper.Matrix): paper.Matrix` - Returns a new matrix as the result of prepending the
   specified matrix to this matrix. This is the equivalent of multiplying `(specified matrix) s * (this matrix)`.
 
 #### `Item`
 
-* `globalMatrix: paper.Matrix` - The item's global transformation matrix in relation to the global
+- `globalMatrix: paper.Matrix` - The item's global transformation matrix in relation to the global
   project coordinate space. Note that the view's transformations resulting from zooming and
   panning are not factored in.
-* `viewMatrix: paper.Matrix` - The item's global matrix in relation to the view coordinate space.
+- `viewMatrix: paper.Matrix` - The item's global matrix in relation to the view coordinate space.
   This means that the view's transformations resulting from zooming and panning are factored in.
-* `globalToLocal(p: paper.Point): paper.Point` - Converts the specified point from global
+- `globalToLocal(p: paper.Point): paper.Point` - Converts the specified point from global
   project coordinate space to the item's own local coordinate space.
-* `localToGlobal(p: paper.Point): paper.Point` - Converts the specified point from the
+- `localToGlobal(p: paper.Point): paper.Point` - Converts the specified point from the
   item's own local coordinate space to the global project coordinate space.
-* `parentToLocal(p: paper.Point): paper.Point` - Converts the specified point from the
+- `parentToLocal(p: paper.Point): paper.Point` - Converts the specified point from the
   parent's coordinate space to item's own local coordinate space.
-* `localToParent(p: paper.Point): paper.Point` - Converts the specified point from the
+- `localToParent(p: paper.Point): paper.Point` - Converts the specified point from the
   item's own local coordinate space to the parent's coordinate space.
 
 #### `View`
 
-* `projectToView(p: paper.Point): paper.Point` - Converts the passed point from project
+- `projectToView(p: paper.Point): paper.Point` - Converts the passed point from project
   coordinate space to view coordinate space, which is measured in browser pixels in relation
   to the position of the view element.
-* `viewToProject(p: paper.Point): paper.Point` - Converts the passed point from view
+- `viewToProject(p: paper.Point): paper.Point` - Converts the passed point from view
   coordinate space to project coordinate space.
 
 ### Project coordinates
 
-* Project coordinates are in terms of the canvas' size in CSS pixels (note that the
+- Project coordinates are in terms of the canvas' size in CSS pixels (note that the
   view's transformations resulting from zooming and panning are not factored in).
-* Most of the `paper.js` API uses project coordinates (i.e. hit tests, mouse events, etc.).
-* Project coordinate points are prefixed with `proj`.
+- Most of the `paper.js` API uses project coordinates (i.e. hit tests, mouse events, etc.).
+- Project coordinate points are prefixed with `proj`.
 
 ### Physical coordinates
 
-* Physical coordinates are in terms of the canvas' size in physical pixels.
-* Physical coordinate points are prefixed with `phys`.
-* To convert from project coordinates to physical coordinates, we can do:
+- Physical coordinates are in terms of the canvas' size in physical pixels.
+- Physical coordinate points are prefixed with `phys`.
+- To convert from project coordinates to physical coordinates, we can do:
 
 ```js
 // Same as window.devicePixelRatio.
@@ -97,9 +97,9 @@ const physPoint = projPoint.transform(new Matrix().scale(pixelRatio));
 
 ### View coordinates
 
-* View coordinates are project coordinates with zooming/panning factored in.
-* View coordinate points are prefixed with `view`.
-* To convert from project coordinates to view coordinates, we can do:
+- View coordinates are project coordinates with zooming/panning factored in.
+- View coordinate points are prefixed with `view`.
+- To convert from project coordinates to view coordinates, we can do:
 
 ```js
 const viewPoint = paper.project.view.projectToView(projPoint);
@@ -107,10 +107,10 @@ const viewPoint = paper.project.view.projectToView(projPoint);
 
 ### Viewport coordinates
 
-* Viewport coordinate points are prefixed with `vp`.
-* Note that points that are saved to the store should always be in terms of
+- Viewport coordinate points are prefixed with `vp`.
+- Note that points that are saved to the store should always be in terms of
   viewport coordinates.
-* To convert from project coordinates to viewport coordinates, we can do:
+- To convert from project coordinates to viewport coordinates, we can do:
 
 ```js
 const vpPoint = paperLayer.globalToLocal(projPoint);
@@ -122,10 +122,10 @@ const vpPoint = new Matrix().scale(cssScaling).inverseTransform(projPoint);
 
 ### Local coordinates
 
-* Local coordinate points are prefixed with `local`.
+- Local coordinate points are prefixed with `local`.
 
 ### Parent coordinates
 
-* Parent coordinate points are prefixed with `parent`.
+- Parent coordinate points are prefixed with `parent`.
 
 ## Tools

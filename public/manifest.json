@@ -5,11 +5,13 @@
   "background_color": "#e0e0e0",
   "display": "standalone",
   "description": "Shape Shifter is a web-app that simplifies the process of creating SVG-based path morphing animations.",
-  "icons": [{
-    "src": "assets/shapeshifter.png",
-    "sizes": "600x600",
-    "type": "image/png"
-  }],
+  "icons": [
+    {
+      "src": "assets/shapeshifter.png",
+      "sizes": "600x600",
+      "type": "image/png"
+    }
+  ],
   "scope": "./",
   "start_url": "./"
 }

@@ -187,7 +187,12 @@ $mat-orange: (
     );
     $contrast: map.get($base-palette, contrast);
     @if $contrast {
-        $result: map.merge($result, (default-contrast: map.get($contrast, $default)));
+        $result: map.merge(
+            $result,
+            (
+                default-contrast: map.get($contrast, $default),
+            )
+        );
     }
     @return $result;
 }

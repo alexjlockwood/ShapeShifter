@@ -149,7 +149,7 @@ export class LineCalculator implements Calculator {
     } else {
       const t = round(((s - q) * (r - a) + (p - r) * (s - b)) / det);
       const u = round(((b - d) * (r - a) + (c - a) * (s - b)) / det);
-      return 0 <= t && t <= 1 && (0 <= u && u <= 1) ? [t] : [];
+      return 0 <= t && t <= 1 && 0 <= u && u <= 1 ? [t] : [];
     }
   }
 }

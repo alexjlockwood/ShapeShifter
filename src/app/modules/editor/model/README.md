@@ -133,7 +133,7 @@ An `AnimationBlock` describes a property animation for a particular `Layer`. The
 
 - `endTime` (integer) - An integer greater than the block's `startTime` representing the block's ending time in milliseconds. Default value is `100`.
 
-- `interpolator` (enum string) - Describes the interpolator to use for the property animation. It will be one of the `value`s listed in this [`Interpolator.ts`](https://github.com/alexjlockwood/ShapeShifter/blob/master/src/app/model/interpolators/Interpolator.ts) file.
+- `interpolator` (enum string) - Describes the interpolator to use for the property animation. It will be one of the `value`s listed in this [`Interpolator.ts`](interpolators/Interpolator.ts) file.
 
 - `type` (enum string) - Describes the value type of the associated `Layer` property: `path`, `color`, or `number`.
 
@@ -145,9 +145,9 @@ An `AnimationBlock` describes a property animation for a particular `Layer`. The
 
 The source code for each of these model objects is located here:
 
-- https://github.com/alexjlockwood/ShapeShifter/blob/master/src/app/model/layers/Layer.ts
-- https://github.com/alexjlockwood/ShapeShifter/blob/master/src/app/model/timeline/Animation.ts
-- https://github.com/alexjlockwood/ShapeShifter/blob/master/src/app/model/timeline/AnimationBlock.ts
+- [`layers/Layer.ts`](layers/Layer.ts)
+- [`timeline/Animation.ts`](timeline/Animation.ts)
+- [`timeline/AnimationBlock.ts`](timeline/AnimationBlock.ts)
 
 You may also find the documentation for `VectorDrawable` and `AnimatedVectorDrawable` useful, as Shape Shifter was closely modeled after the structure of these two Android classes:
 

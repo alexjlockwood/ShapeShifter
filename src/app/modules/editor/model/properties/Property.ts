@@ -17,7 +17,7 @@ export abstract class Property<T> {
    * Builds a decorator factory for the specified properties.
    */
   static register(...props: Property<any>[]) {
-    return function(cls: any) {
+    return function (cls: any) {
       props.forEach(prop => {
         // Create's a property with the specified property name.
         Object.defineProperty(cls.prototype, prop.propertyName, {
@@ -56,7 +56,10 @@ export abstract class Property<T> {
     };
   }
 
-  constructor(private readonly propertyName: string, config: Config = {}) {
+  constructor(
+    private readonly propertyName: string,
+    config: Config = {},
+  ) {
     this.isAnimatable = !!config.isAnimatable;
   }
 

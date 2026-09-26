@@ -18,7 +18,11 @@ export class BezierCalculator implements Calculator {
   private bbox: BBox | undefined;
   private bezierJs_: any;
 
-  constructor(private readonly id: string, private readonly svgChar: SvgChar, ...points: Point[]) {
+  constructor(
+    private readonly id: string,
+    private readonly svgChar: SvgChar,
+    ...points: Point[]
+  ) {
     this.points = points;
 
     // Don't initialize variables lazily for dev builds (to avoid

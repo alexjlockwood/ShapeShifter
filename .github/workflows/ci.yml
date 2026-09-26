@@ -15,9 +15,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium firefox webkit
+      # The quick checks go first, so that they fail before the browsers are installed.
+      - run: npm run format:check
       - run: npm run typecheck
       - run: npm run lint
+      - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:run
       - run: npm run build
       - run: npm run e2e

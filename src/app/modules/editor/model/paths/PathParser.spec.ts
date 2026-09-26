@@ -1,12 +1,18 @@
 import * as PathParser from './PathParser';
 
 class Test {
-  constructor(readonly before: string, readonly after: string) {}
+  constructor(
+    readonly before: string,
+    readonly after: string,
+  ) {}
 }
 
 class Spec {
   readonly tests: ReadonlyArray<Test>;
-  constructor(readonly description: string, ...tests: Test[]) {
+  constructor(
+    readonly description: string,
+    ...tests: Test[]
+  ) {
     this.tests = tests;
   }
 }

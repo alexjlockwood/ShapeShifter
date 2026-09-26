@@ -11,66 +11,66 @@
 @use '../components/toolbar/toolbar-theme' as *;
 
 $ss-light-theme-foreground: (
-  divider:                rgba(black, 0.12),
-  divider-inverse:        rgba(white, 0.12),
-  disabled-text:          rgba(black, 0.38),
-  disabled-text-inverse:  rgba(white, 0.5),
-  secondary-text:         rgba(black, 0.54),
-  secondary-text-inverse: rgba(white, 0.7),
-  primary-text:           rgba(black, 0.87),
-  primary-text-inverse:   rgba(white, 1),
+    divider: rgba(black, 0.12),
+    divider-inverse: rgba(white, 0.12),
+    disabled-text: rgba(black, 0.38),
+    disabled-text-inverse: rgba(white, 0.5),
+    secondary-text: rgba(black, 0.54),
+    secondary-text-inverse: rgba(white, 0.7),
+    primary-text: rgba(black, 0.87),
+    primary-text-inverse: rgba(white, 1),
 );
 
 $ss-dark-theme-foreground: (
-  divider:                rgba(white, 0.12),
-  divider-inverse:        rgba(black, 0.12),
-  disabled-text:          rgba(white, 0.5),
-  disabled-text-inverse:  rgba(black, 0.38),
-  secondary-text:         rgba(white, 0.7),
-  secondary-text-inverse: rgba(black, 0.54),
-  primary-text:           rgba(white, 1),
-  primary-text-inverse:   rgba(black, 0.87),
+    divider: rgba(white, 0.12),
+    divider-inverse: rgba(black, 0.12),
+    disabled-text: rgba(white, 0.5),
+    disabled-text-inverse: rgba(black, 0.38),
+    secondary-text: rgba(white, 0.7),
+    secondary-text-inverse: rgba(black, 0.54),
+    primary-text: rgba(white, 1),
+    primary-text-inverse: rgba(black, 0.87),
 );
 
 $ss-light-theme-background: (
-  base: white,
-  base50: map.get($mat-grey, 50),
-  base100: map.get($mat-grey, 100),
-  base200: map.get($mat-grey, 200),
-  base200-inverse: map.get($mat-grey, 900),
-  base300: map.get($mat-grey, 300),
+    base: white,
+    base50: map.get($mat-grey, 50),
+    base100: map.get($mat-grey, 100),
+    base200: map.get($mat-grey, 200),
+    base200-inverse: map.get($mat-grey, 900),
+    base300: map.get($mat-grey, 300),
 );
 
 $ss-dark-theme-background: (
-  base: black,
-  base50: #303030,
-  base100: map.get($mat-grey, 800),
-  base200: map.get($mat-grey, 900),
-  base200-inverse: map.get($mat-grey, 200),
-  base300: #101010,
+    base: black,
+    base50: #303030,
+    base100: map.get($mat-grey, 800),
+    base200: map.get($mat-grey, 900),
+    base200-inverse: map.get($mat-grey, 200),
+    base300: #101010,
 );
 
 $light-accent: mat-palette($mat-blue, A400, A200, A700);
 $dark-accent: mat-palette($mat-deep-orange, A200, A100, A400);
 
 $light-theme: (
-  primary: mat-palette($mat-blue-grey, 500),
-  accent: $light-accent,
-  warn: mat-palette($mat-red),
-  is-dark: false,
-  accent-inverse: $dark-accent,
-  ss-foreground: $ss-light-theme-foreground,
-  ss-background: $ss-light-theme-background,
+    primary: mat-palette($mat-blue-grey, 500),
+    accent: $light-accent,
+    warn: mat-palette($mat-red),
+    is-dark: false,
+    accent-inverse: $dark-accent,
+    ss-foreground: $ss-light-theme-foreground,
+    ss-background: $ss-light-theme-background,
 );
 
 $dark-theme: (
-  primary: mat-palette($mat-indigo, 700),
-  accent: $dark-accent,
-  warn: mat-palette($mat-red),
-  is-dark: true,
-  accent-inverse: $light-accent,
-  ss-foreground: $ss-dark-theme-foreground,
-  ss-background: $ss-dark-theme-background,
+    primary: mat-palette($mat-indigo, 700),
+    accent: $dark-accent,
+    warn: mat-palette($mat-red),
+    is-dark: true,
+    accent-inverse: $light-accent,
+    ss-foreground: $ss-dark-theme-foreground,
+    ss-background: $ss-dark-theme-background,
 );
 
 @mixin build-custom-theme($theme) {

@@ -29,10 +29,7 @@ describe('Path', () => {
       return new Path(
         (svgChars.split('') as SvgChar[])
           .map(svgChar => {
-            const args = '5'
-              .repeat(numSvgCharArgsFn(svgChar))
-              .split('')
-              .join(' ');
+            const args = '5'.repeat(numSvgCharArgsFn(svgChar)).split('').join(' ');
             return svgChar === 'Z' ? 'Z' : `${svgChar} ${args}`;
           })
           .join(' '),
@@ -112,32 +109,18 @@ describe('Path', () => {
       extractPathIdsFn(path, 4, 4);
 
       // Reversing/shifting an existing path generates no new ids.
-      path = path
-        .mutate()
-        .shiftSubPathBack(0)
-        .reverseSubPath(0)
-        .shiftSubPathForward(0)
-        .build();
+      path = path.mutate().shiftSubPathBack(0).reverseSubPath(0).shiftSubPathForward(0).build();
       extractPathIdsFn(path, 4, 4);
 
       // Splitting an existing path generates no new ids.
-      path = path
-        .mutate()
-        .splitCommand(0, 2, 0.25, 0.5, 0.75)
-        .build();
+      path = path.mutate().splitCommand(0, 2, 0.25, 0.5, 0.75).build();
       extractPathIdsFn(path, 7, 7);
 
       // Creating new paths generate new IDs.
-      path = new Path('M 0 0 L 0 0 L 0 0 L 0 0')
-        .mutate()
-        .shiftSubPathBack(0)
-        .build();
+      path = new Path('M 0 0 L 0 0 L 0 0 L 0 0').mutate().shiftSubPathBack(0).build();
       extractPathIdsFn(path, 4, 11);
 
-      path = new Path('M 0 0 L 0 0 L 0 0 L 0 0')
-        .mutate()
-        .reverseSubPath(0)
-        .build();
+      path = new Path('M 0 0 L 0 0 L 0 0 L 0 0').mutate().reverseSubPath(0).build();
       extractPathIdsFn(path, 4, 15);
     });
 
@@ -809,16 +792,10 @@ describe('Path', () => {
     it('subpath IDs persist correctly after mutations', () => {
       const path = new Path('M 0 0 L 0 0 M 0 0 L 0 0 M 0 0 L 0 0');
       const subPathIds = path.getSubPaths().map(s => s.getId());
-      const updatedPath = path
-        .mutate()
-        .moveSubPath(0, 1)
-        .build();
+      const updatedPath = path.mutate().moveSubPath(0, 1).build();
       const updatedSubPathIds = updatedPath.getSubPaths().map(s => s.getId());
       expect(updatedSubPathIds).toEqual([subPathIds[1], subPathIds[0], subPathIds[2]]);
-      const revertedPath = updatedPath
-        .mutate()
-        .revert()
-        .build();
+      const revertedPath = updatedPath.mutate().revert().build();
       const revertedSubPathIds = revertedPath.getSubPaths().map(s => s.getId());
       expect(revertedSubPathIds).toEqual(subPathIds);
     });

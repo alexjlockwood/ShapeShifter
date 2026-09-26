@@ -3,7 +3,10 @@ import _ from 'lodash';
 import { Property } from './Property';
 
 export class EnumProperty extends Property<string> {
-  constructor(name: string, readonly options: ReadonlyArray<Option>) {
+  constructor(
+    name: string,
+    readonly options: ReadonlyArray<Option>,
+  ) {
     super(name);
   }
 
