@@ -1,3 +1,5 @@
+import { getStoredItem, setStoredItem } from 'app/modules/editor/scripts/storage';
+
 import { ThemeActionTypes, ThemeActions } from './actions';
 
 const STORAGE_KEY_THEME_TYPE = 'storage_key_theme_type';
@@ -10,7 +12,7 @@ export interface State {
 
 export function buildInitialState() {
   return {
-    themeType: window.localStorage.getItem(STORAGE_KEY_THEME_TYPE) || 'light',
+    themeType: getStoredItem(STORAGE_KEY_THEME_TYPE) || 'light',
     isInitialPageLoad: true,
   } as State;
 }
@@ -18,7 +20,7 @@ export function buildInitialState() {
 export function reducer(state = buildInitialState(), action: ThemeActions) {
   if (action.type === ThemeActionTypes.SetTheme) {
     const { themeType } = action.payload;
-    window.localStorage.setItem(STORAGE_KEY_THEME_TYPE, themeType);
+    setStoredItem(STORAGE_KEY_THEME_TYPE, themeType);
     if (themeType === state.themeType) {
       return state;
     }
