@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 // Checks that the files and directories named in the agent instructions (AGENTS.md files and
 // project skills) still exist, so that the instructions don't point agents at code that has
-// moved or been deleted.
+// moved or been deleted. Also checks that there's no CLAUDE.md, which would hide them from Claude
+// Code.
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -23,15 +24,14 @@ const SKIPPED_DIRS = new Set(['node_modules', 'dist', 'test-results', 'playwrigh
 // A file name, as opposed to e.g. `.tsx` or `window.shapeshifter`.
 const FILE_NAME = /\w\.(css|html|js|json|md|mjs|png|scss|sh|svg|ts|tsx|xml|yaml|yml)$/;
 
-function findDocs(dir = ''): string[] {
-  return readdirSync(join(ROOT, dir), { withFileTypes: true }).flatMap(entry => {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      const isSkipped = entry.name.startsWith('.') || SKIPPED_DIRS.has(entry.name);
-      return isSkipped ? [] : findDocs(path);
-    }
-    return entry.name === 'AGENTS.md' ? [path] : [];
-  });
+/** Returns the repo's directories, except for dot directories, dependencies, and build output. */
+function findDirs(dir = ''): string[] {
+  const subdirs = readdirSync(join(ROOT, dir), { withFileTypes: true })
+    .filter(
+      entry => entry.isDirectory() && !entry.name.startsWith('.') && !SKIPPED_DIRS.has(entry.name),
+    )
+    .map(entry => join(dir, entry.name));
+  return [dir, ...subdirs.flatMap(subdir => findDirs(subdir))];
 }
 
 function findSkills() {
@@ -54,9 +54,11 @@ function findReferences(doc: string) {
       /^[\w.-]+(\/[\w.-]+)*\/?$/.test(span) &&
       !span.includes('...') &&
       !EXEMPT.has(span) &&
-      // A code span is only a path if it names a file, or starts with a directory that exists
-      // (so that e.g. `origin/master` isn't mistaken for one).
+      // A code span is only a path if it names a file, ends with a slash like the docs' directory
+      // names, or starts with a directory that exists (so that e.g. `origin/master` isn't
+      // mistaken for one).
       (FILE_NAME.test(span) ||
+        span.endsWith('/') ||
         (span.includes('/') && candidates(doc, span.split('/')[0]).some(existsSync))),
   );
   return [...pathLike, ...links.filter(link => !/^[a-z]+:/.test(link))];
@@ -66,10 +68,23 @@ function candidates(doc: string, path: string) {
   return [dirname(doc), ...BASES].map(base => join(ROOT, base, path));
 }
 
-const docs = [...findDocs(), ...findSkills()];
+const dirs = findDirs();
+const docs = [
+  ...dirs.map(dir => join(dir, 'AGENTS.md')).filter(path => existsSync(join(ROOT, path))),
+  ...findSkills(),
+];
 
 it('finds the root AGENTS.md', () => {
   expect(docs).toContain('AGENTS.md');
+});
+
+it("doesn't have a CLAUDE.md", () => {
+  // Claude Code doesn't read an AGENTS.md that has one of these next to it, or any AGENTS.md when
+  // there's one at the root.
+  const claudeFiles = dirs
+    .flatMap(dir => ['CLAUDE.md', '.claude/CLAUDE.md', 'CLAUDE.local.md'].map(n => join(dir, n)))
+    .filter(path => existsSync(join(ROOT, path)));
+  expect(claudeFiles, 'Put instructions in AGENTS.md instead').toEqual([]);
 });
 
 it.each(docs)('%s only names files that exist', doc => {
