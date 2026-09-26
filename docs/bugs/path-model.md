@@ -11,11 +11,6 @@
   right after the one that was split. Increment every entry above the split subpath's index, then
   insert the new index next to its entry (`model/paths/Path.ts`, `splitStrokedSubPath` and
   `splitFilledSubPath`). (PATH-2, high, confirmed by a test)
-- **"Split in half" on an already split curve splits in the wrong place.** On a curve that already
-  has a split point, "Split in half" and its hover preview add the point off center, sometimes on
-  the neighboring segment. It passes the midpoint in t to `findTimeByDistance`, which expects a
-  fraction of the arc length, so it should average the ends' arc length fractions instead
-  (`model/paths/CommandState.ts`, `splitInHalfAtIndex`). (PATH-4, medium, confirmed by a test)
 - **Splitting a stroked subpath at its first or last point makes an empty subpath.** In split
   subpaths mode, clicking the start or end point of a stroked subpath adds a subpath that's only a
   move, which draws nothing (auto fix grows the other path's subpath from it). `SegmentSplitter`

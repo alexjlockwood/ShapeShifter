@@ -2,6 +2,7 @@ import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import _ from 'lodash';
 import * as PathUtil from 'test/PathUtil';
 
+import { newCalculator } from './calculators';
 import { Command } from './Command';
 import { CommandState } from './CommandState';
 import { Path, ProjectionOntoPath } from './Path';
@@ -1026,6 +1027,36 @@ describe('Path', () => {
           }
         }
       }
+    });
+  });
+
+  describe('#splitCommandInHalf', () => {
+    const lengths = (path: Path, subIdx: number) =>
+      path
+        .getSubPath(subIdx)
+        .getCommands()
+        .slice(1)
+        .map(cmd => newCalculator(cmd).getPathLength());
+
+    // PATH-4: this passed the midpoint in t where a fraction of the length was expected.
+    it('splits an already split curve at the middle of the piece', () => {
+      const path = new Path('M 11 8 C 15 15 7 1 19 18').mutate().splitCommand(0, 1, 0.6).build();
+      const [first, second] = lengths(path.mutate().splitCommandInHalf(0, 2).build(), 0).slice(1);
+      expect(first).toBeCloseTo(second, 1);
+    });
+
+    // This used to put the point past the end of the subpath's piece of the curve, and throw
+    // "Attempt to convert an undefined svgChar".
+    it('splits a curve that a subpath split cut short', () => {
+      const path = new Path('M 14 4 C 15 6 3 0 6 9 L 23 0')
+        .mutate()
+        .splitCommand(0, 1, 0.2135)
+        .build()
+        .mutate()
+        .splitStrokedSubPath(0, 1)
+        .build();
+      const [first, second] = lengths(path.mutate().splitCommandInHalf(0, 1).build(), 0);
+      expect(first).toBeCloseTo(second, 1);
     });
   });
 
