@@ -26,11 +26,11 @@
   flips end over end during the morph. `permuteSubPath` compares orientation even for open
   subpaths, where `alignSubPath` has already chosen the direction, and should only compare it when
   both are closed (`scripts/algorithms/AutoAwesome.ts`). (PATH-6, medium, confirmed by a test)
-- **Splitting a stroked subpath at its first or last point makes a degenerate subpath that later
-  crashes.** In split subpaths mode, clicking the start or end point of a stroked subpath adds an
-  empty subpath, and auto fix or the next action mode edit then throws. `SegmentSplitter` should
-  ignore those points, and `splitStrokedSubPath` should reject them with a warning
-  (`components/canvas/SegmentSplitter.ts`, `model/paths/Path.ts`). (PATH-7, medium, confirmed by a
+- **Splitting a stroked subpath at its first or last point makes an empty subpath.** In split
+  subpaths mode, clicking the start or end point of a stroked subpath adds a subpath that's only a
+  move, which draws nothing (auto fix grows the other path's subpath from it). `SegmentSplitter`
+  should ignore those points, and `splitStrokedSubPath` should reject them with a warning
+  (`components/canvas/SegmentSplitter.ts`, `model/paths/Path.ts`). (PATH-7, low, confirmed by a
   test)
 - **Deleting the start point of a reversed, shifted subpath throws.** Split a segment of a closed
   subpath, make the new point the first point, reverse the subpath, and delete the point: it
@@ -80,15 +80,6 @@
   uncompiled paper.js editor; `PathParser` converts arcs itself. (PATH-18, confirmed by reading; a
   candidate fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, which deletes the file,
   needs a rebase before reuse)
-- **Reversing or shifting the first subpath drops a trailing lone `M`.** A path that ends with a
-  subpath that's only an `M` loses it when the subpath before it is reversed or shifted, since
-  that subpath is rebuilt ending in an `L` instead of a `Z`. Auto fix reverses and reorders
-  subpaths, so it can throw on a lone `M` anywhere but first, as in
-  `M 0 18 L 15 4 Z M 10 16 M 12 6 L 10 24 Z` to `M 12 2 L 10 17 C 3 18 17 5 24 23 Z` (about 4,000
-  Bugsnag reports). Parsing drops it too: `M 0 0 L 10 0 M 5 5` has one subpath.
-  `createSubPaths` ends an open subpath at the next `M` but doesn't start the next subpath with it,
-  and should (`model/paths/SubPath.ts`, `createSubPaths`, and `scripts/algorithms/AutoAwesome.ts`,
-  `alignSubPath`). (found after the sweep, high, confirmed by a test)
 - **Auto fix picks which subpaths grow from a point before it pairs them.** When one path has
   fewer subpaths, `autoAddCollapsingSubPaths` gives the other path's last subpaths collapsing
   partners by index, and only then does `orderSubPaths` pair them up. So a subpath can fly across

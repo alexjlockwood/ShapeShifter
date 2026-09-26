@@ -54,12 +54,16 @@ describe('Path', () => {
         actual: 'MLCQLZMZ',
         expected: ['MLCQLZMZ', 2],
       },
-      // TODO: fix this test (SVGO probably makes it impossible, but just in case...)
-      // {
-      //   desc: 'construct a Path w/ multiple moveto commands',
-      //   actual: 'MMMMMLLLLL',
-      //   expected: ['MMMMMLLLLL', 5],
-      // },
+      {
+        desc: 'construct a Path w/ multiple moveto commands',
+        actual: 'MMMMMLLLLL',
+        expected: ['MMMMMLLLLL', 5],
+      },
+      {
+        desc: 'construct a Path w/ a moveto command after an open subpath',
+        actual: 'MLLM',
+        expected: ['MLLM', 2],
+      },
       {
         desc: 'construct a Path w/ multiple closepath commands',
         actual: 'MLCQLZMZZZZMLZMZZ',

@@ -92,6 +92,19 @@ describe('AutoAwesome', () => {
         }
       });
 
+      // A lone move after another subpath used to be lost, when parsing or after auto fix
+      // reversed or reordered the subpaths, which left the path's subpaths out of step.
+      it.each([
+        [
+          'M 2 19 L 20 9 L 16 16',
+          'M 3 11 C 6 12 2 13 11 19 Q 1 3 9 5 Z M 19 6 M 15 14 Q 8 7 2 6 Z',
+        ],
+        ['M 0 18 L 15 4 Z M 10 16 M 12 6 L 10 24 Z', 'M 12 2 L 10 17 C 3 18 17 5 24 23 Z'],
+      ])('keeps a lone move after another subpath (%s to %s)', (f, t) => {
+        const [from, to] = AutoAwesome.autoFix(new Path(f), new Path(t));
+        expect(from.isMorphableWith(to)).toBe(true);
+      });
+
       it('leaves two moves alone', () => {
         const [from, to] = AutoAwesome.autoFix(new Path('M 6 5'), new Path('M 1 2'));
         expect(from.getPathString()).toEqual('M 6 5');
