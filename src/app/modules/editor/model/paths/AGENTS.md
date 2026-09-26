@@ -52,8 +52,8 @@ splitting, deleting, and index mapping in `model/paths/Path.ts`. Read the tests 
 
 - The first command of the first subpath is an `M` without a start point (`points[0]` is
   `undefined`). Code that reverses, reorders, or interpolates commands has to keep it that way.
-- Like a browser, `PathParser` stops at the first command it can't read (a missing number, or an
-  unknown letter), so a typo drops the rest of the path.
+- `PathParser` skips a command it can't read (e.g. one with a missing number) and keeps the rest,
+  where a browser would stop drawing at it.
 - In dev builds and tests, the `Path` constructor also warns about duplicate command ids.
 - Playback interpolates a whole new `Path` on every frame (`model/paths/PathUtil.ts`), so keep
   construction cheap.

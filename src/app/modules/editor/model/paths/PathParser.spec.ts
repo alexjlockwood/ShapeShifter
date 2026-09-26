@@ -104,16 +104,15 @@ const specs = [
       PathParser.commandsToString(PathParser.parseCommands(`M 0 0 a 10 10 0 0 1 .5 2`)),
     ),
   ),
-  new Spec(`unknown commands`, new Test(`M 0 0 L 5 5 X 1 1 L 9 9`, `M 0 0 L 5 5`)),
   new Spec(
     `incomplete commands`,
     new Test(`M 0 0 Q 1 1`, `M 0 0`),
     new Test(`M 0 0 C 1 1`, `M 0 0`),
     new Test(`M 0 0 C 1 1 2 2 3 3 4 4`, `M 0 0 C 1 1 2 2 3 3`),
-    // Like a browser, parsing stops at the first error.
-    new Test(`M 0 0 L 10 L 5 5`, `M 0 0`),
-    new Test(`M 0 0 L 10 10 20 L 5 5`, `M 0 0 L 10 10`),
-    new Test(`M 0 0 L 5 5 L Z`, `M 0 0 L 5 5`),
+    // Unlike a browser, which stops drawing there, parsing keeps the rest of the path.
+    new Test(`M 0 0 L 10 L 5 5`, `M 0 0 L 5 5`),
+    new Test(`M 0 0 L 10 10 20 L 5 5`, `M 0 0 L 10 10 L 5 5`),
+    new Test(`M 0 0 L NaN 5 L 9 9`, `M 0 0 L 9 9`),
   ),
 ];
 

@@ -34,10 +34,7 @@ export function parseCommands(pathData: string) {
   let previousCommand = 'm';
   const builder = new CommandsBuilder();
   for (const n of nodes) {
-    // Like a browser, draw the path up to its first error.
-    if (!addCommand(builder, current, previousCommand, n.type, n.params)) {
-      break;
-    }
+    addCommand(builder, current, previousCommand, n.type, n.params);
     previousCommand = n.type;
   }
   return builder.toCommands();
@@ -64,23 +61,27 @@ function nextStart(s: string, end: number) {
  */
 function getArcFloats(s: string) {
   const results: number[] = [];
-  const numberRegExp = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/;
+  const separators = /[\s,]*/y;
+  const number = /[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/y;
+  const flag = /[01]/y;
   let i = 1;
-  while (i < s.length) {
-    while (i < s.length && /[\s,]/.test(s.charAt(i))) {
-      i++;
-    }
+  while (true) {
+    separators.lastIndex = i;
+    separators.exec(s);
+    i = separators.lastIndex;
     if (i >= s.length) {
       break;
     }
     const isFlag = results.length % 7 === 3 || results.length % 7 === 4;
-    const match = isFlag ? /^[01]/.exec(s.slice(i)) : numberRegExp.exec(s.slice(i));
+    const regExp = isFlag ? flag : number;
+    regExp.lastIndex = i;
+    const match = regExp.exec(s);
     if (!match) {
       results.push(NaN);
       break;
     }
     results.push(parseFloat(match[0]));
-    i += match[0].length;
+    i = regExp.lastIndex;
   }
   return results;
 }
@@ -169,8 +170,6 @@ function extract(s: string, start: number, result: ExtractFloatResult) {
   result.mEndPosition = currentIndex;
 }
 
-const COMMAND_CHARS = 'MmLlHhVvCcSsQqTtAa';
-
 function addCommand(
   path: CommandsBuilder,
   current: [number, number, number, number, number, number],
@@ -221,15 +220,12 @@ function addCommand(
       increment = 7;
       break;
   }
-  // Draw the command's complete groups of numbers, and report an error if any are missing, which
-  // would otherwise make a curve with missing points (e.g. from 'M 0 0 Q 1 1').
-  let isValid =
-    cmd === 'z' ||
-    cmd === 'Z' ||
-    (COMMAND_CHARS.includes(cmd) && val.length > 0 && val.length % increment === 0);
+  // Draw the command's complete groups of numbers, and skip a group with a missing or non-numeric
+  // one, which would otherwise make a curve with missing points (e.g. from 'M 0 0 Q 1 1'). A
+  // browser stops drawing at the first error, but this keeps the rest of the path, since it's
+  // someone's work, and paths that went through commandsToString with a NaN coordinate get here.
   for (let k = 0; k + increment <= val.length; k += increment) {
     if (!val.slice(k, k + increment).every(Number.isFinite)) {
-      isValid = false;
       break;
     }
     switch (cmd) {
@@ -420,7 +416,6 @@ function addCommand(
   current[3] = ctrlPointY;
   current[4] = currentSegmentStartX;
   current[5] = currentSegmentStartY;
-  return isValid;
 }
 
 function drawArc(
