@@ -70,6 +70,50 @@ describe('AutoAwesome', () => {
       expect(from.isMorphableWith(to)).toBe(true);
     });
 
+    describe('pairing subpaths', () => {
+      const square = (x: number, y: number, size: number) =>
+        `M ${x} ${y} L ${x + size} ${y} L ${x + size} ${y + size} L ${x} ${y + size} Z`;
+
+      /** Returns how far apart the centers of each pair of subpaths are. */
+      function distances(from: Path, to: Path) {
+        expect(from.isMorphableWith(to)).toBe(true);
+        return from.getSubPaths().map((unused, subIdx) => {
+          const p = from.getPoleOfInaccessibility(subIdx);
+          const q = to.getPoleOfInaccessibility(subIdx);
+          return Math.hypot(p.x - q.x, p.y - q.y);
+        });
+      }
+
+      it.each([
+        ['with the far square first', `${square(14, 14, 7)} ${square(3, 3, 7)}`],
+        ['with the near square first', `${square(3, 3, 7)} ${square(14, 14, 7)}`],
+      ])('keeps a square in place when another one appears (%s)', (unused, t) => {
+        const f = square(3, 3, 7);
+        for (const [from, to] of [
+          AutoAwesome.autoFix(new Path(f), new Path(t)),
+          AutoAwesome.autoFix(new Path(t), new Path(f)).reverse(),
+        ]) {
+          // The square pairs with the one on top of it, and the far one grows from its own center.
+          expect(distances(from, to)).toEqual([0, 0]);
+          expect(from.getSubPaths().filter(s => s.isCollapsing())).toHaveLength(1);
+          // The pairs stay the same after an edit, which adds the collapsing subpaths again.
+          expect(distances(...AutoAwesome.autoAddCollapsingSubPaths(from, to))).toEqual([0, 0]);
+        }
+      });
+
+      it('pairs more than eight subpaths', () => {
+        const grid = (order: number[], dx: number) =>
+          order.map(i => square(4 + (i % 3) * 7 + dx, 4 + Math.floor(i / 3) * 7, 2)).join(' ');
+        const [from, to] = AutoAwesome.autoFix(
+          new Path(grid([0, 1, 2, 3, 4, 5, 6, 7, 8], 0)),
+          new Path(grid([8, 7, 6, 5, 4, 3, 2, 1, 0], 2)),
+        );
+        for (const d of distances(from, to)) {
+          expect(d).toBeCloseTo(2);
+        }
+      });
+    });
+
     // Reversing an open subpath flips a stroke end over end, so auto fix shouldn't reverse one to
     // match the other's direction, the way it does for closed subpaths.
     it.each([

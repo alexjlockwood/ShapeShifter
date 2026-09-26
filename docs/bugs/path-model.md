@@ -70,14 +70,6 @@
   uncompiled paper.js editor; `PathParser` converts arcs itself. (PATH-18, confirmed by reading; a
   candidate fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, which deletes the file,
   needs a rebase before reuse)
-- **Auto fix picks which subpaths grow from a point before it pairs them.** When one path has
-  fewer subpaths, `autoAddCollapsingSubPaths` gives the other path's last subpaths collapsing
-  partners by index, and only then does `orderSubPaths` pair them up. So a subpath can fly across
-  the icon while a copy of it grows where it started: `autoFix` on the square
-  `M 0 0 L 4 0 L 4 4 L 0 4 Z` and a target with a far square followed by that same square moves the
-  square to the far one and grows a new one in its place. Pair the subpaths first, then add
-  collapsing subpaths for the ones left over (`scripts/algorithms/AutoAwesome.ts`). (found after
-  the sweep, medium, confirmed by a test)
 - **Auto fix's alignment depends on the size of the paths.** `alignSubPath` scores a pair of
   commands `1 / max(1, distance)`, so when the points are less than a unit apart every pair scores
   the same and the alignment is arbitrary. A square and a heptagon shrunk 20 times get all three new

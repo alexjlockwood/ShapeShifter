@@ -5,6 +5,7 @@ import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil } from 'app/modules/editor/scripts/common';
 import _ from 'lodash';
 
+import { assign } from './Hungarian';
 import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 
 // POSSIBLE IMPROVEMENTS
@@ -35,8 +36,8 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
   const origTo = to.getPathString();
   try {
     [from, to] = autoUnconvertSubPaths(from, to);
+    [from, to] = pairSubPaths(from, to);
     [from, to] = autoAddCollapsingSubPaths(from, to);
-    [from, to] = orderSubPaths(from, to);
 
     const min = Math.min(from.getSubPaths().length, to.getSubPaths().length);
     for (let subIdx = 0; subIdx < min; subIdx++) {
@@ -111,14 +112,18 @@ function autoUnconvertSubPaths(from: Path, to: Path) {
   }) as [Path, Path];
 }
 
+const deleteCollapsingSubPaths = (path: Path) =>
+  path.getSubPaths().some(s => s.isCollapsing())
+    ? path.mutate().deleteCollapsingSubPaths().build()
+    : path;
+
+/**
+ * Gives the path with fewer subpaths collapsing ones to grow from (or collapse into), one for
+ * each of the other path's last subpaths that has no partner.
+ */
 export function autoAddCollapsingSubPaths(from: Path, to: Path): [Path, Path] {
-  const deleteCollapsingSubPathsFn = (p: Path) => {
-    return p.getSubPaths().some(s => s.isCollapsing())
-      ? p.mutate().deleteCollapsingSubPaths().build()
-      : p;
-  };
-  from = deleteCollapsingSubPathsFn(from);
-  to = deleteCollapsingSubPathsFn(to);
+  from = deleteCollapsingSubPaths(from);
+  to = deleteCollapsingSubPaths(to);
 
   const numFrom = from.getSubPaths().length;
   const numTo = to.getSubPaths().length;
@@ -141,73 +146,37 @@ export function autoAddCollapsingSubPaths(from: Path, to: Path): [Path, Path] {
 }
 
 /**
- * Reorders the subpaths in each path to minimize the distance each shape will
- * travel during the morph.
+ * Pairs each subpath of the path with fewer subpaths with a subpath of the other path, so that the
+ * total distance between the centers of the pairs is as small as possible, and reorders the other
+ * path's subpaths to match. Its subpaths without a partner go last, where
+ * autoAddCollapsingSubPaths gives each one a collapsing subpath at its own center to grow from.
  */
-function orderSubPaths(from: Path, to: Path): [Path, Path] {
-  if (from.getSubPaths().length > 8 || to.getSubPaths().length > 8) {
-    // Don't attempt to order paths with many subpaths.
-    return [from, to];
-  }
+function pairSubPaths(from: Path, to: Path): [Path, Path] {
+  from = deleteCollapsingSubPaths(from);
+  to = deleteCollapsingSubPaths(to);
+  const shouldReorderFrom = from.getSubPaths().length >= to.getSubPaths().length;
+  const [longer, shorter] = shouldReorderFrom ? [from, to] : [to, from];
+  const centers = (path: Path) =>
+    path.getSubPaths().map((unused, subIdx) => path.getPoleOfInaccessibility(subIdx));
+  const longerCenters = centers(longer);
+  const partners = assign(
+    centers(shorter).map(p => longerCenters.map(q => MathUtil.distance(p, q))),
+  );
+  const order = [
+    ...partners,
+    ..._.range(longerCenters.length).filter(subIdx => !partners.includes(subIdx)),
+  ];
 
-  const shouldSwap = from.getSubPaths().length < to.getSubPaths().length;
-  if (shouldSwap) {
-    [from, to] = [to, from];
-  }
-
-  const fromSubPaths = from.getSubPaths();
-  const toSubPaths = to.getSubPaths();
-
-  const distances = fromSubPaths.map((f, i) => {
-    return toSubPaths.map((t, j) => {
-      const pole1 = from.getPoleOfInaccessibility(i);
-      const pole2 = to.getPoleOfInaccessibility(j);
-      return MathUtil.distance(pole1, pole2);
-    });
+  // Move each subpath into place in turn, keeping track of where the rest are.
+  const pm = longer.mutate();
+  const currentOrder = _.range(order.length);
+  order.forEach((subIdx, i) => {
+    const currentIdx = currentOrder.indexOf(subIdx);
+    pm.moveSubPath(currentIdx, i);
+    currentOrder.splice(i, 0, ...currentOrder.splice(currentIdx, 1));
   });
-
-  let min = Infinity;
-  let best: number[] = [];
-
-  (function recurseFn(arr: number[], order: number[] = []) {
-    if (order.length === toSubPaths.length) {
-      let sum = 0;
-      for (let i = 0; i < order.length; i++) {
-        sum += distances[order[i]][i];
-      }
-      if (sum < min) {
-        min = sum;
-        best = order;
-      }
-      return;
-    }
-    for (let i = 0; i < arr.length; i++) {
-      const [cur] = arr.splice(i, 1);
-      recurseFn([...arr], [...order, cur]);
-      if (arr.length) {
-        arr.splice(i, 0, cur);
-      }
-    }
-  })(_.range(fromSubPaths.length));
-
-  const pm = from.mutate();
-  for (let i = 0; i < best.length; i++) {
-    const m = best[i];
-    pm.moveSubPath(m, i);
-    for (let j = i + 1; j < best.length; j++) {
-      const n = best[j];
-      if (n < m) {
-        best[j]++;
-      }
-    }
-  }
-  from = pm.build();
-
-  if (shouldSwap) {
-    [from, to] = [to, from];
-  }
-
-  return [from, to];
+  const reordered = pm.build();
+  return shouldReorderFrom ? [reordered, to] : [from, reordered];
 }
 
 /** Aligns two paths using the Needleman-Wunsch algorithm. */

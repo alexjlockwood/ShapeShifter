@@ -33,7 +33,8 @@ splitting, deleting, and index mapping in `model/paths/Path.ts`. Read the tests 
 - Two paths are morphable (`isMorphableWith`) when their commands match type for type.
 - Auto fix (`scripts/algorithms/AutoAwesome.ts`) lines up the commands of two paths with the
   Needleman-Wunsch algorithm (`scripts/algorithms/NeedlemanWunsch.ts`), trying every reversal and
-  shift of each subpath.
+  shift of each subpath, after pairing the subpaths by position (`scripts/algorithms/Hungarian.ts`).
+  Try changes to it in the auto fix playground (`src/playground/autofix/README.md`).
 
 ## Terms
 
