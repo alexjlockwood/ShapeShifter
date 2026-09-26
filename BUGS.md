@@ -19,7 +19,11 @@ These existed before the migration and are still there.
 - **Deleting a split segment can find it without a parent command.** It's unclear how the path
   gets into this state. It used to crash with "Cannot read properties of undefined (reading
   'getCommands')" (reported to Bugsnag from 1.0.15), and now it leaves the path as it is and
-  reports a warning (`model/paths/Path.ts`, `deleteFilledSubPathSegmentInternal`).
+  reports a warning (`model/paths/Path.ts`, `deleteFilledSubPathSegmentInternal`). A candidate fix
+  exists on the unmerged branch `alex/fix-split-filled-subpath-order` (commit `8f66bc6c`, PR #368,
+  closed without merging); it fixes this case and many related ones, but deleting a split segment
+  in a shifted or reversed subpath is still wrong in a lot of cases, per that branch's fuzz
+  testing.
 - **Split subpaths can't be deleted, but the toolbar offers to.** It's not clear whether
   deleting them is meant to work. After you split a subpath in action mode, selecting either half
   shows a "Delete subpath" button, but neither it nor Backspace does anything, on this branch or
@@ -44,6 +48,27 @@ These existed before the migration and are still there.
   - `PaperProject.remove()` doesn't remove the `paper.Tool` it created, and paper.js only
     activates a new tool when none is active, so a remounted canvas keeps using the old tool
     (`scripts/paper/PaperProject.ts`). Not yet verified.
+
+## Found by the 2026-09-25 bug sweep
+
+An automated bug sweep on 2026-09-25 found 100 issues (3 high, 31 medium, 66 low), split across
+seven areas of the compiled app plus build/PWA/e2e/tooling. Most were confirmed with a throwaway
+test (deleted afterward, no source changed); the rest by reading the code, and one is only
+plausible. None of these are triaged yet. They're grouped by area in `docs/bugs/`, one file per
+area, in the same style as the rest of this file:
+
+- **Path model** (18 bugs): `docs/bugs/path-model.md`
+- **Store and services** (18 bugs): `docs/bugs/store-and-services.md`
+- **Layers and properties** (10 bugs): `docs/bugs/layers-and-properties.md`
+- **Import** (15 bugs): `docs/bugs/import.md`
+- **Export** (7 bugs): `docs/bugs/export.md`
+- **Canvas** (11 bugs): `docs/bugs/canvas.md`
+- **Timeline and UI** (16 bugs): `docs/bugs/timeline-and-ui.md`
+- **Build and tests** (7 bugs): `docs/bugs/build-and-tests.md`
+
+A subset of these (marked with a candidate fix in their entry) were fixed on a branch,
+`alex/fix-sweep-quick-wins`, whose PR (#370) was closed without merging; the branch predates the
+Prettier reformat in PR #366, so it would need a rebase before its commits could be reused.
 
 ## Fixed during the migration
 

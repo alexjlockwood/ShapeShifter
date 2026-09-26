@@ -112,7 +112,9 @@ are compiled. `src/test/paperExclusions.spec.ts` checks that this list matches `
 
 - `BUGS.md` lists known bugs. Add the bugs you find but don't fix, and remove a bug's entry when
   you fix it (the commit says what fixed it). Don't add to "Fixed during the migration", which
-  records the port from Angular.
+  records the port from Angular. A large batch found by an automated sweep lives in `docs/bugs/`,
+  one file per area of the app, linked from `BUGS.md`; add a new sweep's findings the same way if
+  the batch is too big for `BUGS.md` itself.
 - `IMPROVEMENTS.md` surveys possible improvements, with rough estimates.
 
 ## Commits and pull requests
