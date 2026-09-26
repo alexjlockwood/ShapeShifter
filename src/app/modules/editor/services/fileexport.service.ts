@@ -63,7 +63,8 @@ export class FileExportService {
     EXPORTED_FPS.forEach(fps => {
       const numSteps = Math.ceil((anim.duration / 1000) * fps);
       const svgs = SpriteSerializer.createSvgFrames(vl, anim, numSteps);
-      const length = (numSteps - 1).toString().length;
+      // There are numSteps + 1 frames, numbered 0 through numSteps.
+      const length = numSteps.toString().length;
       const fpsFolder = getFolder(zip, `${fps}fps`);
       svgs.forEach((s, i) => {
         fpsFolder.file(`frame${_.padStart(i.toString(), length, '0')}.svg`, s);

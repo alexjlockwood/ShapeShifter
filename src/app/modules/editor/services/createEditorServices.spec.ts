@@ -10,6 +10,8 @@ import {
   getActionModeStartState,
 } from 'app/modules/editor/store/actionmode/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
+import JSZip from 'jszip';
+import _ from 'lodash';
 import { ActionCreators } from 'redux-undo';
 
 import { createEditorServices, type EditorServices } from './createEditorServices';
@@ -90,6 +92,37 @@ describe('createEditorServices', () => {
       });
     });
   }
+
+  it('pads the frame numbers of exported SVG frames so that they sort in order', async () => {
+    const path = new PathLayer({
+      name: 'path',
+      children: [],
+      pathData: new Path('M 0 0 L 10 10'),
+      strokeColor: '#000',
+    });
+    const vectorLayer = new VectorLayer({ name: 'vector', children: [path] });
+    // At 30fps, 310ms is 10 steps, so there are 11 frames, numbered 0 through 10.
+    const animation = new Animation({
+      duration: 310,
+      blocks: [
+        AnimationBlock.from({
+          type: 'number',
+          layerId: path.id,
+          propertyName: 'strokeWidth',
+          fromValue: 1,
+          toValue: 2,
+        }),
+      ],
+    });
+    store.dispatch(new ResetWorkspace(vectorLayer, animation));
+    services.fileExportService.exportSvg();
+    await vi.waitFor(() => expect(downloads.length).toBe(1));
+
+    const zip = await JSZip.loadAsync(await downloads[0].arrayBuffer());
+    const names = Object.keys(zip.files).filter(n => /^30fps\/.+\.svg$/.test(n));
+    const expected = _.range(11).map(i => `30fps/frame${_.padStart(i.toString(), 2, '0')}.svg`);
+    expect([...names].sort()).toEqual(expected);
+  });
 
   it('can undo setting the paths of the selected block in action mode', () => {
     vi.useFakeTimers();
