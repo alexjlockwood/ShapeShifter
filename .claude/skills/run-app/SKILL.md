@@ -24,15 +24,17 @@ port. Stop the server when you're done.
 ## Drive it with Playwright
 
 If your tools include a browser, use it. Otherwise write a script in `tmp/` at the repo root
-(gitignored, and it resolves the repo's `@playwright/test`) and run it with `node tmp/<name>.mjs`:
+(gitignored, and it resolves the repo's `@playwright/test`) and run it with
+`node tmp/<name>.mjs <the URL Vite printed>`:
 
 ```js
 import { chromium } from '@playwright/test';
 
+const baseUrl = process.argv[2];
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 page.on('pageerror', error => console.error(error));
-await page.goto('http://localhost:5173/?project=demos/playtopause.shapeshifter');
+await page.goto(new URL('?project=demos/playtopause.shapeshifter', baseUrl).href);
 await page.waitForFunction(
   () => window.shapeshifter.store.getState().present.layers.vectorLayer.children.length > 0,
 );
@@ -55,8 +57,9 @@ interactions, including drags on the canvas and timeline.
 ## Gotchas
 
 - A mobile user agent gets a splash screen instead of the editor. Use a desktop viewport.
-- Keyboard shortcuts are ignored while a text field, menu, or dialog has focus. Shortcuts use
-  Meta when the user agent is a Mac, and Control otherwise.
+- Keyboard shortcuts are ignored while a menu or dialog has focus, and so are the ones without a
+  modifier while a text field has focus (undo, redo, group, and zoom to fit still fire).
+  Shortcuts use Meta when the user agent is a Mac, and Control otherwise.
 - The dev server has no service worker, and `window.shapeshifter` only exists in dev builds. To
   test offline support, run `npm run build && npm run preview` (port 4173). The service worker it
   registers keeps serving that build on that origin until you unregister it, so use a fresh

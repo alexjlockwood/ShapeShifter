@@ -14,9 +14,11 @@ because it would ignore `.npmrc`'s package age check.
 - `npm start` runs the dev server with hot reloading. To run and drive the app in a browser, use
   the `run-app` skill (`.claude/skills/run-app/SKILL.md`).
 - `npm run typecheck`, `npm run lint` (oxlint), and `npm run format` (Prettier).
-- `npm run test:run` runs the unit tests with Vitest. `npx vitest run <file or directory>` runs some
-  of them, and `-t "<name>"` runs one test. Specs named `*.browser.spec.ts` run in headless
-  Chromium, for SVG DOM APIs that jsdom doesn't have. The rest run in jsdom.
+- `npm run test:run` runs the unit tests with Vitest. `npm run test:run -- <file or directory>` runs
+  some of them, and `-t "<name>"` runs one test. If `node_modules/.bin` has no `vitest` (e.g. in an
+  old worktree), run `npm ci` first, since `npx vitest` would download a copy that can't load the
+  config. Specs named `*.browser.spec.ts` run in headless
+  Chromium, for what jsdom doesn't have, like SVG geometry and canvas pixels. The rest run in jsdom.
 - `npm run e2e` runs the Playwright end-to-end tests. Read `e2e/AGENTS.md` before running them.
 - Never run `npm run deploy`. It publishes the live site.
 

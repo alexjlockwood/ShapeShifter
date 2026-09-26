@@ -40,9 +40,11 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
 
 ## Browser quirks
 
-- Shortcuts are ignored while a menu, dialog, or text field has focus. Safari keeps the focus in a
-  closing menu until it's gone, so wait for `.MuiModal-root` to have a count of 0 before pressing a
-  shortcut (see `e2e/morph.spec.ts`).
+- Shortcuts are ignored while a menu or dialog has focus, and so are the ones without a modifier
+  while a text field has focus (the modifier ones, like undo, still fire). The app checks for focus
+  inside `.MuiModal-root`, which a closing menu keeps until its exit transition ends, and Safari
+  leaves the focus in it. So wait for `.MuiModal-root` to have a count of 0 before pressing a
+  shortcut after choosing a menu item (see `e2e/morph.spec.ts`).
 - Playwright's WebKit can't navigate while offline, and it can't intercept Firefox's service worker
   scripts, so a few tests in `e2e/offline.preview.spec.ts` are skipped in those browsers.
 - Clicks don't land on exact coordinates, so round canvas positions before comparing them.

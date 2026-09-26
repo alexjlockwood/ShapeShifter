@@ -36,9 +36,8 @@ From the outside in: the action logger (dev only), freeze (dev and tests), undo,
 - **Undo** (`store/undoredo/metareducer.ts`) keeps 30 states. An action less than 1 second after
   the previous recorded one joins its undo step. Actions in `UNDO_EXCLUDED_ACTIONS` (the playback
   actions, `SetActionMode`, `SetActionModeHover`, and `SetTheme`) update the state without
-  recording a step. Everything else is recorded, including selections, hidden and collapsed layers
-  (a known bug in `BUGS.md`), and action mode selections and pairings. Undo and redo
-  keep the current theme.
+  recording a step. Everything else is recorded, including selections, hidden and collapsed layers,
+  and action mode selections and pairings. Undo and redo keep the current theme.
 - **Batch:** `new BatchAction(a, b)` applies several actions as one undo step. Only one level is
   unpacked, so don't nest batches.
 - **Reset:** `ResetWorkspace` rebuilds every slice's initial state, then loads its payload. It's an
