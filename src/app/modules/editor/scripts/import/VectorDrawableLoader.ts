@@ -36,7 +36,8 @@ function loadVectorLayerFromElement(
   const usedNames = new Set<string>();
   const makeFinalNodeIdFn = (value: string | null, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
-      NameProperty.sanitize(value || prefix),
+      // Fall back to the prefix if sanitizing leaves nothing (e.g. a name in Chinese).
+      NameProperty.sanitize(value || '') || NameProperty.sanitize(prefix),
       n => doesLayerNameExistFn(n) || usedNames.has(n),
     );
     usedNames.add(finalName);

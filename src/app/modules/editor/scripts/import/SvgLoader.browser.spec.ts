@@ -50,6 +50,20 @@ describe('SvgLoader', () => {
     expect(vl.children[0].children.map(l => l.name)).toEqual(['head', 'shaft']);
   });
 
+  it(`names layers after their types if nothing is left of their ids`, async () => {
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g id="图层" transform="translate(2 2)">
+    <path id="路径一" fill="#f00" d="M 10 0 L 20 10 L 10 20 Z"/>
+    <path id="路径二" fill="#00f" d="M 0 8 L 10 8 L 10 12 L 0 12 Z"/>
+  </g>
+</svg>
+`;
+    const vl = await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    expect(vl.children.map(l => l.name)).toEqual(['group']);
+    expect(vl.children[0].children.map(l => l.name)).toEqual(['path', 'path_1']);
+  });
+
   it(`inherits paint from groups`, async () => {
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

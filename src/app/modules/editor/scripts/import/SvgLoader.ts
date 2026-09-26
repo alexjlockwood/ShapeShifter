@@ -58,7 +58,8 @@ export function loadVectorLayerFromSvgStringInternal(
   const usedIds = new Set<string>();
   const makeFinalNodeIdFn = (nodeId: string | null, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
-      NameProperty.sanitize(nodeId || prefix),
+      // Fall back to the prefix if sanitizing leaves nothing (e.g. an id in Chinese).
+      NameProperty.sanitize(nodeId || '') || NameProperty.sanitize(prefix),
       name => doesNameExistFn(name) || usedIds.has(name),
     );
     usedIds.add(finalName);
