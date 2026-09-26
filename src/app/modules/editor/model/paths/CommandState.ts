@@ -274,12 +274,11 @@ class CommandStateMutator {
     }
     const currSplits = this.mutations.map(m => m.t);
     const currSvgChars = this.mutations.map(m => m.svgChar);
-    for (const t of ts) {
-      if (t < this.minT || this.maxT < t) {
-        // A point past the ends of the command (or of its piece of a split subpath) would have
-        // no command to split.
-        continue;
-      }
+    for (let t of ts) {
+      // A point past the ends of the command (or of its piece of a split subpath) would have no
+      // command to split. It isn't skipped, since the caller has already counted it when it
+      // updated the subpath's shift offset.
+      t = _.clamp(t, this.minT, this.maxT);
       const id = _.uniqueId();
       const svgChar = currSvgChars[_.sortedIndex(currSplits, t)];
       const mutation = { id, t, svgChar };

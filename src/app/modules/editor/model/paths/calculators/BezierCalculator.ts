@@ -95,7 +95,12 @@ export class BezierCalculator implements Calculator {
 
   /** Returns the time at which the curve has covered the given fraction of its length. */
   findTimeByDistance(distance: number): number {
-    if (distance <= 0 || distance >= 1) {
+    if (!Number.isFinite(distance)) {
+      console.warn('distance must be a number between 0 and 1.');
+      return 0;
+    }
+    if (distance <= 0 || distance >= 1 || !this.getPathLength()) {
+      // A curve with no length is at its start and end at every time.
       return _.clamp(distance, 0, 1);
     }
     // The length covered only grows with time, so bisect. (Searching outward from t = distance,
