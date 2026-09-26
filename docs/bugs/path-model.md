@@ -16,12 +16,6 @@
   the neighboring segment. It passes the midpoint in t to `findTimeByDistance`, which expects a
   fraction of the arc length, so it should average the ends' arc length fractions instead
   (`model/paths/CommandState.ts`, `splitInHalfAtIndex`). (PATH-4, medium, confirmed by a test)
-- **`isClockwise` can't tell the direction of line segments, so auto fix twists polygons.** A
-  square and its reversal are both reported as clockwise, so auto fix reverses polygons it
-  shouldn't (or misses ones it should), and they turn inside out during the morph. Most icons are
-  made of lines. For `L` and `Z`, `getArea` uses a term that doesn't change sign when the segment
-  is reversed, and should use the shoelace term (`model/paths/PathState.ts`, `getArea`). (PATH-5,
-  medium, confirmed by a test)
 - **Auto fix reverses open subpaths.** Auto fix can reverse an open line or arc, so the stroke
   flips end over end during the morph. `permuteSubPath` compares orientation even for open
   subpaths, where `alignSubPath` has already chosen the direction, and should only compare it when

@@ -946,6 +946,30 @@ describe('Path', () => {
     });
   });
 
+  describe('#isClockwise', () => {
+    // Clockwise on screen, where y points down.
+    it.each([
+      ['a square', 'M 0 0 L 10 0 L 10 10 L 0 10 Z', true],
+      ['a square drawn the other way', 'M 0 0 L 0 10 L 10 10 L 10 0 Z', false],
+      ['a triangle away from the origin', 'M 20 20 L 30 25 L 20 30 Z', true],
+      ['the same triangle drawn the other way', 'M 20 20 L 20 30 L 30 25 Z', false],
+      ['a square closed with a line', 'M 5 5 L 15 5 L 15 15 L 5 15 L 5 5', true],
+      ['a curve and a line', 'M 0 0 C 5 -5 15 -5 20 0 L 10 10 Z', true],
+      ['a curve and a line drawn the other way', 'M 0 0 L 10 10 L 20 0 C 15 -5 5 -5 0 0', false],
+      ['a quadratic curve and a line', 'M 0 0 Q 10 -10 20 0 Z', true],
+    ])('%s: %s', (unused, pathString, expected) => {
+      expect(new Path(pathString).isClockwise(0)).toBe(expected);
+    });
+
+    it("doesn't depend on the size of the path", () => {
+      const pathString = 'M 20 20 L 30 25 L 20 30 Z';
+      for (const factor of [0.01, 1, 100]) {
+        const scaled = pathString.replace(/\d+/g, n => String(Number(n) * factor));
+        expect(new Path(scaled).isClockwise(0)).toBe(true);
+      }
+    });
+  });
+
   describe('#padSubPath', () => {
     it('adds commands of the given types at the point of a subpath that is only a move', () => {
       const path = new Path('M 0 0 L 10 0 L 10 10 Z M 5 5').mutate().padSubPath(1, ['L', 'C', 'Z']);
