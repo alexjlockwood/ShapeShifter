@@ -53,7 +53,7 @@ plausible. None of these are triaged yet. They're grouped by area in `docs/bugs/
 area, in the same style as the rest of this file:
 
 - **Path model** (11 bugs): `docs/bugs/path-model.md`
-- **Store and services** (17 bugs): `docs/bugs/store-and-services.md`
+- **Store and services** (16 bugs): `docs/bugs/store-and-services.md`
 - **Layers and properties** (10 bugs): `docs/bugs/layers-and-properties.md`
 - **Import** (15 bugs): `docs/bugs/import.md`
 - **Export** (7 bugs): `docs/bugs/export.md`
@@ -69,9 +69,9 @@ Prettier reformat in PR #366, so it would need a rebase before its commits could
 
 Eight years of Bugsnag emails (2018 to 2026) were traced to the Angular source and checked
 against the current code on 2026-09-26: `docs/bugs/bugsnag.md`. It ranks the most common errors,
-lists which are fixed, and describes the ones still present, some of them sweep bugs that turned
-out to be far more common than their rating. The top one is auto fix throwing on a subpath that's
-only a move (PATH-9, 13,000 events).
+lists which are fixed, including the ones that were still present when it was written, some of
+them sweep bugs that turned out to be far more common than their rating. The top one was auto fix
+throwing on a subpath that's only a move (PATH-9, 13,000 events).
 
 ## Fixed during the migration
 
