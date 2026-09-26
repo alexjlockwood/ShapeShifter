@@ -170,13 +170,12 @@ function pairSubPaths(from: Path, to: Path): [Path, Path] {
   const centers = (path: Path) =>
     path.getSubPaths().map((unused, subIdx) => path.getPoleOfInaccessibility(subIdx));
   const longerCenters = centers(longer);
-  // A subpath with huge or missing coordinates gets the largest distance, rather than one the
-  // assignment can't compare.
-  const distance = (p: Point, q: Point) => {
-    const d = MathUtil.distance(p, q);
-    return Number.isFinite(d) ? d : Number.MAX_SAFE_INTEGER;
-  };
-  const partners = assign(centers(shorter).map(p => longerCenters.map(q => distance(p, q))));
+  const distances = centers(shorter).map(p => longerCenters.map(q => MathUtil.distance(p, q)));
+  // A subpath with huge or missing coordinates is farther from everything than any other, but by a
+  // finite amount, since the assignment can't compare infinite costs, and huge ones lose precision.
+  const maxDistance = _.max(distances.flat().filter(Number.isFinite)) ?? 0;
+  const farthest = (maxDistance + 1) * (distances.length + 1);
+  const partners = assign(distances.map(row => row.map(d => (Number.isFinite(d) ? d : farthest))));
   const order = [
     ...partners,
     ..._.range(longerCenters.length).filter(subIdx => !partners.includes(subIdx)),
@@ -285,13 +284,13 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
       if (prevOp?.cmdIdx === cmdIdx) {
         // Streaks at the start or end of the alignment are clamped to the same command as their
         // neighbors, so split it once for both, keeping their points in order.
-        const numTs = prevOp.ts.length + ts.length;
         const merged = [...prevOp.ts, ...ts];
-        const isIncreasing = merged.every((t, j) => !j || merged[j - 1] < t);
         splitOps[splitOps.length - 1] = {
           subIdx,
           cmdIdx,
-          ts: isIncreasing ? merged : _.range(1, numTs + 1).map(n => n / (numTs + 1)),
+          ts: isIncreasing(merged)
+            ? merged
+            : _.range(1, merged.length + 1).map(n => n / (merged.length + 1)),
         };
       } else {
         splitOps.push({ subIdx, cmdIdx, ts });
@@ -317,6 +316,10 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
   return autoConvertSubPath(fromPathResult, toPathResult, subIdx);
 }
 
+/** Returns true if the times are strictly between 0 and 1, and in increasing order. */
+const isIncreasing = (ts: ReadonlyArray<number>) =>
+  ts.every((t, i) => 0 < t && t < 1 && (!i || ts[i - 1] < t));
+
 /**
  * Returns the times at which to split a command so that each new point starts near the point
  * it morphs into, given the other path's commands it's aligned with (the ones whose end points
@@ -333,9 +336,6 @@ function getSplitTimes(cmd: Command | undefined, otherCmds: ReadonlyArray<Comman
   if (!calculator.getPathLength()) {
     return undefined;
   }
-  const isIncreasing = (ts: ReadonlyArray<number>) =>
-    ts.every((t, i) => 0 < t && t < 1 && (!i || ts[i - 1] < t));
-
   const partners = otherCmds.slice(0, -1).map(c => c.end);
   const projectedTs = partners.map(p => calculator.project(p)?.t ?? -1);
   if (isIncreasing(projectedTs)) {
