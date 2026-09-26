@@ -22,11 +22,6 @@
   should ignore those points, and `splitStrokedSubPath` should reject them with a warning
   (`components/canvas/SegmentSplitter.ts`, `model/paths/Path.ts`). (PATH-7, low, confirmed by a
   test)
-- **Deleting the start point of a reversed, shifted subpath throws.** Split a segment of a closed
-  subpath, make the new point the first point, reverse the subpath, and delete the point: it
-  throws from the keydown handler and nothing changes. For a reversed subpath the removed index is
-  `splitIdx - 1`, but the shift is still computed from `splitIdx` (`model/paths/Path.ts`,
-  `unsplitCommand`). (PATH-8, low, confirmed by a test)
 - **`CommandState.getPathLength` ignores `minT` and `maxT`.** A split piece of a command reports
   the length of the whole command. Trim paths use it, so a trimmed stroke on a morph with a split
   subpath gets the wrong dashes at the start and end of the block, in the preview and in SVG and

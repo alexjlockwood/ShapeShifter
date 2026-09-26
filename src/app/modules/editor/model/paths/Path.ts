@@ -386,35 +386,31 @@ export class PathMutator {
       cmdIdx,
     );
     const isSubPathReversed = this.findSubPathStateLeaf(subIdx).isReversed();
+    // The index of the command whose end point is removed.
+    const unsplitIdx = isSubPathReversed ? splitIdx - 1 : splitIdx;
     this.setSubPathStateLeaf(
       subIdx,
       this.findSubPathStateLeaf(subIdx)
         .mutate()
-        .setCommandState(
-          csIdx,
-          targetCs
-            .mutate()
-            .unsplitAtIndex(isSubPathReversed ? splitIdx - 1 : splitIdx)
-            .build(),
-        )
+        .setCommandState(csIdx, targetCs.mutate().unsplitAtIndex(unsplitIdx).build())
         .build(),
     );
     const sps = this.findSubPathStateLeaf(subIdx);
-    const shiftOffset = sps.getShiftOffset();
-    let position = splitIdx;
+    let shiftOffset = sps.getShiftOffset();
+    let position = unsplitIdx;
     for (let i = 0; i < csIdx; i++) {
       position += sps.getCommandStates()[i].getCommands().length;
     }
     if (shiftOffset && position <= shiftOffset) {
       // Subtract the shift offset by 1 to ensure that the unsplit operation
       // doesn't alter the positions of the path points.
-      this.setSubPathStateLeaf(
-        subIdx,
-        this.findSubPathStateLeaf(subIdx)
-          .mutate()
-          .setShiftOffset(shiftOffset - 1)
-          .build(),
-      );
+      shiftOffset--;
+    }
+    // A closed subpath with n commands has n - 1 points to start from.
+    const numCmdsInSubPath = _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
+    shiftOffset = MathUtil.floorMod(shiftOffset, Math.max(1, numCmdsInSubPath - 1));
+    if (shiftOffset !== sps.getShiftOffset()) {
+      this.setSubPathStateLeaf(subIdx, sps.mutate().setShiftOffset(shiftOffset).build());
     }
     return this;
   }

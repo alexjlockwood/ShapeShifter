@@ -970,6 +970,65 @@ describe('Path', () => {
     });
   });
 
+  describe('#unsplitCommand in reversed and shifted subpaths', () => {
+    const key = (p: Point) => `${_.round(p.x, 3)},${_.round(p.y, 3)}`;
+    const points = (path: Path) =>
+      path
+        .getSubPath(0)
+        .getCommands()
+        .slice(1)
+        .map(cmd => key(cmd.end))
+        .sort();
+
+    /** Unsplits a point, and checks that it's the only point that goes away. */
+    function unsplitAndCheck(path: Path, cmdIdx: number) {
+      const expected = points(path);
+      expected.splice(expected.indexOf(key(path.getCommand(0, cmdIdx).end)), 1);
+      const unsplit = path.mutate().unsplitCommand(0, cmdIdx).build();
+      expect(points(unsplit)).toEqual(expected);
+      return unsplit;
+    }
+
+    // These used to leave the shift offset past the end of the subpath (PATH-8).
+    it.each([
+      ['RV 0 S 0 1 0.5 SF 0', 5],
+      ['S 0 1 0.5 RV 0 SF 0', 3],
+      ['RV 0 SB 0 SB 0 S 0 3 0.46 S 0 2 0.77 SB 0 SB 0', 6],
+    ])('keeps the other points after %s, then unsplitting %i', (ops, cmdIdx) => {
+      unsplitAndCheck(fromPathOpString('M 0 0 L 10 0 L 10 10 L 0 10 Z', ops), cmdIdx);
+    });
+
+    it('keeps the other points after random edits', () => {
+      let seed = 3;
+      const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let run = 0; run < 300; run++) {
+        let path = new Path('M 0 0 C 5 -5 15 -5 20 0 L 20 20 L 0 20 Z');
+        for (let step = 0; step < 8; step++) {
+          const numCommands = path.getSubPath(0).getCommands().length;
+          const r = random();
+          const pm = path.mutate();
+          if (r < 0.15) {
+            path = pm.reverseSubPath(0).build();
+          } else if (r < 0.3) {
+            path = pm.shiftSubPathForward(0, 1 + Math.floor(random() * 3)).build();
+          } else if (r < 0.45) {
+            path = pm.shiftSubPathBack(0, 1 + Math.floor(random() * 3)).build();
+          } else if (r < 0.7) {
+            const cmdIdx = 1 + Math.floor(random() * (numCommands - 1));
+            path = pm.splitCommand(0, cmdIdx, 0.2 + random() * 0.6).build();
+          } else {
+            const splitIdxs = _.range(numCommands).filter(i =>
+              path.getCommand(0, i).isSplitPoint(),
+            );
+            if (splitIdxs.length) {
+              path = unsplitAndCheck(path, splitIdxs[Math.floor(random() * splitIdxs.length)]);
+            }
+          }
+        }
+      }
+    });
+  });
+
   describe('#padSubPath', () => {
     it('adds commands of the given types at the point of a subpath that is only a move', () => {
       const path = new Path('M 0 0 L 10 0 L 10 10 Z M 5 5').mutate().padSubPath(1, ['L', 'C', 'Z']);
