@@ -2,6 +2,7 @@ import { Action, ActionReducer } from 'app/modules/editor/store';
 import { ActionModeActionTypes } from 'app/modules/editor/store/actionmode/actions';
 import { BatchAction, BatchActionTypes } from 'app/modules/editor/store/batch/actions';
 import { PlaybackActionTypes } from 'app/modules/editor/store/playback/actions';
+import { PaperActionTypes } from 'app/modules/editor/store/paper/actions';
 import { EditorState } from 'app/modules/editor/store/reducer';
 import { ThemeActionTypes } from 'app/modules/editor/store/theme/actions';
 import type { UnknownAction } from 'redux';
@@ -21,6 +22,8 @@ const UNDO_EXCLUDED_ACTIONS: ReadonlySet<string> = new Set([
   ActionModeActionTypes.SetActionMode,
   ActionModeActionTypes.SetActionModeHover,
   ThemeActionTypes.SetTheme,
+  // The paper slice only holds canvas UI state, like the cursor, the hovered layer, and the zoom.
+  ...Object.values(PaperActionTypes),
 ]);
 const UNDO_REDO_ACTIONS: ReadonlySet<string> = new Set([
   UndoActionTypes.UNDO,
@@ -52,20 +55,23 @@ export function metaReducer(reducer: EditorStateReducer): StateReducer {
     limit: UNDO_HISTORY_SIZE,
     filter: (action: Action) => isRecorded(action),
     groupBy: (action: Action, currState: EditorState, prevState: StateWithHistory<EditorState>) => {
+      // An action more than a second after the last recorded one starts a new group, and the
+      // actions that follow it are merged into its undo step. (Returning undefined instead would
+      // give the first action a step of its own.)
       const { timestamp } = prevState as StateWithHistoryAndTimestamp;
-      if (Date.now() - timestamp < UNDO_DEBOUNCE_MILLIS) {
-        return groupCounter;
+      if (Date.now() - timestamp >= UNDO_DEBOUNCE_MILLIS) {
+        groupCounter++;
       }
-      groupCounter++;
-      return undefined;
+      return groupCounter;
     },
   } as UndoableOptions);
   return (state: StateWithHistoryAndTimestamp | undefined, action: Action) => {
     const history = undoableReducer(state, action as UnknownAction);
     let { present } = history;
     if (state && UNDO_REDO_ACTIONS.has(action.type)) {
-      // The theme is a preference, so undoing edits shouldn't change it.
-      present = { ...present, theme: state.present.theme };
+      // The theme is a preference and the paper slice is canvas UI state, so undoing edits
+      // shouldn't change either of them.
+      present = { ...present, theme: state.present.theme, paper: state.present.paper };
     }
     // Excluded actions (e.g. the current time changing on every frame of playback) shouldn't
     // keep edits made more than a second apart from getting their own undo steps.

@@ -33,11 +33,12 @@ was ported from ngrx. `store/createEditorStore.ts` builds it.
 
 From the outside in: the action logger (dev only), freeze (dev and tests), undo, batch, reset.
 
-- **Undo** (`store/undoredo/metareducer.ts`) keeps 30 states. An action less than 1 second after
-  the previous recorded one joins its undo step. Actions in `UNDO_EXCLUDED_ACTIONS` (the playback
-  actions, `SetActionMode`, `SetActionModeHover`, and `SetTheme`) update the state without
-  recording a step. Everything else is recorded, including selections, hidden and collapsed layers,
-  and action mode selections and pairings. Undo and redo keep the current theme.
+- **Undo** (`store/undoredo/metareducer.ts`) keeps 30 states. An action more than 1 second after
+  the previous recorded one starts an undo step, and the actions after it within a second join
+  it. Actions in `UNDO_EXCLUDED_ACTIONS` (the playback actions, `SetActionMode`,
+  `SetActionModeHover`, `SetTheme`, and every `paper` action) update the state without recording a
+  step. Everything else is recorded, including selections, hidden and collapsed layers, and action
+  mode selections and pairings. Undo and redo keep the current theme and `paper` slice.
 - **Batch:** `new BatchAction(a, b)` applies several actions as one undo step. Only one level is
   unpacked, so don't nest batches.
 - **Reset:** `ResetWorkspace` rebuilds every slice's initial state, then loads its payload. It's an

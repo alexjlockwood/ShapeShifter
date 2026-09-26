@@ -6,12 +6,6 @@
   Carry the playback slice over like the theme, and keep action mode only if the restored state
   selects the same path block (`store/undoredo/metareducer.ts`). (STORE-1, medium, confirmed by a
   test)
-- **The first action of a burst becomes its own undo step.** After dragging a block or typing a
-  name, the first undo only goes back to the first drag event or keystroke, so it takes two. When
-  the grouping window has expired, `groupBy` returns `undefined`, so the next action starts
-  another step. Increment the counter and return it, and update `store/createEditorStore.spec.ts`,
-  which asserts the current behavior (`store/undoredo/metareducer.ts`, `groupBy`). (STORE-2,
-  medium, confirmed by a test)
 - **Cut in action mode deletes the block being edited, then every edit throws.** In action mode,
   Cmd+X deletes the path block being edited without leaving action mode, and then R, B, F, A, and
   Backspace throw. Cut should only copy (or do nothing) in action mode, and callers of
