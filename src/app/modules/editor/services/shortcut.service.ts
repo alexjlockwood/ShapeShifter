@@ -58,11 +58,14 @@ export class ShortcutService {
         return undefined;
       }
       if (ShortcutService.isOsDependentModifierKey(event)) {
-        if (event.keyCode === 'Z'.charCodeAt(0)) {
+        // A focused text field keeps its own undo, and typing in one shouldn't group layers.
+        const isTextField =
+          event.target instanceof Element && event.target.matches(TEXT_FIELD_SELECTOR);
+        if (event.keyCode === 'Z'.charCodeAt(0) && !isTextField) {
           this.store.dispatch(event.shiftKey ? ActionCreators.redo() : ActionCreators.undo());
           return false;
         }
-        if (event.keyCode === 'G'.charCodeAt(0)) {
+        if (event.keyCode === 'G'.charCodeAt(0) && !isTextField) {
           this.layerTimelineService.groupOrUngroupSelectedLayers(!event.shiftKey);
           return false;
         }
