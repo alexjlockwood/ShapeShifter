@@ -25,7 +25,7 @@ import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
-import _ from 'lodash';
+import { clamp, find, findIndex, findLastIndex, flatMap, uniqueId } from 'lodash-es';
 import type { RefObject } from 'react';
 
 import * as TimelineConsts from './constants';
@@ -365,7 +365,7 @@ export class LayerTimelineController extends DestroyableMixin() {
 
     const blockInfos: BlockInfo[] = draggingBlocks.map(block => {
       const blockNeighbors = blocksByPropertyByLayer[block.layerId][block.propertyName];
-      const indexIntoNeighbors = _.findIndex(blockNeighbors, b => block.id === b.id);
+      const indexIntoNeighbors = findIndex(blockNeighbors, b => block.id === b.id);
 
       // By default the block is only bound by the animation duration.
       let startBound = 0;
@@ -475,10 +475,10 @@ export class LayerTimelineController extends DestroyableMixin() {
               // Clamp time delta to ensure it remains within the duration's bounds.
               const min = -info.downStartTime;
               const max = animation.duration - info.downEndTime;
-              timeDelta = _.clamp(timeDelta, min, max);
+              timeDelta = clamp(timeDelta, min, max);
             });
 
-            const deltas = _(blockInfos)
+            const deltas = blockInfos
               .filter(info => {
                 // For each block, check if it overlaps with any of the stagnant blocks.
                 const low = info.downStartTime + timeDelta;
@@ -492,14 +492,13 @@ export class LayerTimelineController extends DestroyableMixin() {
                 const neighbors = blocksByPropertyByLayer[layerId][propertyName].filter(
                   ngh => id !== ngh.id,
                 );
-                return _.flatMap(neighbors, ngh => {
+                return flatMap(neighbors, ngh => {
                   return [ngh.startTime - info.downEndTime, ngh.endTime - info.downStartTime];
                 });
               })
-              .sort((a, b) => Math.abs(a - timeDelta) - Math.abs(b - timeDelta))
-              .value();
+              .sort((a, b) => Math.abs(a - timeDelta) - Math.abs(b - timeDelta));
 
-            const deltaIndex = _.findIndex(deltas, delta => {
+            const deltaIndex = findIndex(deltas, delta => {
               return blockInfos.every(info => {
                 const low = info.downStartTime + delta;
                 const high = info.downEndTime + delta;
@@ -535,7 +534,7 @@ export class LayerTimelineController extends DestroyableMixin() {
               // Clamp time delta.
               const min = info.startBound - info.downStartTime;
               const max = info.block.endTime - MIN_BLOCK_DURATION - info.downStartTime;
-              timeDelta = _.clamp(timeDelta, min, max);
+              timeDelta = clamp(timeDelta, min, max);
             });
             blockInfos.forEach(info => {
               const block = info.block.clone();
@@ -557,7 +556,7 @@ export class LayerTimelineController extends DestroyableMixin() {
               // Clamp time delta.
               const min = info.block.startTime + MIN_BLOCK_DURATION - info.downEndTime;
               const max = info.endBound - info.downEndTime;
-              timeDelta = _.clamp(timeDelta, min, max);
+              timeDelta = clamp(timeDelta, min, max);
             });
             blockInfos.forEach(info => {
               const block = info.block.clone();
@@ -626,7 +625,7 @@ export class LayerTimelineController extends DestroyableMixin() {
         const blocks = replacementBlocks.filter(replacementBlock => {
           // Note that existingBlock may not be found if changes were made to the animation
           // (i.e. a block was deleted during a drag).
-          const existingBlock = _.find(anim.blocks, b => replacementBlock.id === b.id);
+          const existingBlock = find(anim.blocks, b => replacementBlock.id === b.id);
           return (
             existingBlock &&
             (replacementBlock.startTime !== existingBlock.startTime ||
@@ -702,13 +701,13 @@ export class LayerTimelineController extends DestroyableMixin() {
 
   onConvertToClipPathClick(layer: Layer) {
     const clipPathLayer = new ClipPathLayer(layer as PathLayer);
-    clipPathLayer.id = _.uniqueId();
+    clipPathLayer.id = uniqueId();
     this.services.layerTimelineService.swapLayers(layer.id, clipPathLayer);
   }
 
   onConvertToPathClick(layer: Layer) {
     const pathLayer = new PathLayer(layer as ClipPathLayer);
-    pathLayer.id = _.uniqueId();
+    pathLayer.id = uniqueId();
     this.services.layerTimelineService.swapLayers(layer.id, pathLayer);
   }
 
@@ -743,13 +742,13 @@ export class LayerTimelineController extends DestroyableMixin() {
     // Batch add layers to the existing selections.
     const { vectorLayer } = this;
     const topDownSortedLayers = LayerUtil.runPreorderTraversal(vectorLayer);
-    const clickedLayerIndex = _.findIndex(topDownSortedLayers, l => l.id === clickedLayer.id);
+    const clickedLayerIndex = findIndex(topDownSortedLayers, l => l.id === clickedLayer.id);
     const selectedLayerIds = this.services.layerTimelineService.getSelectedLayerIds();
     // TODO: re-implement this behavior to match the behavior of Sketch
     // TODO will need to store most recently selected layer ID in order to implement this behavior
     const { startIndex, endIndex } = (function () {
       // Find the first selected layer before clickedLayerIndex.
-      const beforeLayerIndex = _.findLastIndex(
+      const beforeLayerIndex = findLastIndex(
         topDownSortedLayers,
         l => selectedLayerIds.has(l.id),
         clickedLayerIndex,
@@ -759,7 +758,7 @@ export class LayerTimelineController extends DestroyableMixin() {
         return { startIndex: beforeLayerIndex, endIndex: clickedLayerIndex };
       }
       // Find the first selected layer after clickedLayerIndex.
-      const afterLayerIndex = _.findIndex(
+      const afterLayerIndex = findIndex(
         topDownSortedLayers,
         l => selectedLayerIds.has(l.id),
         clickedLayerIndex,
@@ -901,7 +900,7 @@ export class LayerTimelineController extends DestroyableMixin() {
           let layer: Layer | undefined = targetLayerInfo.layer;
           while (layer) {
             const layerId = layer.id;
-            if (_.find(dragLayers, l => l.id === layerId)) {
+            if (find(dragLayers, l => l.id === layerId)) {
               targetLayerInfo = undefined;
               break;
             }
@@ -958,7 +957,7 @@ export class LayerTimelineController extends DestroyableMixin() {
           // Moving next to another layer.
           const tempVl = removeDragLayersFn(initialVl);
           const parent = LayerUtil.findParent(tempVl, targetLayer.id);
-          const index = parent ? _.findIndex(parent.children, l => l.id === targetLayer.id) : -1;
+          const index = parent ? findIndex(parent.children, l => l.id === targetLayer.id) : -1;
           if (parent && index >= 0) {
             replacementVl = addDragLayersFn(tempVl, parent, index + (targetEdge === 'top' ? 0 : 1));
           }
@@ -1033,7 +1032,7 @@ export class LayerTimelineController extends DestroyableMixin() {
       const deltaY =
         event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * 16 : event.deltaY;
       this.targetHorizZoom *= 1.01 ** -deltaY;
-      this.targetHorizZoom = _.clamp(this.targetHorizZoom, MIN_ZOOM, MAX_ZOOM);
+      this.targetHorizZoom = clamp(this.targetHorizZoom, MIN_ZOOM, MAX_ZOOM);
       if (this.targetHorizZoom !== this.horizZoom) {
         // Zoom has changed.
         if (this.performZoomRAF) {
@@ -1062,7 +1061,7 @@ export class LayerTimelineController extends DestroyableMixin() {
     }
     // Shave off 48 pixels for safety.
     const horizZoom = (getContentSize(timeline, 'width') - 48) / this.animation.duration;
-    this.horizZoom = _.clamp(horizZoom, MIN_ZOOM, MAX_ZOOM);
+    this.horizZoom = clamp(horizZoom, MIN_ZOOM, MAX_ZOOM);
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.

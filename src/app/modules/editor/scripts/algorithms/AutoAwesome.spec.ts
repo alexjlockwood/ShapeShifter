@@ -1,6 +1,5 @@
 import { Path } from 'app/modules/editor/model/paths';
-import _ from 'lodash';
-
+import { range, round } from 'lodash-es';
 import { AutoAwesome } from '.';
 
 describe('AutoAwesome', () => {
@@ -113,9 +112,7 @@ describe('AutoAwesome', () => {
     ])('adds points to %s next to the ones they morph into', (unused, f, expected) => {
       const [from, to] = AutoAwesome.autoFix(new Path(f), new Path('M 0 12 L 2 8 L 20 16 L 24 12'));
       expect(from.isMorphableWith(to)).toBe(true);
-      const points = from
-        .getCommands()
-        .map(cmd => `${_.round(cmd.end.x, 1)},${_.round(cmd.end.y, 1)}`);
+      const points = from.getCommands().map(cmd => `${round(cmd.end.x, 1)},${round(cmd.end.y, 1)}`);
       expect(points).toEqual(expected);
     });
 
@@ -253,9 +250,9 @@ describe('AutoAwesome', () => {
 
 /** A regular polygon around (12, 12), drawn clockwise from the given angle. */
 function polygon(numSides: number, angle = 0) {
-  const points = _.range(numSides).map(i => {
+  const points = range(numSides).map(i => {
     const a = angle + (2 * Math.PI * i) / numSides;
-    return `${_.round(12 + 9 * Math.cos(a), 3)} ${_.round(12 + 9 * Math.sin(a), 3)}`;
+    return `${round(12 + 9 * Math.cos(a), 3)} ${round(12 + 9 * Math.sin(a), 3)}`;
   });
   return `M ${points[0]} ${points
     .slice(1)
@@ -265,7 +262,7 @@ function polygon(numSides: number, angle = 0) {
 
 /** A circle made of four cubic curves. */
 function circle(cx: number, cy: number, r: number) {
-  const k = _.round(r * 0.5523, 3);
+  const k = round(r * 0.5523, 3);
   return [
     `M ${cx} ${cy - r}`,
     `C ${cx + k} ${cy - r} ${cx + r} ${cy - k} ${cx + r} ${cy}`,

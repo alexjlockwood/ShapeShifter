@@ -2,8 +2,7 @@ import { ActionMode } from 'app/modules/editor/model/actionmode';
 import { HitResult, ProjectionOntoPath } from 'app/modules/editor/model/paths';
 import { Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
-import _ from 'lodash';
-
+import { last, remove } from 'lodash-es';
 import type { CanvasOverlay } from './CanvasOverlay';
 
 interface ProjInfo {
@@ -206,7 +205,7 @@ export class ShapeSplitter {
       const allowedSubIdxs = new Set<number>(
         this.initProjInfos.map(projInfo => projInfo.proj.subIdx),
       );
-      _.remove(this.finalProjInfos, projInfo => !allowedSubIdxs.has(projInfo.proj.subIdx));
+      remove(this.finalProjInfos, projInfo => !allowedSubIdxs.has(projInfo.proj.subIdx));
     }
   }
 
@@ -231,10 +230,10 @@ export class ShapeSplitter {
     }
     const { isEndPointHit, isSegmentHit, endPointHits, segmentHits } = this.hitResult;
     if (isEndPointHit) {
-      return _.last(endPointHits);
+      return last(endPointHits);
     }
     if (isSegmentHit) {
-      return _.last(segmentHits);
+      return last(segmentHits);
     }
     return undefined;
   }

@@ -29,8 +29,7 @@ import {
 } from 'app/modules/editor/store/actionmode/selectors';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
-import _ from 'lodash';
-
+import { findIndex, isEqual, remove } from 'lodash-es';
 import { LayerTimelineService } from './layertimeline.service';
 import { Duration, SnackBarService } from './snackbar.service';
 
@@ -127,7 +126,7 @@ export class ActionModeService {
 
   toggleSubPathSelection(source: ActionSource, subIdx: number) {
     const selections = [...this.getSelections()];
-    _.remove(selections, s => s.type !== SelectionType.SubPath || s.source !== source);
+    remove(selections, s => s.type !== SelectionType.SubPath || s.source !== source);
     const type = SelectionType.SubPath;
     const toggledSelections = this.toggleSelections(selections, [{ type, source, subIdx }]);
     this.store.dispatch(new SetActionModeSelections(toggledSelections));
@@ -138,7 +137,7 @@ export class ActionModeService {
     segments: ReadonlyArray<{ subIdx: number; cmdIdx: number }>,
   ) {
     const selections = [...this.getSelections()];
-    _.remove(selections, s => s.type !== SelectionType.Segment || s.source !== source);
+    remove(selections, s => s.type !== SelectionType.Segment || s.source !== source);
     const type = SelectionType.Segment;
     const toggledSelections = this.toggleSelections(
       selections,
@@ -154,7 +153,7 @@ export class ActionModeService {
     isShiftOrMetaPressed: boolean,
   ) {
     const selections = [...this.getSelections()];
-    _.remove(selections, s => s.type !== SelectionType.Point || s.source !== source);
+    remove(selections, s => s.type !== SelectionType.Point || s.source !== source);
     const type = SelectionType.Point;
     const toggledSelections = this.toggleSelections(
       selections,
@@ -174,9 +173,9 @@ export class ActionModeService {
     newSelections: Selection[],
     appendToList = false,
   ) {
-    const matchingSelections = _.remove(currentSelections, currSel => {
+    const matchingSelections = remove(currentSelections, currSel => {
       // Remove any selections that are equal to a new selection.
-      return newSelections.some(s => _.isEqual(s, currSel));
+      return newSelections.some(s => isEqual(s, currSel));
     });
     if (!matchingSelections.length) {
       // If no selections were removed, then add all of the selections to the list.
@@ -185,8 +184,8 @@ export class ActionModeService {
     if (!appendToList) {
       // If we aren't appending multiple selections at a time, then clear
       // any previous selections from the list.
-      _.remove(currentSelections, currSel => {
-        return newSelections.every(newSel => !_.isEqual(currSel, newSel));
+      remove(currentSelections, currSel => {
+        return newSelections.every(newSel => !isEqual(currSel, newSel));
       });
     }
     return currentSelections;
@@ -196,7 +195,7 @@ export class ActionModeService {
 
   setHover(newHover: Hover | undefined) {
     const currHover = this.queryStore(getActionModeHover);
-    if (!_.isEqual(newHover, currHover)) {
+    if (!isEqual(newHover, currHover)) {
       this.store.dispatch(new SetActionModeHover(newHover));
     }
   }
@@ -350,7 +349,7 @@ export class ActionModeService {
   }
 
   setUnpairedSubPath(unpair: { subIdx: number; source: ActionSource }) {
-    if (!_.isEqual(this.getUnpairedSubPath(), unpair)) {
+    if (!isEqual(this.getUnpairedSubPath(), unpair)) {
       this.store.dispatch(new SetUnpairedSubPath(unpair));
     }
   }
@@ -483,7 +482,7 @@ export class ActionModeService {
     animation = this.layerTimelineService.getAnimation(),
   ) {
     const blockId = this.getRequiredActivePathBlock().id;
-    const blockIndex = _.findIndex(animation.blocks, b => b.id === blockId);
+    const blockIndex = findIndex(animation.blocks, b => b.id === blockId);
     const block = animation.blocks[blockIndex] as PathAnimationBlock;
 
     // Remove any existing conversions and collapsing sub paths from the path.

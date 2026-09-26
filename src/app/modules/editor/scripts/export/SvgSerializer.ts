@@ -7,8 +7,7 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { isNil } from 'lodash-es';
 import * as XmlSerializer from './XmlSerializer';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
@@ -251,7 +250,7 @@ function conditionalAttr(
   value: string | number | undefined,
   skipValue?: string | number,
 ) {
-  if (!_.isNil(value) && (skipValue === undefined || value !== skipValue)) {
+  if (!isNil(value) && (skipValue === undefined || value !== skipValue)) {
     node.setAttributeNS(null, attr, value.toString());
   }
 }

@@ -1,8 +1,7 @@
 import { Projection, SvgChar } from 'app/modules/editor/model/paths';
 import { CommandBuilder } from 'app/modules/editor/model/paths/Command';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { round as lodashRound } from 'lodash-es';
 import { BBox, Calculator, Line } from '.';
 import { PointCalculator } from './PointCalculator';
 
@@ -155,5 +154,5 @@ export class LineCalculator implements Calculator {
 }
 
 function round(num: number) {
-  return _.round(num, ROUNDING_PRECISION);
+  return lodashRound(num, ROUNDING_PRECISION);
 }

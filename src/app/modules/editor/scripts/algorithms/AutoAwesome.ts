@@ -4,8 +4,7 @@ import { Command, Path, PathUtil } from 'app/modules/editor/model/paths';
 import { newCalculator } from 'app/modules/editor/model/paths/calculators';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { clamp, last, max, range, sortBy, sum } from 'lodash-es';
 import { assign } from './Hungarian';
 import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 
@@ -174,19 +173,19 @@ function pairSubPaths(from: Path, to: Path): [Path, Path] {
   // Scale the distances to at most 1, which doesn't change the best pairs, and put a subpath with
   // huge or missing coordinates farther from everything than any other, by a finite amount, since
   // the assignment can't compare infinite costs, and huge ones lose precision.
-  const maxDistance = _.max(distances.flat().filter(Number.isFinite)) || 1;
+  const maxDistance = max(distances.flat().filter(Number.isFinite)) || 1;
   const farthest = distances.length + 1;
   const partners = assign(
     distances.map(row => row.map(d => (Number.isFinite(d) ? d / maxDistance : farthest))),
   );
   const order = [
     ...partners,
-    ..._.range(longerCenters.length).filter(subIdx => !partners.includes(subIdx)),
+    ...range(longerCenters.length).filter(subIdx => !partners.includes(subIdx)),
   ];
 
   // Move each subpath into place in turn, keeping track of where the rest are.
   const pm = longer.mutate();
-  const currentOrder = _.range(order.length);
+  const currentOrder = range(order.length);
   order.forEach((subIdx, i) => {
     const currentIdx = currentOrder.indexOf(subIdx);
     pm.moveSubPath(currentIdx, i);
@@ -274,7 +273,7 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
       }
       // Clamp the index between 1 and numCommands - 1 to account for cases where the alignment
       // algorithm attempts to append new commands to the front and back of the sequence.
-      const cmdIdx = _.clamp(nextCmdIdx, 1, numCmds - 1);
+      const cmdIdx = clamp(nextCmdIdx, 1, numCmds - 1);
       const numGaps = i - streakStart;
       const ts =
         (cmdIdx === nextCmdIdx &&
@@ -282,8 +281,8 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
             alignments[i].obj,
             others.slice(streakStart, i + 1).map(a => a.obj),
           )) ||
-        _.range(1, numGaps + 1).map(n => n / (numGaps + 1));
-      const prevOp = _.last(splitOps);
+        range(1, numGaps + 1).map(n => n / (numGaps + 1));
+      const prevOp = last(splitOps);
       if (prevOp?.cmdIdx === cmdIdx) {
         // Streaks at the start or end of the alignment are clamped to the same command as their
         // neighbors, so split it once for both, keeping their points in order.
@@ -293,7 +292,7 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
           cmdIdx,
           ts: isIncreasing(merged)
             ? merged
-            : _.range(1, merged.length + 1).map(n => n / (merged.length + 1)),
+            : range(1, merged.length + 1).map(n => n / (merged.length + 1)),
         };
       } else {
         splitOps.push({ subIdx, cmdIdx, ts });
@@ -346,7 +345,7 @@ function getSplitTimes(cmd: Command | undefined, otherCmds: ReadonlyArray<Comman
   }
 
   const lengths = otherCmds.map(c => newCalculator(c).getPathLength());
-  const totalLength = _.sum(lengths);
+  const totalLength = sum(lengths);
   if (!totalLength) {
     return undefined;
   }
@@ -375,7 +374,7 @@ function getAlignmentCandidates(from: Path, to: Path, subIdx: number, size: numb
     .getCommands()
     .map(cmd => cmd.end);
   const score = (ends: ReadonlyArray<Point>) =>
-    _.sum(
+    sum(
       ends.map((p, i) => {
         const q = toEnds[Math.round((i * (toEnds.length - 1)) / Math.max(1, ends.length - 1))];
         return getCloseness(p, q, size);
@@ -387,8 +386,8 @@ function getAlignmentCandidates(from: Path, to: Path, subIdx: number, size: numb
   const chosen =
     candidates.length <= MAX_ALIGNMENT_CANDIDATES
       ? candidates
-      : _.sortBy(
-          _.sortBy(candidates, c => -score(c.ends)).slice(0, MAX_ALIGNMENT_CANDIDATES),
+      : sortBy(
+          sortBy(candidates, c => -score(c.ends)).slice(0, MAX_ALIGNMENT_CANDIDATES),
           // Keep them in the original order, which breaks ties between their alignments.
           c => candidates.indexOf(c),
         );
@@ -418,7 +417,7 @@ function getShiftedEndPoints(path: Path, subIdx: number): Point[][] {
     .map(cmd => cmd.end);
   const rotate = (step: number, numShifts: number) => {
     const offset = MathUtil.floorMod(step * numShifts, numPoints);
-    const rotated = _.range(numPoints).map(i => ring[(offset + i) % numPoints]);
+    const rotated = range(numPoints).map(i => ring[(offset + i) % numPoints]);
     return [...rotated, rotated[0]];
   };
   const matches = (a: ReadonlyArray<Point>, b: ReadonlyArray<Point>) =>
@@ -428,7 +427,7 @@ function getShiftedEndPoints(path: Path, subIdx: number): Point[][] {
     // The mutator ignores shifts of a subpath whose end doesn't quite meet its start.
     return [ends];
   }
-  return _.range(numPoints).map(numShifts => rotate(step, numShifts));
+  return range(numPoints).map(numShifts => rotate(step, numShifts));
 }
 
 /**
@@ -485,7 +484,7 @@ function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
     .getCommands()
     .map(cmd => cmd.end);
   const sumOfSquares = (ends: ReadonlyArray<Point>) =>
-    _.sum(ends.map((p, cmdIdx) => MathUtil.distance(p, toEnds[cmdIdx]) ** 2));
+    sum(ends.map((p, cmdIdx) => MathUtil.distance(p, toEnds[cmdIdx]) ** 2));
   const shiftedEnds = getShiftedEndPoints(from, subIdx);
   let numShifts = 0;
   let min = Infinity;

@@ -1,6 +1,5 @@
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { uniqWith } from 'lodash-es';
 import { Command, SvgChar } from '..';
 import { isPoint } from '../Command';
 import { BezierCalculator } from './BezierCalculator';
@@ -30,7 +29,7 @@ export function newCalculator(cmd: Command): Calculator {
   }
   // Only a move can be missing its start point.
   const points = cmd.points.filter(isPoint);
-  const uniquePoints: Point[] = _.uniqWith(points, MathUtil.arePointsEqual);
+  const uniquePoints: Point[] = uniqWith(points, MathUtil.arePointsEqual);
   if (uniquePoints.length === 1) {
     return new PointCalculator(cmd.id, cmd.type, points[0]);
   }

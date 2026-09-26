@@ -1,6 +1,5 @@
 import { ColorUtil, MathUtil } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { clamp } from 'lodash-es';
 import { Property } from './Property';
 
 export class ColorProperty extends Property<string> {
@@ -35,10 +34,10 @@ export class ColorProperty extends Property<string> {
       return start;
     }
     return ColorUtil.toAndroidString({
-      r: _.clamp(Math.round(MathUtil.lerp(s.r, e.r, f)), 0, 0xff),
-      g: _.clamp(Math.round(MathUtil.lerp(s.g, e.g, f)), 0, 0xff),
-      b: _.clamp(Math.round(MathUtil.lerp(s.b, e.b, f)), 0, 0xff),
-      a: _.clamp(Math.round(MathUtil.lerp(s.a, e.a, f)), 0, 0xff),
+      r: clamp(Math.round(MathUtil.lerp(s.r, e.r, f)), 0, 0xff),
+      g: clamp(Math.round(MathUtil.lerp(s.g, e.g, f)), 0, 0xff),
+      b: clamp(Math.round(MathUtil.lerp(s.b, e.b, f)), 0, 0xff),
+      a: clamp(Math.round(MathUtil.lerp(s.a, e.a, f)), 0, 0xff),
     });
   }
 

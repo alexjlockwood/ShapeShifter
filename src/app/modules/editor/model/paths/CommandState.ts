@@ -1,6 +1,5 @@
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { clamp, clone, sortedIndex, sortedIndexBy, sumBy, uniqueId } from 'lodash-es';
 import { Command, Projection, SvgChar } from '.';
 import { Calculator, Line, newCalculator } from './calculators';
 
@@ -85,7 +84,7 @@ export class CommandState {
       return undefined;
     }
     // Count the number of t values that are less than the projection.
-    const splitIdx = _.sumBy(this.mutations, m => (m.t < projection.t ? 1 : 0));
+    const splitIdx = sumBy(this.mutations, m => (m.t < projection.t ? 1 : 0));
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
@@ -178,7 +177,7 @@ class CommandStateMutator {
    * anything to the right.
    */
   sliceLeft(splitIdx: number) {
-    this.mutations = this.mutations.slice(0, splitIdx + 1).map(m => _.clone(m));
+    this.mutations = this.mutations.slice(0, splitIdx + 1).map(m => clone(m));
     this.maxT = this.lastMutation().t;
     return this;
   }
@@ -189,7 +188,7 @@ class CommandStateMutator {
    */
   sliceRight(splitIdx: number) {
     this.minT = this.mutations[splitIdx].t;
-    this.mutations = this.mutations.slice(splitIdx + 1).map(m => _.clone(m));
+    this.mutations = this.mutations.slice(splitIdx + 1).map(m => clone(m));
     return this;
   }
 
@@ -280,11 +279,11 @@ class CommandStateMutator {
       // updated the subpath's shift offset.
       t = Number.isNaN(t)
         ? MathUtil.lerp(this.minT, this.maxT, 0.5)
-        : _.clamp(t, this.minT, this.maxT);
-      const id = _.uniqueId();
-      const svgChar = currSvgChars[_.sortedIndex(currSplits, t)];
+        : clamp(t, this.minT, this.maxT);
+      const id = uniqueId();
+      const svgChar = currSvgChars[sortedIndex(currSplits, t)];
       const mutation = { id, t, svgChar };
-      const insertionIdx = _.sortedIndexBy<Mutation>(this.mutations, mutation, m => m.t);
+      const insertionIdx = sortedIndexBy<Mutation>(this.mutations, mutation, m => m.t);
       this.mutations.splice(insertionIdx, 0, { id, t, svgChar });
     }
     for (let i = 0; i < this.mutations.length - 1; i++) {

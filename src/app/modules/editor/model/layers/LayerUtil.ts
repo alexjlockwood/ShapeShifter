@@ -1,8 +1,7 @@
 import { Path } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { environment } from 'environments/environment';
-import _ from 'lodash';
-
+import { findIndex, flatMap } from 'lodash-es';
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from './Layer';
 
 const IS_DEV_BUILD = !environment.production;
@@ -26,7 +25,7 @@ export function getCanvasTransformForLayer(root: Layer, layerId: string) {
 function getCanvasTransformsForLayer(root: Layer, layerId: string) {
   return (function recurseFn(parents: Layer[], current: Layer): Matrix[] | undefined {
     if (current.id === layerId) {
-      return _.flatMap(parents, l => {
+      return flatMap(parents, l => {
         return l instanceof GroupLayer ? getCanvasTransformsForGroupLayer(l) : [];
       });
     }
@@ -268,7 +267,7 @@ function findSibling(layerId: string, parent: Layer | undefined, offset: number)
   if (!parent || !parent.children) {
     return undefined;
   }
-  let index = _.findIndex(parent.children, c => c.id === layerId);
+  let index = findIndex(parent.children, c => c.id === layerId);
   if (index < 0) {
     return undefined;
   }

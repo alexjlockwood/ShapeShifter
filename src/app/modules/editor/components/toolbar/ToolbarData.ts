@@ -8,8 +8,7 @@ import {
 import { MorphableLayer } from 'app/modules/editor/model/layers';
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { ActionModeUtil } from 'app/modules/editor/scripts/actionmode';
-import _ from 'lodash';
-
+import { sumBy } from 'lodash-es';
 /**
  * Determines what to show in the toolbar for the current action mode and selections.
  */
@@ -59,10 +58,10 @@ export class ToolbarData {
       ({ subIdx, cmdIdx }) => ({ subIdx, cmdIdx }),
     );
 
-    this.numSplitSubPaths = _.sumBy(this.subPaths, subIdx => {
+    this.numSplitSubPaths = sumBy(this.subPaths, subIdx => {
       return activePath.getSubPath(subIdx).isUnsplittable() ? 1 : 0;
     });
-    this.numSplitPoints = _.sumBy(this.points, s => {
+    this.numSplitPoints = sumBy(this.points, s => {
       const { subIdx, cmdIdx } = s;
       return activePath.getCommand(subIdx, cmdIdx).isSplitPoint() ? 1 : 0;
     });

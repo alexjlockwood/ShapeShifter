@@ -7,8 +7,7 @@ import {
 } from 'app/modules/editor/scripts/dom';
 import { Dragger } from 'app/modules/editor/scripts/dragger';
 import { ShortcutService, ThemeService } from 'app/modules/editor/services';
-import _ from 'lodash';
-
+import { clamp, round as lodashRound } from 'lodash-es';
 import { TIMELINE_ANIMATION_PADDING } from './constants';
 
 const HEADER_HEIGHT = 40;
@@ -86,7 +85,7 @@ export class TimelineGridRenderer {
       ((x - TIMELINE_ANIMATION_PADDING) /
         (getContentSize(this.canvas, 'width') - TIMELINE_ANIMATION_PADDING * 2)) *
       animation.duration;
-    time = _.clamp(time, 0, animation.duration);
+    time = clamp(time, 0, animation.duration);
     return { time, disableSnap };
   }
 
@@ -142,7 +141,7 @@ export class TimelineGridRenderer {
 }
 
 function round(n: number) {
-  return _.round(n, 8);
+  return lodashRound(n, 8);
 }
 
 export interface ScrubEvent {

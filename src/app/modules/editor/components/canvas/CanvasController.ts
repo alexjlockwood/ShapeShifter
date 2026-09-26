@@ -5,7 +5,7 @@ import type { EditorServices } from 'app/modules/editor/services/createEditorSer
 import { State, Store } from 'app/modules/editor/store';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { getZoomPanInfo } from 'app/modules/editor/store/paper/selectors';
-import _ from 'lodash';
+import { isEqual, round } from 'lodash-es';
 import { ReplaySubject, combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
@@ -65,7 +65,7 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
 
     const activeViewport$ = this.store.select(getVectorLayer).pipe(
       map(vl => ({ w: vl.width, h: vl.height })),
-      distinctUntilChanged((a, b) => _.isEqual(a, b)),
+      distinctUntilChanged((a, b) => isEqual(a, b)),
     );
     this.registerSubscription(
       combineLatest([this.canvasBounds$, activeViewport$]).subscribe(([bounds, viewport]) => {
@@ -141,7 +141,7 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
     );
     const x = point.x / Math.max(1, this.cssScale);
     const y = point.y / Math.max(1, this.cssScale);
-    this.canvasRulers.forEach(r => r.showMouse({ x: _.round(x), y: _.round(y) }));
+    this.canvasRulers.forEach(r => r.showMouse({ x: round(x), y: round(y) }));
   }
 
   private hideRuler() {

@@ -1,5 +1,4 @@
-import _ from 'lodash';
-
+import { find } from 'lodash-es';
 import { Property } from './Property';
 
 export class EnumProperty extends Property<string> {
@@ -20,7 +19,7 @@ export class EnumProperty extends Property<string> {
 
   // @Override
   displayValueForValue(value: string) {
-    const option = _.find(this.options, o => o.value === value);
+    const option = find(this.options, o => o.value === value);
     return option ? option.label : value;
   }
 

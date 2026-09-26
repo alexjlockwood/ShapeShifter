@@ -1,6 +1,5 @@
 import { MathUtil } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { uniqueId } from 'lodash-es';
 import { Command } from '.';
 
 /**
@@ -10,7 +9,7 @@ import { Command } from '.';
 export class SubPath {
   constructor(
     private readonly commands: ReadonlyArray<Command>,
-    private readonly id = _.uniqueId(),
+    private readonly id = uniqueId(),
     private readonly isCollapsing_ = false,
     private readonly isReversed_ = false,
     private readonly shiftOffset = 0,
@@ -114,7 +113,7 @@ export function createSubPaths(commands: ReadonlyArray<Command>) {
       continue;
     }
     if (!currentCmdList.length) {
-      currentCmdList.push(lastSeenMove.mutate().setId(_.uniqueId()).build());
+      currentCmdList.push(lastSeenMove.mutate().setId(uniqueId()).build());
     }
     currentCmdList.push(cmd);
     if (cmd.type === 'Z') {

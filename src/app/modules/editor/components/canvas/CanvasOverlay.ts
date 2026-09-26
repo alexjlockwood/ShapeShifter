@@ -34,7 +34,7 @@ import {
 } from 'app/modules/editor/store/actionmode/selectors';
 import { getCanvasOverlayState } from 'app/modules/editor/store/common/selectors';
 import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
-import _ from 'lodash';
+import { flatMap, remove, uniq } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -419,18 +419,18 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     if (this.selectionHelper) {
       // Draw any highlighted subpaths. We'll highlight a subpath if a subpath
       // selection or a point selection exists.
-      const selectedSubPaths = _(this.actionSelections as Selection[])
-        .filter(s => {
-          return (
-            s.source === this.actionSource &&
-            (s.type === SelectionType.Point || s.type === SelectionType.SubPath)
-          );
-        })
-        .map(s => s.subIdx)
-        .uniq()
+      const selectedSubPaths = uniq(
+        (this.actionSelections as Selection[])
+          .filter(s => {
+            return (
+              s.source === this.actionSource &&
+              (s.type === SelectionType.Point || s.type === SelectionType.SubPath)
+            );
+          })
+          .map(s => s.subIdx),
+      )
         .map(subIdx => activePath.getSubPath(subIdx))
-        .filter(subPath => !subPath.isCollapsing())
-        .value();
+        .filter(subPath => !subPath.isCollapsing());
 
       for (const subPath of selectedSubPaths) {
         // If the subpath has a split segment, highlight it in orange. Otherwise,
@@ -485,11 +485,10 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     }
 
     // Draw any existing split shape segments to the canvas.
-    const commands = _(activePath.getSubPaths() as SubPath[])
+    const commands = (activePath.getSubPaths() as SubPath[])
       .filter(s => !s.isCollapsing())
       .flatMap(s => s.getCommands() as Command[])
-      .filter(c => c.isSplitSegment())
-      .value();
+      .filter(c => c.isSplitSegment());
     CanvasUtil.executeCommands(ctx, commands, flattenedTransform);
     executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
@@ -515,7 +514,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       }
       if (pairedSubPaths.size) {
         // Draw any already paired subpaths in blue.
-        const pairedCmds = _.flatMap(
+        const pairedCmds = flatMap(
           Array.from(pairedSubPaths),
           subIdx => activePath.getSubPath(subIdx).getCommands() as Command[],
         );
@@ -590,7 +589,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     }
 
     // Create a list of all path points in their normal order.
-    const pointInfos = _(path.getSubPaths() as SubPath[])
+    const pointInfos = (path.getSubPaths() as SubPath[])
       .filter(s => !s.isCollapsing())
       .map((s, subIdx) => {
         return s.getCommands().map((cmd, cmdIdx) => {
@@ -598,8 +597,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         });
       })
       .flatMap(pis => pis)
-      .reverse()
-      .value();
+      .reverse();
 
     const subPathSelections = this.actionSelections.filter(s => s.type === SelectionType.SubPath);
     const pointSelections = this.actionSelections.filter(s => s.type === SelectionType.Point);
@@ -611,7 +609,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         pointSelections.some(s => s.subIdx === subIdx && s.cmdIdx === cmdIdx)
       );
     };
-    const selectedPointInfos = _.remove(pointInfos, pi => isPointInfoSelectedFn(pi));
+    const selectedPointInfos = remove(pointInfos, pi => isPointInfoSelectedFn(pi));
     // Remove any subpath points that share the same subIdx as an existing selection.
     // We'll call these 'medium' points (i.e. labeled, but not selected), and we'll
     // always draw selected points on top of medium points, and medium points
@@ -622,13 +620,13 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         pointSelections.some(s => s.subIdx === subIdx)
       );
     };
-    pointInfos.push(..._.remove(pointInfos, pi => isPointInfoAtLeastMediumFn(pi)));
+    pointInfos.push(...remove(pointInfos, pi => isPointInfoAtLeastMediumFn(pi)));
     pointInfos.push(...selectedPointInfos);
 
     const currentHover = this.actionHover;
 
     // Remove a hovering point, if one exists.
-    const hoveringPointInfos = _.remove(pointInfos, ({ subIdx, cmdIdx }: PointInfo) => {
+    const hoveringPointInfos = remove(pointInfos, ({ subIdx, cmdIdx }: PointInfo) => {
       const hover = currentHover;
       return (
         hover &&
@@ -643,7 +641,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       return hover && hover.type !== HoverType.Segment && hover.subIdx === subIdx;
     };
     // Similar to above, always draw hover points on top of subpath hover points.
-    pointInfos.push(..._.remove(pointInfos, pi => isPointInfoHoveringFn(pi)));
+    pointInfos.push(...remove(pointInfos, pi => isPointInfoHoveringFn(pi)));
     pointInfos.push(...hoveringPointInfos);
 
     const draggingIndex =

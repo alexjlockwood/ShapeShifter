@@ -1,5 +1,4 @@
-import _ from 'lodash';
-
+import { isEqual } from 'lodash-es';
 export function CanvasLayoutMixin<T extends Constructor>(Base = class {} as T) {
   return class extends Base {
     private bounds = { w: 24, h: 24 };
@@ -46,7 +45,7 @@ export function CanvasLayoutMixin<T extends Constructor>(Base = class {} as T) {
     }
 
     setDimensions(bounds: Size, viewport: Size) {
-      if (!_.isEqual(this.bounds, bounds) || !_.isEqual(this.viewport, viewport)) {
+      if (!isEqual(this.bounds, bounds) || !isEqual(this.viewport, viewport)) {
         this.bounds = bounds;
         this.viewport = viewport;
         this.onDimensionsChanged(this.bounds, this.viewport);
@@ -56,7 +55,7 @@ export function CanvasLayoutMixin<T extends Constructor>(Base = class {} as T) {
     protected onDimensionsChanged(bounds: Size, viewport: Size) {}
 
     setZoomPan(zoom: number, translation: Readonly<{ tx: number; ty: number }>) {
-      if (this.zoom !== zoom || !_.isEqual(this.translation, translation)) {
+      if (this.zoom !== zoom || !isEqual(this.translation, translation)) {
         this.zoom = zoom;
         this.translation = translation;
         this.onZoomPanChanged(zoom, translation);
