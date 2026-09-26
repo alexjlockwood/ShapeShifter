@@ -20,7 +20,9 @@ because it would ignore `.npmrc`'s package age check.
   config. Specs named `*.browser.spec.ts` run in headless
   Chromium, for what jsdom doesn't have, like SVG geometry and canvas pixels. The rest run in jsdom.
 - `npm run e2e` runs the Playwright end-to-end tests. Read `e2e/AGENTS.md` before running them.
-- Never run `npm run deploy`. It publishes the live site.
+- Never run `npm run deploy`. It publishes the live site. `.claude/settings.json` blocks it, and
+  also any command that mentions `deploy-stable.sh` or `gh-pages`, so read the deploy script with
+  a file tool instead of `cat`.
 
 ## Before you finish
 

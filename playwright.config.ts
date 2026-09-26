@@ -31,16 +31,17 @@ export default defineConfig({
       use: { ...use, baseURL: `http://localhost:${PREVIEW_PORT}` },
     },
   ]),
+  // Never reuse a running server: it could be serving another worktree's code, or a stale build.
   webServer: [
     {
       command: `npx vite --port ${DEV_PORT} --strictPort`,
       url: `http://localhost:${DEV_PORT}`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
     {
       command: `npx vite build && npx vite preview --port ${PREVIEW_PORT} --strictPort`,
       url: `http://localhost:${PREVIEW_PORT}`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
   ],
 });

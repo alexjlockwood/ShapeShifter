@@ -11,10 +11,8 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
   files run against the production build, for what only it has: the service worker, source maps,
   and the unsaved-changes prompts (which dev builds skip).
 - Every run starts both servers, the dev server on port 4280 and `vite build && vite preview` on
-  4281, even if you only pick a dev project. Locally, Playwright reuses whatever is already
-  listening on those ports. If another worktree is running end-to-end tests at the same time, you'd
-  be testing its code, so check `lsof -i :4280 -i :4281` first. A preview server that's still
-  running also won't include your changes.
+  4281, even if you only pick a dev project. If another worktree is running end-to-end tests, the
+  run fails because a port is in use. Wait for the other run to finish rather than stopping it.
 - A failed test keeps a trace: `npx playwright show-trace test-results/<test>/trace.zip`.
 - CI retries a failed test once. Locally there are no retries, so flaky tests fail.
 
