@@ -94,9 +94,10 @@ Where to start for common changes:
 
 The paper.js beta editor hasn't been ported, so it isn't compiled, typechecked, or linted:
 `components/canvas/canvaspaper.directive.ts`, `components/toolpanel/`, `scripts/paper/`,
-`services/paper.service.ts`, and `src/typings/paper/`. Don't edit it unless the task is to port
-it (see `IMPROVEMENTS.md`), and ignore it when looking for usages. `model/paper/` and `store/paper/`
-are compiled. `src/test/paperExclusions.spec.ts` checks that this list matches `tsconfig.json`,
+`services/paper.service.ts`, and `src/typings/paper/`. Don't edit it, and ignore it when looking
+for usages. A new canvas editor is replacing it rather than porting it: `docs/canvas-editor.md`
+explains why, and what's worth reusing. `model/paper/` and `store/paper/` are compiled.
+`src/test/paperExclusions.spec.ts` checks that this list matches `tsconfig.json`,
 `.oxlintrc.json`, and `.prettierignore`.
 
 ## Debugging
