@@ -68,6 +68,8 @@ during the React migration.
 - Several bugs found by reading the code: Escape during a shape drag makes the mouse up throw,
   distort bends every handle wrongly, the vector tool treats a selected group as a path, and hit
   tests prefer the bottom layer when shapes overlap. There are 106 TODOs and no tests.
+- Crash reports from the beta site add more: its most common error came from the paper.js tool
+  outliving its canvas ("Beta only" in `docs/bugs/bugsnag.md`).
 
 ### What's worth keeping
 
@@ -262,13 +264,15 @@ Once the new editor covers what the old one did, the old code, its exclusions, a
   (CANVAS-4 in `docs/bugs/canvas.md`, and the scaled group stroke width entry in `BUGS.md`).
 - **Path invariants.** The first `M` has no start point, each command starts where the previous
   one ended, and collapsing subpaths come last (see `model/paths/AGENTS.md`). Path strings are
-  rounded to 3 decimals, so snapping should produce values at that precision. A subpath that's
-  only an `M` still breaks several operations ("Reversing or shifting the first subpath drops a
-  trailing lone `M`" in `docs/bugs/path-model.md`), so the pen needs that fixed first. The parser
-  also accepts incomplete curves, which the editor mustn't produce.
+  rounded to 3 decimals, so snapping should produce values at that precision. The pen briefly
+  creates subpaths that are only an `M`, which crashed thousands of times in production until
+  recently (BUGSNAG-3 in `docs/bugs/bugsnag.md`), so it needs tests that edit paths in that state.
 - **Hit testing.** Tolerances are in screen pixels, so they're divided by the zoom and by the
   layer's scale (CANVAS-3). Filled subpaths without a `Z` should still be hit by their fill
-  (PATH-17). Clip paths are editable but drawn as outlines.
+  (PATH-17). A group scaled to 0 has no inverse, which made the old editor's hit tests throw.
+  Clip paths are editable but drawn as outlines.
+- **Failing gestures.** A gesture whose pointer down throws has to end there. The old editor kept
+  sending it events, so one failure turned into an error on every drag and key repeat.
 - **Names and ids.** Duplicated and new layers need unique names, since the
   `AnimatedVectorDrawable` export targets layers by name (`LayerUtil.getUniqueLayerName`), and new
   ids with their blocks remapped (`regenerateModelIds` in `scripts/common/ModelUtil.ts`).
