@@ -4,7 +4,7 @@ import { type DragEvent, useEffect, useRef, useState } from 'react';
  * Handles files dropped onto an element. Returns whether files are being dragged over it,
  * along with the event handlers to attach to it.
  */
-export function useDropTarget(onDropFiles: (files: FileList) => void) {
+export function useDropTarget(onDropFiles: (files: FileList | undefined) => void) {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const notDraggingTimeoutId = useRef<number>(undefined);
 
@@ -36,7 +36,10 @@ export function useDropTarget(onDropFiles: (files: FileList) => void) {
     onDragOver(event: DragEvent) {
       event.preventDefault();
       event.stopPropagation();
-      event.dataTransfer.dropEffect = 'copy';
+      // Drag events created by scripts (e.g. browser extensions) have no data transfer.
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'copy';
+      }
     },
     onDragLeave(event: DragEvent) {
       event.preventDefault();
@@ -48,7 +51,7 @@ export function useDropTarget(onDropFiles: (files: FileList) => void) {
       event.stopPropagation();
       window.clearTimeout(notDraggingTimeoutId.current);
       setIsDraggingOver(false);
-      onDropFiles(event.dataTransfer.files);
+      onDropFiles(event.dataTransfer?.files);
     },
   };
 

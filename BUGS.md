@@ -47,7 +47,8 @@ These existed before the migration and are still there.
     (`components/toolpanel/`, `store/paper/selectors.ts`).
   - `PaperProject.remove()` doesn't remove the `paper.Tool` it created, and paper.js only
     activates a new tool when none is active, so a remounted canvas keeps using the old tool
-    (`scripts/paper/PaperProject.ts`). Not yet verified.
+    (`scripts/paper/PaperProject.ts`). Verified against paper.js 0.11.5: it caused the most
+    common beta crash in Bugsnag (see `docs/bugs/bugsnag.md`).
 
 ## Found by the 2026-09-25 bug sweep
 
@@ -63,12 +64,20 @@ area, in the same style as the rest of this file:
 - **Import** (15 bugs): `docs/bugs/import.md`
 - **Export** (7 bugs): `docs/bugs/export.md`
 - **Canvas** (11 bugs): `docs/bugs/canvas.md`
-- **Timeline and UI** (16 bugs): `docs/bugs/timeline-and-ui.md`
+- **Timeline and UI** (15 bugs): `docs/bugs/timeline-and-ui.md`
 - **Build and tests** (7 bugs): `docs/bugs/build-and-tests.md`
 
 A subset of these (marked with a candidate fix in their entry) were fixed on a branch,
 `alex/fix-sweep-quick-wins`, whose PR (#370) was closed without merging; the branch predates the
 Prettier reformat in PR #366, so it would need a rebase before its commits could be reused.
+
+## Found in the Bugsnag reports
+
+Eight years of Bugsnag emails (2018 to 2026) were traced to the Angular source and checked
+against the current code on 2026-09-26: `docs/bugs/bugsnag.md`. It ranks the most common errors,
+lists which are fixed, and describes the ones still present, some of them sweep bugs that turned
+out to be far more common than their rating. The top one is auto fix throwing on a subpath that's
+only a move (PATH-9, 13,000 events).
 
 ## Fixed during the migration
 

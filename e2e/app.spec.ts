@@ -21,6 +21,19 @@ test('shows an error when the project fails to load', async ({ page, consoleErro
   consoleErrors.length = 0;
 });
 
+// Reading localStorage throws when cookies are blocked, which used to leave the page blank.
+test('loads when localStorage is blocked', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'localStorage', {
+      get() {
+        throw new DOMException('Access is denied for this document.', 'SecurityError');
+      },
+    });
+  });
+  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await expect(page.locator('.slt-layer').first()).toHaveText('playtopause');
+});
+
 test('switches between the light and dark themes', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('body')).not.toHaveClass(/ss-dark-theme/);

@@ -12,6 +12,13 @@ const fromPathOpString = PathUtil.fromPathOpString;
 
 describe('Path', () => {
   describe('constructing new Path objects', () => {
+    // Pressing Up in an empty path field used to build a Path from a number, which production
+    // builds stored and only failed on later, while drawing or exporting.
+    it("throws for arguments that aren't paths", () => {
+      expect(() => new Path(1 as any)).toThrow("Paths can't be built from number: 1");
+      expect(() => new Path(undefined as any)).toThrow();
+    });
+
     function buildPath(svgChars: string) {
       const numSvgCharArgsFn = (svgChar: SvgChar) => {
         switch (svgChar) {

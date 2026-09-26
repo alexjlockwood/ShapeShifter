@@ -91,3 +91,15 @@ export function getContext2d(canvas: HTMLCanvasElement) {
   }
   return ctx;
 }
+
+// Browsers fail to draw canvases that are larger than this (and Firefox throws).
+const MAX_CANVAS_SIZE = 16384;
+
+/**
+ * Returns the number of canvas pixels per CSS pixel to draw a canvas of the given CSS size at.
+ * That's the device pixel ratio, unless the canvas would then be too big to draw, e.g. when
+ * zoomed in on a long animation.
+ */
+export function getCanvasPixelRatio(width: number, height: number) {
+  return Math.min(devicePixelRatio, MAX_CANVAS_SIZE / width, MAX_CANVAS_SIZE / height);
+}

@@ -203,18 +203,19 @@ export class LayerTimelineController extends DestroyableMixin() {
         return;
       }
       trackEvent('select_demo', { demo_title: selectedDemoInfo.title });
-      this.services.projectService
-        .getProject(`demos/${selectedDemoInfo.id}.shapeshifter`)
-        .then(({ vectorLayer, animation, hiddenLayerIds }) => {
+      this.services.projectService.getProject(`demos/${selectedDemoInfo.id}.shapeshifter`).then(
+        ({ vectorLayer, animation, hiddenLayerIds }) => {
           this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
-        })
-        .catch(() => {
-          const msg =
-            'serviceWorker' in navigator && navigator.serviceWorker.controller
-              ? 'Demo not available offline'
-              : `Couldn't fetch demo`;
+        },
+        // Only fetch failures are handled here, so that errors from opening the demo are still
+        // reported. navigator.serviceWorker is undefined in some embedded browsers.
+        () => {
+          const msg = navigator.serviceWorker?.controller
+            ? 'Demo not available offline'
+            : `Couldn't fetch demo`;
           this.services.snackBarService.show(msg, 'Dismiss', Duration.Long);
-        });
+        },
+      );
     });
   }
 
