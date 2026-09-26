@@ -112,12 +112,13 @@ function vectorLayerToSvgNode(
       const clipPathName = clippedLayerToClipPathNameMap.get(layerId);
       seenClipPaths.forEach((id, i) => {
         const clipPathNode = xmlDoc.createElement('clipPath');
-        conditionalAttr(clipPathNode, 'id', clipPathName + (i ? '_' + i : ''));
+        // Layer names can't contain hyphens, so these ids can't match another layer's clip path.
+        conditionalAttr(clipPathNode, 'id', clipPathName + (i ? '-' + i : ''));
         const pathNode = xmlDoc.createElement('path');
         conditionalAttr(pathNode, 'd', clipPathToPathDataMap.get(id));
         if (i + 1 < seenClipPaths.length) {
           // Build the intersection of all seen clip paths.
-          const nextClipPathName = clipPathName + '_' + (i + 1);
+          const nextClipPathName = clipPathName + '-' + (i + 1);
           conditionalAttr(pathNode, 'clip-path', `url(#${nextClipPathName})`);
         }
         clipPathNode.appendChild(pathNode);
