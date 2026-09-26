@@ -10,6 +10,8 @@ const EXTRA_RULER_PADDING = 12;
 const GRID_INTERVALS_PX: ReadonlyArray<number> = [1, 2, 4, 8, 16, 24, 48, 100, 100, 250];
 const LABEL_OFFSET = 12;
 const TICK_SIZE = 6;
+// Browsers fail to draw canvases that are larger than this (and Firefox throws).
+const MAX_CANVAS_SIZE = 16384;
 
 /**
  * Draws a ruler along one of the canvas' edges.
@@ -65,11 +67,17 @@ export class CanvasRuler extends CanvasLayoutMixin() {
       : viewport.h * cssScale * zoom + EXTRA_RULER_PADDING * 2;
     this.canvas.style.width = `${width}px`;
     this.canvas.style.height = `${height}px`;
-    this.canvas.setAttribute('width', `${width * devicePixelRatio}`);
-    this.canvas.setAttribute('height', `${height * devicePixelRatio}`);
+    // Zooming in far enough would make the canvas too big to draw, so lower its resolution.
+    const pixelRatio = Math.min(
+      devicePixelRatio,
+      MAX_CANVAS_SIZE / width,
+      MAX_CANVAS_SIZE / height,
+    );
+    this.canvas.setAttribute('width', `${width * pixelRatio}`);
+    this.canvas.setAttribute('height', `${height * pixelRatio}`);
 
     const ctx = getContext2d(this.canvas);
-    ctx.scale(devicePixelRatio, devicePixelRatio);
+    ctx.scale(pixelRatio, pixelRatio);
     const { tx, ty } = this.getTranslation();
     ctx.translate(
       isHorizontal ? tx + EXTRA_RULER_PADDING : 0,
