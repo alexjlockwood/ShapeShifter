@@ -46,7 +46,7 @@ describe('SelectionHelper', () => {
               ...NO_HIT,
               isHit: true,
               isEndPointHit: true,
-              endPointHits: [{ subIdx: 0, cmdIdx: 1 }],
+              endPointHits: [{ subIdx: 0, cmdIdx: 1, projection: { ...splitPoint, t: 1, d: 0 } }],
             }
           : NO_HIT,
     };
