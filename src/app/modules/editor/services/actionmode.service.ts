@@ -379,12 +379,15 @@ export class ActionModeService {
     }
     let animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.From, from);
     animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.To, to, animation);
-    // The selected points and the hover may not exist in the new paths.
+    // Auto fix adds points and reorders subpaths, so the selected points, the hover, and the
+    // subpaths paired so far in pair subpaths mode may not refer to the same things anymore.
     this.store.dispatch(
       new BatchAction(
         new SetAnimation(animation),
         new SetActionModeSelections([]),
         new SetActionModeHover(undefined),
+        new SetUnpairedSubPath(undefined),
+        new SetPairedSubPaths(new Set()),
       ),
     );
   }

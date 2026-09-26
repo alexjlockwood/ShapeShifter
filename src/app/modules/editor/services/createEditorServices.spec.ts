@@ -187,6 +187,22 @@ describe('createEditorServices', () => {
       actionModeService.autoFix();
       expect(store.getState().present.actionmode.selections).toEqual([]);
     });
+
+    // Auto fix can reorder the subpaths, so the ones paired so far may have moved.
+    it('forgets the subpaths paired so far', () => {
+      selectPathBlock(
+        'M 0 0 L 4 0 L 4 4 Z M 20 20 L 24 20 L 24 24 Z',
+        'M 20 20 L 24 20 L 24 24 Z M 0 0 L 4 0 L 4 4 Z',
+      );
+      const { actionModeService } = services;
+      actionModeService.setActionMode(ActionMode.PairSubPaths);
+      actionModeService.pairSubPath(1, ActionSource.From);
+      expect(store.getState().present.actionmode.unpairedSubPath).toBeDefined();
+      actionModeService.autoFix();
+      const { unpairedSubPath, pairedSubPaths } = store.getState().present.actionmode;
+      expect(unpairedSubPath).toBeUndefined();
+      expect(pairedSubPaths.size).toBe(0);
+    });
   });
 
   describe('in action mode', () => {
