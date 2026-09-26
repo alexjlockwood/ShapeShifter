@@ -3,7 +3,7 @@
 import { Command, Path, PathUtil } from 'app/modules/editor/model/paths';
 import { newCalculator } from 'app/modules/editor/model/paths/calculators';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
-import { MathUtil } from 'app/modules/editor/scripts/common';
+import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import _ from 'lodash';
 
 import { assign } from './Hungarian';
@@ -200,21 +200,7 @@ function getDiagonal(commands: ReadonlyArray<Command>) {
 
 /** Aligns two paths using the Needleman-Wunsch algorithm. */
 function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
-  // Create and return a list of reversed and shifted from paths to test.
-  // Each generated 'from path' will be aligned with the target 'to path'.
-  const fromPaths: ReadonlyArray<Path> = _.flatMap(
-    [from, from.mutate().reverseSubPath(subIdx).build()],
-    p => {
-      const paths = [p];
-      if (p.getSubPath(subIdx).isClosed()) {
-        for (let i = 1; i < p.getSubPath(subIdx).getCommands().length - 1; i++) {
-          // TODO: we need to find a way to reduce the number of paths to try.
-          paths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
-        }
-      }
-      return paths;
-    },
-  );
+  const fromPaths = getAlignmentCandidates(from, to, subIdx);
 
   // The scoring function to use to calculate the alignment. Convert-able commands are considered
   // matches, and the farther apart their points are, the lower the score. Distances are measured
@@ -347,6 +333,82 @@ function getSplitTimes(cmd: Command | undefined, otherCmds: ReadonlyArray<Comman
   return isIncreasing(ts) ? ts : undefined;
 }
 
+/** The most candidates alignSubPath aligns in full, out of every reversal and shift. */
+const MAX_ALIGNMENT_CANDIDATES = 10;
+
+/**
+ * Returns the from path, reversed or not, and shifted to each of its start points if the subpath
+ * is closed, for alignSubPath to align with the to path. There are two for each point, and each
+ * alignment takes time proportional to the product of the subpaths' lengths, so when there are
+ * many, it only returns the few whose points are closest to the to path's at proportional
+ * positions, which is quick to find without building the paths.
+ */
+function getAlignmentCandidates(from: Path, to: Path, subIdx: number): Path[] {
+  const toEnds = to
+    .getSubPath(subIdx)
+    .getCommands()
+    .map(cmd => cmd.end);
+  const size = getDiagonal([
+    ...from.getSubPath(subIdx).getCommands(),
+    ...to.getSubPath(subIdx).getCommands(),
+  ]);
+  const score = (ends: ReadonlyArray<Point>) =>
+    _.sum(
+      ends.map((p, i) => {
+        const q = toEnds[Math.round((i * (toEnds.length - 1)) / Math.max(1, ends.length - 1))];
+        return 1 / Math.max(1 / 24, MathUtil.distance(p, q) / size);
+      }),
+    );
+  const candidates = [from, from.mutate().reverseSubPath(subIdx).build()].flatMap(path =>
+    getShiftedEndPoints(path, subIdx).map((ends, numShifts) => ({ path, numShifts, ends })),
+  );
+  const chosen =
+    candidates.length <= MAX_ALIGNMENT_CANDIDATES
+      ? candidates
+      : _.sortBy(
+          _.sortBy(candidates, c => -score(c.ends)).slice(0, MAX_ALIGNMENT_CANDIDATES),
+          // Keep them in the original order, which breaks ties between their alignments.
+          c => candidates.indexOf(c),
+        );
+  return chosen.map(({ path, numShifts }) =>
+    numShifts ? path.mutate().shiftSubPathBack(subIdx, numShifts).build() : path,
+  );
+}
+
+/**
+ * Returns the end points of a subpath's commands after shiftSubPathBack(subIdx, n), for each n
+ * from 0 to one less than its number of points, without building each shifted path. An open
+ * subpath can't be shifted, so it only has its own.
+ */
+function getShiftedEndPoints(path: Path, subIdx: number): Point[][] {
+  const subPath = path.getSubPath(subIdx);
+  const ends = subPath.getCommands().map(cmd => cmd.end);
+  const numPoints = ends.length - 1;
+  if (!subPath.isClosed() || numPoints < 2) {
+    return [ends];
+  }
+  // A shift rotates the ring of points. Find out which way by shifting once.
+  const ring = ends.slice(0, numPoints);
+  const shiftedOnce = path.mutate().shiftSubPathBack(subIdx, 1).build();
+  const shiftedOnceEnds = shiftedOnce
+    .getSubPath(subIdx)
+    .getCommands()
+    .map(cmd => cmd.end);
+  const rotate = (step: number, numShifts: number) => {
+    const offset = MathUtil.floorMod(step * numShifts, numPoints);
+    const rotated = _.range(numPoints).map(i => ring[(offset + i) % numPoints]);
+    return [...rotated, rotated[0]];
+  };
+  const matches = (a: ReadonlyArray<Point>, b: ReadonlyArray<Point>) =>
+    a.length === b.length && a.every((p, i) => MathUtil.arePointsEqual(p, b[i]));
+  const step = [1, -1].find(s => matches(rotate(s, 1), shiftedOnceEnds));
+  if (step === undefined) {
+    // The mutator ignores shifts of a subpath whose end doesn't quite meet its start.
+    return [ends];
+  }
+  return _.range(numPoints).map(numShifts => rotate(step, numShifts));
+}
+
 /**
  * Takes two paths with an equal number of commands and makes them compatible
  * by converting each pair one-by-one.
@@ -395,30 +457,24 @@ function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
     to = to.mutate().reverseSubPath(subIdx).build();
   }
 
-  // Create and return a list of reversed and shifted from paths to test.
-  // Each generated 'from path' will be aligned with the target 'to path'.
-  const fromPaths: Path[] = [from];
-  if (from.getSubPath(subIdx).isClosed()) {
-    for (let i = 1; i < from.getSubPath(subIdx).getCommands().length - 1; i++) {
-      // TODO: we need to find a way to reduce the number of paths to try.
-      fromPaths.push(from.mutate().shiftSubPathBack(subIdx, i).build());
-    }
-  }
-
-  let bestFromPath = from;
+  // Shift the from subpath to whichever start point moves the points the least.
+  const toEnds = to
+    .getSubPath(subIdx)
+    .getCommands()
+    .map(cmd => cmd.end);
+  const sumOfSquares = (ends: ReadonlyArray<Point>) =>
+    _.sum(ends.map((p, cmdIdx) => MathUtil.distance(p, toEnds[cmdIdx]) ** 2));
+  const shiftedEnds = getShiftedEndPoints(from, subIdx);
+  let numShifts = 0;
   let min = Infinity;
-  for (const fromPath of fromPaths) {
-    const fromCmds = fromPath.getSubPath(subIdx).getCommands();
-    let sumOfSquares = 0;
-    const toCmds = to.getSubPath(subIdx).getCommands();
-    fromCmds.forEach(
-      (c, cmdIdx) => (sumOfSquares += MathUtil.distance(c.end, toCmds[cmdIdx].end) ** 2),
-    );
-    if (sumOfSquares < min) {
-      min = sumOfSquares;
-      bestFromPath = fromPath;
+  shiftedEnds.forEach((ends, i) => {
+    const sum = sumOfSquares(ends);
+    if (sum < min) {
+      min = sum;
+      numShifts = i;
     }
-  }
+  });
+  const bestFromPath = numShifts ? from.mutate().shiftSubPathBack(subIdx, numShifts).build() : from;
 
   // Reversing and shifting reorder the commands, so the conversions that made their types match
   // no longer line up. Convert them again.

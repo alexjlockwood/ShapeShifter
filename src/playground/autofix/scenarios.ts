@@ -398,7 +398,7 @@ export const BUILT_IN_SCENARIOS: ReadonlyArray<Scenario> = [
     id: `polygons-${from}-${to}`,
     group: 'Performance',
     name: `${from}-gon to ${to}-gon`,
-    note: 'Auto fix tries every start point and direction, so its time grows quickly with the number of points.',
+    note: 'Auto fix used to align every start point and direction in full, so its time grew quickly with the number of points.',
     from: polygon(from, 12, 12, 10),
     to: polygon(to, 12, 12, 7, 0.2),
     kind: 'fill' as const,

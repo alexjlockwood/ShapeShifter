@@ -119,6 +119,25 @@ describe('AutoAwesome', () => {
       expect(points).toEqual(expected);
     });
 
+    // With many points, only the shifts and reversals closest to the other subpath are aligned
+    // in full, so this checks that they still find the one that moves nothing.
+    it.each([
+      ['starting from another point', 17, false],
+      ['starting from another point, drawn the other way', 41, true],
+    ])('lines up a polygon with many points with itself %s', (unused, start, reverse) => {
+      const polygonPath = new Path(polygon(60));
+      let other = polygonPath.mutate().shiftSubPathBack(0, start);
+      if (reverse) {
+        other = other.reverseSubPath(0);
+      }
+      const [from, to] = AutoAwesome.autoFix(polygonPath, new Path(other.build().getPathString()));
+      expect(from.isMorphableWith(to)).toBe(true);
+      from.getCommands().forEach((cmd, i) => {
+        expect(cmd.end.x).toBeCloseTo(to.getCommands()[i].end.x);
+        expect(cmd.end.y).toBeCloseTo(to.getCommands()[i].end.y);
+      });
+    });
+
     describe('pairing subpaths', () => {
       const square = (x: number, y: number, size: number) =>
         `M ${x} ${y} L ${x + size} ${y} L ${x + size} ${y + size} L ${x} ${y + size} Z`;
