@@ -164,6 +164,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
               selectedLayerIds,
               subIdxWithError,
             }) => {
+              const previousPath = this.activePath;
               this.vectorLayer = vectorLayer;
               this.blockLayerId = blockLayerId;
               this.isActionMode = isActionMode;
@@ -174,6 +175,12 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
               this.hiddenLayerIds = hiddenLayerIds;
               this.selectedLayerIds = selectedLayerIds;
               this.subIdxWithError = subIdxWithError;
+              if (this.activePath !== previousPath) {
+                // The splitters only update on mouse events, so after an undo (for example)
+                // they would still point at subpaths and commands the path no longer has.
+                this.segmentSplitter?.reset();
+                this.shapeSplitter?.reset();
+              }
               this.draw();
             },
           ),
@@ -420,6 +427,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         })
         .map(s => s.subIdx)
         .uniq()
+        .filter(subIdx => hasSubPath(activePath, subIdx))
         .map(subIdx => activePath.getSubPath(subIdx))
         .filter(subPath => !subPath.isCollapsing())
         .value();
@@ -451,13 +459,14 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         });
       }
       const segmentSelectionCmds = segmentSelections
+        .filter(s => hasCommand(activePath, s.subIdx, s.cmdIdx))
         .map(s => activePath.getCommand(s.subIdx, s.cmdIdx))
         .filter(cmd => cmd.isSplitSegment());
       CanvasUtil.executeCommands(ctx, segmentSelectionCmds, flattenedTransform);
       executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
 
       // Highlight any subpaths with errors.
-      if (this.subIdxWithError !== undefined) {
+      if (this.subIdxWithError !== undefined && hasSubPath(activePath, this.subIdxWithError)) {
         const cmds = activePath.getSubPath(this.subIdxWithError).getCommands();
         CanvasUtil.executeCommands(ctx, cmds, flattenedTransform);
         executeHighlights(ctx, ERROR_COLOR, this.highlightLineWidth, this.highlightLineDash);
@@ -465,7 +474,11 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     } else if (this.segmentSplitter) {
       // Highlight the segment as the user hovers over it.
       const projectionOntoPath = this.segmentSplitter.getProjectionOntoPath();
-      if (projectionOntoPath && projectionOntoPath.projection.d < this.minSnapThreshold) {
+      if (
+        projectionOntoPath &&
+        projectionOntoPath.projection.d < this.minSnapThreshold &&
+        hasCommand(activePath, projectionOntoPath.subIdx, projectionOntoPath.cmdIdx)
+      ) {
         const { subIdx, cmdIdx } = projectionOntoPath;
         CanvasUtil.executeCommands(
           ctx,
@@ -490,7 +503,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       if (currUnpair) {
         // Draw the current unpaired subpath in orange, if it exists.
         const { source, subIdx } = currUnpair;
-        if (source === this.actionSource) {
+        if (source === this.actionSource && hasSubPath(activePath, subIdx)) {
           const subPath = activePath.getSubPath(subIdx);
           CanvasUtil.executeCommands(ctx, subPath.getCommands(), flattenedTransform);
           executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
@@ -501,14 +514,15 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       const hasHover =
         currentHover &&
         currentHover.source === this.actionSource &&
-        currentHover.type === HoverType.SubPath;
+        currentHover.type === HoverType.SubPath &&
+        hasSubPath(activePath, currentHover.subIdx);
       if (hasHover) {
         pairedSubPaths.delete(currentHover.subIdx);
       }
       if (pairedSubPaths.size) {
         // Draw any already paired subpaths in blue.
         const pairedCmds = _.flatMap(
-          Array.from(pairedSubPaths),
+          Array.from(pairedSubPaths).filter(subIdx => hasSubPath(activePath, subIdx)),
           subIdx => activePath.getSubPath(subIdx).getCommands() as Command[],
         );
         CanvasUtil.executeCommands(ctx, pairedCmds, flattenedTransform);
@@ -543,8 +557,12 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
         if (projectionOntoPath) {
           const projection = projectionOntoPath.projection;
-          if (projection && projection.d < this.minSnapThreshold) {
-            const { subIdx, cmdIdx } = projectionOntoPath;
+          const { subIdx, cmdIdx } = projectionOntoPath;
+          if (
+            projection &&
+            projection.d < this.minSnapThreshold &&
+            hasCommand(activePath, subIdx, cmdIdx)
+          ) {
             CanvasUtil.executeCommands(
               ctx,
               [activePath.getCommand(subIdx, cmdIdx)],
@@ -1087,6 +1105,18 @@ function executeLabeledPoint(
 
 // Takes a path point and transforms it so that its coordinates are in terms
 // of the VectorLayer's viewport coordinates.
+// Selections and hovers can outlive the subpaths and commands they point at, e.g. when auto fix
+// changes the path.
+function hasSubPath(path: Path, subIdx: number) {
+  return subIdx >= 0 && subIdx < path.getSubPaths().length;
+}
+
+function hasCommand(path: Path, subIdx: number, cmdIdx: number) {
+  return (
+    hasSubPath(path, subIdx) && cmdIdx >= 0 && cmdIdx < path.getSubPath(subIdx).getCommands().length
+  );
+}
+
 function applyGroupTransform(mousePoint: Point, transform: Matrix) {
   return MathUtil.transformPoint(mousePoint, transform);
 }
