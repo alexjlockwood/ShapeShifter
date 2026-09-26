@@ -58,7 +58,7 @@ it. Fixed by rewording so no wrapped line starts with a digit followed by `.` or
 
 ## Code review found 11 problems; all fixed before anything was committed
 
-`/code-review` was run against the draft. It caught real defects in the *documentation itself* (bad
+`/code-review` was run against the draft. It caught real defects in the _documentation itself_ (bad
 fix advice, and a couple of claims that don't match the code), not typos. Each was checked against
 the actual code (and, in one case, a local AOSP mirror) before being fixed:
 
@@ -70,7 +70,7 @@ the actual code (and, in one case, a local AOSP mirror) before being fixed:
    undo steps "that do nothing." Actually both **also clear the selection** as a side effect
    (`groupOrUngroupSelectedLayers` and `addBlocks` both unconditionally dispatch
    `SetSelectedLayers(new Set())`). The suggested fix ("only dispatch when something changes")
-   wouldn't have addressed real behavior since the selection *does* change. Corrected to describe
+   wouldn't have addressed real behavior since the selection _does_ change. Corrected to describe
    the selection-clearing and say these paths need an early return instead.
 3. **STORE-13** — the fix pointed at `store/reset/reducer.ts`, but that reducer **never runs on
    undo/redo** — redux-undo 1.1.1 returns the past/future state directly and skips the wrapped
@@ -110,9 +110,9 @@ the actual code (and, in one case, a local AOSP mirror) before being fixed:
    name which clamps to remove.
 10. **CFG-3** — quoted a test name, "doesn't reload open pages", that doesn't exist. The actual test
     in `e2e/offline.preview.spec.ts` is named `'activates a new version without reloading open
-    pages'`. Corrected the quote (and title) to match.
+pages'`. Corrected the quote (and title) to match.
 11. **Intro paragraph** — the list of "confirmed by reading" ids was inconsistent (didn't mention
-    the ids that are *partly* by-reading, like CANVAS-7 and EXP-1) and gave no reason for the gaps in
+    the ids that are _partly_ by-reading, like CANVAS-7 and EXP-1) and gave no reason for the gaps in
     the numbering. Added a sentence explaining that skipped ids belong to bugs fixed in other PRs.
 
 The review also surfaced something **outside the sweep's own scope**, which was not added as its own
@@ -130,13 +130,13 @@ about needing `npm ci` first):
 
 - **Reversing or shifting the first subpath drops a trailing lone `M`.** Repro confirmed exactly as
   relayed: `AutoAwesome.autoFix(new Path('M 5 5 M 0 0 L 10 0 L 10 10 Z'), new Path('M 0 0 L 10 10 L
-  20 0 M 0 0 L 10 0 L 10 10 L 0 10 Z'))` throws `"Subpath index out of bounds: subIdx=1
-  numSubPaths=1"`. One correction versus how it was relayed: the report attributed part of this to
+20 0 M 0 0 L 10 0 L 10 10 L 0 10 Z'))` throws `"Subpath index out of bounds: subIdx=1
+numSubPaths=1"`. One correction versus how it was relayed: the report attributed part of this to
   `PathParser.ts`, but a throwaway test showed the **parser actually keeps** the trailing `M`
   (`parseCommands('M 0 0 L 10 0 M 5 5')` yields command types `M L M`). The drop happens one layer
   up, in `model/paths/SubPath.ts`'s `createSubPaths`: when it hits an `M`, it only starts a new
   subpath if the current one is empty; otherwise it just marks `lastSeenMove` and continues, so a
-  *rebuilt* subpath (from `reverseSubPath`/`shiftSubPathBack`, which end in `L` instead of `Z`)
+  _rebuilt_ subpath (from `reverseSubPath`/`shiftSubPathBack`, which end in `L` instead of `Z`)
   swallows the following lone `M` instead of ending there. (Confirmed with a test:
   `new Path('M 0 0 L 10 0 L 10 10 Z M 5 5').mutate().reverseSubPath(0).build()` has 1 subpath instead
   of 2.)
