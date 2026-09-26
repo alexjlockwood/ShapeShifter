@@ -168,21 +168,11 @@ function vectorLayerToSvgNode(
         conditionalAttr(node, 'stroke-width', layer.strokeWidth, 0);
 
         if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
-          const flattenedTransform = LayerUtil.getCanvasTransformForLayer(vl, layer.id);
-          const { a, d } = flattenedTransform;
           // Note that we only return the length of the first sub path due to
           // https://code.google.com/p/android/issues/detail?id=172547
-          let pathLength: number;
-          if (Math.abs(a) !== 1 || Math.abs(d) !== 1) {
-            // Then recompute the scaled path length.
-            pathLength = pathData
-              .mutate()
-              .transform(flattenedTransform)
-              .build()
-              .getSubPathLength(0);
-          } else {
-            pathLength = pathData.getSubPathLength(0);
-          }
+          // The dash lengths are in the path's own units, under its groups' transforms, so the
+          // length isn't transformed.
+          const pathLength = pathData.getSubPathLength(0);
           const strokeDashArray = LayerUtil.toStrokeDashArray(
             layer.trimPathStart,
             layer.trimPathEnd,
