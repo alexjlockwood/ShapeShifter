@@ -170,9 +170,13 @@ function pairSubPaths(from: Path, to: Path): [Path, Path] {
   const centers = (path: Path) =>
     path.getSubPaths().map((unused, subIdx) => path.getPoleOfInaccessibility(subIdx));
   const longerCenters = centers(longer);
-  const partners = assign(
-    centers(shorter).map(p => longerCenters.map(q => MathUtil.distance(p, q))),
-  );
+  // A subpath with huge or missing coordinates gets the largest distance, rather than one the
+  // assignment can't compare.
+  const distance = (p: Point, q: Point) => {
+    const d = MathUtil.distance(p, q);
+    return Number.isFinite(d) ? d : Number.MAX_SAFE_INTEGER;
+  };
+  const partners = assign(centers(shorter).map(p => longerCenters.map(q => distance(p, q))));
   const order = [
     ...partners,
     ..._.range(longerCenters.length).filter(subIdx => !partners.includes(subIdx)),
@@ -190,6 +194,14 @@ function pairSubPaths(from: Path, to: Path): [Path, Path] {
   return shouldReorderFrom ? [reordered, to] : [from, reordered];
 }
 
+/**
+ * Returns how close two points are, relative to the size of the subpaths they're in, so that it
+ * doesn't depend on the units they're drawn in. Points closer than a 24th of it (a unit in a
+ * 24 x 24 icon) count as being in the same place.
+ */
+const getCloseness = (p: Point, q: Point, size: number) =>
+  1 / Math.max(1 / 24, MathUtil.distance(p, q) / size);
+
 /** Returns the length of the diagonal of the commands' end points' bounding box, or 1 if it's 0. */
 function getDiagonal(commands: ReadonlyArray<Command>) {
   const xs = commands.map(c => c.end.x);
@@ -200,24 +212,21 @@ function getDiagonal(commands: ReadonlyArray<Command>) {
 
 /** Aligns two paths using the Needleman-Wunsch algorithm. */
 function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
-  const fromPaths = getAlignmentCandidates(from, to, subIdx);
-
-  // The scoring function to use to calculate the alignment. Convert-able commands are considered
-  // matches, and the farther apart their points are, the lower the score. Distances are measured
-  // relative to the size of the subpaths, so that the alignment doesn't depend on the units
-  // they're drawn in, and points closer than a 24th of it (a unit in a 24 x 24 icon) count as
-  // being in the same place.
   const size = getDiagonal([
     ...from.getSubPath(subIdx).getCommands(),
     ...to.getSubPath(subIdx).getCommands(),
   ]);
+  const fromPaths = getAlignmentCandidates(from, to, subIdx, size);
+
+  // The scoring function to use to calculate the alignment. Convert-able commands are considered
+  // matches, and the closer their points are, the higher the score.
   const getScoreFn = (a: Command, b: Command) => {
     const charA = a.type;
     const charB = b.type;
     if (charA !== charB && !a.canConvertTo(charB) && !b.canConvertTo(charA)) {
       return MISMATCH;
     }
-    return MATCH / Math.max(1 / 24, MathUtil.distance(a.end, b.end) / size);
+    return MATCH * getCloseness(a.end, b.end, size);
   };
 
   const alignmentInfos = fromPaths.map(generatedFromPath => {
@@ -272,7 +281,21 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
             others.slice(streakStart, i + 1).map(a => a.obj),
           )) ||
         _.range(1, numGaps + 1).map(n => n / (numGaps + 1));
-      splitOps.push({ subIdx, cmdIdx, ts });
+      const prevOp = _.last(splitOps);
+      if (prevOp?.cmdIdx === cmdIdx) {
+        // Streaks at the start or end of the alignment are clamped to the same command as their
+        // neighbors, so split it once for both, keeping their points in order.
+        const numTs = prevOp.ts.length + ts.length;
+        const merged = [...prevOp.ts, ...ts];
+        const isIncreasing = merged.every((t, j) => !j || merged[j - 1] < t);
+        splitOps[splitOps.length - 1] = {
+          subIdx,
+          cmdIdx,
+          ts: isIncreasing ? merged : _.range(1, numTs + 1).map(n => n / (numTs + 1)),
+        };
+      } else {
+        splitOps.push({ subIdx, cmdIdx, ts });
+      }
     }
     PathUtil.sortPathOps(splitOps);
     const mutator = path.mutate();
@@ -303,7 +326,7 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
  * neither works, e.g. when the commands have no length.
  */
 function getSplitTimes(cmd: Command | undefined, otherCmds: ReadonlyArray<Command | undefined>) {
-  if (!cmd || otherCmds.some(c => !c)) {
+  if (!cmd || !otherCmds.every((c): c is Command => !!c)) {
     return undefined;
   }
   const calculator = newCalculator(cmd);
@@ -313,13 +336,13 @@ function getSplitTimes(cmd: Command | undefined, otherCmds: ReadonlyArray<Comman
   const isIncreasing = (ts: ReadonlyArray<number>) =>
     ts.every((t, i) => 0 < t && t < 1 && (!i || ts[i - 1] < t));
 
-  const partners = otherCmds.slice(0, -1).map(c => (c ? c.end : cmd.end));
+  const partners = otherCmds.slice(0, -1).map(c => c.end);
   const projectedTs = partners.map(p => calculator.project(p)?.t ?? -1);
   if (isIncreasing(projectedTs)) {
     return projectedTs;
   }
 
-  const lengths = otherCmds.map(c => (c ? newCalculator(c).getPathLength() : 0));
+  const lengths = otherCmds.map(c => newCalculator(c).getPathLength());
   const totalLength = _.sum(lengths);
   if (!totalLength) {
     return undefined;
@@ -343,20 +366,16 @@ const MAX_ALIGNMENT_CANDIDATES = 10;
  * many, it only returns the few whose points are closest to the to path's at proportional
  * positions, which is quick to find without building the paths.
  */
-function getAlignmentCandidates(from: Path, to: Path, subIdx: number): Path[] {
+function getAlignmentCandidates(from: Path, to: Path, subIdx: number, size: number): Path[] {
   const toEnds = to
     .getSubPath(subIdx)
     .getCommands()
     .map(cmd => cmd.end);
-  const size = getDiagonal([
-    ...from.getSubPath(subIdx).getCommands(),
-    ...to.getSubPath(subIdx).getCommands(),
-  ]);
   const score = (ends: ReadonlyArray<Point>) =>
     _.sum(
       ends.map((p, i) => {
         const q = toEnds[Math.round((i * (toEnds.length - 1)) / Math.max(1, ends.length - 1))];
-        return 1 / Math.max(1 / 24, MathUtil.distance(p, q) / size);
+        return getCloseness(p, q, size);
       }),
     );
   const candidates = [from, from.mutate().reverseSubPath(subIdx).build()].flatMap(path =>

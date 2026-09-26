@@ -13,6 +13,10 @@ export function assign(costs: ReadonlyArray<ReadonlyArray<number>>): number[] {
   if (costs.some(row => row.length !== numCols) || numRows > numCols) {
     throw new Error('Expected at least as many columns as rows, in every row');
   }
+  if (!costs.every(row => row.every(Number.isFinite))) {
+    // The search below would never end.
+    throw new Error('Expected every cost to be a finite number');
+  }
 
   // The rows and columns are indexed from 1 here, and column 0 is a placeholder that the rows
   // start from. rowPotentials and colPotentials are the dual variables, and rowForCol holds the

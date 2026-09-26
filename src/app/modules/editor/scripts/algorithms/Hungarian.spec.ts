@@ -49,6 +49,10 @@ describe('assign', () => {
     expect(assign([])).toEqual([]);
   });
 
+  it.each([Infinity, NaN])('rejects a cost of %d', cost => {
+    expect(() => assign([[cost, cost]])).toThrow();
+  });
+
   it('rejects more rows than columns', () => {
     expect(() => assign([[1], [2]])).toThrow();
   });

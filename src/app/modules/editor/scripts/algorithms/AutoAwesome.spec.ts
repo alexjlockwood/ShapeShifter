@@ -138,6 +138,19 @@ describe('AutoAwesome', () => {
       });
     });
 
+    // The gaps at the end of the alignment and the ones before the last command both split the
+    // last command, and splitting it twice cut the second batch of points out of the first piece.
+    it('spreads points out along a command that two streaks of gaps split', () => {
+      const [from, to] = AutoAwesome.autoFix(
+        new Path('M 7 13 L 10 14'),
+        new Path('M 13 21 L 20 10 L 9 23 L 18 22 L 6 23 L 22 17'),
+      );
+      expect(from.isMorphableWith(to)).toBe(true);
+      const xs = from.getCommands().map(cmd => cmd.end.x);
+      expect(xs).toEqual([...xs].sort((a, b) => a - b));
+      expect(xs[xs.length - 2]).toBeGreaterThan(9);
+    });
+
     describe('pairing subpaths', () => {
       const square = (x: number, y: number, size: number) =>
         `M ${x} ${y} L ${x + size} ${y} L ${x + size} ${y + size} L ${x} ${y + size} Z`;
