@@ -43,10 +43,6 @@
   past the end of the animation, or the blocks shift relative to each other near 0. Snap first,
   then clamp against every block (`components/layertimeline/LayerTimelineController.ts`). (UI-8,
   low, confirmed by a test)
-- **Up and Down arrows in name and color fields throw or change the value.** ArrowUp in an empty
-  or numeric name field throws, which is reported to Bugsnag, and in an empty color field it sets
-  `#000000`. Only handle the arrows for number and fraction properties, and ignore empty input
-  (`components/propertyinput/PropertyInput.tsx`). (UI-9, low, confirmed by a test)
 - **Modifier+Up does nothing on integer times, while modifier+Down subtracts 1.** With Cmd or Ctrl
   held, the arrows step by 0.1, which `Math.floor` turns into no change going up and -1 going down
   for integer properties such as block times. Round instead, or step by 1

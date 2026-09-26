@@ -64,7 +64,7 @@ area, in the same style as the rest of this file:
 - **Import** (15 bugs): `docs/bugs/import.md`
 - **Export** (7 bugs): `docs/bugs/export.md`
 - **Canvas** (11 bugs): `docs/bugs/canvas.md`
-- **Timeline and UI** (16 bugs): `docs/bugs/timeline-and-ui.md`
+- **Timeline and UI** (15 bugs): `docs/bugs/timeline-and-ui.md`
 - **Build and tests** (7 bugs): `docs/bugs/build-and-tests.md`
 
 A subset of these (marked with a candidate fix in their entry) were fixed on a branch,
@@ -75,10 +75,9 @@ Prettier reformat in PR #366, so it would need a rebase before its commits could
 
 Eight years of Bugsnag emails (2018 to 2026) were traced to the Angular source and checked
 against the current code on 2026-09-26: `docs/bugs/bugsnag.md`. It ranks the most common errors,
-lists which are fixed, and describes 11 that are still present, some of them sweep bugs that turned
-out to be far more common than their rating. The top ones: the app shows a blank page when
-localStorage is unavailable, auto fix throws on a subpath that's only a move (PATH-9, 13,000
-events), and the Up and Down arrows put a number into empty color, path, and name fields (UI-9).
+lists which are fixed, and describes the ones still present, some of them sweep bugs that turned
+out to be far more common than their rating. The top one is auto fix throwing on a subpath that's
+only a move (PATH-9, 13,000 events).
 
 ## Fixed during the migration
 

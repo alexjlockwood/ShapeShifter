@@ -33,10 +33,10 @@ Ranked by events. Everything not marked "beta" happened on the live site.
 | Firefox extensions: "Permission denied to access property 'apply'"                                 | 8,000  | 2018-2022 | Gone with zone.js             |
 | Firefox timeline grid canvas too big: `NS_ERROR_FAILURE`                                           | 7,100  | 2018-2025 | Fixed in the port             |
 | Blocks for missing layers: "reading 'animatableProperties'", AVD export "reading 'name'"           | 5,200  | 2018-2026 | Fixed in the port             |
-| No localStorage: "reading 'present'", "'themeType'", "'nativeElement'"                             | 5,000  | 2018-2026 | **Still present** (BUGSNAG-1) |
+| No localStorage: "reading 'present'", "'themeType'", "'nativeElement'"                             | 5,000  | 2018-2026 | Fixed                         |
 | Action mode with an empty path block: "reading 'getSubPaths'"                                      | 4,000  | 2018-2026 | Fixed in the port             |
 | Lone `M` after an open subpath: "Error retrieving command mutation", "Subpath index out of bounds" | 4,000  | 2018-2026 | **Still present** (BUGSNAG-3) |
-| Up/Down in an empty color field: "Argument has incorrect type (number)"                            | 2,550  | 2018-2025 | **Still present** (BUGSNAG-4) |
+| Up/Down in an empty color field: "Argument has incorrect type (number)"                            | 2,550  | 2018-2025 | Fixed                         |
 | Undo while hovering a new split: "Subpath index out of bounds", "Command index out of bounds"      | 2,000  | 2018-2026 | **Still present** (BUGSNAG-5) |
 | Typing "none" in a color field: "Argument has incorrect type (undefined)", then "reading 'a'"      | 1,100  | 2018-2026 | Fixed in the port             |
 | Incomplete curves in production builds: bezier-js "reading 'x'", "reading 'filter'"                | 1,000  | 2018-2026 | **Still present** (BUGSNAG-6) |
@@ -45,16 +45,6 @@ Ranked by events. Everything not marked "beta" happened on the live site.
 
 In rough order of priority.
 
-- **The app shows a blank page when localStorage is unavailable.** The theme reducer reads
-  `window.localStorage` while building its initial state, and `createEditorStore()` runs at the
-  top of `src/main.tsx`. When storage is blocked (cookies or site data blocked in Chrome or
-  Firefox, a sandboxed iframe) or null (WebViews with DOM storage off), the throw stops the module
-  before anything renders. In Angular this surfaced as a cascade of "reading 'present'",
-  "'themeType'", and "'nativeElement'" errors, about 5,000 events. The reducer's `setItem`, the
-  `ResetWorkspace` rebuild of the theme state, and `components/splitter/Splitter.tsx` have the same
-  exposure. Add a storage helper that falls back to memory, read the theme once in `src/main.tsx`,
-  and persist it from `ThemeService` instead of the reducer (`store/theme/reducer.ts`).
-  (BUGSNAG-1, high, confirmed by a test)
 - **Auto fix throws when a subpath is only a move.** This is PATH-9, and the most common crash still
   in the code: 13,000 events, and every retry throws again. `alignSubPath` clamps the split index to
   1, which is past the end of a one-command subpath. Lone moves come from stray `M x y` in typed or
@@ -72,23 +62,6 @@ In rough order of priority.
   shifting the first subpath drops a trailing lone `M`" in `path-model.md`, which rates it low;
   it's about 4,000 events. Start a new subpath at every `M` (`model/paths/SubPath.ts`).
   (BUGSNAG-3, high, confirmed by a test)
-- **Up and Down arrows in an empty text field put a number into the property.** UI-9 describes the
-  handler, but the reports show it's one of the most frequent errors on the live site, and it's
-  worse for path fields than UI-9 says. `Number('')` is 0, so the handler calls `setEditableValue`
-  with 1 or -1 (or 10 or -10 with Shift):
-  - A color field reports "Argument has incorrect type (number)" to Bugsnag and turns black. That's
-    2,550 events by 2020, and still 10 to 30 a week in 2025.
-  - A path field (a new path or clip path layer's `pathData`, or an empty block value) stores
-    `new Path(1)`, because the `Path` constructor keeps any non-string argument as its state. In
-    production builds, drawing, the property panel, playback, hit tests, and every export then
-    throw ("reading 'length'", "reading 'forEach'", "this.ps.hitTest is not a function").
-  - A name field throws "toLowerCase is not a function".
-
-  Only handle the arrows for number and fraction properties, and ignore empty input
-  (`components/propertyinput/PropertyInput.tsx`). Also have the `Path` constructor throw for
-  anything that isn't a string, a command array, or a `PathState`. (BUGSNAG-4, high, confirmed by
-  tests)
-
 - **Undo leaves the action mode splitters hovering indices that no longer exist.** Split a filled
   subpath or add a point, leave the mouse over the result, and press Cmd+Z. `ShapeSplitter` and
   `SegmentSplitter` only update their hover on mouse events, so `drawHighlights` asks for the old
@@ -115,41 +88,18 @@ In rough order of priority.
   It's behind about 200 "reading 'start'" and "reading 'type'" errors from dragging, deleting, and
   auto fix. For example, reverse a closed subpath, add a point, press F, then delete the point.
   (BUGSNAG-8, medium, confirmed by a test)
-- **Pasting or dropping in action mode does nothing and reports a warning.** The paste and drop
-  handlers call `bugsnagClient.notify('Attempt to import files while in action mode')` and ignore
-  the input. That's 221 warnings, from users who were probably trying to bring in the shape to
-  morph into. Exit action mode and import, or show a snackbar, and leave a breadcrumb instead of
-  reporting it (`services/clipboard.service.ts`, `components/root/Root.tsx`). (BUGSNAG-9, low,
-  confirmed by a test)
-- **A translucent vector layer with a non-square viewport can crash drawing in a small canvas.**
-  The offscreen canvas's attributes are the viewport times the attribute scale, so a short side
-  under 1 becomes 0, and compositing it throws "drawImage ... canvas element with a width or height
-  of 0". It was still reported in August 2026. Round the size up to at least 1, or skip the
-  composite (`components/canvas/CanvasLayers.ts`). (BUGSNAG-10, low, confirmed by a browser test)
 - **Splitting in half after a subpath split can pick an undefined command type.**
   `CommandStateMutator.split` looks up the new command's type by split time, which is undefined when
   the time is past the command's last split ("Attempt to convert an undefined svgChar"). Related to
   PATH-4. Clamp split times to the command's range (`model/paths/CommandState.ts`). (BUGSNAG-11,
   low, found by a fuzz test)
 - **Smaller issues:**
-  - The drop target handlers assume `event.dataTransfer` isn't null, which fails for
-    script-created drag events ("t.dataTransfer is null", about 40 in Firefox)
-    (`components/root/useDropTarget.ts`).
   - Pasted block JSON keeps its `layerId`, and ids restart on every page load, so blocks copied
     in another tab or before a reload can silently animate an unrelated layer
     (`services/layertimeline.service.ts`).
   - `serializeNamespace(node, options.isRootNode)` passes a boolean where it expects the options.
     It can't be reached with the roots the serializers create today
     (`scripts/export/XmlSerializer.ts`).
-  - `new FileReader()` and `readAsText` aren't guarded, and Safari with restricted features has
-    thrown "Can't find variable: FileReader" (`services/fileimport.service.ts`).
-  - The demo fetch's error handler reads `navigator.serviceWorker.controller`, which throws where
-    `navigator.serviceWorker` is undefined. Its catch also hides errors from loading the demo
-    itself, like a model change that breaks `fromJSON`, behind "Couldn't fetch demo"
-    (`components/layertimeline/LayerTimelineController.ts`, `components/root/Root.tsx`).
-  - The rulers aren't capped at the maximum canvas size the way the timeline is now. It's rare on
-    the live site, where the zoom is always 1, but it was the beta zoom tool's
-    most common error (`components/canvas/CanvasRuler.ts`).
 
 ## Error reporting
 
@@ -157,14 +107,6 @@ In rough order of priority.
   AVD player, and an Adobe extension that bundle old builds sent about 30% of all
   notifications, and they don't have `isReportable`. Discard events whose app version isn't 2.x in
   the Bugsnag project settings, or give 2.0 a new API key (`scripts/bugsnag/index.ts`).
-- **Page-injected scripts still get through `isReportable`.** Cross-origin extension errors arrive
-  as "Script error." and are dropped, but Safari `webkit-masked-url://` frames, `user-script:`
-  frames, crypto wallet rejections, and rejections whose reason isn't an Error are reported. Drop
-  events whose top frame isn't on the page's origin.
-- **Service worker failures on the live site are now invisible.** `onRegisterError` only leaves a
-  breadcrumb, which is right for private windows and Googlebot, but hides install and script
-  evaluation failures that mean a deploy is broken offline. Report those with severity `info`
-  (`src/main.tsx`).
 
 ## Fixed in the port
 
