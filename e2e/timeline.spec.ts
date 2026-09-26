@@ -32,6 +32,19 @@ test('selects and hides layers', async ({ page }) => {
   await expect(pathLayer).toHaveClass(/is-selected/);
 });
 
+test('converts a path to a clip path when another layer has a non-path animation', async ({
+  page,
+}) => {
+  await loadDemo(page);
+  // The path only animates its pathData, but the group animates its rotation.
+  const pathLayer = page.locator('.slt-layer', { hasText: 'path' });
+  await pathLayer.hover();
+  await pathLayer.locator('.slt-layer-more-actions').click();
+  await page.getByRole('menuitem', { name: 'Convert to clip path' }).click();
+  await expect(pathLayer).toHaveClass(/slt-layer-type-mask/);
+  await expect(page.locator('.slt-timeline-block')).toHaveCount(2);
+});
+
 test('adds layers from the add layer menu', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('To get started, drag + drop an SVG file here')).toBeVisible();

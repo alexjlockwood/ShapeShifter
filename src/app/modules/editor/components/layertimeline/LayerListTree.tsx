@@ -45,7 +45,7 @@ function buildLayerModel(
   const canBeConvertedToClipPath =
     layer instanceof PathLayer &&
     // TODO: comparing the sets of all animatable properties for each layer type would be more robust
-    !animation.blocks.some(b => !(b instanceof PathAnimationBlock));
+    !animation.blocks.some(b => b.layerId === layer.id && !(b instanceof PathAnimationBlock));
   const canBeFlattened =
     layer instanceof GroupLayer &&
     layer.children.length > 0 &&
