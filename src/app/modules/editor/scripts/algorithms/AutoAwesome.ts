@@ -1,6 +1,7 @@
 // TODO: test stroked paths
 
 import { Command, Path, PathUtil } from 'app/modules/editor/model/paths';
+import { newCalculator } from 'app/modules/editor/model/paths/calculators';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil } from 'app/modules/editor/scripts/common';
 import _ from 'lodash';
@@ -249,64 +250,42 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
     return prevScore > currScore ? prev : curr;
   });
 
-  interface CmdInfo {
-    readonly isGap: boolean;
-    readonly isNextGap: boolean;
-    readonly nextCmdIdx: number;
-  }
-
-  // For each alignment, determine whether it and its neighbor is a gap.
-  const processAlignmentsFn = (
+  // Fill in each streak of gaps in one path by splitting the command after it, so that each new
+  // point starts near the point it morphs into, instead of evenly spread along the command.
+  const applySplitsFn = (
+    path: Path,
     alignments: ReadonlyArray<Alignment<Command>>,
-  ): ReadonlyArray<CmdInfo> => {
-    let nextCmdIdx = 0;
-    return alignments.map((alignment, i) => {
-      const isGap = !alignment.obj;
-      const isNextGap = i + 1 < alignments.length && !alignments[i + 1].obj;
-      if (!isGap) {
-        nextCmdIdx++;
-      }
-      return { isGap, isNextGap, nextCmdIdx } as CmdInfo;
-    });
-  };
-
-  const fromCmdInfos = processAlignmentsFn(alignmentInfo.alignment.from);
-  const toCmdInfos = processAlignmentsFn(alignmentInfo.alignment.to);
-
-  // Process each list of alignments. Each streak of gaps represents a series
-  // of one or more splits we'll perform on the path.
-  const createGapStreaksFn = (cmdInfos: ReadonlyArray<CmdInfo>) => {
-    const gapStreaks: CmdInfo[][] = [];
-    let currentGapStreak: CmdInfo[] = [];
-    for (const cmdInfo of cmdInfos) {
-      if (cmdInfo.isGap) {
-        currentGapStreak.push(cmdInfo);
-        if (!cmdInfo.isNextGap) {
-          gapStreaks.push(currentGapStreak);
-          currentGapStreak = [];
-        }
-      }
-    }
-    return gapStreaks as ReadonlyTable<CmdInfo>;
-  };
-  const fromGapGroups = createGapStreaksFn(fromCmdInfos);
-  const toGapGroups = createGapStreaksFn(toCmdInfos);
-
-  // Fill in the gaps by applying linear subdivide batch splits.
-  const applySplitsFn = (path: Path, gapGroups: ReadonlyTable<CmdInfo>) => {
+    others: ReadonlyArray<Alignment<Command>>,
+  ) => {
     const splitOps: Array<{
       readonly subIdx: number;
       readonly cmdIdx: number;
       readonly ts: number[];
     }> = [];
-    const numPaths = path.getSubPath(subIdx).getCommands().length;
-    for (let i = gapGroups.length - 1; i >= 0; i--) {
-      const gapGroup = gapGroups[i];
-      // Clamp the index between 1 and numCommands - 1 to account for cases
-      // where the alignment algorithm attempts to append new commands to the
-      // front and back of the sequence.
-      const cmdIdx = _.clamp(gapGroup[gapGroup.length - 1].nextCmdIdx, 1, numPaths - 1);
-      const ts = gapGroup.map((unused, gapIdx) => (gapIdx + 1) / (gapGroup.length + 1));
+    const numCmds = path.getSubPath(subIdx).getCommands().length;
+    let nextCmdIdx = 0;
+    let i = 0;
+    while (i < alignments.length) {
+      if (alignments[i].obj) {
+        nextCmdIdx++;
+        i++;
+        continue;
+      }
+      const streakStart = i;
+      while (i < alignments.length && !alignments[i].obj) {
+        i++;
+      }
+      // Clamp the index between 1 and numCommands - 1 to account for cases where the alignment
+      // algorithm attempts to append new commands to the front and back of the sequence.
+      const cmdIdx = _.clamp(nextCmdIdx, 1, numCmds - 1);
+      const numGaps = i - streakStart;
+      const ts =
+        (cmdIdx === nextCmdIdx &&
+          getSplitTimes(
+            alignments[i].obj,
+            others.slice(streakStart, i + 1).map(a => a.obj),
+          )) ||
+        _.range(1, numGaps + 1).map(n => n / (numGaps + 1));
       splitOps.push({ subIdx, cmdIdx, ts });
     }
     PathUtil.sortPathOps(splitOps);
@@ -317,11 +296,55 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
     return mutator.build();
   };
 
-  const fromPathResult = applySplitsFn(alignmentInfo.generatedFromPath, fromGapGroups);
-  const toPathResult = applySplitsFn(to, toGapGroups);
+  const { from: fromAlignments, to: toAlignments } = alignmentInfo.alignment;
+  const fromPathResult = applySplitsFn(
+    alignmentInfo.generatedFromPath,
+    fromAlignments,
+    toAlignments,
+  );
+  const toPathResult = applySplitsFn(to, toAlignments, fromAlignments);
 
   // Finally, convert the commands before returning the result.
   return autoConvertSubPath(fromPathResult, toPathResult, subIdx);
+}
+
+/**
+ * Returns the times at which to split a command so that each new point starts near the point
+ * it morphs into, given the other path's commands it's aligned with (the ones whose end points
+ * the new points morph into, then the one the command itself is aligned with). The new points go
+ * where those end points are nearest the command, if that keeps them in order, or else at the
+ * same fractions of the command's length as the commands take up of theirs. Returns undefined if
+ * neither works, e.g. when the commands have no length.
+ */
+function getSplitTimes(cmd: Command | undefined, otherCmds: ReadonlyArray<Command | undefined>) {
+  if (!cmd || otherCmds.some(c => !c)) {
+    return undefined;
+  }
+  const calculator = newCalculator(cmd);
+  if (!calculator.getPathLength()) {
+    return undefined;
+  }
+  const isIncreasing = (ts: ReadonlyArray<number>) =>
+    ts.every((t, i) => 0 < t && t < 1 && (!i || ts[i - 1] < t));
+
+  const partners = otherCmds.slice(0, -1).map(c => (c ? c.end : cmd.end));
+  const projectedTs = partners.map(p => calculator.project(p)?.t ?? -1);
+  if (isIncreasing(projectedTs)) {
+    return projectedTs;
+  }
+
+  const lengths = otherCmds.map(c => (c ? newCalculator(c).getPathLength() : 0));
+  const totalLength = _.sum(lengths);
+  if (!totalLength) {
+    return undefined;
+  }
+  let distance = 0;
+  const ts = lengths.slice(0, -1).map(l => {
+    distance += l;
+    // This takes a fraction of the command's length.
+    return calculator.findTimeByDistance(distance / totalLength);
+  });
+  return isIncreasing(ts) ? ts : undefined;
 }
 
 /**

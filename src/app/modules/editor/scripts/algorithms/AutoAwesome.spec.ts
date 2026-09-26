@@ -106,6 +106,19 @@ describe('AutoAwesome', () => {
       }
     });
 
+    // New points used to be spread evenly along the command they split.
+    it.each([
+      ['a line', 'M 0 12 L 24 12', ['0,12', '2,12', '20,12', '24,12']],
+      ['a curve', 'M 0 12 C 8 12 16 12 24 12', ['0,12', '2,12', '20,12', '24,12']],
+    ])('adds points to %s next to the ones they morph into', (unused, f, expected) => {
+      const [from, to] = AutoAwesome.autoFix(new Path(f), new Path('M 0 12 L 2 8 L 20 16 L 24 12'));
+      expect(from.isMorphableWith(to)).toBe(true);
+      const points = from
+        .getCommands()
+        .map(cmd => `${_.round(cmd.end.x, 1)},${_.round(cmd.end.y, 1)}`);
+      expect(points).toEqual(expected);
+    });
+
     describe('pairing subpaths', () => {
       const square = (x: number, y: number, size: number) =>
         `M ${x} ${y} L ${x + size} ${y} L ${x + size} ${y + size} L ${x} ${y + size} Z`;
