@@ -214,7 +214,11 @@ export class ShapeSplitter {
     return this.component.performHitTest(mousePoint, { withExtraSegmentPadding: true });
   }
 
-  private reset() {
+  /**
+   * Forgets the hovered segment and any split in progress, e.g. because the path changed and
+   * their indices are stale.
+   */
+  reset() {
     this.initProjInfos = [];
     this.finalProjInfos = [];
     this.hitResult = undefined;

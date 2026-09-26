@@ -37,7 +37,7 @@ Ranked by events. Everything not marked "beta" happened on the live site.
 | Action mode with an empty path block: "reading 'getSubPaths'"                                      | 4,000  | 2018-2026 | Fixed in the port             |
 | Lone `M` after an open subpath: "Error retrieving command mutation", "Subpath index out of bounds" | 4,000  | 2018-2026 | **Still present** (BUGSNAG-3) |
 | Up/Down in an empty color field: "Argument has incorrect type (number)"                            | 2,550  | 2018-2025 | Fixed                         |
-| Undo while hovering a new split: "Subpath index out of bounds", "Command index out of bounds"      | 2,000  | 2018-2026 | **Still present** (BUGSNAG-5) |
+| Undo while hovering a new split: "Subpath index out of bounds", "Command index out of bounds"      | 2,000  | 2018-2026 | Fixed                         |
 | Typing "none" in a color field: "Argument has incorrect type (undefined)", then "reading 'a'"      | 1,100  | 2018-2026 | Fixed in the port             |
 | Incomplete curves in production builds: bezier-js "reading 'x'", "reading 'filter'"                | 1,000  | 2018-2026 | **Still present** (BUGSNAG-6) |
 
@@ -62,14 +62,6 @@ In rough order of priority.
   shifting the first subpath drops a trailing lone `M`" in `path-model.md`, which rates it low;
   it's about 4,000 events. Start a new subpath at every `M` (`model/paths/SubPath.ts`).
   (BUGSNAG-3, high, confirmed by a test)
-- **Undo leaves the action mode splitters hovering indices that no longer exist.** Split a filled
-  subpath or add a point, leave the mouse over the result, and press Cmd+Z. `ShapeSplitter` and
-  `SegmentSplitter` only update their hover on mouse events, so `drawHighlights` asks for the old
-  subpath or command and throws "Subpath index out of bounds: subIdx=1 numSubPaths=1" or "Command
-  index out of bounds" (2,000 events). `autoFix()` and `shiftPointToFront()` don't clear the
-  selections or the hover either. Reset the splitters when the active path changes, and skip
-  out-of-range indices when drawing (`components/canvas/CanvasOverlay.ts`). (BUGSNAG-5, medium,
-  confirmed by tests)
 - **Production builds accept path data with missing curve numbers.** `PathProperty.setEditableValue`
   relies on `new Path()` throwing for bad input, but `Path` and `BezierCalculator` only build their
   curves eagerly in dev builds. So in production, typing a path one keystroke at a time stores
