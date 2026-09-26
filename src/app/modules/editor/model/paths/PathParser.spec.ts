@@ -94,8 +94,10 @@ const specs = [
     new Test(`M 0 0 Q 1 1`, `M 0 0`),
     new Test(`M 0 0 C 1 1`, `M 0 0`),
     new Test(`M 0 0 C 1 1 2 2 3 3 4 4`, `M 0 0 C 1 1 2 2 3 3`),
-    new Test(`M 0 0 L 10 L 5 5`, `M 0 0 L 5 5`),
-    new Test(`M 0 0 L 10 10 20`, `M 0 0 L 10 10`),
+    // Like a browser, parsing stops at the first error.
+    new Test(`M 0 0 L 10 L 5 5`, `M 0 0`),
+    new Test(`M 0 0 L 10 10 20 L 5 5`, `M 0 0 L 10 10`),
+    new Test(`M 0 0 L 5 5 L Z`, `M 0 0 L 5 5`),
   ),
 ];
 

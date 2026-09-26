@@ -33,7 +33,10 @@ export function parseCommands(pathData: string) {
   let previousCommand = 'm';
   const builder = new CommandsBuilder();
   for (const n of nodes) {
-    addCommand(builder, current, previousCommand, n.type, n.params);
+    // Like a browser, draw the path up to its first error.
+    if (!addCommand(builder, current, previousCommand, n.type, n.params)) {
+      break;
+    }
     previousCommand = n.type;
   }
   return builder.toCommands();
@@ -187,10 +190,12 @@ function addCommand(
       increment = 7;
       break;
   }
-  // Like a browser, draw a command's complete groups of numbers and ignore an incomplete one at
-  // the end, which would otherwise make a curve with missing points (e.g. from 'M 0 0 Q 1 1').
+  // Draw the command's complete groups of numbers, and report an error if any are missing, which
+  // would otherwise make a curve with missing points (e.g. from 'M 0 0 Q 1 1').
+  let isValid = cmd === 'z' || cmd === 'Z' || (val.length > 0 && val.length % increment === 0);
   for (let k = 0; k + increment <= val.length; k += increment) {
     if (!val.slice(k, k + increment).every(Number.isFinite)) {
+      isValid = false;
       break;
     }
     switch (cmd) {
@@ -381,6 +386,7 @@ function addCommand(
   current[3] = ctrlPointY;
   current[4] = currentSegmentStartX;
   current[5] = currentSegmentStartY;
+  return isValid;
 }
 
 function drawArc(
