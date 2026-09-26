@@ -1,3 +1,4 @@
+import { VectorLayer } from 'app/modules/editor/model/layers';
 import { AnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import { on } from 'app/modules/editor/scripts/dom';
@@ -28,7 +29,13 @@ export class ClipboardService {
         return true;
       }
 
-      const blocks = this.layerTimelineService.getSelectedBlocks().map(b => b.toJSON());
+      const vl = this.layerTimelineService.getVectorLayer();
+      const blocks = this.layerTimelineService.getSelectedBlocks().map(b => ({
+        ...b.toJSON(),
+        // Layer ids restart on every page load, so a block pasted in another tab or after a
+        // reload finds its layer by name.
+        layerName: vl.findLayerById(b.layerId)?.name,
+      }));
       if (!blocks.length) {
         return false;
       }
@@ -88,30 +95,35 @@ export class ClipboardService {
           console.error(`Couldn't parse JSON: ${str}`);
           return false;
         }
-        if (parsed.blocks) {
+        if (Array.isArray(parsed.blocks)) {
           trackEvent('paste_blocks');
+          const vl = this.layerTimelineService.getVectorLayer();
           this.layerTimelineService.addBlocks(
-            parsed.blocks.map((b: any) => {
-              const block = AnimationBlock.from(b);
-              const {
-                layerId,
-                propertyName,
-                fromValue,
-                toValue,
-                interpolator,
-                startTime,
-                endTime,
-              } = block;
+            parsed.blocks.flatMap((b: any) => {
+              let block: AnimationBlock;
+              try {
+                block = AnimationBlock.from(b);
+              } catch {
+                // Pasted text isn't validated, so skip blocks that can't be read.
+                return [];
+              }
+              const layerId = getPastedLayerId(vl, block.layerId, b.layerName);
+              if (layerId === undefined) {
+                return [];
+              }
+              const { propertyName, fromValue, toValue, interpolator, startTime, endTime } = block;
               const duration = endTime - startTime;
-              return {
-                layerId,
-                propertyName,
-                fromValue,
-                toValue,
-                currentTime: this.playbackService.getCurrentTime(),
-                duration,
-                interpolator,
-              };
+              return [
+                {
+                  layerId,
+                  propertyName,
+                  fromValue,
+                  toValue,
+                  currentTime: this.playbackService.getCurrentTime(),
+                  duration,
+                  interpolator,
+                },
+              ];
             }),
             false,
           );
@@ -135,4 +147,19 @@ export class ClipboardService {
     this.removeListeners.forEach(removeListener => removeListener());
     this.removeListeners = [];
   }
+}
+
+/**
+ * Returns the id of the layer to paste a copied block onto: the layer it was copied from, if it's
+ * still there, or else the layer with its name. Returns undefined if there's no such layer.
+ */
+function getPastedLayerId(vl: VectorLayer, layerId: string, layerName: unknown) {
+  if (typeof layerName !== 'string') {
+    // Copied by an older version, which didn't record layer names.
+    return layerId;
+  }
+  if (vl.findLayerById(layerId)?.name === layerName) {
+    return layerId;
+  }
+  return vl.findLayerByName(layerName)?.id;
 }

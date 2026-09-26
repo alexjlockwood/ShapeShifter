@@ -66,4 +66,81 @@ describe('ClipboardService', () => {
       expect(show).not.toHaveBeenCalled();
     });
   });
+
+  describe('pasting blocks', () => {
+    function addLayer(name: string) {
+      const layer = new PathLayer({ name, children: [], pathData: new Path('M 4 4 L 20 20') });
+      services.layerTimelineService.addLayer(layer);
+      return layer;
+    }
+
+    function copy() {
+      let text = '';
+      const event = new Event('copy', { cancelable: true });
+      Object.defineProperty(event, 'clipboardData', {
+        value: { setData: (_: string, data: string) => (text = data) },
+      });
+      window.dispatchEvent(event);
+      return text;
+    }
+
+    function getBlocks() {
+      return services.layerTimelineService.getAnimation().blocks;
+    }
+
+    function copyStrokeWidthBlock(layerName: string) {
+      const layer = addLayer(layerName);
+      services.layerTimelineService.addBlocks([
+        {
+          layerId: layer.id,
+          propertyName: 'strokeWidth',
+          fromValue: 1,
+          toValue: 2,
+          currentTime: 0,
+        },
+      ]);
+      return copy();
+    }
+
+    it('pastes onto the layer with the same name', () => {
+      const copied = copyStrokeWidthBlock('path');
+      // Layer ids restart on every page load, so the ids don't match in another tab.
+      const json = JSON.parse(copied);
+      json.blocks[0].layerId = 'from another tab';
+      paste(JSON.stringify(json));
+      const blocks = getBlocks();
+      expect(blocks).toHaveLength(2);
+      expect(blocks[1].layerId).toBe(blocks[0].layerId);
+    });
+
+    it("doesn't paste onto a different layer that has the same id", () => {
+      const copied = copyStrokeWidthBlock('path');
+      const other = addLayer('other');
+      const json = JSON.parse(copied);
+      json.blocks[0].layerId = other.id;
+      json.blocks[0].layerName = 'missing';
+      paste(JSON.stringify(json));
+      expect(getBlocks()).toHaveLength(1);
+    });
+
+    // Reported to Bugsnag as uncaught TypeErrors.
+    it('ignores malformed blocks', () => {
+      addLayer('path');
+      // Errors thrown by event listeners are reported to the window, not to dispatchEvent.
+      const errors: unknown[] = [];
+      const onError = (event: ErrorEvent) => {
+        errors.push(event.error);
+        event.preventDefault();
+      };
+      window.addEventListener('error', onError);
+      try {
+        paste('{"blocks": {"a": 1}}');
+        paste('{"blocks": [null, {"type": "unknown"}]}');
+      } finally {
+        window.removeEventListener('error', onError);
+      }
+      expect(errors).toEqual([]);
+      expect(getBlocks()).toHaveLength(0);
+    });
+  });
 });
