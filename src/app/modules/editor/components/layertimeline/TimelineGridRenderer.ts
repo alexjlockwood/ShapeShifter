@@ -1,5 +1,10 @@
 import { Animation } from 'app/modules/editor/model/timeline';
-import { getContentSize, getContext2d, isVisible } from 'app/modules/editor/scripts/dom';
+import {
+  getCanvasPixelRatio,
+  getContentSize,
+  getContext2d,
+  isVisible,
+} from 'app/modules/editor/scripts/dom';
 import { Dragger } from 'app/modules/editor/scripts/dragger';
 import { ShortcutService, ThemeService } from 'app/modules/editor/services';
 import _ from 'lodash';
@@ -7,8 +12,6 @@ import _ from 'lodash';
 import { TIMELINE_ANIMATION_PADDING } from './constants';
 
 const HEADER_HEIGHT = 40;
-// Browsers fail to draw canvases that are larger than this (and Firefox throws).
-const MAX_CANVAS_SIZE = 16384;
 const GRID_INTERVALS_MS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000];
 
 /**
@@ -96,12 +99,7 @@ export class TimelineGridRenderer {
 
     const width = getContentSize(this.canvas, 'width');
     const height = getContentSize(this.canvas, 'height');
-    // Zooming in on a long animation can make the canvas too big to draw at full resolution.
-    const scale = Math.min(
-      window.devicePixelRatio,
-      MAX_CANVAS_SIZE / width,
-      MAX_CANVAS_SIZE / height,
-    );
+    const scale = getCanvasPixelRatio(width, height);
     this.canvas.setAttribute('width', `${width * scale}`);
     this.canvas.setAttribute('height', `${height * scale}`);
 

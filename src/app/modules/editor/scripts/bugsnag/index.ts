@@ -52,12 +52,13 @@ export function isReportable(
 }
 
 /**
- * Returns whether a service worker registration error means the deployed worker is broken (e.g.
- * a precached file is missing), rather than that the browser doesn't allow one here, as in
- * private windows or when the app is opened from a file.
+ * Returns whether a service worker registration error means the deployed worker is broken, rather
+ * than that the browser doesn't allow one here (as in private windows, or when the app is opened
+ * from a file) or that the network failed. Firefox reports failed precache downloads as "an error
+ * during installation", so only a worker script that fails to run counts.
  */
 export function isServiceWorkerDeployError(error: unknown) {
-  return /script evaluation failed|error during installation/i.test(String(error));
+  return /script evaluation failed/i.test(String(error));
 }
 
 /**

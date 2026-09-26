@@ -46,26 +46,31 @@ export class ClipboardService {
       if (!clipboardData || document.activeElement?.matches('input')) {
         return true;
       }
+      const str = clipboardData.getData('text');
+      const isSvg = /<\/svg>\s*$/.test(str);
+      const isVectorDrawable = /<\/vector>\s*$/.test(str);
+      const isJson = /\}\s*$/.test(str);
       if (this.actionModeService.isActionMode()) {
         // TODO: make action mode automatically exit when layers/blocks are added in other parts of the app
-        this.snackBarService.show(
-          "Can't import while editing a path morph",
-          'Dismiss',
-          Duration.Short,
-        );
+        if (isSvg || isVectorDrawable || isJson) {
+          this.snackBarService.show(
+            "Can't import while editing a path morph",
+            'Dismiss',
+            Duration.Short,
+          );
+        }
         return false;
       }
 
-      const str = clipboardData.getData('text');
       const existingVl = this.layerTimelineService.getVectorLayer();
 
-      if (str.match(/<\/svg>\s*$/)) {
+      if (isSvg) {
         // Paste SVG.
         trackEvent('paste_svg');
         SvgLoader.loadVectorLayerFromSvgString(str, name => !!existingVl.findLayerByName(name))
           .then(vl => this.layerTimelineService.importLayers([vl]))
           .catch(() => console.warn('failed to import SVG'));
-      } else if (str.match(/<\/vector>\s*$/)) {
+      } else if (isVectorDrawable) {
         // Paste VD.
         trackEvent('paste_vector_drawable');
         const importedVl = VectorDrawableLoader.loadVectorLayerFromXmlString(
@@ -75,7 +80,7 @@ export class ClipboardService {
         if (importedVl) {
           this.layerTimelineService.importLayers([importedVl]);
         }
-      } else if (str.match(/\}\s*$/)) {
+      } else if (isJson) {
         let parsed;
         try {
           parsed = JSON.parse(str);

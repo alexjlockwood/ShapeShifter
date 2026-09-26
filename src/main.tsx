@@ -47,7 +47,7 @@ registerSW({
   // Reloading an open page could lose the user's work.
   onNeedReload() {},
   // E.g. in private windows, or when the app is opened from a file. It still works, just not
-  // offline. A worker that fails to run or install means the deploy is broken, so report those.
+  // offline. A worker script that fails to run means the deploy is broken, so report those.
   onRegisterError(error) {
     if (isServiceWorkerDeployError(error)) {
       bugsnagClient.notify(error, { severity: 'info' });

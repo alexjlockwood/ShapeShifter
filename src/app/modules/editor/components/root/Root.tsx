@@ -113,12 +113,12 @@ function Workspace() {
   }, [store, projectService, snackBarService]);
 
   const { isDraggingOver, handlers: dropTargetHandlers } = useDropTarget(fileList => {
+    if (!fileList || !fileList.length) {
+      return;
+    }
     if (actionModeService.isActionMode()) {
       // TODO: make action mode automatically exit when layers/blocks are added in other parts of the app
       snackBarService.show("Can't import while editing a path morph", 'Dismiss', Duration.Short);
-      return;
-    }
-    if (!fileList || !fileList.length) {
       return;
     }
     const files = Array.from(fileList);

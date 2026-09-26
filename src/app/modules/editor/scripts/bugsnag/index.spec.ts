@@ -31,17 +31,10 @@ describe('isReportable', () => {
 });
 
 describe('isServiceWorkerDeployError', () => {
-  it('reports broken service workers', () => {
+  it('reports service worker scripts that fail to run', () => {
     expect(
       isServiceWorkerDeployError(
         new TypeError('Failed to register a ServiceWorker: ServiceWorker script evaluation failed'),
-      ),
-    ).toBe(true);
-    expect(
-      isServiceWorkerDeployError(
-        new TypeError(
-          'ServiceWorker script at https://x/sw.js encountered an error during installation.',
-        ),
       ),
     ).toBe(true);
   });
@@ -49,5 +42,13 @@ describe('isServiceWorkerDeployError', () => {
   it('ignores browsers that disallow service workers', () => {
     expect(isServiceWorkerDeployError(new DOMException('The operation is insecure.'))).toBe(false);
     expect(isServiceWorkerDeployError(new Error('Rejected'))).toBe(false);
+    // Firefox reports failed precache downloads this way, e.g. on a flaky connection.
+    expect(
+      isServiceWorkerDeployError(
+        new TypeError(
+          'ServiceWorker script at https://x/sw.js encountered an error during installation.',
+        ),
+      ),
+    ).toBe(false);
   });
 });
