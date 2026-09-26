@@ -1,13 +1,12 @@
 # Shape Shifter
 
 [![Build Status][ci-badge]][ci-badge-url]
-[![GitHub Stats](https://img.shields.io/badge/github-stats-ff5500.svg)](http://githubstats.com/alexjlockwood/ShapeShifter)
 
-**[Go to live version](https://shapeshifter.design)** or **[ask a question on Slack](https://join.slack.com/t/shapeshifterdesign/shared_invite/enQtNDAwODY5NjI2NTE4LTAyZTE3ZmYxNGUxMmViY2UwNDJjZWYyYzhhNTQzYmVkYmVmNTA0NmEyY2MwMmFiOTllODI5YzZmNDQwOTE1MGU)**
+**[Go to live version](https://shapeshifter.design)**
 
 ---
 
-[Shape Shifter](https://alexjlockwood.github.io/ShapeShifter/) is a web-app that simplifies
+[Shape Shifter](https://shapeshifter.design) is a web-app that simplifies
 the creation of [icon animations][adp-icon-animations] for Android, iOS, and the web.
 
 This tool currently exports to standalone SVGs, SVG spritesheets,
@@ -169,7 +168,3 @@ and [Steph Yim][steph-yim-website] for all of their help during the early stages
 [steph-yim-website]: http://stephanieyim.com
 [ci-badge]: https://github.com/alexjlockwood/ShapeShifter/actions/workflows/ci.yml/badge.svg?branch=master
 [ci-badge-url]: https://github.com/alexjlockwood/ShapeShifter/actions/workflows/ci.yml
-[david-badge]: https://david-dm.org/alexjlockwood/ShapeShifter.svg
-[david-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter
-[david-dev-badge]: https://david-dm.org/alexjlockwood/ShapeShifter/dev-status.svg
-[david-dev-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter?type=dev
