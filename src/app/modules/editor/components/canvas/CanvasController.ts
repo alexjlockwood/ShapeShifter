@@ -1,19 +1,24 @@
 import { ActionSource } from 'app/modules/editor/model/actionmode';
+import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
 import type { EditorServices } from 'app/modules/editor/services/createEditorServices';
+import { Duration, SnackBarService } from 'app/modules/editor/services/snackbar.service';
 import { State, Store } from 'app/modules/editor/store';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { getZoomPanInfo } from 'app/modules/editor/store/paper/selectors';
+import type { Features } from 'environments/features';
 import { isEqual, round } from 'lodash-es';
 import { ReplaySubject, combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { CanvasContainer } from './CanvasContainer';
+import type { CanvasEditor } from './CanvasEditorApi';
 import { CanvasLayers } from './CanvasLayers';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { CanvasOverlay } from './CanvasOverlay';
 import { CanvasRuler } from './CanvasRuler';
+import { loadCanvasEditor } from './loadCanvasEditor';
 
 // Canvas margin in css pixels.
 const CANVAS_MARGIN = 36;
@@ -36,14 +41,26 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
   private readonly canvasLayers: CanvasLayers;
   private readonly canvasOverlay: CanvasOverlay;
   private readonly canvasRulers: ReadonlyArray<CanvasRuler>;
+  private readonly features: Features;
+  private readonly snackBarService: SnackBarService;
+  private canvasEditor: CanvasEditor | undefined;
+  private isDisposed = false;
 
   constructor(
     private readonly elements: CanvasElements,
-    actionSource: ActionSource,
+    private readonly actionSource: ActionSource,
     private readonly store: Store<State>,
-    { actionModeService, layerTimelineService, themeService }: EditorServices,
+    {
+      actionModeService,
+      layerTimelineService,
+      themeService,
+      snackBarService,
+      features,
+    }: EditorServices,
   ) {
     super();
+    this.features = features;
+    this.snackBarService = snackBarService;
     this.canvasContainer = new CanvasContainer(elements.container);
     this.canvasLayers = new CanvasLayers(elements.layers, actionSource, store);
     this.canvasOverlay = new CanvasOverlay(
@@ -79,13 +96,45 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
         this.setZoomPan(info.zoom, info.translation);
       }),
     );
+    // Only the canvas that shows the current time is editable. In action mode, the start and end
+    // canvases next to it are for morphing.
+    if (this.features.canvasEditor && this.actionSource === ActionSource.Animated) {
+      this.loadEditor();
+    }
   }
 
   // @Override
   dispose() {
     super.dispose();
+    this.isDisposed = true;
+    this.canvasEditor?.dispose();
+    delete this.elements.root.dataset.canvasEditor;
     this.canvasLayers.dispose();
     this.canvasOverlay.dispose();
+  }
+
+  private loadEditor() {
+    loadCanvasEditor().then(
+      editorModule => {
+        // The canvas can be removed while the editor loads (StrictMode removes it right away in
+        // development).
+        if (this.isDisposed) {
+          return;
+        }
+        this.canvasEditor = editorModule.createCanvasEditor();
+        // Lets the end-to-end tests wait for the editor.
+        this.elements.root.dataset.canvasEditor = 'ready';
+      },
+      (error: unknown) => {
+        if (this.isDisposed) {
+          return;
+        }
+        // The canvas still works without the editor. Loading fails offline if the editor was
+        // never cached, and after a deploy that removed the file an old page asks for.
+        bugsnagClient.notify(error instanceof Error ? error : String(error), { severity: 'info' });
+        this.snackBarService.show("Couldn't load the canvas editor", 'Dismiss', Duration.Long);
+      },
+    );
   }
 
   setCanvasBounds(bounds: Size) {

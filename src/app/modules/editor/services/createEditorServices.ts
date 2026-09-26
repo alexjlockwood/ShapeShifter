@@ -1,6 +1,7 @@
 import { DialogService } from 'app/modules/editor/components/dialogs/dialog.service';
 import { ProjectService } from 'app/modules/editor/components/project/project.service';
 import type { State, Store } from 'app/modules/editor/store';
+import { Features, NO_FEATURES } from 'environments/features';
 
 import { ActionModeService } from './actionmode.service';
 import { ClipboardService } from './clipboard.service';
@@ -14,9 +15,13 @@ import { ThemeService } from './theme.service';
 
 /**
  * Creates the services shared across the app. These should only be created once, since some of
- * them subscribe to the store for as long as they are alive.
+ * them subscribe to the store for as long as they are alive. Every feature is off unless the
+ * features are passed in, so tests get the app as users see it by default.
  */
-export function createEditorServices(store: Store<State>) {
+export function createEditorServices(
+  store: Store<State>,
+  { features = NO_FEATURES }: { readonly features?: Features } = {},
+) {
   const dialogService = new DialogService();
   const projectService = new ProjectService();
   const snackBarService = new SnackBarService();
@@ -39,6 +44,7 @@ export function createEditorServices(store: Store<State>) {
     layerTimelineService,
   );
   return {
+    features,
     actionModeService,
     clipboardService,
     dialogService,

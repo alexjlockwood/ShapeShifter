@@ -9,10 +9,10 @@ has been implemented yet.
 ## Quick wins (low risk, about a day or less each)
 
 - **Single 1.57 MB (480 KB gzip) JS bundle.** `vite.config.ts` has no `manualChunks` config and
-  there are no dynamic `import()` calls anywhere in `src/app`, so MUI, svgo, jszip, rxjs, and
-  bezier-js all ship in one chunk that blocks first paint, even though svgo/jszip and the demo
-  loader are only needed for export/import flows. Splitting those behind `import()` is a
-  half-day to a day, low risk.
+  the only dynamic `import()` in `src/app` loads the unfinished canvas editor
+  (`components/canvas/loadCanvasEditor.ts`), so MUI, svgo, jszip, rxjs, and bezier-js all ship in
+  one chunk that blocks first paint, even though svgo/jszip and the demo loader are only needed
+  for export/import flows. Splitting those behind `import()` is a half-day to a day, low risk.
 - **Playback does a linear scan every frame.** `AnimationRenderer.setCurrentTime`
   (`scripts/animator/AnimationRenderer.ts`, around line 71) runs `_.find` over the interpolator
   list for every animated property on every rAF tick; there's already a TODO at line 69

@@ -19,3 +19,12 @@ export function setStoredItem(key: string, value: string) {
     // Nothing to do. The value lasts for this session only.
   }
 }
+
+/** Removes the stored value for the key. Does nothing if storage is unavailable. */
+export function removeStoredItem(key: string) {
+  try {
+    window.localStorage?.removeItem(key);
+  } catch {
+    // Nothing to do.
+  }
+}
