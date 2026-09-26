@@ -9,16 +9,21 @@ import { CanvasLayers } from './CanvasLayers';
 
 describe('CanvasLayers', () => {
   let store: Store<State>;
+  let canvas: HTMLCanvasElement;
+  let canvasLayers: CanvasLayers;
 
   beforeEach(() => {
     store = createEditorStore();
+    canvas = document.createElement('canvas');
+    canvasLayers = new CanvasLayers(canvas, ActionSource.Animated, store);
+    canvasLayers.init();
+  });
+
+  afterEach(() => {
+    canvasLayers.dispose();
   });
 
   it('draws the fill before the stroke, so the stroke covers the fill', () => {
-    const canvas = document.createElement('canvas');
-    const canvasLayers = new CanvasLayers(canvas, ActionSource.Animated, store);
-    canvasLayers.init();
-
     const layer = new PathLayer({
       name: 'path',
       children: [],
@@ -38,7 +43,5 @@ describe('CanvasLayers', () => {
     // should show the pure, opaque stroke color rather than a blend with the fill.
     const { data } = canvas.getContext('2d')!.getImageData(12, 5, 1, 1);
     expect([data[0], data[1], data[2]]).toEqual([0, 0, 255]);
-
-    canvasLayers.dispose();
   });
 });

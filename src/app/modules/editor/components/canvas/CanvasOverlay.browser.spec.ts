@@ -15,19 +15,14 @@ import { CanvasOverlay } from './CanvasOverlay';
 describe('CanvasOverlay', () => {
   let store: Store<State>;
   let services: EditorServices;
+  let canvas: HTMLCanvasElement;
+  let overlay: CanvasOverlay;
 
   beforeEach(() => {
     store = createEditorStore();
     services = createEditorServices(store);
-  });
-
-  afterEach(() => {
-    services.dispose();
-  });
-
-  it("doesn't clip the selections of later layers to a selected clip path", () => {
-    const canvas = document.createElement('canvas');
-    const overlay = new CanvasOverlay(
+    canvas = document.createElement('canvas');
+    overlay = new CanvasOverlay(
       canvas,
       ActionSource.Animated,
       store,
@@ -35,7 +30,14 @@ describe('CanvasOverlay', () => {
       services.layerTimelineService,
     );
     overlay.init();
+  });
 
+  afterEach(() => {
+    overlay.dispose();
+    services.dispose();
+  });
+
+  it("doesn't clip the selections of later layers to a selected clip path", () => {
     const clipPath = new ClipPathLayer({
       name: 'clip',
       children: [],
@@ -62,7 +64,5 @@ describe('CanvasOverlay', () => {
     expect(isHighlightedFn()).toBe(true);
     store.dispatch(new SetSelectedLayers(new Set([clipPath.id, path.id])));
     expect(isHighlightedFn()).toBe(true);
-
-    overlay.dispose();
   });
 });
