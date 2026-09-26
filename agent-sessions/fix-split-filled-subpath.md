@@ -26,7 +26,7 @@ Prettier reformat in PR #366, so they'll move after a rebase.
   `splitFilledSubPath`, a typo in ordering the two split points, and two things in deleting a split
   segment. It adds 6 tests to `Path.spec.ts`, which all fail on master and pass with the fix. Unit
   tests, typecheck, lint, and the Chromium morph end-to-end test pass. CI failed only on the WebKit
-  end-to-end flake (see `agent-sessions/fix-webkit-flakes.md`).
+  end-to-end flake (since fixed by #376).
 - **Code review** (`/code-review` on Opus 5.5) reported one blocker plus a few smaller things. When
   I reran the review's repros, 3 of its 4 "delete corrupts the shape" repros turned out to delete a
   curve instead of a split segment, which the app can't do, and a 5th claim (a square losing a
@@ -161,8 +161,7 @@ timed out after 30 s; the retry failed `expect(received).toBe(expected)`, expect
 received `true`). That test does split a filled subpath (a triangle, from its left edge to its right
 point), but it passed locally in Chromium, and the failure is a click timeout, the same WebKit flake
 that failed #366, #367, and #369 (a docs-only PR) the same day (per
-`session-notes/create-agents.md`). `agent-sessions/fix-webkit-flakes.md` covers it. I didn't rerun
-it on WebKit.
+`session-notes/create-agents.md`), since fixed by #376. I didn't rerun it on WebKit.
 
 ## Code review
 
@@ -312,7 +311,6 @@ segment's endpoints):
 - `agent-sessions/list-sweep-bugs.md` lists PATH-1, PATH-8, and CANVAS-2, and leaves PATH-3 out
   because #368 was going to fix it. With #368 closed, PATH-3 is only described here and in the
   create-agents notes.
-- `agent-sessions/fix-webkit-flakes.md` covers the CI failure.
 - PR #366 (agent setup) reformats `Path.ts`, `Path.spec.ts`, and `CommandState.ts` with Prettier, so
   `8f66bc6c` will conflict with it.
 
