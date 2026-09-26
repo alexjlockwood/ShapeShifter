@@ -17,7 +17,7 @@ describe('ShapeSplitter', () => {
     };
     const component = {
       actionModeService: {},
-      draw: vi.fn(),
+      draw: vi.fn<() => void>(),
       performHitTest: () => segmentHit,
     };
     const shapeSplitter = new ShapeSplitter(component as unknown as CanvasOverlay);

@@ -2,6 +2,7 @@ import { ActionSource } from 'app/modules/editor/model/actionmode';
 import { PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { HitResult, Path } from 'app/modules/editor/model/paths';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
+import type { ActionModeService } from 'app/modules/editor/services';
 
 import type { CanvasOverlay } from './CanvasOverlay';
 import { SelectionHelper } from './SelectionHelper';
@@ -25,10 +26,10 @@ describe('SelectionHelper', () => {
     const pathLayer = new PathLayer({ name: 'path', children: [], pathData: path });
     const vectorLayer = new VectorLayer({ name: 'vector', children: [pathLayer] });
     const actionModeService = {
-      clearHover: vi.fn(),
-      setHover: vi.fn(),
-      setSelections: vi.fn(),
-      updateActivePathBlock: vi.fn(),
+      clearHover: vi.fn<ActionModeService['clearHover']>(),
+      setHover: vi.fn<ActionModeService['setHover']>(),
+      setSelections: vi.fn<ActionModeService['setSelections']>(),
+      updateActivePathBlock: vi.fn<ActionModeService['updateActivePathBlock']>(),
     };
     const component = {
       actionSource: ActionSource.From,
@@ -39,7 +40,7 @@ describe('SelectionHelper', () => {
         return pathLayer.pathData;
       },
       dragTriggerTouchSlop: 1,
-      draw: vi.fn(),
+      draw: vi.fn<() => void>(),
       performHitTest: (point: Point): HitResult =>
         MathUtil.distance(point, splitPoint) < 1
           ? {
@@ -62,7 +63,7 @@ describe('SelectionHelper', () => {
 
     // ...and so should the final path, rather than giving up and leaving the point at (10, 0).
     expect(actionModeService.updateActivePathBlock).toHaveBeenCalledTimes(1);
-    const newPath: Path = actionModeService.updateActivePathBlock.mock.calls[0][1];
+    const newPath = actionModeService.updateActivePathBlock.mock.calls[0][1];
     expect(newPath.getCommand(0, 1).end).toEqual({ x: 5, y: 0 });
     expect(newPath.getCommand(0, 1).isSplitPoint()).toBe(true);
   });
