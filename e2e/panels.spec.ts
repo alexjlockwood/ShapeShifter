@@ -18,7 +18,12 @@ function getVectorLayer(page: Page) {
   return page.evaluate(() => {
     const { store } = (window as any).shapeshifter;
     const vl = store.getState().present.layers.vectorLayer;
-    return { name: vl.name as string, alpha: vl.alpha as number, width: vl.width as number };
+    return {
+      name: vl.name as string,
+      alpha: vl.alpha as number,
+      width: vl.width as number,
+      canvasColor: vl.canvasColor as string | undefined,
+    };
   });
 }
 
@@ -50,6 +55,13 @@ test('edits the selected layer in the property inspector', async ({ page }) => {
   await expect.poll(async () => (await getVectorLayer(page)).alpha).toBe(0.6);
   await alphaInput.press('Shift+ArrowDown');
   await expect.poll(async () => (await getVectorLayer(page)).alpha).toBe(0);
+
+  // Other text fields ignore them. An empty color used to turn black.
+  const canvasColorInput = page.locator('.spi-property input[name="canvasColor"]');
+  await canvasColorInput.fill('');
+  await canvasColorInput.press('ArrowUp');
+  await expect(canvasColorInput).toHaveValue('');
+  expect((await getVectorLayer(page)).canvasColor).toBeFalsy();
 });
 
 test('switches to the dark theme from the overflow menu', async ({ page }) => {
