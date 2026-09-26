@@ -16,10 +16,6 @@ These existed before the migration and are still there.
 - **UI-only state is recorded in the undo history.** Changes to the `paper` slice (cursor, hover,
   zoom) aren't excluded, so they can become undo steps of their own
   (`store/undoredo/metareducer.ts`).
-- **Deleting a split segment can find it without a parent command.** It's unclear how the path
-  gets into this state. It used to crash with "Cannot read properties of undefined (reading
-  'getCommands')" (reported to Bugsnag from 1.0.15), and now it leaves the path as it is and
-  reports a warning (`model/paths/Path.ts`, `deleteFilledSubPathSegmentInternal`).
 - **Split subpaths can't be deleted, but the toolbar offers to.** It's not clear whether
   deleting them is meant to work. After you split a subpath in action mode, selecting either half
   shows a "Delete subpath" button, but neither it nor Backspace does anything, on this branch or

@@ -756,6 +756,38 @@ describe('Path', () => {
         'M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 C 6 14.81 8.69 17.5 12 17.5 L 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 12 17.5 ' +
           'C 15.31 17.5 18 14.81 18 11.5 L 12 17.5',
       ),
+      // Split/unsplit filled sub paths between two points in the same command.
+      makeTest(
+        'M 0 10 C 0 0 20 0 20 10 L 0 10',
+        'SIH 0 1 SFSP 0 1 2',
+        'M 0 10 C 0 5 5 2.5 10 2.5 L 20 10 L 0 10 M 10 2.5 C 15 2.5 20 5 20 10 L 10 2.5',
+      ),
+      makeTest(
+        'M 0 10 C 0 0 20 0 20 10 L 0 10',
+        'SIH 0 1 SFSP 0 2 1',
+        'M 0 10 C 0 5 5 2.5 10 2.5 L 20 10 L 0 10 M 10 2.5 C 15 2.5 20 5 20 10 L 10 2.5',
+      ),
+      makeTest(
+        'M 0 0 L 20 0 L 20 20 L 0 20 L 0 0',
+        'S 0 1 0.25 0.5 0.75 SFSP 0 3 4',
+        'M 0 0 L 5 0 L 10 0 L 15 0 L 20 0 L 20 20 L 0 20 L 0 0 M 15 0 L 20 0 L 15 0',
+      ),
+      makeTest(
+        'M 0 10 C 0 0 20 0 20 10 L 0 10',
+        'S 0 1 0.25 0.75 SFSP 0 1 2 DFSPS 0 2',
+        'M 0 10 C 0 0 20 0 20 10 L 0 10',
+      ),
+      makeTest(
+        'M 0 20 L 0 0 C 5 -5 15 -5 20 0 L 20 20 L 0 20',
+        'SIH 0 4 SFSP 0 1 4 S 1 1 0.25 0.75 SFSP 1 1 2 DFSPS 1 2',
+        'M 0 20 L 0 0 L 10 20 L 0 20 M 0 0 C 5 -5 15 -5 20 0 L 20 20 L 10 20 L 0 0',
+      ),
+      // Unsplit a filled sub path split from the end of one command to a point in the next.
+      makeTest(
+        'M 0 20 L 0 0 C 5 -5 15 -5 20 0 L 20 20 L 0 20',
+        'SIH 0 4 SFSP 0 1 4 SIH 1 1 SFSP 1 0 1 DFSPS 1 1',
+        'M 0 20 L 0 0 L 10 20 L 0 20 M 0 0 C 5 -5 15 -5 20 0 L 20 20 L 10 20 L 0 0',
+      ),
       // TODO: determine if this is the right behavior
       // makeTest(
       //   'M 4 4 h 16 v 16 h -16 v -16',

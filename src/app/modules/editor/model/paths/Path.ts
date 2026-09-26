@@ -635,7 +635,7 @@ export class PathMutator {
     const findTargetSplitIdxs = () => {
       let s = this.findInternalIndices(targetCss, startCmdIdx);
       let e = this.findInternalIndices(targetCss, endCmdIdx);
-      if (s.csIdx > e.csIdx || (s.csIdx === e.csIdx && s.splitIdx > e.csIdx)) {
+      if (s.csIdx > e.csIdx || (s.csIdx === e.csIdx && s.splitIdx > e.splitIdx)) {
         // Make sure the start index appears before the end index in the path.
         const temp = s;
         s = e;
@@ -680,6 +680,11 @@ export class PathMutator {
       } else if (i === startCsIdx) {
         startCommandStates.push(firstLeft);
         startCommandStates.push(startLine);
+        if (i === endCsIdx && secondRight) {
+          // Both split points are in this command state, so the first split path
+          // continues with what's left of it after the second split point.
+          startCommandStates.push(secondRight);
+        }
       } else if (i === endCsIdx && secondRight) {
         startCommandStates.push(secondRight);
       }
@@ -698,7 +703,15 @@ export class PathMutator {
             .setSplitSegmentInfo(firstLeft, '')
             .build(),
         );
-        if (firstRight) {
+        if (i === endCsIdx) {
+          // Both split points are in this command state, so the second split path
+          // only gets the part between them.
+          const { right: middle } = secondLeft.slice(startSplitIdx);
+          if (middle) {
+            endCommandStates.push(middle);
+          }
+          endCommandStates.push(endLine);
+        } else if (firstRight) {
           endCommandStates.push(firstRight);
         }
       } else if (startCsIdx < i && i < endCsIdx) {
@@ -873,7 +886,19 @@ export class PathMutator {
         }
         newCss.push(cs);
       }
-      i = _.findIndex(splitCss1, c => c.getBackingId() === parentBackingId2);
+      if (!cs) {
+        // The second split path is only a move, the part left of the second split
+        // point, and the split segment, so that part was added above. Take it back
+        // so it can be merged with the part right of the second split point.
+        cs = newCss.pop();
+      }
+      // Search after the first split, since the command state left of it has the same
+      // backing ID when both split points are in the same command state.
+      i = _.findIndex(
+        splitCss1,
+        c => c.getBackingId() === parentBackingId2,
+        parentBackingCmdIdx1 + 1,
+      );
       if (i >= 0) {
         if (cs) {
           if (splitCss1[i].getBackingId() === cs.getBackingId()) {
@@ -906,8 +931,11 @@ export class PathMutator {
     const mutator = psps.mutate().setSplitSubPaths(updatedSplitSubPaths);
     const firstSplitSegId = last(firstParentCs.getCommands()).id;
     const secondSplitSegId = last(lastParentCs.getCommands()).id;
+    // Both split points can be in the same command state, so delete the second one
+    // from the command states left by deleting the first.
+    let css = pcss;
     for (const id of [firstSplitSegId, secondSplitSegId]) {
-      this.deleteSpsSplitPoint(pcss, id, mutator);
+      css = this.deleteSpsSplitPoint(css, id, mutator);
     }
     this.subPathStateMap = this.replaceSubPathStateNode(
       psps,
@@ -946,6 +974,9 @@ export class PathMutator {
       .sort((a, b) => b - a);
   }
 
+  /**
+   * Deletes the split point with the specified ID and returns the updated command states.
+   */
   private deleteSpsSplitPoint(
     css: ReadonlyArray<CommandState>,
     splitCmdId: string,
@@ -968,7 +999,9 @@ export class PathMutator {
         .unsplitAtIndex(splitIdx)
         .build();
       mutator.setCommandState(csIdx, unsplitCs);
+      return css.map((cs, i) => (i === csIdx ? unsplitCs : cs));
     }
+    return css;
   }
 
   private updateOrderingAfterUnsplitSubPath(subIdx: number) {
@@ -1470,8 +1503,9 @@ function last<T>(array: ReadonlyArray<T>): T {
   return array[array.length - 1];
 }
 
-// TODO: figure out how a split segment can end up without a parent (reported to Bugsnag as
-// "reading 'getCommands'"). Paths are left as they are instead of crashing.
+// Splitting a filled subpath between two points on the same command used to leave a split
+// segment without its pair, and deleting it ended up here (reported to Bugsnag as "reading
+// 'getCommands'"). Paths are left as they are in case there's another way to get here.
 function reportMissingSplitSegmentParent() {
   bugsnagClient.notify(new Error("Couldn't find the split segment's parent command"), {
     severity: 'warning',
