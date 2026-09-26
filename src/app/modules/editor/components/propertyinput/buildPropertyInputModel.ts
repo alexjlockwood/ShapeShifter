@@ -147,7 +147,11 @@ function buildInspectedLayerProperties(
         undefined,
         enteredValue => {
           if (property instanceof NameProperty) {
-            return LayerUtil.getUniqueLayerName([vl], NameProperty.sanitize(enteredValue));
+            const name = NameProperty.sanitize(enteredValue);
+            // Keep the current name if the new one is empty, or the same once it's sanitized.
+            return !name || name === layer.name
+              ? layer.name
+              : LayerUtil.getUniqueLayerName([vl], name);
           }
           return enteredValue;
         },
@@ -242,7 +246,11 @@ function buildInspectedAnimationProperties(deps: Dependencies, animation: Animat
           store.dispatch(new SetAnimation(clonedAnimation));
         },
         undefined,
-        undefined,
+        // Keep the current name if the new one is empty once it's sanitized.
+        enteredValue =>
+          property instanceof NameProperty && !NameProperty.sanitize(enteredValue)
+            ? animation.name
+            : enteredValue,
         undefined,
       ),
     );
