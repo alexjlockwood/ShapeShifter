@@ -19,11 +19,6 @@
       "Bash(npx prettier --check *)",
       "Bash(npx oxlint *)"
     ],
-    "deny": [
-      "Bash(npm run deploy*)",
-      "Bash(npm run-script deploy*)",
-      "Bash(*deploy-stable.sh*)",
-      "Bash(*gh-pages*)"
-    ]
+    "deny": ["Bash(npm *deploy*)", "Bash(*deploy-stable.sh*)", "Bash(*gh-pages*)"]
   }
 }
