@@ -6,6 +6,17 @@ import { version } from 'environments/version';
 
 type Severity = 'error' | 'warning' | 'info';
 
+// Scripts that browser extensions and userscript managers inject into the page. Their errors
+// aren't ours, but unlike cross-origin scripts, browsers don't strip their details.
+const INJECTED_SCRIPT_PREFIXES = [
+  'chrome-extension:',
+  'moz-extension:',
+  'safari-extension:',
+  'safari-web-extension:',
+  'webkit-masked-url:',
+  'user-script:',
+];
+
 /** Starts error reporting. Must be called once at startup, before the app renders. */
 export function startBugsnag() {
   Bugsnag.start({
@@ -15,20 +26,39 @@ export function startBugsnag() {
     enabledReleaseStages: ['production'],
     autoTrackSessions: false,
     plugins: [new BugsnagPluginReact()],
-    onError: event => isReportable(window.location, event.errors[0]?.errorMessage),
+    onError: event => {
+      const [error] = event.errors;
+      return isReportable(window.location, error?.errorMessage, error?.stacktrace[0]?.file);
+    },
   });
 }
 
 /**
  * Returns false for errors that don't come from Shape Shifter's own site, since forks and other
  * apps that bundle a copy of it use the same API key. Also returns false for errors from
- * cross-origin scripts, which browsers strip of any details.
+ * cross-origin scripts, which browsers strip of any details, and for errors thrown by scripts
+ * that extensions inject into the page.
  */
 export function isReportable(
   location: { readonly protocol: string; readonly hostname: string },
   errorMessage: string | undefined,
+  topFrameFile?: string,
 ) {
-  return isShapeShifterSite(location) && errorMessage !== 'Script error.';
+  return (
+    isShapeShifterSite(location) &&
+    errorMessage !== 'Script error.' &&
+    !INJECTED_SCRIPT_PREFIXES.some(prefix => topFrameFile?.startsWith(prefix))
+  );
+}
+
+/**
+ * Returns whether a service worker registration error means the deployed worker is broken, rather
+ * than that the browser doesn't allow one here (as in private windows, or when the app is opened
+ * from a file) or that the network failed. Firefox reports failed precache downloads as "an error
+ * during installation", so only a worker script that fails to run counts.
+ */
+export function isServiceWorkerDeployError(error: unknown) {
+  return /script evaluation failed/i.test(String(error));
 }
 
 /**

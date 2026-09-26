@@ -10,7 +10,7 @@ import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useMenu } from 'app/modules/editor/hooks/useMenu';
 import { ActionMode } from 'app/modules/editor/model/actionmode';
 import type { Layer } from 'app/modules/editor/model/layers';
-import { EnumProperty, FractionProperty } from 'app/modules/editor/model/properties';
+import { EnumProperty } from 'app/modules/editor/model/properties';
 import type { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
@@ -29,6 +29,7 @@ import {
   shouldShowStartActionModeButton,
 } from './buildPropertyInputModel';
 import type { InspectedProperty } from './InspectedProperty';
+import { getSteppedValue } from './steppedValue';
 import './propertyinput.scss';
 
 const TEXT_INPUT_TYPE_NAMES = new Set([
@@ -83,23 +84,16 @@ export function PropertyInput() {
     }
     ip.resolveEnteredValue();
     const target = event.currentTarget;
-    const numberValue = Number(target.value);
-    if (isNaN(numberValue)) {
+    const value = getSteppedValue(ip.property, target.value, {
+      up: event.keyCode === 38,
+      shiftKey: event.shiftKey,
+      modifierKey: ShortcutService.isOsDependentModifierKey(event),
+    });
+    if (value === undefined) {
       forceUpdate();
       return;
     }
-    let delta = event.keyCode === 38 ? 1 : -1;
-    if (ip.property instanceof FractionProperty) {
-      delta *= 0.1;
-    }
-    if (event.shiftKey) {
-      // TODO: make this more obvious somehow
-      delta *= 10;
-    } else if (ShortcutService.isOsDependentModifierKey(event)) {
-      // TODO: make this more obvious somehow
-      delta /= 10;
-    }
-    ip.property.setEditableValue(ip, 'value', Number((numberValue + delta).toFixed(6)));
+    ip.property.setEditableValue(ip, 'value', value);
     forceUpdate();
     setTimeout(() => target.select(), 0);
     event.preventDefault();

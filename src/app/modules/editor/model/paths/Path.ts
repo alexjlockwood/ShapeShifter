@@ -20,7 +20,15 @@ export class Path {
   private pathString: string | undefined;
 
   constructor(obj: string | Command[] | PathState) {
-    this.ps = typeof obj === 'string' || Array.isArray(obj) ? new PathState(obj) : obj;
+    if (typeof obj === 'string' || Array.isArray(obj)) {
+      this.ps = new PathState(obj);
+    } else if (obj instanceof PathState) {
+      this.ps = obj;
+    } else {
+      // Production builds build the path lazily, so without this check a bad argument (like a
+      // number) would be stored and only throw later, while drawing or exporting.
+      throw new Error(`Paths can't be built from ${typeof obj}: ${String(obj)}`);
+    }
     if (!environment.production) {
       // Don't initialize variables lazily for dev builds (to avoid
       // ngrx-store-freeze crashes).

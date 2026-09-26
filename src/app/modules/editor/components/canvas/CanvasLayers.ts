@@ -125,7 +125,12 @@ export class CanvasLayers extends CanvasLayoutMixin(DestroyableMixin()) {
       // Bring the canvas back to its original coordinates before
       // drawing the offscreen canvas contents.
       this.renderingCtx.scale(1 / this.attrScale, 1 / this.attrScale);
-      this.renderingCtx.drawImage(this.offscreenCtx.canvas, 0, 0);
+      // A canvas side shorter than a pixel rounds down to 0 (e.g. a wide viewport in a small
+      // canvas area), and drawing a canvas with no width or height throws.
+      const { width, height } = this.offscreenCtx.canvas;
+      if (width > 0 && height > 0) {
+        this.renderingCtx.drawImage(this.offscreenCtx.canvas, 0, 0);
+      }
       this.renderingCtx.restore();
       this.offscreenCtx.restore();
     }

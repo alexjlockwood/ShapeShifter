@@ -1,5 +1,5 @@
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
-import { getContext2d } from 'app/modules/editor/scripts/dom';
+import { getCanvasPixelRatio, getContext2d } from 'app/modules/editor/scripts/dom';
 import { ThemeService } from 'app/modules/editor/services';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
@@ -65,11 +65,12 @@ export class CanvasRuler extends CanvasLayoutMixin() {
       : viewport.h * cssScale * zoom + EXTRA_RULER_PADDING * 2;
     this.canvas.style.width = `${width}px`;
     this.canvas.style.height = `${height}px`;
-    this.canvas.setAttribute('width', `${width * devicePixelRatio}`);
-    this.canvas.setAttribute('height', `${height * devicePixelRatio}`);
+    const pixelRatio = getCanvasPixelRatio(width, height);
+    this.canvas.setAttribute('width', `${width * pixelRatio}`);
+    this.canvas.setAttribute('height', `${height * pixelRatio}`);
 
     const ctx = getContext2d(this.canvas);
-    ctx.scale(devicePixelRatio, devicePixelRatio);
+    ctx.scale(pixelRatio, pixelRatio);
     const { tx, ty } = this.getTranslation();
     ctx.translate(
       isHorizontal ? tx + EXTRA_RULER_PADDING : 0,

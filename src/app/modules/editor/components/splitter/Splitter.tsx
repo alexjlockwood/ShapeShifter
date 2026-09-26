@@ -1,6 +1,7 @@
 import { requireRef } from 'app/modules/editor/hooks/requireRef';
 import { getContentSize, setContentSize } from 'app/modules/editor/scripts/dom';
 import { Dragger } from 'app/modules/editor/scripts/dragger';
+import { getStoredItem, setStoredItem } from 'app/modules/editor/scripts/storage';
 import { type MouseEvent, useEffectEvent, useLayoutEffect, useRef, useState } from 'react';
 
 import './splitter.scss';
@@ -36,15 +37,16 @@ export function Splitter({ edge, min = 100, persistId }: SplitterProps) {
 
   const setSize = (size: number) => {
     if (persistKey) {
-      localStorage[persistKey] = size;
+      setStoredItem(persistKey, String(size));
     }
     setContentSize(getParent(), dimension, size);
   };
 
   // Restore the size from the last session, if there is one.
   const restoreSize = useEffectEvent(() => {
-    if (persistKey && persistKey in localStorage) {
-      setSize(Number(localStorage[persistKey]));
+    const storedSize = persistKey ? getStoredItem(persistKey) : null;
+    if (storedSize !== null) {
+      setSize(Number(storedSize));
     }
   });
   useLayoutEffect(() => restoreSize(), []);

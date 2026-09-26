@@ -57,7 +57,17 @@ export class FileImportService {
 
     const existingVl = this.vectorLayer;
     for (const file of files) {
-      const fileReader = new FileReader();
+      // FileReader is missing in some locked-down browsers, and reading can throw synchronously
+      // (e.g. a dropped folder in older Firefox versions).
+      let fileReader: FileReader;
+      try {
+        fileReader = new FileReader();
+      } catch (e) {
+        console.warn('Failed to read the file', e);
+        numErrors++;
+        maybeAddVectorLayersFn();
+        continue;
+      }
 
       fileReader.onload = event => {
         const text = (event.target as any).result;
@@ -136,7 +146,13 @@ export class FileImportService {
         alert('File read cancelled');
       };
 
-      fileReader.readAsText(file);
+      try {
+        fileReader.readAsText(file);
+      } catch (e) {
+        console.warn('Failed to read the file', e);
+        numErrors++;
+        maybeAddVectorLayersFn();
+      }
     }
   }
 

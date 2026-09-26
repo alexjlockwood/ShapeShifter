@@ -30,6 +30,7 @@ export function createEditorServices(store: Store<State>) {
     layerTimelineService,
     playbackService,
     actionModeService,
+    snackBarService,
   );
   const shortcutService = new ShortcutService(
     store,

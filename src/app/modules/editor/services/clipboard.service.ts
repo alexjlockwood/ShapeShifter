@@ -1,12 +1,12 @@
 import { AnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
-import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { on } from 'app/modules/editor/scripts/dom';
 import { SvgLoader, VectorDrawableLoader } from 'app/modules/editor/scripts/import';
 
 import { ActionModeService } from './actionmode.service';
 import { LayerTimelineService } from './layertimeline.service';
 import { PlaybackService } from './playback.service';
+import { Duration, SnackBarService } from './snackbar.service';
 
 export class ClipboardService {
   private removeListeners: (() => void)[] = [];
@@ -15,6 +15,7 @@ export class ClipboardService {
     private readonly layerTimelineService: LayerTimelineService,
     private readonly playbackService: PlaybackService,
     private readonly actionModeService: ActionModeService,
+    private readonly snackBarService: SnackBarService,
   ) {}
 
   init() {
@@ -41,28 +42,35 @@ export class ClipboardService {
     };
 
     const pasteHandlerFn = (event: ClipboardEvent) => {
-      if (this.actionModeService.isActionMode()) {
-        // TODO: make action mode automatically exit when layers/blocks are added in other parts of the app
-        bugsnagClient.notify('Attempt to import files while in action mode', {
-          severity: 'warning',
-        });
-        return false;
-      }
       const { clipboardData } = event;
       if (!clipboardData || document.activeElement?.matches('input')) {
         return true;
       }
-
       const str = clipboardData.getData('text');
+      const isSvg = /<\/svg>\s*$/.test(str);
+      const isVectorDrawable = /<\/vector>\s*$/.test(str);
+      const isJson = /\}\s*$/.test(str);
+      if (this.actionModeService.isActionMode()) {
+        // TODO: make action mode automatically exit when layers/blocks are added in other parts of the app
+        if (isSvg || isVectorDrawable || isJson) {
+          this.snackBarService.show(
+            "Can't import while editing a path morph",
+            'Dismiss',
+            Duration.Short,
+          );
+        }
+        return false;
+      }
+
       const existingVl = this.layerTimelineService.getVectorLayer();
 
-      if (str.match(/<\/svg>\s*$/)) {
+      if (isSvg) {
         // Paste SVG.
         trackEvent('paste_svg');
         SvgLoader.loadVectorLayerFromSvgString(str, name => !!existingVl.findLayerByName(name))
           .then(vl => this.layerTimelineService.importLayers([vl]))
           .catch(() => console.warn('failed to import SVG'));
-      } else if (str.match(/<\/vector>\s*$/)) {
+      } else if (isVectorDrawable) {
         // Paste VD.
         trackEvent('paste_vector_drawable');
         const importedVl = VectorDrawableLoader.loadVectorLayerFromXmlString(
@@ -72,7 +80,7 @@ export class ClipboardService {
         if (importedVl) {
           this.layerTimelineService.importLayers([importedVl]);
         }
-      } else if (str.match(/\}\s*$/)) {
+      } else if (isJson) {
         let parsed;
         try {
           parsed = JSON.parse(str);
