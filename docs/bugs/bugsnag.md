@@ -85,13 +85,10 @@ In rough order of priority.
   the time is past the command's last split ("Attempt to convert an undefined svgChar"). Related to
   PATH-4. Clamp split times to the command's range (`model/paths/CommandState.ts`). (BUGSNAG-11,
   low, found by a fuzz test)
-- **Smaller issues:**
-  - Pasted block JSON keeps its `layerId`, and ids restart on every page load, so blocks copied
-    in another tab or before a reload can silently animate an unrelated layer
-    (`services/layertimeline.service.ts`).
-  - `serializeNamespace(node, options.isRootNode)` passes a boolean where it expects the options.
-    It can't be reached with the roots the serializers create today
-    (`scripts/export/XmlSerializer.ts`).
+- **Pasted blocks can animate an unrelated layer.** Pasted block JSON keeps its `layerId`, and ids
+  restart on every page load, so blocks copied in another tab or before a reload can silently
+  animate a different layer that happens to have the same id (`services/layertimeline.service.ts`).
+  (low, found by reading the code)
 
 ## Error reporting
 
