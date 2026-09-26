@@ -94,3 +94,25 @@
   `createSubPaths` ends an open subpath at the next `M` but doesn't start the next subpath with it,
   and should (`model/paths/SubPath.ts`, `createSubPaths`, and `scripts/algorithms/AutoAwesome.ts`,
   `alignSubPath`). (found after the sweep, low, confirmed by a test)
+- **Auto fix picks which subpaths grow from a point before it pairs them.** When one path has
+  fewer subpaths, `autoAddCollapsingSubPaths` gives the other path's last subpaths collapsing
+  partners by index, and only then does `orderSubPaths` pair them up. So a subpath can fly across
+  the icon while a copy of it grows where it started: `autoFix` on the square
+  `M 0 0 L 4 0 L 4 4 L 0 4 Z` and a target with a far square followed by that same square moves the
+  square to the far one and grows a new one in its place. Pair the subpaths first, then add
+  collapsing subpaths for the ones left over (`scripts/algorithms/AutoAwesome.ts`). (found after
+  the sweep, medium, confirmed by a test)
+- **Auto fix's alignment depends on the size of the paths.** `alignSubPath` scores a pair of
+  commands `1 / max(1, distance)`, so when the points are less than a unit apart every pair scores
+  the same and the alignment is arbitrary. A square and a heptagon shrunk 20 times get all three new
+  points on one edge of the square, where at full size they get one per edge. Divide distances by
+  the size of the paths instead of clamping them at 1 (`scripts/algorithms/AutoAwesome.ts`,
+  `alignSubPath`). (found after the sweep, low, confirmed by a test)
+- **Auto fix can return paths that can't be morphed.** After `alignSubPath` converts the commands
+  so that they match, `permuteSubPath` reverses the target subpath if the two are wound in
+  different directions. Reversing turns the target's closing `Z` into an `L`, and nothing converts
+  the commands again, so one path ends in `Z` and the other in `L`. Since PATH-5 misreports the
+  directions, this happens even to shapes wound the same way: in the auto fix playground
+  (`src/playground/autofix/`), "Square to heptagon" and "Search to close" come out unmorphable.
+  Convert the commands again after permuting (`scripts/algorithms/AutoAwesome.ts`,
+  `permuteSubPath`). (found after the sweep, high, confirmed by a test)
