@@ -7,9 +7,6 @@ Bugs noticed while migrating the app from Angular to React. Paths are relative t
 
 These existed before the migration and are still there.
 
-- **UI-only state is recorded in the undo history.** Changes to the `paper` slice (cursor, hover,
-  zoom) aren't excluded, so they can become undo steps of their own
-  (`store/undoredo/metareducer.ts`).
 - **Deleting a split segment can find it without a parent command.** It's unclear how the path
   gets into this state. It used to crash with "Cannot read properties of undefined (reading
   'getCommands')" (reported to Bugsnag from 1.0.15), and now it leaves the path as it is and
@@ -53,7 +50,7 @@ plausible. None of these are triaged yet. They're grouped by area in `docs/bugs/
 area, in the same style as the rest of this file:
 
 - **Path model** (11 bugs): `docs/bugs/path-model.md`
-- **Store and services** (16 bugs): `docs/bugs/store-and-services.md`
+- **Store and services** (15 bugs): `docs/bugs/store-and-services.md`
 - **Layers and properties** (10 bugs): `docs/bugs/layers-and-properties.md`
 - **Import** (15 bugs): `docs/bugs/import.md`
 - **Export** (7 bugs): `docs/bugs/export.md`
