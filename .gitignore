@@ -28,6 +28,9 @@ CLAUDE.local.md
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# The auto fix playground's copy of an older src/ (scripts/playground-baseline.mjs)
+/.playground-baseline/
+
 # misc
 /.sass-cache
 /connect.lock
