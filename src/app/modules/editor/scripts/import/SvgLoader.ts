@@ -363,7 +363,7 @@ function buildClipPathIdMap(rootNode: Element) {
  */
 function buildPathInfosForClipPath(node: SVGClipPathElement) {
   // TODO: make sure that transforms from parent clip-paths aren't inherited...
-  const clipPathTransforms = getNodeTransforms(node).reverse();
+  const clipPathTransforms = getNodeTransforms(node);
 
   const pathInfos: PathInfo[] = [];
   if (node.childNodes) {
@@ -376,8 +376,8 @@ function buildPathInfosForClipPath(node: SVGClipPathElement) {
       if (!pathStr) {
         continue;
       }
-      const pathTransforms = getNodeTransforms(childNode).reverse();
-      const transforms = [...pathTransforms, ...clipPathTransforms];
+      // Like a group's, the clip path's transform applies after its children's.
+      const transforms = [...clipPathTransforms, ...getNodeTransforms(childNode)];
       const refClipPathId = getReferencedClipPathId(childNode);
       pathInfos.push({
         refClipPathId,

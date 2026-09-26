@@ -1,4 +1,4 @@
-import { PathLayer } from 'app/modules/editor/model/layers';
+import { ClipPathLayer, PathLayer } from 'app/modules/editor/model/layers';
 
 import { SvgLoader } from '.';
 
@@ -174,5 +174,24 @@ describe('SvgLoader', () => {
     await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
     // TODO: test stuff
     expect(true).toBe(true);
+  });
+
+  it(`applies a clip path's transform after its paths' transforms`, async () => {
+    // The id keeps svgo from baking the path's transform into its path data.
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <clipPath id="clip" transform="translate(10 0)">
+    <path id="cp" transform="scale(2)" d="M0 0h5v5H0z"/>
+  </clipPath>
+  <path id="path" d="M0 0h24v24H0z" clip-path="url(#clip)"/>
+</svg>
+`;
+    const vl = await SvgLoader.loadVectorLayerFromSvgString(svg, () => false);
+    const clipPaths: ClipPathLayer[] = [];
+    vl.walk(layer => layer instanceof ClipPathLayer && clipPaths.push(layer));
+    expect(clipPaths).toHaveLength(1);
+    // Scaled to 0..10, then translated to 10..20.
+    const { l, t, r, b } = clipPaths[0].pathData!.getBoundingBox();
+    expect({ l, t, r, b }).toEqual({ l: 10, t: 0, r: 20, b: 10 });
   });
 });
