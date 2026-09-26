@@ -364,7 +364,6 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         if (curr.pathData && curr.pathData.getCommands().length) {
           CanvasUtil.executeCommands(ctx, curr.pathData.getCommands(), flattenedTransform);
           executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth, this.highlightLineDash);
-          ctx.clip();
         }
       } else if (curr instanceof PathLayer) {
         if (curr.pathData && curr.pathData.getCommands().length) {
