@@ -405,5 +405,8 @@ function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
     }
   }
 
-  return [bestFromPath, to];
+  // Reversing and shifting reorder the commands, so the conversions that made their types match
+  // no longer line up. Convert them again.
+  const unconvert = (path: Path) => path.mutate().unconvertSubPath(subIdx).build();
+  return autoConvertSubPath(unconvert(bestFromPath), unconvert(to), subIdx);
 }

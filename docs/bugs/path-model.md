@@ -103,11 +103,3 @@
   points on one edge of the square, where at full size they get one per edge. Divide distances by
   the size of the paths instead of clamping them at 1 (`scripts/algorithms/AutoAwesome.ts`,
   `alignSubPath`). (found after the sweep, low, confirmed by a test)
-- **Auto fix can return paths that can't be morphed.** After `alignSubPath` converts the commands
-  so that they match, `permuteSubPath` reverses the target subpath if the two are wound in
-  different directions. Reversing turns the target's closing `Z` into an `L`, and nothing converts
-  the commands again, so one path ends in `Z` and the other in `L`. Since PATH-5 misreports the
-  directions, this happens even to shapes wound the same way: in the auto fix playground
-  (`src/playground/autofix/`), "Square to heptagon" and "Search to close" come out unmorphable.
-  Convert the commands again after permuting (`scripts/algorithms/AutoAwesome.ts`,
-  `permuteSubPath`). (found after the sweep, high, confirmed by a test)
