@@ -8,7 +8,8 @@ classes and the ngrx-style store).
 
 ## Commands
 
-Use Node 24 (`.nvmrc`).
+Use Node 24 (`.nvmrc`) with npm 11.10 or later. Older npm refuses to install (`EBADENGINE`),
+because it would ignore `.npmrc`'s package age check.
 
 - `npm start` runs the dev server with hot reloading. To run and drive the app in a browser, use
   the `run-app` skill (`.claude/skills/run-app/SKILL.md`).

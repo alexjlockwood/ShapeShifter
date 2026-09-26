@@ -118,8 +118,9 @@ curious how I can make this web app more useful for iOS and web developers.**
 
 If you want to contribute, you can build and serve the web app locally as follows:
 
-1. First install [`Node.js`](https://nodejs.org/) 22.12 or later (see `.nvmrc`), which comes
-   with [`npm`](https://www.npmjs.com/).
+1. First install [`Node.js`](https://nodejs.org/) 24 or later (see `.nvmrc`), and
+   [`npm`](https://www.npmjs.com/) 11.10 or later. Older releases of Node 24 come with an older
+   npm, so run `npm install -g npm` if `npm install` fails with `EBADENGINE`.
 
 2. Clone the repository and in the root directory, run:
 
