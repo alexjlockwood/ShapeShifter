@@ -10,7 +10,6 @@ import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useElementSize } from 'app/modules/editor/hooks/useElementSize';
 import { ActionMode, ActionSource } from 'app/modules/editor/model/actionmode';
 import { CursorType } from 'app/modules/editor/model/paper';
-import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { on } from 'app/modules/editor/scripts/dom';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import {
@@ -116,9 +115,7 @@ function Workspace() {
   const { isDraggingOver, handlers: dropTargetHandlers } = useDropTarget(fileList => {
     if (actionModeService.isActionMode()) {
       // TODO: make action mode automatically exit when layers/blocks are added in other parts of the app
-      bugsnagClient.notify('Attempt to import files while in action mode', {
-        severity: 'warning',
-      });
+      snackBarService.show("Can't import while editing a path morph", 'Dismiss', Duration.Short);
       return;
     }
     if (!fileList || !fileList.length) {
