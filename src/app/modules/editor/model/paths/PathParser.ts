@@ -181,7 +181,12 @@ function addCommand(
       increment = 7;
       break;
   }
-  for (let k = 0; k < val.length; k += increment) {
+  // Like a browser, draw a command's complete groups of numbers and ignore an incomplete one at
+  // the end, which would otherwise make a curve with missing points (e.g. from 'M 0 0 Q 1 1').
+  for (let k = 0; k + increment <= val.length; k += increment) {
+    if (!val.slice(k, k + increment).every(Number.isFinite)) {
+      break;
+    }
     switch (cmd) {
       case 'm':
         currentX += val[k];
