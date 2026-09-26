@@ -61,4 +61,19 @@ describe('SvgSerializer', () => {
       expect(second.querySelector('path')!.getAttribute('d')).toBe('M 1 1 L 4 1 L 4 4 Z');
     }
   });
+
+  it("doesn't give a clip path the same id as a layer", () => {
+    const doc = toSvgDocument(
+      newPath('clip_path'),
+      new ClipPathLayer({ name: 'mask', children: [], pathData: new Path('M 0 0 L 5 0 L 5 5 Z') }),
+      newPath('path'),
+    );
+    const ids = Array.from(doc.querySelectorAll('[id]')).map(n => n.getAttribute('id'));
+    expect(ids).toHaveLength(4);
+    expect(new Set(ids).size).toBe(4);
+    // The clipped layer still references its clip path.
+    const clipPathUrl = doc.getElementById('path')!.getAttribute('clip-path');
+    const clipPath = doc.getElementById(clipPathUrl!.slice('url(#'.length, -1))!;
+    expect(clipPath.tagName).toBe('clipPath');
+  });
 });

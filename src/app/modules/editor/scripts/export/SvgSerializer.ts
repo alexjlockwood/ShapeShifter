@@ -99,8 +99,10 @@ function vectorLayerToSvgNode(
   // clip path names they should use when referencing the clip-path.
   const clippedLayerToClipPathNameMap = new Map<string, string>();
   clippedLayerToSeenClipPathsMap.forEach((seenClipPaths, layerId) => {
-    const frameInfo = frameNumber ? `_frame${frameNumber}` : '';
-    const layerInfo = `_${vl.findLayerById(layerId)?.name ?? layerId}`;
+    // Layer names can't contain hyphens, so separating with them keeps these ids (and the
+    // chained ones below) from matching a layer's own id or another layer's clip path.
+    const frameInfo = frameNumber ? `-frame${frameNumber}` : '';
+    const layerInfo = `-${vl.findLayerById(layerId)?.name ?? layerId}`;
     const clipPathName = `clip${frameInfo}${layerInfo}`;
     clippedLayerToClipPathNameMap.set(layerId, clipPathName);
   });
@@ -112,7 +114,6 @@ function vectorLayerToSvgNode(
       const clipPathName = clippedLayerToClipPathNameMap.get(layerId);
       seenClipPaths.forEach((id, i) => {
         const clipPathNode = xmlDoc.createElement('clipPath');
-        // Layer names can't contain hyphens, so these ids can't match another layer's clip path.
         conditionalAttr(clipPathNode, 'id', clipPathName + (i ? '-' + i : ''));
         const pathNode = xmlDoc.createElement('path');
         conditionalAttr(pathNode, 'd', clipPathToPathDataMap.get(id));
