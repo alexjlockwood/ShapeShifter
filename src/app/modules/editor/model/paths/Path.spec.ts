@@ -941,6 +941,32 @@ describe('Path', () => {
       });
     });
   });
+
+  describe('#padSubPath', () => {
+    it('adds commands of the given types at the point of a subpath that is only a move', () => {
+      const path = new Path('M 0 0 L 10 0 L 10 10 Z M 5 5').mutate().padSubPath(1, ['L', 'C', 'Z']);
+      checkPathsEqual(path.build(), new Path('M 0 0 L 10 0 L 10 10 Z M 5 5 L 5 5 C 5 5 5 5 5 5 Z'));
+    });
+
+    it('pads the first subpath, which has no start point', () => {
+      const path = new Path('M 5 5 M 0 0 L 10 0 Z').mutate().padSubPath(0, ['Q', 'L']).build();
+      checkPathsEqual(path, new Path('M 5 5 Q 5 5 5 5 L 5 5 M 0 0 L 10 0 Z'));
+      expect(path.getCommands()[0].start).toBeUndefined();
+    });
+
+    it("doesn't reverse the padding of a reversed move", () => {
+      const path = new Path('M 5 5').mutate().reverseSubPath(0).padSubPath(0, ['L', 'C']).build();
+      checkPathsEqual(path, new Path('M 5 5 L 5 5 C 5 5 5 5 5 5'));
+    });
+
+    it('rejects a subpath that is more than a move', () => {
+      expect(() => new Path('M 0 0 L 10 10').mutate().padSubPath(0, ['L'])).toThrow();
+    });
+
+    it('rejects padding with a move', () => {
+      expect(() => new Path('M 5 5').mutate().padSubPath(0, ['M'])).toThrow();
+    });
+  });
 });
 
 function checkPathsEqual(actual: Path, expected: Path) {

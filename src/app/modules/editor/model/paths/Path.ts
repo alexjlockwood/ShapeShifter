@@ -934,6 +934,43 @@ export class PathMutator {
   }
 
   /**
+   * Adds commands of the specified types to a subpath that's only a move, all at the move's
+   * point, so that it can morph into a subpath with those commands by growing from that point.
+   */
+  padSubPath(subIdx: number, svgChars: ReadonlyArray<SvgChar>) {
+    LOG('padSubPath', subIdx, svgChars);
+    const sps = this.findSubPathStateLeaf(subIdx);
+    const [moveCs, ...otherCss] = sps.getCommandStates();
+    if (!moveCs || otherCss.length || moveCs.getCommands().length !== 1) {
+      throw new Error('Only a subpath that is only a move can be padded');
+    }
+    if (svgChars.includes('M')) {
+      throw new Error("A subpath can't be padded with a move");
+    }
+    const { end } = moveCs.getCommands()[0];
+    const numPoints: Record<SvgChar, number> = { M: 2, L: 2, Q: 3, C: 4, Z: 2 };
+    const paddingCss = svgChars.map(
+      svgChar =>
+        new CommandState(
+          new Command(
+            svgChar,
+            _.times(numPoints[svgChar], () => end),
+          ),
+        ),
+    );
+    this.setSubPathStateLeaf(
+      subIdx,
+      sps
+        .mutate()
+        // Reversing a lone move doesn't change it, but reversing the padding would reorder it.
+        .setIsReversed(false)
+        .setCommandStates([moveCs, ...paddingCss])
+        .build(),
+    );
+    return this;
+  }
+
+  /**
    * Deletes all collapsing subpaths from the path.
    */
   deleteCollapsingSubPaths() {

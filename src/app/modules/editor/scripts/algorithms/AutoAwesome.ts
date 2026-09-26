@@ -41,6 +41,10 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
     const min = Math.min(from.getSubPaths().length, to.getSubPaths().length);
     for (let subIdx = 0; subIdx < min; subIdx++) {
       // Pass the command with the larger subpath as the 'from' command.
+      if (isMoveOnly(from, subIdx) || isMoveOnly(to, subIdx)) {
+        // A subpath that's only a move has no segment to split, so it's padded below instead.
+        continue;
+      }
       const numFromCmds = from.getSubPath(subIdx).getCommands().length;
       const numToCmds = to.getSubPath(subIdx).getCommands().length;
       const shouldSwap = numFromCmds < numToCmds;
@@ -53,8 +57,11 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
       }
     }
     for (let subIdx = 0; subIdx < min; subIdx++) {
-      [from, to] = permuteSubPath(from, to, subIdx);
+      if (!isMoveOnly(from, subIdx) && !isMoveOnly(to, subIdx)) {
+        [from, to] = permuteSubPath(from, to, subIdx);
+      }
     }
+    [from, to] = padMoveOnlySubPaths(from, to);
   } catch (e) {
     // TODO: remove this once we determine what is causing this bug...
     console.error('autofix failed', origFrom, origTo);
@@ -65,6 +72,35 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
     throw e;
   }
   return [from, to];
+}
+
+/** Returns true if the subpath is only a move, like a stray "M 5 5" in the path data. */
+const isMoveOnly = (path: Path, subIdx: number) =>
+  path.getSubPath(subIdx).getCommands().length === 1;
+
+/**
+ * Pads each subpath that's only a move, and is paired with one that isn't, with commands of the
+ * same types as the other subpath's, all at the move's point. That makes the pair morphable, with
+ * the other subpath growing from (or collapsing to) the point.
+ */
+function padMoveOnlySubPaths(from: Path, to: Path): [Path, Path] {
+  const fromPm = from.mutate();
+  const toPm = to.mutate();
+  const min = Math.min(from.getSubPaths().length, to.getSubPaths().length);
+  for (let subIdx = 0; subIdx < min; subIdx++) {
+    const svgCharsAfterMove = (path: Path) =>
+      path
+        .getSubPath(subIdx)
+        .getCommands()
+        .slice(1)
+        .map(cmd => cmd.type);
+    if (isMoveOnly(from, subIdx) && !isMoveOnly(to, subIdx)) {
+      fromPm.padSubPath(subIdx, svgCharsAfterMove(to));
+    } else if (isMoveOnly(to, subIdx) && !isMoveOnly(from, subIdx)) {
+      toPm.padSubPath(subIdx, svgCharsAfterMove(from));
+    }
+  }
+  return [fromPm.build(), toPm.build()];
 }
 
 function autoUnconvertSubPaths(from: Path, to: Path) {

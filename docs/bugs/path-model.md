@@ -37,12 +37,6 @@
   throws from the keydown handler and nothing changes. For a reversed subpath the removed index is
   `splitIdx - 1`, but the shift is still computed from `splitIdx` (`model/paths/Path.ts`,
   `unsplitCommand`). (PATH-8, low, confirmed by a test)
-- **Auto fix throws on subpaths with a single command.** Aligning or permuting a lone `M` subpath
-  against a longer one throws "Error retrieving command mutation", reachable from a path like
-  `M 5 5` or the degenerate subpaths in PATH-7 (`scripts/algorithms/AutoAwesome.ts`,
-  `alignSubPath`). (PATH-9, confirmed by a test; a candidate fix exists on the unmerged
-  `alex/fix-sweep-quick-wins` branch, which skips these subpaths instead of throwing, so auto fix
-  no longer crashes but the result can still be unmorphable; needs a rebase before reuse)
 - **`CommandState.getPathLength` ignores `minT` and `maxT`.** A split piece of a command reports
   the length of the whole command. Trim paths use it, so a trimmed stroke on a morph with a split
   subpath gets the wrong dashes at the start and end of the block, in the preview and in SVG and
@@ -88,12 +82,13 @@
   needs a rebase before reuse)
 - **Reversing or shifting the first subpath drops a trailing lone `M`.** A path that ends with a
   subpath that's only an `M` loses it when the subpath before it is reversed or shifted, since
-  that subpath is rebuilt ending in an `L` instead of a `Z`. Auto fix's `orderSubPaths` moves lone
-  `M`s to the end, so `autoFix` on `M 5 5 M 0 0 L 10 0 L 10 10 Z` and a two-subpath target throws
-  "Subpath index out of bounds". Parsing drops it too: `M 0 0 L 10 0 M 5 5` has one subpath.
+  that subpath is rebuilt ending in an `L` instead of a `Z`. Auto fix reverses and reorders
+  subpaths, so it can throw on a lone `M` anywhere but first, as in
+  `M 0 18 L 15 4 Z M 10 16 M 12 6 L 10 24 Z` to `M 12 2 L 10 17 C 3 18 17 5 24 23 Z` (about 4,000
+  Bugsnag reports). Parsing drops it too: `M 0 0 L 10 0 M 5 5` has one subpath.
   `createSubPaths` ends an open subpath at the next `M` but doesn't start the next subpath with it,
   and should (`model/paths/SubPath.ts`, `createSubPaths`, and `scripts/algorithms/AutoAwesome.ts`,
-  `alignSubPath`). (found after the sweep, low, confirmed by a test)
+  `alignSubPath`). (found after the sweep, high, confirmed by a test)
 - **Auto fix picks which subpaths grow from a point before it pairs them.** When one path has
   fewer subpaths, `autoAddCollapsingSubPaths` gives the other path's last subpaths collapsing
   partners by index, and only then does `orderSubPaths` pair them up. So a subpath can fly across
