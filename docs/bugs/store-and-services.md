@@ -84,3 +84,10 @@
   restarted. Lengthening it cuts the loops off at the old end. Read the current duration at the
   start of each loop instead (`services/playback.service.ts`, `Animator.play` and
   `startAnimation`). (found after the sweep, low, confirmed by reading)
+- **Pair subpaths mode keeps stale subpath indices after edits.** The subpath picked so far and
+  the ones already paired are stored as indices, and edits that change the subpaths (like the
+  collapsing subpaths added after every action mode edit, or splitting and deleting subpaths)
+  don't update them, so the next click can pair the wrong subpath. Auto fix clears them, but the
+  other edits should too, e.g. wherever the active block's paths change
+  (`services/actionmode.service.ts`, `store/actionmode/reducer.ts`). (found after the sweep, low,
+  confirmed by reading)
