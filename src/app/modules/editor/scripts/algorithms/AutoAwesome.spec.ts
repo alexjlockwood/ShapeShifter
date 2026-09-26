@@ -66,4 +66,20 @@ describe('AutoAwesome', () => {
       expect(numCommands(to)[0]).toBe(numCommands(new Path(t))[0]);
     });
   });
+
+  describe('#autoAddCollapsingSubPaths', () => {
+    // These have no subpaths, e.g. path data typed into a morph block without a leading M.
+    it.each(['L 10 10', '   ', 'Z'])('leaves %j and its opposite path alone', empty => {
+      const path = new Path('M 0 0 L 10 10 L 20 0');
+      expect(new Path(empty).getSubPaths()).toHaveLength(0);
+      for (const [from, to] of [
+        [new Path(empty), path],
+        [path, new Path(empty)],
+      ]) {
+        const [newFrom, newTo] = AutoAwesome.autoAddCollapsingSubPaths(from, to);
+        expect(newFrom.getPathString()).toBe(from.getPathString());
+        expect(newTo.getPathString()).toBe(to.getPathString());
+      }
+    });
+  });
 });

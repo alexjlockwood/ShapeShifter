@@ -96,7 +96,8 @@ export function autoAddCollapsingSubPaths(from: Path, to: Path): [Path, Path] {
 
   const numFrom = from.getSubPaths().length;
   const numTo = to.getSubPaths().length;
-  if (numFrom === numTo) {
+  // A collapsing subpath starts where the path's last subpath ends, so a path needs one.
+  if (numFrom === numTo || !numFrom || !numTo) {
     return [from, to];
   }
   // TODO: allow the user to specify the location of collapsing paths?
