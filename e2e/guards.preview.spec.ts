@@ -14,6 +14,9 @@ test.describe('with unsaved changes', () => {
     await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.locator('.slt-layer').first()).toHaveText('playtopause');
 
+    // The File button is clicked again right away, so wait for the dialog to finish closing first
+    // (Safari leaves the focus in it).
+    await expect(page.locator('.MuiModal-root')).toHaveCount(0);
     await page.getByRole('button', { name: 'File' }).click();
     await page.getByRole('menuitem', { name: 'New' }).click();
     await page.getByRole('button', { name: 'OK' }).click();

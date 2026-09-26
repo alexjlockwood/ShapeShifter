@@ -273,13 +273,18 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
 
   // Save the project, and then open it in a new workspace.
   const paths = await getMorphPaths(page);
+  // Shortcuts are ignored until the menu has finished closing (Safari leaves the focus in it).
+  await expect(page.locator('.MuiModal-root')).toHaveCount(0);
   await page.getByRole('button', { name: 'File' }).click();
   const saveDownloadPromise = page.waitForEvent('download');
   await page.getByRole('menuitem', { name: 'Save' }).click();
   const project = await readDownload(await saveDownloadPromise);
+  // Shortcuts are ignored until the menu has finished closing (Safari leaves the focus in it).
+  await expect(page.locator('.MuiModal-root')).toHaveCount(0);
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: 'New' }).click();
   await expect(page.locator('.slt-layer')).toHaveText(['vector']);
+  await expect(page.locator('.MuiModal-root')).toHaveCount(0);
   await page.getByRole('button', { name: 'File' }).click();
   const fileChooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Open' }).click();

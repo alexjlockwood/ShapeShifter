@@ -175,7 +175,8 @@ test('ignores shortcuts while a menu or dialog is open', async ({ page, modifier
   await page.getByRole('button', { name: 'Cancel' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
-  // The shortcuts work again once the dialog is closed.
+  // Shortcuts are ignored until the dialog has finished closing (Safari leaves the focus in it).
+  await expect(page.locator('.MuiModal-root')).toHaveCount(0);
   await page.keyboard.press('s');
   await expect.poll(async () => (await getSnapshot()).isSlowMotion).toBe(true);
 });

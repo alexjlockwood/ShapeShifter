@@ -101,6 +101,9 @@ test('exports and imports files', async ({ page }) => {
     await page.getByRole('menuitem', { name: item, exact: true }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toMatch(fileName);
+    // The menu button is clicked again right away, so wait for the menu to finish closing first
+    // (Safari leaves the focus in it).
+    await expect(page.locator('.MuiModal-root')).toHaveCount(0);
   }
 
   const numLayers = await page.locator('.slt-layer').count();
@@ -231,9 +234,12 @@ test('groups, flattens, and converts layers', async ({ page, modifier }) => {
   expect(await getLine()).toEqual({ pathData: 'M 4 12 L 20 12', strokeWidth: 2 });
 
   // Convert the line to a clip path and back.
+  // Shortcuts are ignored until the menu has finished closing (Safari leaves the focus in it).
+  await expect(page.locator('.MuiModal-root')).toHaveCount(0);
   await openLayerMenu('line');
   await page.getByRole('menuitem', { name: 'Convert to clip path' }).click();
   await expect(layers.filter({ hasText: 'line' })).toHaveClass(/slt-layer-type-mask/);
+  await expect(page.locator('.MuiModal-root')).toHaveCount(0);
   await openLayerMenu('line');
   await page.getByRole('menuitem', { name: 'Convert to path' }).click();
   await expect(layers.filter({ hasText: 'line' })).toHaveClass(/slt-layer-type-path/);
