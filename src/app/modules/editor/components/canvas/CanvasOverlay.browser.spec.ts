@@ -89,6 +89,21 @@ describe('CanvasOverlay', () => {
     expect(() => overlay.draw()).not.toThrow();
   });
 
+  it('cancels dragging a split point when the path changes', () => {
+    services.actionModeService.setActionMode(ActionMode.SplitCommands);
+    overlay.onMouseDown(mouseEvent(12, 4));
+    services.actionModeService.setActionMode(ActionMode.Selection);
+    // Start dragging the new split point along the top segment.
+    overlay.onMouseDown(mouseEvent(12, 4));
+    overlay.onMouseMove(mouseEvent(16, 4));
+
+    // E.g. auto fix, or editing the path in the property panel.
+    services.actionModeService.updateActivePathBlock(ActionSource.From, new Path(PATH));
+
+    expect(() => overlay.onMouseUp(mouseEvent(16, 4))).not.toThrow();
+    expect(getNumCommands()).toBe(4);
+  });
+
   it('ignores selections of commands that no longer exist', () => {
     services.actionModeService.setSelections([
       { type: SelectionType.Segment, source: ActionSource.From, subIdx: 0, cmdIdx: 9 },

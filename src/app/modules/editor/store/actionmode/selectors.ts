@@ -24,11 +24,34 @@ import {
 const getActionModeState = createSelector(getEditorState, s => s.actionmode);
 export const getActionMode = createSelector(getActionModeState, s => s.mode);
 export const isActionMode = createSelector(getActionMode, mode => mode !== ActionMode.None);
-export const getActionModeHover = createDeepEqualSelector(getActionModeState, s => s.hover);
+
+// Selections and hovers can outlive the subpaths and commands they point at, e.g. when auto fix
+// or the property panel changes the block's paths, and the code that reads them assumes they
+// exist. Bugsnag reported thousands of "Subpath index out of bounds" and "Command index out of
+// bounds" errors from the canvases and the toolbar.
+function isInActivePath(
+  block: PathAnimationBlock | undefined,
+  { source, subIdx, cmdIdx }: { source: ActionSource; subIdx: number; cmdIdx?: number },
+) {
+  if (source !== ActionSource.From && source !== ActionSource.To) {
+    return true;
+  }
+  const path = source === ActionSource.From ? block?.fromValue : block?.toValue;
+  const subPaths = path?.getSubPaths() ?? [];
+  if (subIdx < 0 || subIdx >= subPaths.length) {
+    return false;
+  }
+  return cmdIdx === undefined || (cmdIdx >= 0 && cmdIdx < subPaths[subIdx].getCommands().length);
+}
+
+export const getActionModeHover = createDeepEqualSelector(
+  [getActionModeState, getSingleSelectedPathBlock],
+  ({ hover }, block) => (hover && isInActivePath(block, hover) ? hover : undefined),
+);
 
 export const getActionModeSelections = createDeepEqualSelector(
-  getActionModeState,
-  s => s.selections,
+  [getActionModeState, getSingleSelectedPathBlock],
+  ({ selections }, block) => selections.filter(s => isInActivePath(block, s)),
 );
 
 export const getActionModeSubPathSelections = createDeepEqualSelector(

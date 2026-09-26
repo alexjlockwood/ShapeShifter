@@ -180,7 +180,8 @@ export class SelectionHelper {
     return this.component.performHitTest(mousePoint);
   }
 
-  private reset() {
+  /** Forgets any drag in progress, e.g. because the path changed and its indices are stale. */
+  reset() {
     this.initialMouseDown = undefined;
     this.projectionOntoPath = undefined;
     this.currentDraggableSplitIndex = undefined;
