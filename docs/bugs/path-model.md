@@ -56,9 +56,3 @@
   uncompiled paper.js editor; `PathParser` converts arcs itself. (PATH-18, confirmed by reading; a
   candidate fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, which deletes the file,
   needs a rebase before reuse)
-- **Auto fix's alignment depends on the size of the paths.** `alignSubPath` scores a pair of
-  commands `1 / max(1, distance)`, so when the points are less than a unit apart every pair scores
-  the same and the alignment is arbitrary. A square and a heptagon shrunk 20 times get all three new
-  points on one edge of the square, where at full size they get one per edge. Divide distances by
-  the size of the paths instead of clamping them at 1 (`scripts/algorithms/AutoAwesome.ts`,
-  `alignSubPath`). (found after the sweep, low, confirmed by a test)

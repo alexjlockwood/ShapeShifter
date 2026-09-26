@@ -88,6 +88,24 @@ describe('AutoAwesome', () => {
       expect(from.getSubPaths()).toHaveLength(to.getSubPaths().length);
     });
 
+    // The alignment used to clamp distances at 1, so points less than a unit apart all scored the
+    // same, and a small square got all three of a heptagon's extra points on one edge.
+    it("doesn't depend on the size of the paths", () => {
+      const scale = (pathString: string, factor: number) =>
+        pathString.replace(/-?\d+(\.\d+)?/g, n => String(Number(n) * factor));
+      const fix = (factor: number) =>
+        AutoAwesome.autoFix(
+          new Path(scale(polygon(4, 0.3), factor)),
+          new Path(scale(polygon(7), factor)),
+        ).map(p => p.getCommands().map(cmd => [cmd.end.x / factor, cmd.end.y / factor]));
+      const expected = fix(1);
+      for (const factor of [0.05, 20]) {
+        const actual = fix(factor);
+        expect(actual.map(cmds => cmds.length)).toEqual(expected.map(cmds => cmds.length));
+        actual.flat(2).forEach((n, i) => expect(n).toBeCloseTo(expected.flat(2)[i], 0));
+      }
+    });
+
     describe('pairing subpaths', () => {
       const square = (x: number, y: number, size: number) =>
         `M ${x} ${y} L ${x + size} ${y} L ${x + size} ${y + size} L ${x} ${y + size} Z`;

@@ -189,6 +189,14 @@ function pairSubPaths(from: Path, to: Path): [Path, Path] {
   return shouldReorderFrom ? [reordered, to] : [from, reordered];
 }
 
+/** Returns the length of the diagonal of the commands' end points' bounding box, or 1 if it's 0. */
+function getDiagonal(commands: ReadonlyArray<Command>) {
+  const xs = commands.map(c => c.end.x);
+  const ys = commands.map(c => c.end.y);
+  const diagonal = Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+  return diagonal || 1;
+}
+
 /** Aligns two paths using the Needleman-Wunsch algorithm. */
 function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
   // Create and return a list of reversed and shifted from paths to test.
@@ -207,19 +215,22 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
     },
   );
 
-  // The scoring function to use to calculate the alignment. Convert-able
-  // commands are considered matches. However, the farther away the points
-  // are from each other, the lower the score.
+  // The scoring function to use to calculate the alignment. Convert-able commands are considered
+  // matches, and the farther apart their points are, the lower the score. Distances are measured
+  // relative to the size of the subpaths, so that the alignment doesn't depend on the units
+  // they're drawn in, and points closer than a 24th of it (a unit in a 24 x 24 icon) count as
+  // being in the same place.
+  const size = getDiagonal([
+    ...from.getSubPath(subIdx).getCommands(),
+    ...to.getSubPath(subIdx).getCommands(),
+  ]);
   const getScoreFn = (a: Command, b: Command) => {
     const charA = a.type;
     const charB = b.type;
     if (charA !== charB && !a.canConvertTo(charB) && !b.canConvertTo(charA)) {
       return MISMATCH;
     }
-    const { x, y } = a.end;
-    const start = { x, y };
-    const end = b.end;
-    return 1 / Math.max(MATCH, MathUtil.distance(start, end));
+    return MATCH / Math.max(1 / 24, MathUtil.distance(a.end, b.end) / size);
   };
 
   const alignmentInfos = fromPaths.map(generatedFromPath => {
