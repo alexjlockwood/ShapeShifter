@@ -51,8 +51,8 @@ An automated bug sweep on 2026-09-25 found these. Most were reproduced with a th
 rest were confirmed by reading the code (PATH-17, STORE-14, STORE-15, MODEL-4, MODEL-8, IMP-13,
 EXP-7, CANVAS-11, UI-13, UI-16, CFG-5, and CFG-6), and IMP-14 is only plausible. None of them are
 triaged yet. Each entry ends with its sweep id, severity, and confidence. The ids that are skipped
-belong to bugs from the same sweep that are being fixed separately. One entry has no id, since it
-was found afterward while fixing one of those.
+belong to bugs from the same sweep that are being fixed separately. Two entries have no id, since
+they were found after the sweep, and their tags say how each was confirmed.
 
 ### Path model
 
@@ -206,6 +206,12 @@ was found afterward while fixing one of those.
   layer selectors deep-compare the whole layers slice on every change. Use a result equality check
   (`resultEqualityCheck: _.isEqual`) instead (`store/selectors.ts`). (STORE-17, low, confirmed by
   a test)
+- **Repeat keeps using the duration from when play was pressed.** With repeat on, every loop
+  reuses the duration passed to `play`, so after the animation is shortened during playback the
+  loops run past the new end, and the current time goes past the duration until playback is
+  restarted. Lengthening it cuts the loops off at the old end. Read the current duration at the
+  start of each loop instead (`services/playback.service.ts`, `Animator.play` and
+  `startAnimation`). (found after the sweep, low, confirmed by reading)
 
 ### Layers and properties
 
