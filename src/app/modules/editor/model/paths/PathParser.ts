@@ -20,8 +20,9 @@ export function parseCommands(pathData: string) {
     end = nextStart(pathData, end);
     const s = pathData.substring(start, end).trim();
     if (s.length > 0) {
-      const val = getFloats(s);
-      nodes.push({ type: s.charAt(0), params: val });
+      const type = s.charAt(0);
+      const val = type === 'a' || type === 'A' ? getArcFloats(s) : getFloats(s);
+      nodes.push({ type, params: val });
     }
     start = end;
     end++;
@@ -51,6 +52,38 @@ function nextStart(s: string, end: number) {
     end++;
   }
   return end;
+}
+
+/**
+ * Returns an arc command's numbers. Its large arc and sweep flags are a single 0 or 1 each, which
+ * can run into the numbers around them, as in 'a10 10 0 100 20' (large arc 1, sweep 0, then 0 20).
+ * Returns NaN in place of the first number that can't be read.
+ */
+function getArcFloats(s: string) {
+  const results: number[] = [];
+  const separators = /[\s,]*/y;
+  const number = /[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/y;
+  const flag = /[01]/y;
+  let i = 1;
+  while (true) {
+    separators.lastIndex = i;
+    separators.exec(s);
+    i = separators.lastIndex;
+    if (i >= s.length) {
+      break;
+    }
+    const isFlag = results.length % 7 === 3 || results.length % 7 === 4;
+    const regExp = isFlag ? flag : number;
+    regExp.lastIndex = i;
+    const match = regExp.exec(s);
+    if (!match) {
+      results.push(NaN);
+      break;
+    }
+    results.push(parseFloat(match[0]));
+    i = regExp.lastIndex;
+  }
+  return results;
 }
 
 class ExtractFloatResult {
@@ -101,11 +134,17 @@ function extract(s: string, start: number, result: ExtractFloatResult) {
     isExponential = false;
     const currentChar = s.charAt(currentIndex);
     switch (currentChar) {
+      // SVG path data can separate numbers with any whitespace, or a comma.
       case ' ':
+      case '\t':
+      case '\n':
+      case '\r':
+      case '\f':
       case ',':
         foundSeparator = true;
         break;
       case '-':
+      case '+':
         if (currentIndex !== start && !isPrevExponential) {
           foundSeparator = true;
           result.mEndWithNegOrDot = true;
@@ -181,7 +220,14 @@ function addCommand(
       increment = 7;
       break;
   }
-  for (let k = 0; k < val.length; k += increment) {
+  // Draw the command's complete groups of numbers, and skip a group with a missing or non-numeric
+  // one, which would otherwise make a curve with missing points (e.g. from 'M 0 0 Q 1 1'). A
+  // browser stops drawing at the first error, but this keeps the rest of the path, since it's
+  // someone's work, and paths that went through commandsToString with a NaN coordinate get here.
+  for (let k = 0; k + increment <= val.length; k += increment) {
+    if (!val.slice(k, k + increment).every(Number.isFinite)) {
+      break;
+    }
     switch (cmd) {
       case 'm':
         currentX += val[k];

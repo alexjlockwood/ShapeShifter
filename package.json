@@ -22,6 +22,8 @@
     "e2e": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "playground": "node scripts/playground-baseline.mjs --if-missing && vite --open /src/playground/autofix/",
+    "playground:baseline": "node scripts/playground-baseline.mjs",
     "deploy": "./scripts/deploy-stable.sh"
   },
   "dependencies": {

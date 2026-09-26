@@ -82,6 +82,38 @@ const specs = [
       `M 5.3 13.2 C 5.2 13.2 5 13.2 4.9 13.1 C 4.6 12.9 4.5 12.4 4.7 12.1 C 6 10.2 7.6 8.7 9.6 7.6 C 13.7 5.4 18.9 5.4 23 7.6 C 24.9 8.7 26.6 10.1 27.9 12 C 28.1 12.3 28 12.8 27.7 13 C 27.4 13.2 26.9 13.1 26.7 12.8 C 25.5 11.1 24.1 9.8 22.4 8.8 C 18.7 6.8 14.1 6.8 10.4 8.8 C 8.7 9.7 7.2 11.1 6.1 12.8 C 5.7 13.1 5.5 13.2 5.3 13.2 Z`,
     ),
   ),
+  new Spec(
+    `numbers separated by other whitespace and signs`,
+    new Test(`M 0 0 L 10\n10`, `M 0 0 L 10 10`),
+    new Test(`M 0\t0\r\nL 10\f10`, `M 0 0 L 10 10`),
+    new Test(`M 5+5 L +1e+1-2`, `M 5 5 L 10 -2`),
+    new Test(`M 0 0 C 1 1 2\n2 3\n3`, `M 0 0 C 1 1 2 2 3 3`),
+  ),
+  new Spec(
+    `arcs with compact flags`,
+    new Test(
+      `M 0 0 a10 10 0 100 20 L 5 5`,
+      PathParser.commandsToString(PathParser.parseCommands(`M 0 0 a 10 10 0 1 0 0 20 L 5 5`)),
+    ),
+    new Test(
+      `M 0 0 A10,10,0,1,1,20,0`,
+      PathParser.commandsToString(PathParser.parseCommands(`M 0 0 A 10 10 0 1 1 20 0`)),
+    ),
+    new Test(
+      `M 0 0 a10 10 0 01.5 2`,
+      PathParser.commandsToString(PathParser.parseCommands(`M 0 0 a 10 10 0 0 1 .5 2`)),
+    ),
+  ),
+  new Spec(
+    `incomplete commands`,
+    new Test(`M 0 0 Q 1 1`, `M 0 0`),
+    new Test(`M 0 0 C 1 1`, `M 0 0`),
+    new Test(`M 0 0 C 1 1 2 2 3 3 4 4`, `M 0 0 C 1 1 2 2 3 3`),
+    // Unlike a browser, which stops drawing there, parsing keeps the rest of the path.
+    new Test(`M 0 0 L 10 L 5 5`, `M 0 0 L 5 5`),
+    new Test(`M 0 0 L 10 10 20 L 5 5`, `M 0 0 L 10 10 L 5 5`),
+    new Test(`M 0 0 L NaN 5 L 9 9`, `M 0 0 L 9 9`),
+  ),
 ];
 
 describe('PathParser', () => {

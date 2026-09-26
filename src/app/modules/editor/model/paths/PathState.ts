@@ -398,7 +398,8 @@ function getArea(cmd: Command) {
   switch (cmd.type) {
     case 'L':
     case 'Z':
-      area = (x3 - x0) * (y3 - y0);
+      // The shoelace formula's term, which is what the curve formula below gives for a line.
+      area = (x0 * y3 - x3 * y0) / 2;
       break;
     case 'Q':
     case 'C':

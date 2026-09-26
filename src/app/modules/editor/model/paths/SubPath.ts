@@ -104,13 +104,13 @@ export function createSubPaths(commands: ReadonlyArray<Command>) {
   const subPathCmds: SubPath[] = [];
   for (const cmd of commands) {
     if (cmd.type === 'M') {
+      // Every move starts a subpath, even one that nothing follows (like the trailing move in
+      // 'M 0 0 L 10 0 M 5 5'), which would otherwise be lost.
       lastSeenMove = cmd;
       if (currentCmdList.length) {
         subPathCmds.push(new SubPath(currentCmdList));
-        currentCmdList = [];
-      } else {
-        currentCmdList.push(cmd);
       }
+      currentCmdList = [cmd];
       continue;
     }
     if (!currentCmdList.length) {

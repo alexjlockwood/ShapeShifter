@@ -2,6 +2,7 @@ import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import _ from 'lodash';
 import * as PathUtil from 'test/PathUtil';
 
+import { newCalculator } from './calculators';
 import { Command } from './Command';
 import { CommandState } from './CommandState';
 import { Path, ProjectionOntoPath } from './Path';
@@ -54,12 +55,16 @@ describe('Path', () => {
         actual: 'MLCQLZMZ',
         expected: ['MLCQLZMZ', 2],
       },
-      // TODO: fix this test (SVGO probably makes it impossible, but just in case...)
-      // {
-      //   desc: 'construct a Path w/ multiple moveto commands',
-      //   actual: 'MMMMMLLLLL',
-      //   expected: ['MMMMMLLLLL', 5],
-      // },
+      {
+        desc: 'construct a Path w/ multiple moveto commands',
+        actual: 'MMMMMLLLLL',
+        expected: ['MMMMMLLLLL', 5],
+      },
+      {
+        desc: 'construct a Path w/ a moveto command after an open subpath',
+        actual: 'MLLM',
+        expected: ['MLLM', 2],
+      },
       {
         desc: 'construct a Path w/ multiple closepath commands',
         actual: 'MLCQLZMZZZZMLZMZZ',
@@ -939,6 +944,145 @@ describe('Path', () => {
       })`, () => {
         expect(new Path(pathStr).getPointAtLength(length)).toEqual(expectedPoint);
       });
+    });
+  });
+
+  describe('#isClockwise', () => {
+    // Clockwise on screen, where y points down.
+    it.each([
+      ['a square', 'M 0 0 L 10 0 L 10 10 L 0 10 Z', true],
+      ['a square drawn the other way', 'M 0 0 L 0 10 L 10 10 L 10 0 Z', false],
+      ['a triangle away from the origin', 'M 20 20 L 30 25 L 20 30 Z', true],
+      ['the same triangle drawn the other way', 'M 20 20 L 20 30 L 30 25 Z', false],
+      ['a square closed with a line', 'M 5 5 L 15 5 L 15 15 L 5 15 L 5 5', true],
+      ['a curve and a line', 'M 0 0 C 5 -5 15 -5 20 0 L 10 10 Z', true],
+      ['a curve and a line drawn the other way', 'M 0 0 L 10 10 L 20 0 C 15 -5 5 -5 0 0', false],
+      ['a quadratic curve and a line', 'M 0 0 Q 10 -10 20 0 Z', true],
+    ])('%s: %s', (unused, pathString, expected) => {
+      expect(new Path(pathString).isClockwise(0)).toBe(expected);
+    });
+
+    it("doesn't depend on the size of the path", () => {
+      const pathString = 'M 20 20 L 30 25 L 20 30 Z';
+      for (const factor of [0.01, 1, 100]) {
+        const scaled = pathString.replace(/\d+/g, n => String(Number(n) * factor));
+        expect(new Path(scaled).isClockwise(0)).toBe(true);
+      }
+    });
+  });
+
+  describe('#unsplitCommand in reversed and shifted subpaths', () => {
+    const key = (p: Point) => `${_.round(p.x, 3)},${_.round(p.y, 3)}`;
+    const points = (path: Path) =>
+      path
+        .getSubPath(0)
+        .getCommands()
+        .slice(1)
+        .map(cmd => key(cmd.end))
+        .sort();
+
+    /** Unsplits a point, and checks that it's the only point that goes away. */
+    function unsplitAndCheck(path: Path, cmdIdx: number) {
+      const expected = points(path);
+      expected.splice(expected.indexOf(key(path.getCommand(0, cmdIdx).end)), 1);
+      const unsplit = path.mutate().unsplitCommand(0, cmdIdx).build();
+      expect(points(unsplit)).toEqual(expected);
+      return unsplit;
+    }
+
+    // These used to leave the shift offset past the end of the subpath (PATH-8).
+    it.each([
+      ['RV 0 S 0 1 0.5 SF 0', 5],
+      ['S 0 1 0.5 RV 0 SF 0', 3],
+      ['RV 0 SB 0 SB 0 S 0 3 0.46 S 0 2 0.77 SB 0 SB 0', 6],
+    ])('keeps the other points after %s, then unsplitting %i', (ops, cmdIdx) => {
+      unsplitAndCheck(fromPathOpString('M 0 0 L 10 0 L 10 10 L 0 10 Z', ops), cmdIdx);
+    });
+
+    it('keeps the other points after random edits', () => {
+      let seed = 3;
+      const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let run = 0; run < 300; run++) {
+        let path = new Path('M 0 0 C 5 -5 15 -5 20 0 L 20 20 L 0 20 Z');
+        for (let step = 0; step < 8; step++) {
+          const numCommands = path.getSubPath(0).getCommands().length;
+          const r = random();
+          const pm = path.mutate();
+          if (r < 0.15) {
+            path = pm.reverseSubPath(0).build();
+          } else if (r < 0.3) {
+            path = pm.shiftSubPathForward(0, 1 + Math.floor(random() * 3)).build();
+          } else if (r < 0.45) {
+            path = pm.shiftSubPathBack(0, 1 + Math.floor(random() * 3)).build();
+          } else if (r < 0.7) {
+            const cmdIdx = 1 + Math.floor(random() * (numCommands - 1));
+            path = pm.splitCommand(0, cmdIdx, 0.2 + random() * 0.6).build();
+          } else {
+            const splitIdxs = _.range(numCommands).filter(i =>
+              path.getCommand(0, i).isSplitPoint(),
+            );
+            if (splitIdxs.length) {
+              path = unsplitAndCheck(path, splitIdxs[Math.floor(random() * splitIdxs.length)]);
+            }
+          }
+        }
+      }
+    });
+  });
+
+  describe('#splitCommandInHalf', () => {
+    const lengths = (path: Path, subIdx: number) =>
+      path
+        .getSubPath(subIdx)
+        .getCommands()
+        .slice(1)
+        .map(cmd => newCalculator(cmd).getPathLength());
+
+    // PATH-4: this passed the midpoint in t where a fraction of the length was expected.
+    it('splits an already split curve at the middle of the piece', () => {
+      const path = new Path('M 11 8 C 15 15 7 1 19 18').mutate().splitCommand(0, 1, 0.6).build();
+      const [first, second] = lengths(path.mutate().splitCommandInHalf(0, 2).build(), 0).slice(1);
+      expect(first).toBeCloseTo(second, 1);
+    });
+
+    // This used to put the point past the end of the subpath's piece of the curve, and throw
+    // "Attempt to convert an undefined svgChar".
+    it('splits a curve that a subpath split cut short', () => {
+      const path = new Path('M 14 4 C 15 6 3 0 6 9 L 23 0')
+        .mutate()
+        .splitCommand(0, 1, 0.2135)
+        .build()
+        .mutate()
+        .splitStrokedSubPath(0, 1)
+        .build();
+      const [first, second] = lengths(path.mutate().splitCommandInHalf(0, 1).build(), 0);
+      expect(first).toBeCloseTo(second, 1);
+    });
+  });
+
+  describe('#padSubPath', () => {
+    it('adds commands of the given types at the point of a subpath that is only a move', () => {
+      const path = new Path('M 0 0 L 10 0 L 10 10 Z M 5 5').mutate().padSubPath(1, ['L', 'C', 'Z']);
+      checkPathsEqual(path.build(), new Path('M 0 0 L 10 0 L 10 10 Z M 5 5 L 5 5 C 5 5 5 5 5 5 Z'));
+    });
+
+    it('pads the first subpath, which has no start point', () => {
+      const path = new Path('M 5 5 M 0 0 L 10 0 Z').mutate().padSubPath(0, ['Q', 'L']).build();
+      checkPathsEqual(path, new Path('M 5 5 Q 5 5 5 5 L 5 5 M 0 0 L 10 0 Z'));
+      expect(path.getCommands()[0].start).toBeUndefined();
+    });
+
+    it("doesn't reverse the padding of a reversed move", () => {
+      const path = new Path('M 5 5').mutate().reverseSubPath(0).padSubPath(0, ['L', 'C']).build();
+      checkPathsEqual(path, new Path('M 5 5 L 5 5 C 5 5 5 5 5 5'));
+    });
+
+    it('rejects a subpath that is more than a move', () => {
+      expect(() => new Path('M 0 0 L 10 10').mutate().padSubPath(0, ['L'])).toThrow();
+    });
+
+    it('rejects padding with a move', () => {
+      expect(() => new Path('M 5 5').mutate().padSubPath(0, ['M'])).toThrow();
     });
   });
 });

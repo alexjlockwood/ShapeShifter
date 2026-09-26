@@ -7,12 +7,6 @@ Bugs noticed while migrating the app from Angular to React. Paths are relative t
 
 These existed before the migration and are still there.
 
-- **Compact arc flags are misparsed.** `PathParser` can't read arc commands whose flags aren't
-  separated by spaces, e.g. `a10 10 0 100 20` (large-arc 1, sweep 0, then `0 20`). svgo 1.x wrote
-  paths this way, so importing SVGs with circles, ellipses, or rounded rects produced the wrong
-  geometry. svgo 4 no longer compacts flags, which fixes imports, but pasting or typing a
-  compact path string (common in optimized icons) still breaks. See
-  `model/paths/PathParser.ts`.
 - **UI-only state is recorded in the undo history.** Changes to the `paper` slice (cursor, hover,
   zoom) aren't excluded, so they can become undo steps of their own
   (`store/undoredo/metareducer.ts`).
@@ -58,8 +52,8 @@ test (deleted afterward, no source changed); the rest by reading the code, and o
 plausible. None of these are triaged yet. They're grouped by area in `docs/bugs/`, one file per
 area, in the same style as the rest of this file:
 
-- **Path model** (18 bugs): `docs/bugs/path-model.md`
-- **Store and services** (17 bugs): `docs/bugs/store-and-services.md`
+- **Path model** (11 bugs): `docs/bugs/path-model.md`
+- **Store and services** (16 bugs): `docs/bugs/store-and-services.md`
 - **Layers and properties** (10 bugs): `docs/bugs/layers-and-properties.md`
 - **Import** (15 bugs): `docs/bugs/import.md`
 - **Export** (7 bugs): `docs/bugs/export.md`
@@ -75,9 +69,9 @@ Prettier reformat in PR #366, so it would need a rebase before its commits could
 
 Eight years of Bugsnag emails (2018 to 2026) were traced to the Angular source and checked
 against the current code on 2026-09-26: `docs/bugs/bugsnag.md`. It ranks the most common errors,
-lists which are fixed, and describes the ones still present, some of them sweep bugs that turned
-out to be far more common than their rating. The top one is auto fix throwing on a subpath that's
-only a move (PATH-9, 13,000 events).
+lists which are fixed, including the ones that were still present when it was written, some of
+them sweep bugs that turned out to be far more common than their rating. The top one was auto fix
+throwing on a subpath that's only a move (PATH-9, 13,000 events).
 
 ## Fixed during the migration
 

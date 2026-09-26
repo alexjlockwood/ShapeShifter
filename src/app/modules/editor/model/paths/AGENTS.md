@@ -33,7 +33,8 @@ splitting, deleting, and index mapping in `model/paths/Path.ts`. Read the tests 
 - Two paths are morphable (`isMorphableWith`) when their commands match type for type.
 - Auto fix (`scripts/algorithms/AutoAwesome.ts`) lines up the commands of two paths with the
   Needleman-Wunsch algorithm (`scripts/algorithms/NeedlemanWunsch.ts`), trying every reversal and
-  shift of each subpath.
+  shift of each subpath, after pairing the subpaths by position (`scripts/algorithms/Hungarian.ts`).
+  Try changes to it in the auto fix playground (`src/playground/autofix/README.md`).
 
 ## Terms
 
@@ -51,7 +52,8 @@ splitting, deleting, and index mapping in `model/paths/Path.ts`. Read the tests 
 
 - The first command of the first subpath is an `M` without a start point (`points[0]` is
   `undefined`). Code that reverses, reorders, or interpolates commands has to keep it that way.
-- Compact arc flags (`a10 10 0 100 20`) are misparsed (see `BUGS.md`).
+- `PathParser` skips a command it can't read (e.g. one with a missing number) and keeps the rest,
+  where a browser would stop drawing at it.
 - In dev builds and tests, the `Path` constructor also warns about duplicate command ids.
 - Playback interpolates a whole new `Path` on every frame (`model/paths/PathUtil.ts`), so keep
   construction cheap.

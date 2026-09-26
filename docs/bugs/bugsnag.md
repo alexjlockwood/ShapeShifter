@@ -22,69 +22,42 @@ How to read the numbers:
 
 Ranked by events. Everything not marked "beta" happened on the live site.
 
-| Error                                                                                              | Events | Years     | Status                        |
-| -------------------------------------------------------------------------------------------------- | ------ | --------- | ----------------------------- |
-| Property panel: "reading 'label'" (invalid line cap, line join, fill type, or interpolator)        | 21,000 | 2018-2026 | Fixed in the port             |
-| Auto fix: "Error retrieving command mutation"                                                      | 13,000 | 2018-2026 | **Still present** (BUGSNAG-2) |
-| Firefox private windows reject the service worker: "The operation is insecure"                     | 12,000 | 2018-2022 | Fixed in the port             |
-| "Script error." from cross-origin scripts                                                          | 12,000 | 2018-2026 | Noise, now filtered           |
-| Beta: clicking after closing action mode: "reading '_matrix'" of null                              | 9,000  | 2018-2026 | Beta only, unported           |
-| Opening a demo offline: "Http failure response ... 504"                                            | 9,000  | 2018-2025 | Fixed in the port             |
-| Firefox extensions: "Permission denied to access property 'apply'"                                 | 8,000  | 2018-2022 | Gone with zone.js             |
-| Firefox timeline grid canvas too big: `NS_ERROR_FAILURE`                                           | 7,100  | 2018-2025 | Fixed in the port             |
-| Blocks for missing layers: "reading 'animatableProperties'", AVD export "reading 'name'"           | 5,200  | 2018-2026 | Fixed in the port             |
-| No localStorage: "reading 'present'", "'themeType'", "'nativeElement'"                             | 5,000  | 2018-2026 | Fixed                         |
-| Action mode with an empty path block: "reading 'getSubPaths'"                                      | 4,000  | 2018-2026 | Fixed in the port             |
-| Lone `M` after an open subpath: "Error retrieving command mutation", "Subpath index out of bounds" | 4,000  | 2018-2026 | **Still present** (BUGSNAG-3) |
-| Up/Down in an empty color field: "Argument has incorrect type (number)"                            | 2,550  | 2018-2025 | Fixed                         |
-| Undo while hovering a new split: "Subpath index out of bounds", "Command index out of bounds"      | 2,000  | 2018-2026 | Fixed                         |
-| Typing "none" in a color field: "Argument has incorrect type (undefined)", then "reading 'a'"      | 1,100  | 2018-2026 | Fixed in the port             |
-| Incomplete curves in production builds: bezier-js "reading 'x'", "reading 'filter'"                | 1,000  | 2018-2026 | **Still present** (BUGSNAG-6) |
+| Error                                                                                              | Events | Years     | Status              |
+| -------------------------------------------------------------------------------------------------- | ------ | --------- | ------------------- |
+| Property panel: "reading 'label'" (invalid line cap, line join, fill type, or interpolator)        | 21,000 | 2018-2026 | Fixed in the port   |
+| Auto fix: "Error retrieving command mutation"                                                      | 13,000 | 2018-2026 | Fixed               |
+| Firefox private windows reject the service worker: "The operation is insecure"                     | 12,000 | 2018-2022 | Fixed in the port   |
+| "Script error." from cross-origin scripts                                                          | 12,000 | 2018-2026 | Noise, now filtered |
+| Beta: clicking after closing action mode: "reading '_matrix'" of null                              | 9,000  | 2018-2026 | Beta only, unported |
+| Opening a demo offline: "Http failure response ... 504"                                            | 9,000  | 2018-2025 | Fixed in the port   |
+| Firefox extensions: "Permission denied to access property 'apply'"                                 | 8,000  | 2018-2022 | Gone with zone.js   |
+| Firefox timeline grid canvas too big: `NS_ERROR_FAILURE`                                           | 7,100  | 2018-2025 | Fixed in the port   |
+| Blocks for missing layers: "reading 'animatableProperties'", AVD export "reading 'name'"           | 5,200  | 2018-2026 | Fixed in the port   |
+| No localStorage: "reading 'present'", "'themeType'", "'nativeElement'"                             | 5,000  | 2018-2026 | Fixed               |
+| Action mode with an empty path block: "reading 'getSubPaths'"                                      | 4,000  | 2018-2026 | Fixed in the port   |
+| Lone `M` after an open subpath: "Error retrieving command mutation", "Subpath index out of bounds" | 4,000  | 2018-2026 | Fixed               |
+| Up/Down in an empty color field: "Argument has incorrect type (number)"                            | 2,550  | 2018-2025 | Fixed               |
+| Undo while hovering a new split: "Subpath index out of bounds", "Command index out of bounds"      | 2,000  | 2018-2026 | Fixed               |
+| Typing "none" in a color field: "Argument has incorrect type (undefined)", then "reading 'a'"      | 1,100  | 2018-2026 | Fixed in the port   |
+| Incomplete curves in production builds: bezier-js "reading 'x'", "reading 'filter'"                | 1,000  | 2018-2026 | Fixed               |
 
-## Still present
+## Fixed since the port
 
-In rough order of priority.
+These were still in the code when the reports were traced, and were fixed afterward.
 
-- **Auto fix throws when a subpath is only a move.** This is PATH-9, and the most common crash still
-  in the code: 13,000 events, and every retry throws again. `alignSubPath` clamps the split index to
-  1, which is past the end of a one-command subpath. Lone moves come from stray `M x y` in typed or
-  pasted path data, arcs the parser drops (PATH-13 and the compact arc flags under "Open" in
-  BUGS.md), and splitting a stroked subpath at an end point (PATH-7). Pad a one-command subpath
-  like a collapsing subpath, and catch errors in `ActionModeService.autoFix` so the user gets a
-  message (`scripts/algorithms/AutoAwesome.ts`). (BUGSNAG-2, high, confirmed by a test; the
-  candidate fix for PATH-9 on `alex/fix-sweep-quick-wins` skips these subpaths instead)
-- **A lone `M` after an open subpath is dropped from the visible subpaths.** `createSubPaths` ends an
-  open subpath at the next `M` but drops that `M` when nothing follows it, while the path state
-  still counts it. The `PathState` constructor then maps subpaths to the wrong states and throws
-  "Error retrieving command mutation", and auto fix, `isClockwise`, and the hit tests read past the
-  end ("Subpath index out of bounds"). `autoAddCollapsingSubPaths` runs after every action mode
-  edit, so after PATH-7 almost any edit throws. This is the same root cause as "Reversing or
-  shifting the first subpath drops a trailing lone `M`" in `path-model.md`, which rates it low;
-  it's about 4,000 events. Start a new subpath at every `M` (`model/paths/SubPath.ts`).
-  (BUGSNAG-3, high, confirmed by a test)
-- **Production builds accept path data with missing curve numbers.** `PathProperty.setEditableValue`
-  relies on `new Path()` throwing for bad input, but `Path` and `BezierCalculator` only build their
-  curves eagerly in dev builds. So in production, typing a path one keystroke at a time stores
-  every incomplete curve, like `M 0 0 Q 1 1` or `M 0 0 C 1 1 2 2`. bezier-js then builds a curve of
-  the wrong order and throws "reading 'filter'" from the bounding box and "reading 'x'" from
-  lengths and splits (1,000 events). Splitting such a curve writes a 3-point `C`, and morphing to
-  one throws "Commands always have an end point" during playback. PATH-14 is another way to lose
-  numbers. Validate that each command has whole groups of finite numbers in `PathParser`, whatever
-  the build (`model/paths/PathParser.ts`, `model/properties/PathProperty.ts`). (BUGSNAG-6, medium,
-  confirmed by tests with production mocked)
-- **Auto fix in the toolbar throws after the active block is cut.** STORE-3 lists R, B, F, A, and
-  Backspace; the toolbar's Auto fix button also throws "reading 'fromValue'" from
-  `getActivePathBlockValue`, since the toolbar still shows it with nothing selected
-  (`services/actionmode.service.ts`). (BUGSNAG-7, low, confirmed by a test)
-- **Unsplitting in a reversed, shifted subpath leaves the shift offset out of range.** This is PATH-8.
-  It's behind about 200 "reading 'start'" and "reading 'type'" errors from dragging, deleting, and
-  auto fix. For example, reverse a closed subpath, add a point, press F, then delete the point.
-  (BUGSNAG-8, medium, confirmed by a test)
-- **Splitting in half after a subpath split can pick an undefined command type.**
-  `CommandStateMutator.split` looks up the new command's type by split time, which is undefined when
-  the time is past the command's last split ("Attempt to convert an undefined svgChar"). Related to
-  PATH-4. Clamp split times to the command's range (`model/paths/CommandState.ts`). (BUGSNAG-11,
-  low, found by a fuzz test)
+- Auto fix threw on a subpath that's only a move (PATH-9, 13,000 events). It now pads the move to
+  match the subpath it's paired with, and the Auto fix action shows a message if it still fails.
+  (BUGSNAG-2)
+- A lone `M` after an open subpath was dropped from the visible subpaths while the path state still
+  counted it (4,000 events). Every `M` now starts a subpath. (BUGSNAG-3)
+- Production builds stored curves with missing numbers (1,000 events). The parser skips an
+  incomplete group of numbers, whatever the build. (BUGSNAG-6)
+- The toolbar's Auto fix threw after the block being edited was cut. Cut only copies in action
+  mode, and the action mode edits do nothing without a block. (BUGSNAG-7)
+- Unsplitting in a reversed, shifted subpath left the shift offset out of range (PATH-8, about 200
+  events). (BUGSNAG-8)
+- Splitting in half after a subpath split could pick an undefined command type (PATH-4). The split
+  time is now measured along the curve and clamped to the command's range. (BUGSNAG-11)
 
 ## Error reporting
 

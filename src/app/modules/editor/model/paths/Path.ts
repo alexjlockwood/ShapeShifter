@@ -386,35 +386,31 @@ export class PathMutator {
       cmdIdx,
     );
     const isSubPathReversed = this.findSubPathStateLeaf(subIdx).isReversed();
+    // The index of the command whose end point is removed.
+    const unsplitIdx = isSubPathReversed ? splitIdx - 1 : splitIdx;
     this.setSubPathStateLeaf(
       subIdx,
       this.findSubPathStateLeaf(subIdx)
         .mutate()
-        .setCommandState(
-          csIdx,
-          targetCs
-            .mutate()
-            .unsplitAtIndex(isSubPathReversed ? splitIdx - 1 : splitIdx)
-            .build(),
-        )
+        .setCommandState(csIdx, targetCs.mutate().unsplitAtIndex(unsplitIdx).build())
         .build(),
     );
     const sps = this.findSubPathStateLeaf(subIdx);
-    const shiftOffset = sps.getShiftOffset();
-    let position = splitIdx;
+    let shiftOffset = sps.getShiftOffset();
+    let position = unsplitIdx;
     for (let i = 0; i < csIdx; i++) {
       position += sps.getCommandStates()[i].getCommands().length;
     }
     if (shiftOffset && position <= shiftOffset) {
       // Subtract the shift offset by 1 to ensure that the unsplit operation
       // doesn't alter the positions of the path points.
-      this.setSubPathStateLeaf(
-        subIdx,
-        this.findSubPathStateLeaf(subIdx)
-          .mutate()
-          .setShiftOffset(shiftOffset - 1)
-          .build(),
-      );
+      shiftOffset--;
+    }
+    // A closed subpath with n commands has n - 1 points to start from.
+    const numCmdsInSubPath = _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
+    shiftOffset = MathUtil.floorMod(shiftOffset, Math.max(1, numCmdsInSubPath - 1));
+    if (shiftOffset !== sps.getShiftOffset()) {
+      this.setSubPathStateLeaf(subIdx, sps.mutate().setShiftOffset(shiftOffset).build());
     }
     return this;
   }
@@ -922,14 +918,52 @@ export class PathMutator {
    * Adds a collapsing subpath to the path.
    */
   addCollapsingSubPath(point: Point, numCommands: number) {
-    const prevCmd = last(this.buildOrderedCommands());
-    const css = [new CommandState(new Command('M', [prevCmd.end, point]))];
+    // The first move of a path has no start point, and a path with no subpaths gets one too.
+    const prevCmd: Command | undefined = last(this.buildOrderedCommands());
+    const css = [new CommandState(new Command('M', [prevCmd?.end, point]))];
     for (let i = 1; i < numCommands; i++) {
       css.push(new CommandState(new Command('L', [point, point])));
     }
     this.subPathStateMap.push(new SubPathState(css));
     this.subPathOrdering.push(this.subPathOrdering.length);
     this.numCollapsingSubPaths++;
+    return this;
+  }
+
+  /**
+   * Adds commands of the specified types to a subpath that's only a move, all at the move's
+   * point, so that it can morph into a subpath with those commands by growing from that point.
+   */
+  padSubPath(subIdx: number, svgChars: ReadonlyArray<SvgChar>) {
+    LOG('padSubPath', subIdx, svgChars);
+    const sps = this.findSubPathStateLeaf(subIdx);
+    const [moveCs, ...otherCss] = sps.getCommandStates();
+    if (!moveCs || otherCss.length || moveCs.getCommands().length !== 1) {
+      throw new Error('Only a subpath that is only a move can be padded');
+    }
+    if (svgChars.includes('M')) {
+      throw new Error("A subpath can't be padded with a move");
+    }
+    const { end } = moveCs.getCommands()[0];
+    const numPoints: Record<SvgChar, number> = { M: 2, L: 2, Q: 3, C: 4, Z: 2 };
+    const paddingCss = svgChars.map(
+      svgChar =>
+        new CommandState(
+          new Command(
+            svgChar,
+            _.times(numPoints[svgChar], () => end),
+          ),
+        ),
+    );
+    this.setSubPathStateLeaf(
+      subIdx,
+      sps
+        .mutate()
+        // Reversing a lone move doesn't change it, but reversing the padding would reorder it.
+        .setIsReversed(false)
+        .setCommandStates([moveCs, ...paddingCss])
+        .build(),
+    );
     return this;
   }
 

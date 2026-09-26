@@ -93,43 +93,36 @@ export class BezierCalculator implements Calculator {
     return new BezierCalculator(this.id, svgChar, ...this.points);
   }
 
+  /** Returns the time at which the curve has covered the given fraction of its length. */
   findTimeByDistance(distance: number): number {
-    if (distance < 0 || distance > 1) {
+    if (!Number.isFinite(distance)) {
       console.warn('distance must be a number between 0 and 1.');
+      return 0;
     }
-    if (distance === 0 || distance === 1) {
-      return distance;
+    if (distance <= 0 || distance >= 1 || !this.getPathLength()) {
+      // A curve with no length is at its start and end at every time.
+      return _.clamp(distance, 0, 1);
     }
-    const originalDistance = distance;
-    const epsilon = 0.001;
-    const maxDepth = -100;
-
-    const lowToHighRatio = distance / (1 - distance);
-    let step = -2;
-    while (step > maxDepth) {
-      const split = this.bezierJs.split(distance);
-      const low = split.left.length();
-      const high = split.right.length();
-      const diff = low - lowToHighRatio * high;
-      if (Math.abs(diff) < epsilon) {
-        // We found a satisfactory midpoint t value.
-        break;
+    // The length covered only grows with time, so bisect. (Searching outward from t = distance,
+    // as this used to, couldn't reach times more than a quarter away, which curves that speed up
+    // or slow down a lot need.)
+    const targetLength = distance * this.getPathLength();
+    const tolerance = this.getPathLength() * 1e-6;
+    let low = 0;
+    let high = 1;
+    for (let i = 0; i < 40; i++) {
+      const mid = (low + high) / 2;
+      const excess = (this.bezierJs.split(mid).left.length() as number) - targetLength;
+      if (Math.abs(excess) < tolerance) {
+        return mid;
       }
-      // Jump half the t-distance in the direction of the bias.
-      step = step - 1;
-      distance += (diff > 0 ? -1 : 1) * 2 ** step;
+      if (excess < 0) {
+        low = mid;
+      } else {
+        high = mid;
+      }
     }
-
-    if (step === maxDepth) {
-      // TODO: handle degenerate curves!!!!!
-      console.warn(
-        'Could not find the midpoint for: ',
-        `${this.svgChar} ` + JSON.stringify(this.points),
-      );
-      return originalDistance;
-    }
-
-    return distance;
+    return (low + high) / 2;
   }
 
   toCommand() {

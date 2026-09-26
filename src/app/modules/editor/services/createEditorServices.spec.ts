@@ -1,4 +1,4 @@
-import { ActionMode } from 'app/modules/editor/model/actionmode';
+import { ActionMode, ActionSource, SelectionType } from 'app/modules/editor/model/actionmode';
 import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
@@ -128,6 +128,137 @@ describe('createEditorServices', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe('auto fix', () => {
+    function selectPathBlock(fromValue: string, toValue: string) {
+      const { layerTimelineService } = services;
+      const layer = new PathLayer({ name: 'path', children: [], pathData: new Path(fromValue) });
+      layerTimelineService.addLayer(layer);
+      layerTimelineService.addBlocks([
+        {
+          layerId: layer.id,
+          propertyName: 'pathData',
+          fromValue: undefined,
+          toValue: undefined,
+          currentTime: 0,
+        },
+      ]);
+      const block = layerTimelineService.getSelectedBlocks()[0].clone() as PathAnimationBlock;
+      block.fromValue = new Path(fromValue);
+      block.toValue = new Path(toValue);
+      layerTimelineService.updateBlocks([block]);
+      layerTimelineService.selectBlock(block.id, true);
+      return () =>
+        layerTimelineService
+          .getAnimation()
+          .blocks.find(b => b.id === block.id) as PathAnimationBlock;
+    }
+
+    // The most common crash in Bugsnag, with a lone "M" typed or pasted into the path data.
+    it('makes a lone point morphable with a triangle', () => {
+      const getBlock = selectPathBlock('M 6 5', 'M 12 6 L 13 11 Z');
+      services.actionModeService.autoFix();
+      const { fromValue, toValue } = getBlock();
+      expect(fromValue!.isMorphableWith(toValue!)).toBe(true);
+    });
+
+    it('shows a snackbar when it fails', () => {
+      const getBlock = selectPathBlock('M 8 5 L 8 19 L 19 12 Z', 'M 6 5 L 10 5 L 10 19 L 6 19 Z');
+      const blockBefore = getBlock();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn(Path.prototype, 'mutate').mockImplementationOnce(() => {
+        throw new Error('Auto fix failed');
+      });
+
+      expect(() => services.actionModeService.autoFix()).not.toThrow();
+      expect(services.snackBarService.getSnackBar()?.message).toBe("Couldn't auto fix these paths");
+      expect(getBlock()).toBe(blockBefore);
+    });
+
+    // The selected points may not exist in the new paths, and drawing them would throw.
+    it('clears the selections', () => {
+      selectPathBlock('M 8 5 L 8 19 L 19 12 Z', 'M 6 5 L 10 5 L 10 19 L 6 19 Z');
+      const { actionModeService } = services;
+      actionModeService.setActionMode(ActionMode.Selection);
+      actionModeService.setSelections([
+        { type: SelectionType.Point, source: ActionSource.From, subIdx: 0, cmdIdx: 3 },
+      ]);
+      actionModeService.autoFix();
+      expect(store.getState().present.actionmode.selections).toEqual([]);
+    });
+
+    // Auto fix can reorder the subpaths, so the ones paired so far may have moved.
+    it('forgets the subpaths paired so far', () => {
+      selectPathBlock(
+        'M 0 0 L 4 0 L 4 4 Z M 20 20 L 24 20 L 24 24 Z',
+        'M 20 20 L 24 20 L 24 24 Z M 0 0 L 4 0 L 4 4 Z',
+      );
+      const { actionModeService } = services;
+      actionModeService.setActionMode(ActionMode.PairSubPaths);
+      actionModeService.pairSubPath(1, ActionSource.From);
+      expect(store.getState().present.actionmode.unpairedSubPath).toBeDefined();
+      actionModeService.autoFix();
+      const { unpairedSubPath, pairedSubPaths } = store.getState().present.actionmode;
+      expect(unpairedSubPath).toBeUndefined();
+      expect(pairedSubPaths.size).toBe(0);
+    });
+  });
+
+  describe('in action mode', () => {
+    function editBlock() {
+      const { layerTimelineService, actionModeService } = services;
+      const layer = new PathLayer({ name: 'path', children: [], pathData: undefined });
+      layerTimelineService.addLayer(layer);
+      layerTimelineService.addBlocks([
+        {
+          layerId: layer.id,
+          propertyName: 'pathData',
+          fromValue: new Path('M 8 5 L 8 19 L 19 12 Z'),
+          toValue: new Path('M 6 5 L 10 5 L 10 19 L 6 19 Z'),
+          currentTime: 0,
+        },
+      ]);
+      const [block] = layerTimelineService.getSelectedBlocks();
+      actionModeService.setActionMode(ActionMode.Selection);
+      return block;
+    }
+
+    function cut() {
+      const setData = vi.fn<(format: string, data: string) => void>();
+      const event = new Event('cut', { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'clipboardData', { value: { setData } });
+      window.dispatchEvent(event);
+      return setData;
+    }
+
+    it('copies the block being edited instead of cutting it', () => {
+      const block = editBlock();
+      services.clipboardService.init();
+      const setData = cut();
+      expect(setData).toHaveBeenCalledWith('text/plain', expect.stringContaining(block.id));
+      expect(services.layerTimelineService.getAnimation().blocks.map(b => b.id)).toContain(
+        block.id,
+      );
+    });
+
+    // E.g. when it's deleted from the timeline.
+    it('does nothing once the block being edited is gone', () => {
+      editBlock();
+      const { actionModeService, layerTimelineService } = services;
+      actionModeService.setSelections([
+        { type: SelectionType.SubPath, source: ActionSource.From, subIdx: 0 },
+      ]);
+      layerTimelineService.deleteSelectedModels();
+      expect(layerTimelineService.getSelectedBlocks()).toEqual([]);
+      expect(() => {
+        actionModeService.autoFix();
+        actionModeService.reverseSelectedSubPaths();
+        actionModeService.shiftBackSelectedSubPaths();
+        actionModeService.shiftForwardSelectedSubPaths();
+        actionModeService.deleteSelectedActionModeModels();
+      }).not.toThrow();
+    });
   });
 
   describe('with blocks that animate hidden or missing layers', () => {

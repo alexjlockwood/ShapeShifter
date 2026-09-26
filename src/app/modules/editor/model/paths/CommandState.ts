@@ -256,8 +256,16 @@ class CommandStateMutator {
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
-    const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
-    return this.split([this.calculator.findTimeByDistance(distance)]);
+    // findTimeByDistance takes a fraction of the whole command's length, so find the fraction
+    // halfway between the ends of the piece being split.
+    const length = this.calculator.getPathLength();
+    if (!length) {
+      return this.split([MathUtil.lerp(startSplit, endSplit, 0.5)]);
+    }
+    const getFraction = (t: number) =>
+      t <= 0 ? 0 : t >= 1 ? 1 : this.calculator.split(0, t).getPathLength() / length;
+    const fraction = (getFraction(startSplit) + getFraction(endSplit)) / 2;
+    return this.split([this.calculator.findTimeByDistance(fraction)]);
   }
 
   private split(ts: ReadonlyArray<number>) {
@@ -266,7 +274,13 @@ class CommandStateMutator {
     }
     const currSplits = this.mutations.map(m => m.t);
     const currSvgChars = this.mutations.map(m => m.svgChar);
-    for (const t of ts) {
+    for (let t of ts) {
+      // A point past the ends of the command (or of its piece of a split subpath) would have no
+      // command to split. It isn't skipped, since the caller has already counted it when it
+      // updated the subpath's shift offset.
+      t = Number.isNaN(t)
+        ? MathUtil.lerp(this.minT, this.maxT, 0.5)
+        : _.clamp(t, this.minT, this.maxT);
       const id = _.uniqueId();
       const svgChar = currSvgChars[_.sortedIndex(currSplits, t)];
       const mutation = { id, t, svgChar };

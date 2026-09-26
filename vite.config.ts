@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
+import type { Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 
@@ -13,9 +14,33 @@ const srcAlias = (name: string) => ({
   replacement: fileURLToPath(new URL(`./src/${name}/`, import.meta.url)),
 });
 
+// The auto fix playground (src/playground/autofix/) also runs a copy of src/ from another commit,
+// which scripts/playground-baseline.mjs puts in .playground-baseline/. The copy's non-relative
+// imports have to stay inside the copy, rather than resolve against the working tree's src/, so
+// rewrite them before the aliases above see them.
+const playgroundBaseline = (): Plugin => {
+  const baselineSrc = fileURLToPath(new URL('./.playground-baseline/src/', import.meta.url));
+  return {
+    name: 'playground-baseline',
+    enforce: 'pre',
+    apply: 'serve',
+    transform(code, id) {
+      if (!id.startsWith(baselineSrc)) {
+        return undefined;
+      }
+      const rewritten = code.replace(
+        /(from\s+|import\s+|import\s*\(\s*)(['"])(app|environments|test)\//g,
+        '$1$2/.playground-baseline/src/$3/',
+      );
+      return { code: rewritten, map: null };
+    },
+  };
+};
+
 export default defineConfig({
   plugins: [
     react(),
+    playgroundBaseline(),
     // Makes the app work offline. The service worker is only registered in production builds.
     VitePWA({
       // The web manifest is already in public/.

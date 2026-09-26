@@ -11,6 +11,7 @@ import { MorphableLayer } from 'app/modules/editor/model/layers';
 import { Path, PathMutator, PathUtil } from 'app/modules/editor/model/paths';
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { AutoAwesome } from 'app/modules/editor/scripts/algorithms';
+import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { Action, State, Store } from 'app/modules/editor/store';
 import {
   SetActionMode,
@@ -31,6 +32,7 @@ import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
 import _ from 'lodash';
 
 import { LayerTimelineService } from './layertimeline.service';
+import { Duration, SnackBarService } from './snackbar.service';
 
 /**
  * A simple service that provides an interface for making action mode changes.
@@ -39,6 +41,7 @@ export class ActionModeService {
   constructor(
     private readonly store: Store<State>,
     private readonly layerTimelineService: LayerTimelineService,
+    private readonly snackBarService: SnackBarService,
   ) {}
 
   // Action mode.
@@ -364,10 +367,29 @@ export class ActionModeService {
     if (!fromPath || !toPath) {
       return;
     }
-    const [from, to] = AutoAwesome.autoFix(fromPath, toPath);
+    let from: Path;
+    let to: Path;
+    try {
+      [from, to] = AutoAwesome.autoFix(fromPath, toPath);
+    } catch (e) {
+      // Trying again would fail the same way, so say so instead of doing nothing.
+      bugsnagClient.notify(e instanceof Error ? e : String(e));
+      this.snackBarService.show("Couldn't auto fix these paths", 'Dismiss', Duration.Long);
+      return;
+    }
     let animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.From, from);
     animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.To, to, animation);
-    this.store.dispatch(new SetAnimation(animation));
+    // Auto fix adds points and reorders subpaths, so the selected points, the hover, and the
+    // subpaths paired so far in pair subpaths mode may not refer to the same things anymore.
+    this.store.dispatch(
+      new BatchAction(
+        new SetAnimation(animation),
+        new SetActionModeSelections([]),
+        new SetActionModeHover(undefined),
+        new SetUnpairedSubPath(undefined),
+        new SetPairedSubPaths(new Set()),
+      ),
+    );
   }
 
   // Delete selected action mode models.
@@ -460,7 +482,7 @@ export class ActionModeService {
     path: Path,
     animation = this.layerTimelineService.getAnimation(),
   ) {
-    const blockId = this.getActivePathBlock().id;
+    const blockId = this.getRequiredActivePathBlock().id;
     const blockIndex = _.findIndex(animation.blocks, b => b.id === blockId);
     const block = animation.blocks[blockIndex] as PathAnimationBlock;
 
@@ -490,18 +512,32 @@ export class ActionModeService {
     return animation;
   }
 
+  /**
+   * Returns the block being edited in action mode, or undefined if it's gone (e.g. deleted from
+   * the timeline), in which case there's nothing to edit.
+   */
   private getActivePathBlock() {
-    return this.layerTimelineService.getSelectedBlocks()[0] as PathAnimationBlock;
+    const block = this.layerTimelineService.getSelectedBlocks()[0];
+    return block instanceof PathAnimationBlock ? block : undefined;
   }
 
   private getActivePathBlockValue(source: ActionSource) {
     const activeBlock = this.getActivePathBlock();
-    return source === ActionSource.From ? activeBlock.fromValue : activeBlock.toValue;
+    return source === ActionSource.From ? activeBlock?.fromValue : activeBlock?.toValue;
   }
 
   private getActivePathBlockLayer() {
     const vl = this.layerTimelineService.getVectorLayer();
-    return vl.findLayerById(this.getActivePathBlock().layerId) as MorphableLayer;
+    return vl.findLayerById(this.getRequiredActivePathBlock().layerId) as MorphableLayer;
+  }
+
+  /** Returns the block being edited, for callers that have already found a path in it. */
+  private getRequiredActivePathBlock() {
+    const block = this.getActivePathBlock();
+    if (!block) {
+      throw new Error('There is no path block being edited');
+    }
+    return block;
   }
 
   private queryStore<T>(selector: (state: State) => T) {

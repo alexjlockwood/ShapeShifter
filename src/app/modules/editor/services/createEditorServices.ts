@@ -22,7 +22,7 @@ export function createEditorServices(store: Store<State>) {
   const snackBarService = new SnackBarService();
   const themeService = new ThemeService(store);
   const layerTimelineService = new LayerTimelineService(store);
-  const actionModeService = new ActionModeService(store, layerTimelineService);
+  const actionModeService = new ActionModeService(store, layerTimelineService, snackBarService);
   const playbackService = new PlaybackService(store);
   const fileExportService = new FileExportService(store);
   const fileImportService = new FileImportService(store, snackBarService, layerTimelineService);
