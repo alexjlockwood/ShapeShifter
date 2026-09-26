@@ -43,8 +43,8 @@ usually looks better, but not always.
 - **Smallest area** (for fills) is the smallest area at ¼, ½, or ¾ of the way through the morph,
   compared with the area expected there. A subpath that turns inside out gets close to 0.
 - A result has a **problem** if auto fix threw, if the paths it returned can't be morphed, or if a
-  subpath is drawn clockwise at one end and counterclockwise at the other. The playground finds
-  directions with the shoelace formula, not `Path.isClockwise`.
+  subpath (other than an open stroke) is drawn clockwise at one end and counterclockwise at the
+  other. The playground finds directions with the shoelace formula, not `Path.isClockwise`.
 - **Changed** means the current version returned different paths from the baseline. Filter to
   the changed scenarios, or to the ones with problems, at the top.
 

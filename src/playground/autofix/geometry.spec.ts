@@ -63,6 +63,13 @@ describe('geometry', () => {
     expect(worstArea).toBeCloseTo(0);
   });
 
+  it('ignores the direction of open strokes', () => {
+    const a = parsePath('M 2 2 L 22 2 L 22 22');
+    const b = parsePath('M 2 2 L 2 22 L 22 22');
+    expect(measure(a, b, 'stroke').oppositeWindings).toEqual(0);
+    expect(measure(a, b, 'fill').oppositeWindings).toEqual(1);
+  });
+
   it('ignores the direction of collapsing subpaths', () => {
     const a = parsePath('M 5 5 L 5 5 L 5 5 L 5 5 Z');
     const b = parsePath('M 0 0 L 0 10 L 10 10 L 10 0 Z');

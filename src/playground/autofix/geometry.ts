@@ -150,7 +150,10 @@ export interface Metrics {
   readonly meanTravel: number;
   /** How far the point that moves the most moves, as a fraction of the paths' size. */
   readonly maxTravel: number;
-  /** The number of subpaths drawn clockwise at one end of the morph and not at the other. */
+  /**
+   * The number of subpaths drawn clockwise at one end of the morph and not at the other, not
+   * counting open strokes.
+   */
   readonly oppositeWindings: number;
   /**
    * For fills, the smallest area in the middle of the morph, as a fraction of the area expected
@@ -170,9 +173,13 @@ export function measure(a: ReadonlyArray<SubPath>, b: ReadonlyArray<SubPath>, ki
     ),
   );
 
-  // A collapsing subpath has no area, so it has no direction either.
+  // A collapsing subpath has no area, so it has no direction either. Neither does an open stroke,
+  // since nothing fills it.
   const minArea = size * size * 1e-6;
   const oppositeWindings = a.filter((subPath, s) => {
+    if (kind === 'stroke' && !(isClosed(subPath) && isClosed(b[s]))) {
+      return false;
+    }
     const areaA = signedArea(subPath);
     const areaB = signedArea(b[s]);
     return Math.abs(areaA) > minArea && Math.abs(areaB) > minArea && areaA > 0 !== areaB > 0;
@@ -199,6 +206,12 @@ export function measure(a: ReadonlyArray<SubPath>, b: ReadonlyArray<SubPath>, ki
     oppositeWindings,
     worstArea,
   };
+}
+
+function isClosed(subPath: SubPath) {
+  const start = endPoint(subPath[0]);
+  const end = endPoint(subPath[subPath.length - 1]);
+  return subPath[subPath.length - 1].type === 'Z' || (start.x === end.x && start.y === end.y);
 }
 
 const distance = (p: Point, q: Point) => Math.hypot(p.x - q.x, p.y - q.y);
