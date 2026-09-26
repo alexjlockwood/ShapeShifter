@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run format)",
+      "Bash(npm run format:check)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint *)",
+      "Bash(npm run test:run)",
+      "Bash(npm run test:run *)",
+      "Bash(npm run build)",
+      "Bash(npm run e2e)",
+      "Bash(npm run e2e *)",
+      "Bash(npx vitest run *)",
+      "Bash(npx playwright test *)",
+      "Bash(npx playwright show-trace *)",
+      "Bash(npx prettier --write *)",
+      "Bash(npx prettier --check *)",
+      "Bash(npx oxlint *)"
+    ],
+    "deny": [
+      "Bash(npm run deploy*)",
+      "Bash(./scripts/deploy-stable.sh*)",
+      "Bash(scripts/deploy-stable.sh*)",
+      "Bash(npx gh-pages *)"
+    ]
+  }
+}
