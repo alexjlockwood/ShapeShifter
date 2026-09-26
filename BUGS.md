@@ -51,7 +51,8 @@ An automated bug sweep on 2026-09-25 found these. Most were reproduced with a th
 rest were confirmed by reading the code (PATH-17, STORE-14, STORE-15, MODEL-4, MODEL-8, IMP-13,
 EXP-7, CANVAS-11, UI-13, UI-16, CFG-5, and CFG-6), and IMP-14 is only plausible. None of them are
 triaged yet. Each entry ends with its sweep id, severity, and confidence. The ids that are skipped
-belong to bugs from the same sweep that are being fixed separately.
+belong to bugs from the same sweep that are being fixed separately. One entry has no id, since it
+was found afterward while fixing one of those.
 
 ### Path model
 
@@ -126,6 +127,14 @@ belong to bugs from the same sweep that are being fixed separately.
   misses the layer. Each subpath is also tested alone with the even-odd rule, ignoring the fill
   type and holes. Treat filled subpaths as closed and test the whole path with its fill rule
   (`model/paths/PathState.ts`, `hitTest`). (PATH-17, low, confirmed by reading)
+- **Reversing or shifting the first subpath drops a trailing lone `M`.** A path that ends with a
+  subpath that's only an `M` loses it when the subpath before it is reversed or shifted, since
+  that subpath is rebuilt ending in an `L` instead of a `Z`. Auto fix's `orderSubPaths` moves lone
+  `M`s to the end, so `autoFix` on `M 5 5 M 0 0 L 10 0 L 10 10 Z` and a two-subpath target throws
+  "Subpath index out of bounds". Parsing drops it too: `M 0 0 L 10 0 M 5 5` has one subpath.
+  `createSubPaths` ends an open subpath at the next `M` but doesn't start the next subpath with it,
+  and should (`model/paths/SubPath.ts`, `createSubPaths`, and `scripts/algorithms/AutoAwesome.ts`,
+  `alignSubPath`). (found after the sweep, low, confirmed by a test)
 
 ### Store and services
 
