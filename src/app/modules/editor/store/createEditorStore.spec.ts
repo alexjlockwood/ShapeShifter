@@ -6,6 +6,8 @@ import { createEditorStore } from '.';
 import { BatchAction } from './batch/actions';
 import { SetSelectedLayers, SetVectorLayer } from './layers/actions';
 import { getHiddenLayerIds, getSelectedLayerIds, getVectorLayer } from './layers/selectors';
+import { SetHoveredLayerId } from './paper/actions';
+import { getHoveredLayerId } from './paper/selectors';
 import { SetCurrentTime, SetIsPlaying } from './playback/actions';
 import { getCurrentTime } from './playback/selectors';
 import { ResetWorkspace } from './reset/actions';
@@ -44,14 +46,16 @@ describe('createEditorStore', () => {
     const store = createEditorStore();
     vi.advanceTimersByTime(2000);
     store.dispatch(new SetSelectedLayers(new Set(['a'])));
-    vi.advanceTimersByTime(300);
+    vi.advanceTimersByTime(2000);
     store.dispatch(new SetSelectedLayers(new Set(['b'])));
     vi.advanceTimersByTime(300);
     store.dispatch(new SetSelectedLayers(new Set(['c'])));
+    vi.advanceTimersByTime(300);
+    store.dispatch(new SetSelectedLayers(new Set(['d'])));
     store.dispatch(ActionCreators.undo());
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
     store.dispatch(ActionCreators.redo());
-    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['c']));
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['d']));
   });
 
   it('does not record playback changes in the undo history', () => {
@@ -104,6 +108,32 @@ describe('createEditorStore', () => {
     store.dispatch(ActionCreators.redo());
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['b']));
     expect(getThemeType(store.getState()).themeType).toBe('light');
+  });
+
+  it('does not record paper slice changes in the undo history', () => {
+    const store = createEditorStore();
+    const numPastStates = store.getState().past.length;
+    store.dispatch(new SetHoveredLayerId('a'));
+    store.dispatch(new BatchAction(new SetHoveredLayerId('b')));
+    expect(getHoveredLayerId(store.getState())).toBe('b');
+    expect(store.getState().past.length).toBe(numPastStates);
+  });
+
+  it('does not change the paper slice on undo or redo', () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    store.dispatch(new SetHoveredLayerId('a'));
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['b'])));
+    store.dispatch(new SetHoveredLayerId('b'));
+    store.dispatch(ActionCreators.undo());
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
+    expect(getHoveredLayerId(store.getState())).toBe('b');
+    store.dispatch(new SetHoveredLayerId('c'));
+    store.dispatch(ActionCreators.redo());
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['b']));
+    expect(getHoveredLayerId(store.getState())).toBe('c');
   });
 
   it('records a batch of actions as one undo step', () => {
