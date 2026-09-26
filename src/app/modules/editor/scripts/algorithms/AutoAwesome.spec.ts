@@ -70,6 +70,18 @@ describe('AutoAwesome', () => {
       expect(from.isMorphableWith(to)).toBe(true);
     });
 
+    // Reversing an open subpath flips a stroke end over end, so auto fix shouldn't reverse one to
+    // match the other's direction, the way it does for closed subpaths.
+    it.each([
+      ['two corners that bend different ways', 'M 2 2 L 22 2 L 22 22', 'M 2 2 L 2 22 L 22 22'],
+      ['a curve and a line', 'M 4 16 Q 12 4 20 16', 'M 4 12 L 20 12'],
+    ])("doesn't reverse %s that go the same way", (unused, f, t) => {
+      const [from, to] = AutoAwesome.autoFix(new Path(f), new Path(t));
+      expect(from.isMorphableWith(to)).toBe(true);
+      expect(from.getCommands()[0].end).toEqual(new Path(f).getCommands()[0].end);
+      expect(to.getCommands()[0].end).toEqual(new Path(t).getCommands()[0].end);
+    });
+
     // A subpath that's only a move, like a stray "M 6 5" in the path data, has no segment to split.
     describe('with a subpath that is only a move', () => {
       it.each([

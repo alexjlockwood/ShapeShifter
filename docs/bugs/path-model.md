@@ -16,10 +16,6 @@
   the neighboring segment. It passes the midpoint in t to `findTimeByDistance`, which expects a
   fraction of the arc length, so it should average the ends' arc length fractions instead
   (`model/paths/CommandState.ts`, `splitInHalfAtIndex`). (PATH-4, medium, confirmed by a test)
-- **Auto fix reverses open subpaths.** Auto fix can reverse an open line or arc, so the stroke
-  flips end over end during the morph. `permuteSubPath` compares orientation even for open
-  subpaths, where `alignSubPath` has already chosen the direction, and should only compare it when
-  both are closed (`scripts/algorithms/AutoAwesome.ts`). (PATH-6, medium, confirmed by a test)
 - **Splitting a stroked subpath at its first or last point makes an empty subpath.** In split
   subpaths mode, clicking the start or end point of a stroked subpath adds a subpath that's only a
   move, which draws nothing (auto fix grows the other path's subpath from it). `SegmentSplitter`

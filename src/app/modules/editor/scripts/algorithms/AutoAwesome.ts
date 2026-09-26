@@ -375,8 +375,10 @@ function autoConvertSubPath(from: Path, to: Path, subIdx: number): [Path, Path] 
 }
 
 function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
-  if (from.isClockwise(subIdx) !== to.isClockwise(subIdx)) {
-    // Make sure the paths share the same direction.
+  const isClosed = (path: Path) => path.getSubPath(subIdx).isClosed();
+  if (isClosed(from) && isClosed(to) && from.isClockwise(subIdx) !== to.isClockwise(subIdx)) {
+    // Make sure the subpaths go the same direction. Open subpaths don't need to, and alignSubPath
+    // has already picked the direction that lines up their points best.
     to = to.mutate().reverseSubPath(subIdx).build();
   }
 
