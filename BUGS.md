@@ -58,7 +58,7 @@ test (deleted afterward, no source changed); the rest by reading the code, and o
 plausible. None of these are triaged yet. They're grouped by area in `docs/bugs/`, one file per
 area, in the same style as the rest of this file:
 
-- **Path model** (15 bugs): `docs/bugs/path-model.md`
+- **Path model** (14 bugs): `docs/bugs/path-model.md`
 - **Store and services** (17 bugs): `docs/bugs/store-and-services.md`
 - **Layers and properties** (10 bugs): `docs/bugs/layers-and-properties.md`
 - **Import** (15 bugs): `docs/bugs/import.md`

@@ -922,8 +922,9 @@ export class PathMutator {
    * Adds a collapsing subpath to the path.
    */
   addCollapsingSubPath(point: Point, numCommands: number) {
-    const prevCmd = last(this.buildOrderedCommands());
-    const css = [new CommandState(new Command('M', [prevCmd.end, point]))];
+    // The first move of a path has no start point, and a path with no subpaths gets one too.
+    const prevCmd: Command | undefined = last(this.buildOrderedCommands());
+    const css = [new CommandState(new Command('M', [prevCmd?.end, point]))];
     for (let i = 1; i < numCommands; i++) {
       css.push(new CommandState(new Command('L', [point, point])));
     }

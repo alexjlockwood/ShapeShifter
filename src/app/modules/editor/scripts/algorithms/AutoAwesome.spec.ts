@@ -70,6 +70,24 @@ describe('AutoAwesome', () => {
       expect(from.isMorphableWith(to)).toBe(true);
     });
 
+    // Path data without a leading M, e.g. typed into a morph block, has no subpaths.
+    it.each(['L 10 10', '   ', 'Z'])('grows a shape out of nothing (%j)', empty => {
+      const shape = 'M 0 0 L 10 10 L 20 0 Z';
+      expect(new Path(empty).getSubPaths()).toHaveLength(0);
+      for (const [from, to] of [
+        AutoAwesome.autoFix(new Path(empty), new Path(shape)),
+        AutoAwesome.autoFix(new Path(shape), new Path(empty)).reverse(),
+      ]) {
+        expect(from.isMorphableWith(to)).toBe(true);
+        expect(from.getSubPaths()[0].isCollapsing()).toBe(true);
+        // The shape isn't reversed, though its Z is converted to match the collapsing subpath's L.
+        const ends = (path: Path) => path.getCommands().map(cmd => cmd.end);
+        expect(ends(to)).toEqual(ends(new Path(shape)));
+      }
+      const [from, to] = AutoAwesome.autoAddCollapsingSubPaths(new Path(empty), new Path(shape));
+      expect(from.getSubPaths()).toHaveLength(to.getSubPaths().length);
+    });
+
     describe('pairing subpaths', () => {
       const square = (x: number, y: number, size: number) =>
         `M ${x} ${y} L ${x + size} ${y} L ${x + size} ${y + size} L ${x} ${y + size} Z`;

@@ -50,11 +50,6 @@
   into the property panel or in a hand-edited file, parses to `NaN` coordinates, and `5+5` loses
   its second number. Treat all SVG whitespace as separators, and `+` too when it doesn't follow an
   `e` (`model/paths/PathParser.ts`, `extract`). (PATH-14, low, confirmed by a test)
-- **A path with no subpaths crashes `autoAddCollapsingSubPaths`.** Path data with no leading `M`
-  (typed into a morph block, or from `Path('L 10 10')`) has 0 subpaths, and reading the last
-  command throws "reading 'end'" (`scripts/algorithms/AutoAwesome.ts`, `model/paths/Path.ts`).
-  (PATH-15, confirmed by a test; a candidate fix exists on the unmerged
-  `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
 - **Degenerate "spike" curves are treated as zero-length lines.** A curve that starts and ends at
   the same point but has other control points, like `M 0 0 C 10 10 10 10 0 0`, is treated as a
   point: the bounding box misses it, "Split in half" collapses it, and auto convert can flatten it.

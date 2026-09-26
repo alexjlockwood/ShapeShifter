@@ -41,11 +41,18 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
 
     const min = Math.min(from.getSubPaths().length, to.getSubPaths().length);
     for (let subIdx = 0; subIdx < min; subIdx++) {
-      // Pass the command with the larger subpath as the 'from' command.
       if (isMoveOnly(from, subIdx) || isMoveOnly(to, subIdx)) {
         // A subpath that's only a move has no segment to split, so it's padded below instead.
         continue;
       }
+      if (isCollapsing(from, subIdx) || isCollapsing(to, subIdx)) {
+        // A collapsing subpath is a point with as many commands as the subpath it grows into, so
+        // all they need is matching types. Aligning or permuting them would only move the other
+        // subpath's start around.
+        [from, to] = autoConvertSubPath(from, to, subIdx);
+        continue;
+      }
+      // Pass the command with the larger subpath as the 'from' command.
       const numFromCmds = from.getSubPath(subIdx).getCommands().length;
       const numToCmds = to.getSubPath(subIdx).getCommands().length;
       const shouldSwap = numFromCmds < numToCmds;
@@ -58,7 +65,8 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
       }
     }
     for (let subIdx = 0; subIdx < min; subIdx++) {
-      if (!isMoveOnly(from, subIdx) && !isMoveOnly(to, subIdx)) {
+      const isAligned = [from, to].every(p => !isMoveOnly(p, subIdx) && !isCollapsing(p, subIdx));
+      if (isAligned) {
         [from, to] = permuteSubPath(from, to, subIdx);
       }
     }
@@ -74,6 +82,8 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
   }
   return [from, to];
 }
+
+const isCollapsing = (path: Path, subIdx: number) => path.getSubPath(subIdx).isCollapsing();
 
 /** Returns true if the subpath is only a move, like a stray "M 5 5" in the path data. */
 const isMoveOnly = (path: Path, subIdx: number) =>
