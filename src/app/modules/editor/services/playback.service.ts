@@ -42,7 +42,7 @@ export class PlaybackService {
         if (isPlaying) {
           const { duration } = this.queryStore(getAnimation);
           const currentTime = this.getCurrentTime();
-          const startTime = duration === this.getCurrentTime() ? 0 : currentTime;
+          const startTime = currentTime >= duration ? 0 : currentTime;
           this.animator.play(duration, startTime);
         } else {
           this.animator.pause();
@@ -167,14 +167,11 @@ class Animator {
       if (!startTimestamp) {
         startTimestamp = timestamp;
       }
-      const progress = timestamp - startTimestamp + startTime;
+      const progress = timestamp - startTimestamp + startTime * playbackSpeed;
       if (progress < duration * playbackSpeed) {
         this.animationFrameId = window.requestAnimationFrame(onAnimationFrameFn);
       } else if (this.isRepeating) {
-        this.timeoutId = window.setTimeout(
-          () => this.startAnimation(duration, startTime),
-          REPEAT_DELAY,
-        );
+        this.timeoutId = window.setTimeout(() => this.startAnimation(duration, 0), REPEAT_DELAY);
       } else {
         this.pause(true);
       }
