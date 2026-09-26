@@ -171,11 +171,14 @@ function pairSubPaths(from: Path, to: Path): [Path, Path] {
     path.getSubPaths().map((unused, subIdx) => path.getPoleOfInaccessibility(subIdx));
   const longerCenters = centers(longer);
   const distances = centers(shorter).map(p => longerCenters.map(q => MathUtil.distance(p, q)));
-  // A subpath with huge or missing coordinates is farther from everything than any other, but by a
-  // finite amount, since the assignment can't compare infinite costs, and huge ones lose precision.
-  const maxDistance = _.max(distances.flat().filter(Number.isFinite)) ?? 0;
-  const farthest = (maxDistance + 1) * (distances.length + 1);
-  const partners = assign(distances.map(row => row.map(d => (Number.isFinite(d) ? d : farthest))));
+  // Scale the distances to at most 1, which doesn't change the best pairs, and put a subpath with
+  // huge or missing coordinates farther from everything than any other, by a finite amount, since
+  // the assignment can't compare infinite costs, and huge ones lose precision.
+  const maxDistance = _.max(distances.flat().filter(Number.isFinite)) || 1;
+  const farthest = distances.length + 1;
+  const partners = assign(
+    distances.map(row => row.map(d => (Number.isFinite(d) ? d / maxDistance : farthest))),
+  );
   const order = [
     ...partners,
     ..._.range(longerCenters.length).filter(subIdx => !partners.includes(subIdx)),

@@ -3,6 +3,10 @@ import { Path } from 'app/modules/editor/model/paths';
 import { newCalculator } from '.';
 
 describe('BezierCalculator', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   // This curve covers most of its length near its end. The search used to start at t = fraction
   // and couldn't get more than a quarter away from it, so it gave up and returned the fraction.
   it.each([0.1, 0.3, 0.5, 0.7, 0.9])('finds the time at %f of its length', fraction => {

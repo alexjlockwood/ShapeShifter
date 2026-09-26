@@ -278,7 +278,9 @@ class CommandStateMutator {
       // A point past the ends of the command (or of its piece of a split subpath) would have no
       // command to split. It isn't skipped, since the caller has already counted it when it
       // updated the subpath's shift offset.
-      t = _.clamp(t, this.minT, this.maxT);
+      t = Number.isNaN(t)
+        ? MathUtil.lerp(this.minT, this.maxT, 0.5)
+        : _.clamp(t, this.minT, this.maxT);
       const id = _.uniqueId();
       const svgChar = currSvgChars[_.sortedIndex(currSplits, t)];
       const mutation = { id, t, svgChar };
