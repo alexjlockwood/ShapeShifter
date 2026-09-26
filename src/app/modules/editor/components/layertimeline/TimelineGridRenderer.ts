@@ -118,7 +118,8 @@ export class TimelineGridRenderer {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.font = '10px Roboto';
-      for (let x = 0, t = 0; round(x) <= round(width); x += spacingPx, t += spacingMs) {
+      const maxX = round(width - TIMELINE_ANIMATION_PADDING * 2);
+      for (let x = 0, t = 0; round(x) <= maxX; x += spacingPx, t += spacingMs) {
         ctx.fillText(`${t / 1000}s`, x, height / 2);
       }
       ctx.fillStyle = 'rgba(244, 67, 54, .7)';
