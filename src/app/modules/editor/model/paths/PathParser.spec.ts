@@ -90,6 +90,22 @@ const specs = [
     new Test(`M 0 0 C 1 1 2\n2 3\n3`, `M 0 0 C 1 1 2 2 3 3`),
   ),
   new Spec(
+    `arcs with compact flags`,
+    new Test(
+      `M 0 0 a10 10 0 100 20 L 5 5`,
+      PathParser.commandsToString(PathParser.parseCommands(`M 0 0 a 10 10 0 1 0 0 20 L 5 5`)),
+    ),
+    new Test(
+      `M 0 0 A10,10,0,1,1,20,0`,
+      PathParser.commandsToString(PathParser.parseCommands(`M 0 0 A 10 10 0 1 1 20 0`)),
+    ),
+    new Test(
+      `M 0 0 a10 10 0 01.5 2`,
+      PathParser.commandsToString(PathParser.parseCommands(`M 0 0 a 10 10 0 0 1 .5 2`)),
+    ),
+  ),
+  new Spec(`unknown commands`, new Test(`M 0 0 L 5 5 X 1 1 L 9 9`, `M 0 0 L 5 5`)),
+  new Spec(
     `incomplete commands`,
     new Test(`M 0 0 Q 1 1`, `M 0 0`),
     new Test(`M 0 0 C 1 1`, `M 0 0`),

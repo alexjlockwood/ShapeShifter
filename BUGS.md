@@ -7,12 +7,6 @@ Bugs noticed while migrating the app from Angular to React. Paths are relative t
 
 These existed before the migration and are still there.
 
-- **Compact arc flags are misparsed.** `PathParser` can't read arc commands whose flags aren't
-  separated by spaces, e.g. `a10 10 0 100 20` (large-arc 1, sweep 0, then `0 20`). svgo 1.x wrote
-  paths this way, so importing SVGs with circles, ellipses, or rounded rects produced the wrong
-  geometry. svgo 4 no longer compacts flags, which fixes imports, but pasting or typing a
-  compact path string (common in optimized icons) still breaks. See
-  `model/paths/PathParser.ts`.
 - **UI-only state is recorded in the undo history.** Changes to the `paper` slice (cursor, hover,
   zoom) aren't excluded, so they can become undo steps of their own
   (`store/undoredo/metareducer.ts`).

@@ -20,8 +20,9 @@ export function parseCommands(pathData: string) {
     end = nextStart(pathData, end);
     const s = pathData.substring(start, end).trim();
     if (s.length > 0) {
-      const val = getFloats(s);
-      nodes.push({ type: s.charAt(0), params: val });
+      const type = s.charAt(0);
+      const val = type === 'a' || type === 'A' ? getArcFloats(s) : getFloats(s);
+      nodes.push({ type, params: val });
     }
     start = end;
     end++;
@@ -54,6 +55,34 @@ function nextStart(s: string, end: number) {
     end++;
   }
   return end;
+}
+
+/**
+ * Returns an arc command's numbers. Its large arc and sweep flags are a single 0 or 1 each, which
+ * can run into the numbers around them, as in 'a10 10 0 100 20' (large arc 1, sweep 0, then 0 20).
+ * Returns NaN in place of the first number that can't be read.
+ */
+function getArcFloats(s: string) {
+  const results: number[] = [];
+  const numberRegExp = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/;
+  let i = 1;
+  while (i < s.length) {
+    while (i < s.length && /[\s,]/.test(s.charAt(i))) {
+      i++;
+    }
+    if (i >= s.length) {
+      break;
+    }
+    const isFlag = results.length % 7 === 3 || results.length % 7 === 4;
+    const match = isFlag ? /^[01]/.exec(s.slice(i)) : numberRegExp.exec(s.slice(i));
+    if (!match) {
+      results.push(NaN);
+      break;
+    }
+    results.push(parseFloat(match[0]));
+    i += match[0].length;
+  }
+  return results;
 }
 
 class ExtractFloatResult {
@@ -140,6 +169,8 @@ function extract(s: string, start: number, result: ExtractFloatResult) {
   result.mEndPosition = currentIndex;
 }
 
+const COMMAND_CHARS = 'MmLlHhVvCcSsQqTtAa';
+
 function addCommand(
   path: CommandsBuilder,
   current: [number, number, number, number, number, number],
@@ -192,7 +223,10 @@ function addCommand(
   }
   // Draw the command's complete groups of numbers, and report an error if any are missing, which
   // would otherwise make a curve with missing points (e.g. from 'M 0 0 Q 1 1').
-  let isValid = cmd === 'z' || cmd === 'Z' || (val.length > 0 && val.length % increment === 0);
+  let isValid =
+    cmd === 'z' ||
+    cmd === 'Z' ||
+    (COMMAND_CHARS.includes(cmd) && val.length > 0 && val.length % increment === 0);
   for (let k = 0; k + increment <= val.length; k += increment) {
     if (!val.slice(k, k + increment).every(Number.isFinite)) {
       isValid = false;

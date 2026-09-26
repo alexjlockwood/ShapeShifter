@@ -348,9 +348,9 @@ export const BUILT_IN_SCENARIOS: ReadonlyArray<Scenario> = [
   },
   {
     id: 'arc-compact-flags',
-    group: 'Lone points',
+    group: 'Open paths',
     name: 'An arc written with compact flags, to a zigzag',
-    note: "Browsers draw the arc, but Shape Shifter's parser reads it as a lone point, which is one way lone points get into projects. The zigzag should grow from the start of the arc.",
+    note: "Shape Shifter's parser used to read this arc as a lone point, since its flags run into the numbers after them.",
     from: 'M 14 2 a10 10 0 100 20',
     to: 'M 14 2 L 22 12 L 14 22',
     kind: 'stroke',
