@@ -212,9 +212,6 @@ export class CanvasLayers extends CanvasLayoutMixin(DestroyableMixin()) {
     } else {
       ctx.setLineDash([]);
     }
-    if (layer.isStroked() && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
-      ctx.stroke();
-    }
     if (layer.isFilled()) {
       if (layer.fillType === 'evenOdd') {
         // Unlike VectorDrawables, SVGs spell 'evenodd' with a lowercase 'o'.
@@ -222,6 +219,9 @@ export class CanvasLayers extends CanvasLayoutMixin(DestroyableMixin()) {
       } else {
         ctx.fill();
       }
+    }
+    if (layer.isStroked() && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
+      ctx.stroke();
     }
     ctx.restore();
   }
