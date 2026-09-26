@@ -6,21 +6,10 @@ session tomorrow can pick up where this one left off without re-deriving any of 
 a snapshot: PR commit counts, CI results, and agent states are as of the time this was written,
 and will be stale by the time it's read. Re-check them before acting on them.
 
-Four sibling agents were also running in parallel (`fix-webkit-flakes`, `fix-split-filled-subpath`,
-`list-sweep-bugs`, `sweep-quick-wins`), each in its own Flotilla worktree and PR. Each is expected
-to write its own session notes file; this one covers only what the `create-agents` session itself
-did and found, plus what it knows about the other four from reviewing their PRs.
-
-## The one thing to read first
-
-**Every PR's CI is failing on the same WebKit end-to-end test**, and the PR meant to fix it
-(#367) does not fix it. `[webkit] e2e/morph.spec.ts "creates a play-to-pause morph from scratch"`
-times out waiting for an element to become stable, and in one run playback never finished either.
-This has now failed CI on #366 (once; passed on rerun), #367, #368, #369 (a docs-only PR with no
-app or test changes), and #370. It reproduces 0 times in 290 local runs on macOS WebKit, so it's
-specific to WebKit on the Linux CI runner. Nobody has pulled the failed run's trace yet. This is
-the highest-priority thing for tomorrow's session: until it's fixed, every PR's CI is red
-regardless of what the PR changes.
+Three sibling agents were also running in parallel (`fix-split-filled-subpath`, `list-sweep-bugs`,
+`sweep-quick-wins`), each in its own Flotilla worktree and PR. Each is expected to write its own
+session notes file; this one covers only what the `create-agents` session itself did and found,
+plus what it knows about the other three from reviewing their PRs.
 
 ## What this session did, in order
 
@@ -30,8 +19,7 @@ regardless of what the PR changes.
    with Prettier and added `format:check` to CI, added `min-release-age=5` to `.npmrc`, fixed
    stale links in `model/README.md`. All of this is PR #366.
 2. Ran `/code-review` on #366. Got 15 findings. Fixed 14 of them directly (7 more commits on
-   #366); the 15th was the WebKit flake, spun out to its own agent instead (#367), since fixing
-   flaky tests conflicts with format/doc changes if done in the same branch.
+   #366).
 3. Spawned two parallel general-purpose agents to sweep the whole codebase for bugs (independent
    of the review; the user asked for this separately). They found **100 issues: 3 high, 31
    medium, 66 low**. Full report inlined below as an appendix.
@@ -42,8 +30,8 @@ regardless of what the PR changes.
    breaking anything else) bundled into one PR by a new agent (`sweep-quick-wins`, PR #370); the
    other 78 (everything except tier 1 and PATH-3) listed in `BUGS.md` by another new agent
    (`list-sweep-bugs`, PR #369) for later triage, not fixed.
-6. Ran `/code-review` again, this time on #366 (post-fixes), #367, and #368 together. Found 27
-   more issues, detailed below. Not yet acted on except for routing two bugs the `sweep-quick-wins`
+6. Ran `/code-review` again, this time on #366 (post-fixes) and #368 together. Found more
+   issues, detailed below. Not yet acted on except for routing two bugs the `sweep-quick-wins`
    agent found in its own code review to the right places.
 7. User asked to pause and have every parallel session write up its findings as a markdown file
    instead of continuing to iterate, so that a fresh session tomorrow can read all of them and
@@ -51,8 +39,7 @@ regardless of what the PR changes.
 
 ## PR #366: Add instructions for coding agents
 
-Status as of writing: **open, CI passing** (last run succeeded, but see the WebKit flake note
-above; it's failed before on this same branch and could again on rerun).
+Status as of writing: **open, CI passing**.
 
 11 commits. The first 4 are the original work (formatting, CI check, `.npmrc`, the AGENTS.md/skill
 setup). The next 7 are round-1 review fixes:
@@ -178,40 +165,9 @@ verbatim at the end of this file.
      matching layer ids" (no force push needed; it was originally folded into the EXP-3 commit,
      which would have needed one, so it was redone as a separate commit instead).
 
-## PR #367: Wait for menus to close in the end-to-end tests
-
-Status: **open, CI failing**, and per the review below, **does not fix the problem it's meant to
-fix**. This is the PR spun out to handle round-1 review finding #366-15 (the WebKit flake).
-
-Review findings (not yet forwarded to the `fix-webkit-flakes` agent as of this writing):
-
-- **The core problem isn't addressed.** The added `.MuiModal-root` waits target a hypothesis
-  (closing menu intercepts the click) that doesn't match what CI actually shows: the failure is
-  the click waiting for "visible, enabled and stable" with no "intercepts pointer events" in the
-  log, and in another run playback simply never finished. This looks like WebKit not producing
-  animation frames on the Linux CI runner at all, which no amount of waiting for menus fixes. Next
-  step: pull the failed run's trace (`retain-on-failure`) and look at what's actually happening
-  frame by frame.
-- A likely **real app bug**, not just a test problem: `shortcut.service.ts`'s check for "is a menu
-  or dialog open" (`event.target.closest('.MuiModal-root')`) matches a modal that MUI has already
-  started closing (still has the class, now `aria-hidden="true"`), so in real Safari, keyboard
-  shortcuts stay dead until the close transition finishes. The PR's fix removed a test assertion
-  that shortcuts work right after a dialog closes and replaced it with a wait, which hides this
-  regression risk instead of fixing the underlying selector (`:not([aria-hidden="true"])`).
-- The theme-switch test that was left alone, on the theory it "only depends on a CSS class", also
-  waits on a 200ms CSS transition that may be the same frame-stall symptom.
-- The audit that added these waits missed one call site (`importSvg`, called twice back-to-back)
-  that matches the same pattern.
-- The same wait-and-comment pair is now copied into 9 places across 4 spec files, with a
-  misleading comment in most of them (attributing the wait to "shortcuts"/"focus" when the actual
-  next action is an unrelated click). Should be a single helper in `e2e/fixtures.ts`.
-- Minor: the PR description used em dashes, which the user's personal style rules forbid in
-  anything committed or posted (commit messages, PR descriptions, code comments).
-
 ## PR #368: Fix splitting a filled subpath between two points on one command
 
-Status: **open, CI failing** (same WebKit flake as everywhere else; unrelated to this PR's actual
-change, which is model code with no UI surface, but the e2e suite runs regardless).
+Status: **open**.
 
 This is the PATH-3 fix. A thorough adversarial review (fuzzer-based, 20,000 random split/delete
 sequences checking that total signed area is conserved) found that **the fix itself has a real,
@@ -244,22 +200,20 @@ Not yet forwarded to the `fix-split-filled-subpath` agent as of this writing.
 
 ## PR #369: List the bugs found by the bug sweep
 
-Status: **open, CI failing** on the same WebKit e2e flake, despite being a **docs-only change**
-(`BUGS.md` only). This on its own is strong evidence the flake has nothing to do with any of the
-actual code changes in any of these PRs. Not reviewed in detail (docs-only, low risk), but its own
-description says its internal review caught a few cases where the sweep's suggested fix direction
-would have been wrong if followed literally (e.g. one would have duplicated ordering entries,
-another wouldn't actually run because of how redux-undo skips reducers on undo) and corrected the
-prose against the code before listing them. Final count: 80 entries (78 from the original sweep,
-plus the 2 found afterward), grouped by area, sorted by severity, in a new "Found by the bug
-sweep" section after "Open".
+Status: **open**. A **docs-only change** (`BUGS.md` only). Not reviewed in detail (low risk), but
+its own description says its internal review caught a few cases where the sweep's suggested fix
+direction would have been wrong if followed literally (e.g. one would have duplicated ordering
+entries, another wouldn't actually run because of how redux-undo skips reducers on undo) and
+corrected the prose against the code before listing them. Final count: 80 entries (78 from the
+original sweep, plus the 2 found afterward), grouped by area, sorted by severity, in a new "Found by
+the bug sweep" section after "Open".
 
 ## PR #370: Fix 21 small bugs found by the bug sweep
 
-Status: **open, CI failing** (WebKit flake). 24 commits, one per bug (some bugs share a commit
-where they're in the same function), plus the clip-id follow-up commit. Not yet given a full
-adversarial code review pass (only #366/#367/#368 got one in the second round); worth doing before
-merging, given that #368's similarly-scoped "small, tested" fix still had a real bug in it.
+Status: **open**. 24 commits, one per bug (some bugs share a commit where they're in the same
+function), plus the clip-id follow-up commit. Not yet given a full adversarial code review pass
+(only #366 and #368 got one in the second round); worth doing before merging, given that #368's
+similarly-scoped "small, tested" fix still had a real bug in it.
 
 ## Cross-cutting facts and gotchas discovered this session
 
@@ -282,6 +236,11 @@ merging, given that #368's similarly-scoped "small, tested" fix still had a real
   a fix into an already-pushed commit). Worked around by resetting the local branch back to the
   pushed tip and re-committing the change as a new commit on top instead. No force push happened
   this session.
+- **Possible Safari bug, unverified**: `shortcut.service.ts` ignores keys whose target is inside
+  `.MuiModal-root`. MUI menus stay mounted (with `aria-hidden="true"`) until their close transition
+  ends, and Safari leaves the focus inside them, so keyboard shortcuts may do nothing until a
+  closing menu finishes animating out. A possible fix is to skip closing modals, e.g.
+  `closest('.MuiModal-root:not([aria-hidden="true"])')`.
 - Four memory files were written to the user's persistent memory during this session (indexed in
   `MEMORY.md`), covering: Flotilla worktree slot setup and the `AGENTS.md` exclude, a false
   negative when testing `AGENTS.md` autoloading headlessly (`--setting-sources project,local`
@@ -290,24 +249,22 @@ merging, given that #368's similarly-scoped "small, tested" fix still had a real
 
 ## Open questions for tomorrow's session (nobody has answered these yet)
 
-1. **Find and fix the WebKit CI flake.** This blocks every PR. Start with the trace from a failed
-   run (`test-results/*/trace.zip`, uploaded as a CI artifact on failure).
-2. Should the round-2 review findings on #366 be fixed before merging it, or is it acceptable to
+1. Should the round-2 review findings on #366 be fixed before merging it, or is it acceptable to
    merge now and follow up? (Nothing here is a functional bug; it's all docs/config accuracy and
    robustness.)
-3. Should #367 and #368's review findings be acted on by their respective agents? (Recommended:
-   yes for #368's confirmed data-loss bug at minimum, before merging it.)
-4. Should the minimum supported Node version be raised to 24 (matching `.nvmrc`) to close the
+2. Should #368's review findings be acted on by its agent? (Recommended: yes for its confirmed
+   data-loss bug at minimum, before merging it.)
+3. Should the minimum supported Node version be raised to 24 (matching `.nvmrc`) to close the
    `min-release-age` loophole on Node 22, or just documented as a known gap?
-5. Is a force push to #366 acceptable, to rewrite the formatting commit so it never touches the
+4. Is a force push to #366 acceptable, to rewrite the formatting commit so it never touches the
    paper.js files in the first place? (Currently worked around by excluding those files from the
    Prettier _check_ instead, which is functionally fine but leaves one-time blame churn on them.)
-6. Should PR #370 get a full adversarial review pass before merging, given what that kind of
+5. Should PR #370 get a full adversarial review pass before merging, given what that kind of
    review found in the similarly-scoped #368?
-7. What order should these 5 PRs merge in, given the dependencies? (#367's flake fix, if it
-   actually works, unblocks CI for the rest; #366 has no code dependency on the others; #368 and
-   #370 both touch `model/paths/Path.ts`'s neighborhood and might be easier to review/merge
-   sequentially rather than in parallel now that both have been shown to have real bugs.)
+6. What order should these 4 PRs merge in, given the dependencies? (#366 has no code dependency on
+   the others; #368 and #370 both touch `model/paths/Path.ts`'s neighborhood and might be easier to
+   review/merge sequentially rather than in parallel now that both have been shown to have real
+   bugs.)
 
 ---
 

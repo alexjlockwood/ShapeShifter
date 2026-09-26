@@ -25,8 +25,7 @@ Prettier reformat in PR #366, so they'll move after a rebase.
 - **The fix (`8f66bc6c`)** changes four things in `model/paths/Path.ts`: the two halves built by
   `splitFilledSubPath`, a typo in ordering the two split points, and two things in deleting a split
   segment. It adds 6 tests to `Path.spec.ts`, which all fail on master and pass with the fix. Unit
-  tests, typecheck, lint, and the Chromium morph end-to-end test pass. CI failed only on the WebKit
-  end-to-end flake (see `agent-sessions/fix-webkit-flakes.md`).
+  tests, typecheck, lint, and the Chromium morph end-to-end test pass.
 - **Code review** (`/code-review` on Opus 5.5) reported one blocker plus a few smaller things. When
   I reran the review's repros, 3 of its 4 "delete corrupts the shape" repros turned out to delete a
   curve instead of a split segment, which the app can't do, and a 5th claim (a square losing a
@@ -152,17 +151,6 @@ It also removes the `BUGS.md` entry and rewrites the comment on `reportMissingSp
 | dome, `S 0 1 0.25 0.75 SFSP 0 1 2 DFSPS 0 2`                                                               | `M 0 10 C 0 0 20 0 20 10 L 0 10`                                                 | `M 0 10 C 0 7.5 1.25 5.625 3.125 4.375 L 16.875 4.375 L 0 10 M 3.125 4.375 C 6.875 1.875 13.125 1.875 16.875 4.375 C 18.75 5.625 20 7.5 20 10` (delete did nothing) |
 | `M 0 20 L 0 0 C 5 -5 15 -5 20 0 L 20 20 L 0 20`, `SIH 0 4 SFSP 0 1 4 S 1 1 0.25 0.75 SFSP 1 1 2 DFSPS 1 2` | `M 0 20 L 0 0 L 10 20 L 0 20 M 0 0 C 5 -5 15 -5 20 0 L 20 20 L 10 20 L 0 0`      | `... M 4.531 -2.813 C 7.969 -4.063 12.031 -4.063 15.469 -2.813 C 17.188 -2.188 18.75 -1.25 20 0`                                                                    |
 | same path, `SIH 0 4 SFSP 0 1 4 SIH 1 1 SFSP 1 0 1 DFSPS 1 1`                                               | same as above                                                                    | `... M 0 0 C 2.5 -2.5 6.25 -3.75 10 -3.75 L 20 20 L 10 20 L 0 0` (rest of the curve lost)                                                                           |
-
-### CI on #368
-
-Run 36215005763: `npm ci`, typecheck, lint, `test:run`, and `build` passed. `npm run e2e` failed
-on `[webkit] e2e/morph.spec.ts:118 › creates a play-to-pause morph from scratch` (`locator.click`
-timed out after 30 s; the retry failed `expect(received).toBe(expected)`, expected `false`,
-received `true`). That test does split a filled subpath (a triangle, from its left edge to its right
-point), but it passed locally in Chromium, and the failure is a click timeout, the same WebKit flake
-that failed #366, #367, and #369 (a docs-only PR) the same day (per
-`session-notes/create-agents.md`). `agent-sessions/fix-webkit-flakes.md` covers it. I didn't rerun
-it on WebKit.
 
 ## Code review
 
@@ -312,7 +300,6 @@ segment's endpoints):
 - `agent-sessions/list-sweep-bugs.md` lists PATH-1, PATH-8, and CANVAS-2, and leaves PATH-3 out
   because #368 was going to fix it. With #368 closed, PATH-3 is only described here and in the
   create-agents notes.
-- `agent-sessions/fix-webkit-flakes.md` covers the CI failure.
 - PR #366 (agent setup) reformats `Path.ts`, `Path.spec.ts`, and `CommandState.ts` with Prettier, so
   `8f66bc6c` will conflict with it.
 
