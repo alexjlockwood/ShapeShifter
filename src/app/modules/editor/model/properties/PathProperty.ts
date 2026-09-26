@@ -64,8 +64,8 @@ export class PathProperty extends Property<Path | undefined> {
 }
 
 // Files and pasted blocks aren't validated, so this replaces anything that isn't a path (like a
-// number, or a string that can't be parsed) with no path. Otherwise the bad value would be stored
-// and throw later, while drawing or exporting.
+// number, or a string the parser rejects) with no path, instead of storing a value that would
+// throw later, while drawing or exporting.
 function toPath(value: unknown) {
   if (value instanceof Path) {
     return value;
@@ -75,7 +75,8 @@ function toPath(value: unknown) {
   }
   try {
     return new Path(value);
-  } catch {
+  } catch (e) {
+    console.warn(`Couldn't parse path data: ${value}`, e);
     return undefined;
   }
 }

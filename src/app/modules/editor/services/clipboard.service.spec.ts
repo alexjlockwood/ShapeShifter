@@ -102,25 +102,49 @@ describe('ClipboardService', () => {
       return copy();
     }
 
-    it('pastes onto the layer with the same name', () => {
-      const copied = copyStrokeWidthBlock('path');
-      // Layer ids restart on every page load, so the ids don't match in another tab.
+    // Layer ids restart on every page load, so they can name a different layer in another tab.
+    function inAnotherTab(copied: string, layerId: string) {
       const json = JSON.parse(copied);
-      json.blocks[0].layerId = 'from another tab';
-      paste(JSON.stringify(json));
+      json.pageId = 'another tab';
+      json.blocks[0].layerId = layerId;
+      return JSON.stringify(json);
+    }
+
+    it('pastes onto the layer with the same name in another tab', () => {
+      const copied = copyStrokeWidthBlock('path');
+      const other = addLayer('other');
+      paste(inAnotherTab(copied, other.id));
       const blocks = getBlocks();
       expect(blocks).toHaveLength(2);
       expect(blocks[1].layerId).toBe(blocks[0].layerId);
     });
 
-    it("doesn't paste onto a different layer that has the same id", () => {
+    it("doesn't paste onto a layer that only has the same id in another tab", () => {
       const copied = copyStrokeWidthBlock('path');
       const other = addLayer('other');
-      const json = JSON.parse(copied);
-      json.blocks[0].layerId = other.id;
-      json.blocks[0].layerName = 'missing';
-      paste(JSON.stringify(json));
+      services.layerTimelineService.updateLayer(
+        Object.assign(services.layerTimelineService.getVectorLayer().children[0].clone(), {
+          name: 'renamed',
+        }),
+      );
+      const show = vi.spyOn(services.snackBarService, 'show');
+      paste(inAnotherTab(copied, other.id));
       expect(getBlocks()).toHaveLength(1);
+      expect(show).toHaveBeenCalledWith(
+        "Couldn't find the layers to paste onto",
+        'Dismiss',
+        expect.anything(),
+      );
+    });
+
+    it('pastes onto the same layer on the same page, even after renaming it', () => {
+      const copied = copyStrokeWidthBlock('path');
+      const [layer] = services.layerTimelineService.getVectorLayer().children;
+      services.layerTimelineService.updateLayer(Object.assign(layer.clone(), { name: 'renamed' }));
+      paste(copied);
+      const blocks = getBlocks();
+      expect(blocks).toHaveLength(2);
+      expect(blocks[1].layerId).toBe(layer.id);
     });
 
     // Reported to Bugsnag as uncaught TypeErrors.
