@@ -8,6 +8,27 @@ what to do next. Nothing here is fixed yet.
 merging. Its branch (`alex/fix-webkit-flakes`, commit `8004ca74`) is still on origin for
 reference, and its full diff is at the end of this file.
 
+## Update (2026-09-26): the diagnosis below is wrong
+
+A later session read the traces and found that nothing hangs. The rest of this file is kept as
+written, but its "hang", "frames stop", and "downloads" explanations don't hold up:
+
+- Every morph failure is the 30s _test_ timeout, not a stuck action. In run 36218170344 the first
+  attempt ran step after step and was still checking pixels (before any download) when time ran
+  out. The retry finished the Save download at 29.97s and ran out of time on the very next click.
+  The failing line moves around because it's wherever the test happens to be at 30s.
+- Frames don't stop, they're slow: about 3 to 4 per second, so Playwright's "stable" check (the same
+  bounding box on consecutive animation frames) takes 1.6 to 3.8s per click.
+- The cause is Playwright's `Desktop Safari` device, which uses `deviceScaleFactor: 2` (Chrome and
+  Firefox use 1). WebKit paints in software on the Linux runners, so 2x means four times the pixels.
+  A CI experiment (run 36260481351) timed the morph test at 29 to 44s at 2x and 10 to 18s at 1x,
+  and the whole e2e step went from 3.7 to 2.9 minutes. On a Mac the scale makes no difference
+  (about 6.5s either way), which is why local runs never reproduced it.
+- The fix sets `deviceScaleFactor: 1` for the WebKit projects in `playwright.config.ts`.
+
+The two app issues below weren't re-checked and are unrelated to the flakes, but may still be real
+Safari bugs.
+
 ## Summary
 
 - `[webkit] e2e/morph.spec.ts` "creates a play-to-pause morph from scratch" fails on most CI runs

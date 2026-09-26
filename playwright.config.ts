@@ -4,9 +4,11 @@ const DEV_PORT = 4280;
 const PREVIEW_PORT = 4281;
 
 const BROWSERS = [
-  { name: 'chromium', device: 'Desktop Chrome' },
-  { name: 'firefox', device: 'Desktop Firefox' },
-  { name: 'webkit', device: 'Desktop Safari' },
+  { name: 'chromium', use: devices['Desktop Chrome'] },
+  { name: 'firefox', use: devices['Desktop Firefox'] },
+  // Desktop Safari renders at 2x, which WebKit paints in software on CI's Linux runners. That made
+  // it about three times slower than at 1x, enough for the longer tests to hit the 30s timeout.
+  { name: 'webkit', use: { ...devices['Desktop Safari'], deviceScaleFactor: 1 } },
 ];
 
 export default defineConfig({
@@ -16,17 +18,17 @@ export default defineConfig({
   use: {
     trace: 'retain-on-failure',
   },
-  projects: BROWSERS.flatMap(({ name, device }) => [
+  projects: BROWSERS.flatMap(({ name, use }) => [
     {
       name,
       testIgnore: '*.preview.spec.ts',
-      use: { ...devices[device], baseURL: `http://localhost:${DEV_PORT}` },
+      use: { ...use, baseURL: `http://localhost:${DEV_PORT}` },
     },
     {
       // Tests that need a production build (e.g. the service worker).
       name: `${name}-preview`,
       testMatch: '*.preview.spec.ts',
-      use: { ...devices[device], baseURL: `http://localhost:${PREVIEW_PORT}` },
+      use: { ...use, baseURL: `http://localhost:${PREVIEW_PORT}` },
     },
   ]),
   webServer: [
