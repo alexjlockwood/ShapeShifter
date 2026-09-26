@@ -1,4 +1,4 @@
-import { isReportable } from '.';
+import { isReportable, isServiceWorkerDeployError } from '.';
 
 describe('isReportable', () => {
   const site = { protocol: 'https:', hostname: 'shapeshifter.design' };
@@ -19,5 +19,35 @@ describe('isReportable', () => {
 
   it('ignores errors without any details', () => {
     expect(isReportable(site, 'Script error.')).toBe(false);
+  });
+
+  it('ignores errors from scripts that extensions inject', () => {
+    const file = 'https://shapeshifter.design/assets/index.js';
+    expect(isReportable(site, 'TypeError', file)).toBe(true);
+    expect(isReportable(site, 'TypeError', 'webkit-masked-url://hidden/')).toBe(false);
+    expect(isReportable(site, 'TypeError', 'chrome-extension://abc/content.js')).toBe(false);
+    expect(isReportable(site, 'TypeError', 'user-script:1:2')).toBe(false);
+  });
+});
+
+describe('isServiceWorkerDeployError', () => {
+  it('reports broken service workers', () => {
+    expect(
+      isServiceWorkerDeployError(
+        new TypeError('Failed to register a ServiceWorker: ServiceWorker script evaluation failed'),
+      ),
+    ).toBe(true);
+    expect(
+      isServiceWorkerDeployError(
+        new TypeError(
+          'ServiceWorker script at https://x/sw.js encountered an error during installation.',
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it('ignores browsers that disallow service workers', () => {
+    expect(isServiceWorkerDeployError(new DOMException('The operation is insecure.'))).toBe(false);
+    expect(isServiceWorkerDeployError(new Error('Rejected'))).toBe(false);
   });
 });

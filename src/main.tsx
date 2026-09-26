@@ -6,7 +6,11 @@ import './styles.scss';
 import Bugsnag from '@bugsnag/js';
 import { App } from 'app/modules/editor/components/root/App';
 import { startAnalytics } from 'app/modules/editor/scripts/analytics';
-import { bugsnagClient, startBugsnag } from 'app/modules/editor/scripts/bugsnag';
+import {
+  bugsnagClient,
+  isServiceWorkerDeployError,
+  startBugsnag,
+} from 'app/modules/editor/scripts/bugsnag';
 import { createEditorServices } from 'app/modules/editor/services/createEditorServices';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { createEditorStore } from 'app/modules/editor/store';
@@ -43,9 +47,13 @@ registerSW({
   // Reloading an open page could lose the user's work.
   onNeedReload() {},
   // E.g. in private windows, or when the app is opened from a file. It still works, just not
-  // offline.
+  // offline. A worker that fails to run or install means the deploy is broken, so report those.
   onRegisterError(error) {
-    bugsnagClient.leaveBreadcrumb('Service worker registration failed', { error: String(error) });
+    if (isServiceWorkerDeployError(error)) {
+      bugsnagClient.notify(error, { severity: 'info' });
+    } else {
+      bugsnagClient.leaveBreadcrumb('Service worker registration failed', { error: String(error) });
+    }
   },
 });
 
