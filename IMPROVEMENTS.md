@@ -3,8 +3,7 @@
 A survey of the codebase (as of the React/TypeScript/Vite migration) looking for further
 improvements beyond the migration itself: design problems in the model and store, performance,
 UX and accessibility, test coverage, the offline/PWA setup, error handling, dependency health,
-and what it would take to bring back the paper.js editor. This is a survey only; nothing here
-has been implemented yet.
+and editing paths on the canvas. This is a survey only; nothing here has been implemented yet.
 
 ## Quick wins (low risk, about a day or less each)
 
@@ -94,7 +93,8 @@ Separately, there is no touch or pointer event handling anywhere in the active c
 the deferred paper.js tree), so the app is effectively mouse-only. Tablets and touchscreen
 laptops cannot interact with the canvas at all. Making the core canvas touch-operable is
 substantial, likely a week or more, and moderate risk given the imperative gesture
-architecture; it may make sense to fold into any paper.js revival work.
+architecture. The canvas editor's move to pointer events (`docs/canvas-editor.md`) is the first
+step.
 
 MUI's `Dialog` and `Tooltip` usage already provide correct focus trapping and labeling, and
 destructive actions (deleting layers, etc.) already go through a confirmation dialog
@@ -149,38 +149,12 @@ gaps found.
   its own scoped effort.
 - `lodash: ^4.18.1` is a real installed version (confirmed against `node_modules`), not a typo.
 
-## Paper.js editor revival
+## Canvas editor
 
-About 9,770 lines of code total. `model/paper/` and `store/paper/` (6 files) already compile
-and ship live today (`Root.tsx` and `CanvasController.ts` import from them). Everything else,
-49 files under `scripts/paper/`, `components/toolpanel/`, `services/paper.service.ts`, and
-`typings/paper/`, is excluded from `tsconfig.json` and the Vite build.
-
-Three files were never migrated off Angular at all: the toolpanel component still uses
-Angular's `@Component` decorator and an rxjs `Observable`, `paper.service.ts` still uses
-`@Injectable`, `NgZone`, and jQuery, and the canvas directive still uses `@Directive` and
-jQuery. The `paper`, `jquery`, and `@angular/core` packages are no longer installed anywhere in
-the project, so this code can't even be type-checked as it sits. The other 49 files under
-`scripts/paper/` are plain TypeScript classes built on the `paper` library and the `Store`
-facade, so they are comparatively portable.
-
-Bringing it back means: reinstalling `paper` and checking the hand-rolled types in
-`typings/paper/` against whatever version is installed; rewriting the three Angular-native
-files from scratch as React components/hooks (no jQuery, no Angular DI); rewiring
-`PaperProject.ts`/`MasterToolPicker.ts` into the current layout-effect-based
-`CanvasController.ts` pattern; and fixing two known, unverified bugs already listed in
-`BUGS.md` under "Beta only, not yet migrated." There is no test coverage for any of it, so
-verification would be manual.
-
-`README.md` frames this editor as the intended replacement for the current
-property-panel-driven path editing: freeform drawing and editing directly on the canvas.
-
-Estimate: 5 to 8 days total (roughly 1 day to get the 49 portable files typechecking again, 2
-to 3 days to rewrite the three Angular-native files, 1 to 2 days to fix the known bugs and
-confirm tool switching/snapping/gestures against the current paper.js API, 1 to 2 days of
-manual QA). Risk: moderate to high. This is the largest remaining pocket of Angular code in the
-repo, has zero test coverage, and changes the app's core editing model, so it is as much a
-product decision as an engineering one.
+The paper.js editor won't be revived as it was. `docs/canvas-editor.md` explains why (it only
+supported one subpath per layer, and its round trips through paper.js broke morphing) and lays out
+a new editor built on the current canvas and path model, behind a feature flag, with a phased
+roadmap.
 
 ## Suggested starting point
 
