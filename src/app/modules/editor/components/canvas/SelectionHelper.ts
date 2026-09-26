@@ -122,7 +122,7 @@ export class SelectionHelper {
           // projection before the split.
           // TODO: improve this API somehow... having to set the active layer here is kind of hacky
           activeLayer.pathData = pathMutator.unsplitCommand(oldSubIdx, oldCmdIdx).build();
-          const tempProjOntoPath = this.calculateProjectionOntoPath(mouseUp);
+          const tempProjOntoPath = this.calculateProjectionOntoPath(mouseUp, oldSubIdx);
           if (tempProjOntoPath && oldSubIdx === tempProjOntoPath.subIdx) {
             pathMutator.splitCommand(
               tempProjOntoPath.subIdx,
