@@ -29,6 +29,15 @@ describe('SvgSerializer', () => {
     expect(pathNode.getAttribute('stroke-dasharray')).toBe('5,5');
   });
 
+  it('writes a stroke width of 0, since the SVG default is 1', () => {
+    const doc = toSvgDocument(
+      newPath('stroked', { strokeColor: '#000000', strokeWidth: 0 }),
+      newPath('unstroked', { strokeWidth: 0 }),
+    );
+    expect(doc.getElementById('stroked')!.getAttribute('stroke-width')).toBe('0');
+    expect(doc.getElementById('unstroked')!.hasAttribute('stroke-width')).toBe(false);
+  });
+
   it('gives each clip path a unique id', () => {
     const newClipPath = (name: string, pathData: string) =>
       new ClipPathLayer({ name, children: [], pathData: new Path(pathData) });

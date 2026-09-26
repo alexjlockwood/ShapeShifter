@@ -166,7 +166,8 @@ function vectorLayerToSvgNode(
           conditionalAttr(node, 'stroke', ColorUtil.androidToCssHexColor(layer.strokeColor), '');
         }
         conditionalAttr(node, 'stroke-opacity', layer.strokeAlpha, 1);
-        conditionalAttr(node, 'stroke-width', layer.strokeWidth, 0);
+        // SVG's default stroke width is 1, so a stroke needs its width written even when it's 0.
+        conditionalAttr(node, 'stroke-width', layer.strokeWidth, layer.strokeColor ? undefined : 0);
 
         if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
           // Note that we only return the length of the first sub path due to
