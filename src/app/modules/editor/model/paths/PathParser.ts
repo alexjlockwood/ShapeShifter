@@ -101,11 +101,17 @@ function extract(s: string, start: number, result: ExtractFloatResult) {
     isExponential = false;
     const currentChar = s.charAt(currentIndex);
     switch (currentChar) {
+      // SVG path data can separate numbers with any whitespace, or a comma.
       case ' ':
+      case '\t':
+      case '\n':
+      case '\r':
+      case '\f':
       case ',':
         foundSeparator = true;
         break;
       case '-':
+      case '+':
         if (currentIndex !== start && !isPrevExponential) {
           foundSeparator = true;
           result.mEndWithNegOrDot = true;

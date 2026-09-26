@@ -83,6 +83,13 @@ const specs = [
     ),
   ),
   new Spec(
+    `numbers separated by other whitespace and signs`,
+    new Test(`M 0 0 L 10\n10`, `M 0 0 L 10 10`),
+    new Test(`M 0\t0\r\nL 10\f10`, `M 0 0 L 10 10`),
+    new Test(`M 5+5 L +1e+1-2`, `M 5 5 L 10 -2`),
+    new Test(`M 0 0 C 1 1 2\n2 3\n3`, `M 0 0 C 1 1 2 2 3 3`),
+  ),
+  new Spec(
     `incomplete commands`,
     new Test(`M 0 0 Q 1 1`, `M 0 0`),
     new Test(`M 0 0 C 1 1`, `M 0 0`),
