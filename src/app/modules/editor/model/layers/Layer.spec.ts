@@ -102,4 +102,11 @@ describe('Property.register', () => {
     property.setEditableValue(layer, 'fillColor', 'blue');
     expect(layer.fillColor).toBe('#0000ff');
   });
+
+  it('replaces path data that is not a path', () => {
+    const newLayer = (pathData: any) => new PathLayer({ name: 'path', children: [], pathData });
+    expect(newLayer(5).pathData).toBeUndefined();
+    expect(newLayer({ commands: [] }).pathData).toBeUndefined();
+    expect(newLayer('M 0 0 L 10 10').pathData?.getPathString()).toBe('M 0 0 L 10 10');
+  });
 });

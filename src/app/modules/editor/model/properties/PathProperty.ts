@@ -28,11 +28,7 @@ export class PathProperty extends Property<Path | undefined> {
 
   // @Override
   protected setter(model: any, propertyName: string, value: Path | string) {
-    if (!value) {
-      model[`${propertyName}_`] = undefined;
-      return;
-    }
-    model[`${propertyName}_`] = typeof value === 'string' ? new Path(value) : value;
+    model[`${propertyName}_`] = toPath(value);
   }
 
   // @Override
@@ -64,5 +60,22 @@ export class PathProperty extends Property<Path | undefined> {
   // @Override
   getTypeName() {
     return 'PathProperty';
+  }
+}
+
+// Files and pasted blocks aren't validated, so this replaces anything that isn't a path (like a
+// number, or a string that can't be parsed) with no path. Otherwise the bad value would be stored
+// and throw later, while drawing or exporting.
+function toPath(value: unknown) {
+  if (value instanceof Path) {
+    return value;
+  }
+  if (typeof value !== 'string' || !value) {
+    return undefined;
+  }
+  try {
+    return new Path(value);
+  } catch {
+    return undefined;
   }
 }
