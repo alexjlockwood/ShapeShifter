@@ -1,6 +1,5 @@
 import { on } from 'app/modules/editor/scripts/dom';
 import { State, Store } from 'app/modules/editor/store';
-import { environment } from 'environments/environment';
 import { ActionCreators } from 'redux-undo';
 import { Subject } from 'rxjs';
 
@@ -80,29 +79,21 @@ export class ShortcutService {
         return true;
       }
       if (event.keyCode === 8 || event.keyCode === 46) {
-        // Backspace or delete.
-        const isActionMode = this.actionModeService.isActionMode();
-        // If we aren't in beta or it is action mode, handle the backspace/delete
-        // event here. Otherwise we will handle it in the gesture tool (which is
-        // where we will likely want to move all of the shortcut logic in the future).
-        if (!environment.beta || isActionMode) {
-          // In case there's a JS error, never navigate away.
-          event.preventDefault();
-          if (isActionMode) {
-            this.actionModeService.deleteSelectedActionModeModels();
-          } else {
-            this.layerTimelineService.deleteSelectedModels();
-          }
-          return false;
+        // Backspace or delete. In case there's a JS error, never navigate away.
+        event.preventDefault();
+        if (this.actionModeService.isActionMode()) {
+          this.actionModeService.deleteSelectedActionModeModels();
+        } else {
+          this.layerTimelineService.deleteSelectedModels();
         }
+        return false;
       }
       if (event.keyCode === 27) {
         // Escape.
         this.actionModeService.closeActionMode();
         return false;
       }
-      // TODO: figure out how to re-enable this keyboard shortcut in beta
-      if (!environment.beta && event.keyCode === 32) {
+      if (event.keyCode === 32) {
         // Spacebar.
         this.playbackService.toggleIsPlaying();
         return false;

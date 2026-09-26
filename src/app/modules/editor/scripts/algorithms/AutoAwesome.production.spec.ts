@@ -4,7 +4,7 @@ import { AutoAwesome } from '.';
 
 // Production builds don't build a path's curves until they're needed, so a curve with missing
 // points used to be stored, and threw once auto fix or a split reached it.
-vi.mock('environments/environment', () => ({ environment: { production: true, beta: false } }));
+vi.mock('environments/environment', () => ({ environment: { production: true } }));
 
 describe('AutoAwesome in production builds', () => {
   it.each(['M 0 0 Q 1 1', 'M 0 0 C 1 1', 'M 0 0 C 1 1 2 2 3 3 4 4'])(
