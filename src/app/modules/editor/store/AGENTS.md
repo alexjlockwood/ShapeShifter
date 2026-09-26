@@ -36,7 +36,9 @@ From the outside in: the action logger (dev only), freeze (dev and tests), undo,
   it. Actions in `UNDO_EXCLUDED_ACTIONS` (the playback actions, `SetActionMode`,
   `SetActionModeHover`, `SetTheme`, and every `paper` action) update the state without recording a
   step. Everything else is recorded, including selections, hidden and collapsed layers, and action
-  mode selections and pairings. Undo and redo keep the current theme and `paper` slice.
+  mode selections and pairings. `ResetWorkspace` always gets a step of its own. Undo and redo keep
+  the current theme and the `paper` slice's view (zoom, cursor, and tool mode), and clear the rest
+  of that slice, since it refers to layers and points.
 - **Batch:** `new BatchAction(a, b)` applies several actions as one undo step. Only one level is
   unpacked, so don't nest batches.
 - **Reset:** `ResetWorkspace` rebuilds every slice's initial state, then loads its payload. It's an

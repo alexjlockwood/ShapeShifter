@@ -6,8 +6,8 @@ import { createEditorStore } from '.';
 import { BatchAction } from './batch/actions';
 import { SetSelectedLayers, SetVectorLayer } from './layers/actions';
 import { getHiddenLayerIds, getSelectedLayerIds, getVectorLayer } from './layers/selectors';
-import { SetHoveredLayerId } from './paper/actions';
-import { getHoveredLayerId } from './paper/selectors';
+import { SetHoveredLayerId, SetZoomPanInfo } from './paper/actions';
+import { getHoveredLayerId, getZoomPanInfo } from './paper/selectors';
 import { SetCurrentTime, SetIsPlaying } from './playback/actions';
 import { getCurrentTime } from './playback/selectors';
 import { ResetWorkspace } from './reset/actions';
@@ -119,21 +119,55 @@ describe('createEditorStore', () => {
     expect(store.getState().past.length).toBe(numPastStates);
   });
 
-  it('does not change the paper slice on undo or redo', () => {
+  it('keeps the canvas view on undo and redo, and clears the paper state about the document', () => {
     const store = createEditorStore();
     vi.advanceTimersByTime(2000);
     store.dispatch(new SetSelectedLayers(new Set(['a'])));
-    store.dispatch(new SetHoveredLayerId('a'));
     vi.advanceTimersByTime(2000);
     store.dispatch(new SetSelectedLayers(new Set(['b'])));
+    const zoomPanInfo = { zoom: 2, translation: { tx: 10, ty: 20 } };
+    store.dispatch(new SetZoomPanInfo(zoomPanInfo));
     store.dispatch(new SetHoveredLayerId('b'));
     store.dispatch(ActionCreators.undo());
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
-    expect(getHoveredLayerId(store.getState())).toBe('b');
-    store.dispatch(new SetHoveredLayerId('c'));
+    expect(getZoomPanInfo(store.getState())).toEqual(zoomPanInfo);
+    expect(getHoveredLayerId(store.getState())).toBeUndefined();
+    store.dispatch(new SetHoveredLayerId('a'));
     store.dispatch(ActionCreators.redo());
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['b']));
-    expect(getHoveredLayerId(store.getState())).toBe('c');
+    expect(getZoomPanInfo(store.getState())).toEqual(zoomPanInfo);
+    expect(getHoveredLayerId(store.getState())).toBeUndefined();
+  });
+
+  it('gives loading a project an undo step of its own', () => {
+    const store = createEditorStore();
+    const vl = getVectorLayer(store.getState());
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    vi.advanceTimersByTime(300);
+    const loadedVl = new VectorLayer();
+    store.dispatch(new ResetWorkspace(loadedVl));
+    vi.advanceTimersByTime(300);
+    store.dispatch(new SetSelectedLayers(new Set(['b'])));
+    store.dispatch(ActionCreators.undo());
+    expect(getVectorLayer(store.getState())).toBe(loadedVl);
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set());
+    store.dispatch(ActionCreators.undo());
+    expect(getVectorLayer(store.getState())).toBe(vl);
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
+  });
+
+  it("doesn't count an undo or redo that does nothing as an edit", () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    vi.advanceTimersByTime(800);
+    // There's nothing to redo.
+    store.dispatch(ActionCreators.redo());
+    vi.advanceTimersByTime(700);
+    store.dispatch(new SetSelectedLayers(new Set(['b'])));
+    store.dispatch(ActionCreators.undo());
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
   });
 
   it('records a batch of actions as one undo step', () => {

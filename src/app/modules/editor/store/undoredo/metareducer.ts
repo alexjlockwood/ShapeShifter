@@ -1,9 +1,10 @@
 import { Action, ActionReducer } from 'app/modules/editor/store';
 import { ActionModeActionTypes } from 'app/modules/editor/store/actionmode/actions';
 import { BatchAction, BatchActionTypes } from 'app/modules/editor/store/batch/actions';
-import { PlaybackActionTypes } from 'app/modules/editor/store/playback/actions';
 import { PaperActionTypes } from 'app/modules/editor/store/paper/actions';
+import { PlaybackActionTypes } from 'app/modules/editor/store/playback/actions';
 import { EditorState } from 'app/modules/editor/store/reducer';
+import { ResetActionTypes } from 'app/modules/editor/store/reset/actions';
 import { ThemeActionTypes } from 'app/modules/editor/store/theme/actions';
 import type { UnknownAction } from 'redux';
 import undoable, {
@@ -43,11 +44,22 @@ export interface StateWithHistoryAndTimestamp extends StateWithHistory<EditorSta
 type StateReducer = ActionReducer<StateWithHistoryAndTimestamp>;
 type EditorStateReducer = ActionReducer<EditorState>;
 
+// Actions that always get an undo step of their own, however soon they come after the last one.
+// Loading a project replaces everything, so undoing an edit made right after it shouldn't undo
+// the load too.
+const UNDO_ISOLATED_ACTIONS: ReadonlySet<string> = new Set([ResetActionTypes.ResetWorkspace]);
+
+function unbatch(action: Action) {
+  return action.type === BatchActionTypes.BatchAction ? (action as BatchAction).payload : [action];
+}
+
 /** Batches are recorded unless every action in them is excluded. */
 function isRecorded(action: Action) {
-  const actions =
-    action.type === BatchActionTypes.BatchAction ? (action as BatchAction).payload : [action];
-  return actions.some(a => !UNDO_EXCLUDED_ACTIONS.has(a.type));
+  return unbatch(action).some(a => !UNDO_EXCLUDED_ACTIONS.has(a.type));
+}
+
+function isIsolated(action: Action) {
+  return unbatch(action).some(a => UNDO_ISOLATED_ACTIONS.has(a.type));
 }
 
 export function metaReducer(reducer: EditorStateReducer): StateReducer {
@@ -59,7 +71,7 @@ export function metaReducer(reducer: EditorStateReducer): StateReducer {
       // actions that follow it are merged into its undo step. (Returning undefined instead would
       // give the first action a step of its own.)
       const { timestamp } = prevState as StateWithHistoryAndTimestamp;
-      if (Date.now() - timestamp >= UNDO_DEBOUNCE_MILLIS) {
+      if (isIsolated(action) || Date.now() - timestamp >= UNDO_DEBOUNCE_MILLIS) {
         groupCounter++;
       }
       return groupCounter;
@@ -67,15 +79,31 @@ export function metaReducer(reducer: EditorStateReducer): StateReducer {
   } as UndoableOptions);
   return (state: StateWithHistoryAndTimestamp | undefined, action: Action) => {
     const history = undoableReducer(state, action as UnknownAction);
+    if (state && history === state) {
+      // Nothing changed, e.g. undo with nothing to undo. That shouldn't count as a recent edit.
+      return state;
+    }
     let { present } = history;
     if (state && UNDO_REDO_ACTIONS.has(action.type)) {
-      // The theme is a preference and the paper slice is canvas UI state, so undoing edits
-      // shouldn't change either of them.
-      present = { ...present, theme: state.present.theme, paper: state.present.paper };
+      // The theme is a preference, so undoing edits shouldn't change it. The paper slice is canvas
+      // UI state: the view (zoom, cursor, and tool) stays as it is, but the rest refers to layers
+      // and points that the restored document may not have, so it's cleared.
+      const { paper } = state.present;
+      present = {
+        ...present,
+        theme: state.present.theme,
+        paper: { ...paper, toolModeInfo: { toolMode: paper.toolModeInfo.toolMode } },
+      };
     }
     // Excluded actions (e.g. the current time changing on every frame of playback) shouldn't
-    // keep edits made more than a second apart from getting their own undo steps.
-    const timestamp = !state || isRecorded(action) ? Date.now() : state.timestamp;
+    // keep edits made more than a second apart from getting their own undo steps. The action
+    // after an isolated one starts a new step too.
+    let timestamp = state ? state.timestamp : Date.now();
+    if (isIsolated(action)) {
+      timestamp = 0;
+    } else if (!state || isRecorded(action)) {
+      timestamp = Date.now();
+    }
     return { ...history, present, timestamp };
   };
 }
