@@ -1,4 +1,4 @@
-import { ActionMode } from 'app/modules/editor/model/actionmode';
+import { ActionMode, ActionSource, SelectionType } from 'app/modules/editor/model/actionmode';
 import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
@@ -174,6 +174,74 @@ describe('createEditorServices', () => {
       expect(() => services.actionModeService.autoFix()).not.toThrow();
       expect(services.snackBarService.getSnackBar()?.message).toBe("Couldn't auto fix these paths");
       expect(getBlock()).toBe(blockBefore);
+    });
+
+    // The selected points may not exist in the new paths, and drawing them would throw.
+    it('clears the selections', () => {
+      selectPathBlock('M 8 5 L 8 19 L 19 12 Z', 'M 6 5 L 10 5 L 10 19 L 6 19 Z');
+      const { actionModeService } = services;
+      actionModeService.setActionMode(ActionMode.Selection);
+      actionModeService.setSelections([
+        { type: SelectionType.Point, source: ActionSource.From, subIdx: 0, cmdIdx: 3 },
+      ]);
+      actionModeService.autoFix();
+      expect(store.getState().present.actionmode.selections).toEqual([]);
+    });
+  });
+
+  describe('in action mode', () => {
+    function editBlock() {
+      const { layerTimelineService, actionModeService } = services;
+      const layer = new PathLayer({ name: 'path', children: [], pathData: undefined });
+      layerTimelineService.addLayer(layer);
+      layerTimelineService.addBlocks([
+        {
+          layerId: layer.id,
+          propertyName: 'pathData',
+          fromValue: new Path('M 8 5 L 8 19 L 19 12 Z'),
+          toValue: new Path('M 6 5 L 10 5 L 10 19 L 6 19 Z'),
+          currentTime: 0,
+        },
+      ]);
+      const [block] = layerTimelineService.getSelectedBlocks();
+      actionModeService.setActionMode(ActionMode.Selection);
+      return block;
+    }
+
+    function cut() {
+      const setData = vi.fn<(format: string, data: string) => void>();
+      const event = new Event('cut', { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'clipboardData', { value: { setData } });
+      window.dispatchEvent(event);
+      return setData;
+    }
+
+    it('copies the block being edited instead of cutting it', () => {
+      const block = editBlock();
+      services.clipboardService.init();
+      const setData = cut();
+      expect(setData).toHaveBeenCalledWith('text/plain', expect.stringContaining(block.id));
+      expect(services.layerTimelineService.getAnimation().blocks.map(b => b.id)).toContain(
+        block.id,
+      );
+    });
+
+    // E.g. when it's deleted from the timeline.
+    it('does nothing once the block being edited is gone', () => {
+      editBlock();
+      const { actionModeService, layerTimelineService } = services;
+      actionModeService.setSelections([
+        { type: SelectionType.SubPath, source: ActionSource.From, subIdx: 0 },
+      ]);
+      layerTimelineService.deleteSelectedModels();
+      expect(layerTimelineService.getSelectedBlocks()).toEqual([]);
+      expect(() => {
+        actionModeService.autoFix();
+        actionModeService.reverseSelectedSubPaths();
+        actionModeService.shiftBackSelectedSubPaths();
+        actionModeService.shiftForwardSelectedSubPaths();
+        actionModeService.deleteSelectedActionModeModels();
+      }).not.toThrow();
     });
   });
 

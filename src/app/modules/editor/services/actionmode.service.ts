@@ -379,7 +379,14 @@ export class ActionModeService {
     }
     let animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.From, from);
     animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.To, to, animation);
-    this.store.dispatch(new SetAnimation(animation));
+    // The selected points and the hover may not exist in the new paths.
+    this.store.dispatch(
+      new BatchAction(
+        new SetAnimation(animation),
+        new SetActionModeSelections([]),
+        new SetActionModeHover(undefined),
+      ),
+    );
   }
 
   // Delete selected action mode models.
@@ -472,7 +479,7 @@ export class ActionModeService {
     path: Path,
     animation = this.layerTimelineService.getAnimation(),
   ) {
-    const blockId = this.getActivePathBlock().id;
+    const blockId = this.getRequiredActivePathBlock().id;
     const blockIndex = _.findIndex(animation.blocks, b => b.id === blockId);
     const block = animation.blocks[blockIndex] as PathAnimationBlock;
 
@@ -502,18 +509,32 @@ export class ActionModeService {
     return animation;
   }
 
+  /**
+   * Returns the block being edited in action mode, or undefined if it's gone (e.g. deleted from
+   * the timeline), in which case there's nothing to edit.
+   */
   private getActivePathBlock() {
-    return this.layerTimelineService.getSelectedBlocks()[0] as PathAnimationBlock;
+    const block = this.layerTimelineService.getSelectedBlocks()[0];
+    return block instanceof PathAnimationBlock ? block : undefined;
   }
 
   private getActivePathBlockValue(source: ActionSource) {
     const activeBlock = this.getActivePathBlock();
-    return source === ActionSource.From ? activeBlock.fromValue : activeBlock.toValue;
+    return source === ActionSource.From ? activeBlock?.fromValue : activeBlock?.toValue;
   }
 
   private getActivePathBlockLayer() {
     const vl = this.layerTimelineService.getVectorLayer();
-    return vl.findLayerById(this.getActivePathBlock().layerId) as MorphableLayer;
+    return vl.findLayerById(this.getRequiredActivePathBlock().layerId) as MorphableLayer;
+  }
+
+  /** Returns the block being edited, for callers that have already found a path in it. */
+  private getRequiredActivePathBlock() {
+    const block = this.getActivePathBlock();
+    if (!block) {
+      throw new Error('There is no path block being edited');
+    }
+    return block;
   }
 
   private queryStore<T>(selector: (state: State) => T) {

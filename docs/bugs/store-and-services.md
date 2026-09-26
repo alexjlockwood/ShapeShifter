@@ -12,11 +12,6 @@
   another step. Increment the counter and return it, and update `store/createEditorStore.spec.ts`,
   which asserts the current behavior (`store/undoredo/metareducer.ts`, `groupBy`). (STORE-2,
   medium, confirmed by a test)
-- **Cut in action mode deletes the block being edited, then every edit throws.** In action mode,
-  Cmd+X deletes the path block being edited without leaving action mode, and then R, B, F, A, and
-  Backspace throw. Cut should only copy (or do nothing) in action mode, and callers of
-  `getActivePathBlock()` should bail out when there's no block (`services/clipboard.service.ts`,
-  `services/actionmode.service.ts`). (STORE-3, medium, confirmed by a test)
 - **Resuming slow motion playback jumps to a fifth of the current time.** `Animator`'s resume math
   scales the whole elapsed-time-plus-start-time sum by the playback speed instead of just the
   start time, so pausing at 500ms and resuming in slow motion starts the next frame at 100ms

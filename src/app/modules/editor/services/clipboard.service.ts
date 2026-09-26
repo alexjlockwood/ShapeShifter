@@ -45,7 +45,8 @@ export class ClipboardService {
         JSON.stringify({ pageId: PAGE_ID, blocks }, undefined, 2),
       );
 
-      if (shouldCut) {
+      // In action mode, the selected block is the one being edited, so cut only copies it.
+      if (shouldCut && !this.actionModeService.isActionMode()) {
         this.layerTimelineService.deleteSelectedModels();
       }
 
