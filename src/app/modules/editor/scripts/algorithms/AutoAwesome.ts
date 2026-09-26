@@ -43,6 +43,10 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
       // Pass the command with the larger subpath as the 'from' command.
       const numFromCmds = from.getSubPath(subIdx).getCommands().length;
       const numToCmds = to.getSubPath(subIdx).getCommands().length;
+      if (Math.min(numFromCmds, numToCmds) === 1) {
+        // A lone move command has no segment to split, so the subpath can't be aligned.
+        continue;
+      }
       const shouldSwap = numFromCmds < numToCmds;
       if (shouldSwap) {
         [from, to] = [to, from];
@@ -53,7 +57,10 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
       }
     }
     for (let subIdx = 0; subIdx < min; subIdx++) {
-      [from, to] = permuteSubPath(from, to, subIdx);
+      const numFromCmds = from.getSubPath(subIdx).getCommands().length;
+      if (numFromCmds === to.getSubPath(subIdx).getCommands().length) {
+        [from, to] = permuteSubPath(from, to, subIdx);
+      }
     }
   } catch (e) {
     // TODO: remove this once we determine what is causing this bug...

@@ -53,5 +53,17 @@ describe('AutoAwesome', () => {
         expect(to.getPathString()).toEqual(new Path(t1).getPathString());
       });
     });
+
+    // A lone move command has no segment to split, so its subpath can't be aligned.
+    it.each([
+      ['M 5 5', 'M 0 0 L 10 10 L 20 0'],
+      ['M 0 0 L 10 10 L 20 0', 'M 5 5'],
+      ['M 5 5 M 0 0 L 10 0 L 10 10 Z', 'M 0 0 L 10 10 L 20 0 M 0 0 L 10 0 L 10 10 Z'],
+    ])('leaves single command subpaths alone (%s to %s)', (f, t) => {
+      const [from, to] = AutoAwesome.autoFix(new Path(f), new Path(t));
+      const numCommands = (p: Path) => p.getSubPaths().map(s => s.getCommands().length);
+      expect(numCommands(from)[0]).toBe(numCommands(new Path(f))[0]);
+      expect(numCommands(to)[0]).toBe(numCommands(new Path(t))[0]);
+    });
   });
 });
