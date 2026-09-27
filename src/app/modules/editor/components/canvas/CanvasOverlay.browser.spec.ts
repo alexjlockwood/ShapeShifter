@@ -1,5 +1,5 @@
 import { ActionMode, ActionSource, SelectionType } from 'app/modules/editor/model/actionmode';
-import { PathLayer } from 'app/modules/editor/model/layers';
+import { PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { getContext2d } from 'app/modules/editor/scripts/dom';
@@ -8,11 +8,13 @@ import {
   type EditorServices,
 } from 'app/modules/editor/services/createEditorServices';
 import { createEditorStore, type State, type Store } from 'app/modules/editor/store';
+import { getSelectedLayerIds } from 'app/modules/editor/store/layers/selectors';
 import { ActionCreators } from 'redux-undo';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CanvasCamera } from './CanvasCamera';
 import { CanvasOverlay } from './CanvasOverlay';
+import { CanvasPreview } from './CanvasPreview';
 
 // An open square, which action mode splits by segment when it's stroked and by shape when it's
 // filled.
@@ -140,6 +142,50 @@ describe('CanvasOverlay splitting a filled path', () => {
     overlay.onMouseLeave();
     expect(isHighlighted()).toBe(false);
     overlay.dispose();
+    services.dispose();
+  });
+});
+
+describe('CanvasOverlay on the main canvas', () => {
+  it('hit tests an edit in progress', () => {
+    const store = createEditorStore({ logActions: false });
+    const services = createEditorServices(store);
+    const { actionModeService, layerTimelineService } = services;
+    const layer = new PathLayer({
+      name: 'path',
+      children: [],
+      pathData: new Path('M 0 0 L 4 0 L 4 4 L 0 4 Z'),
+      fillColor: '#000',
+    });
+    layerTimelineService.setVectorLayer(new VectorLayer({ name: 'vector', children: [layer] }));
+    const preview = new CanvasPreview(store, layerTimelineService);
+    preview.init();
+    const overlay = new CanvasOverlay(
+      document.createElement('canvas'),
+      ActionSource.Animated,
+      store,
+      actionModeService,
+      layerTimelineService,
+      preview,
+    );
+    overlay.init();
+    overlay.setCamera(
+      CanvasCamera.fit({
+        panel: { w: 240, h: 240 },
+        viewport: { w: 24, h: 24 },
+        pixelRatio: 1,
+        margin: 0,
+      }),
+    );
+
+    // The edit covers (20, 20), and the layer's own path doesn't.
+    preview.begin();
+    preview.setPath(layer.id, new Path('M 0 0 L 24 0 L 24 24 L 0 24 Z'));
+    overlay.onMouseDown(mouseEvent(20, 20));
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set([layer.id]));
+
+    overlay.dispose();
+    preview.dispose();
     services.dispose();
   });
 });

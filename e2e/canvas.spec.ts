@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { artboardPoint, expect, test } from './fixtures';
+import { artboardPoint, dispatchClipboardEvent, expect, test } from './fixtures';
 
 function getCurrentTime(page: Page) {
   return page.evaluate(() => {
@@ -41,15 +41,21 @@ test('loads the canvas editor with ?editor=1', async ({ page }) => {
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
 });
 
+// A small square in a layer that isn't animated.
+const SQUARE_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M 2 2 H 8 V 8 H 2 Z"/></svg>';
+const BIG_SQUARE = 'M 0 0 L 24 0 L 24 24 L 0 24 Z';
+
 test('previews an edit, and commits it as one undo step', async ({ page, modifier }) => {
-  await page.goto('/?project=demos/playtopause.shapeshifter&editor=1');
+  await page.goto('/?editor=1');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  await dispatchClipboardEvent(page, 'paste', SQUARE_SVG);
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
-  const triangle = await countDrawnPixels(page);
+  const small = await countDrawnPixels(page);
   const layerId = await page.evaluate(() => {
     const { store } = (window as any).shapeshifter;
     const find = (layer: any): any =>
-      layer.name === 'path' ? layer : layer.children.map(find).find(Boolean);
+      layer.pathData ? layer : layer.children.map(find).find(Boolean);
     return find(store.getState().present.layers.vectorLayer).id as string;
   });
   const getPathData = () =>
@@ -58,28 +64,35 @@ test('previews an edit, and commits it as one undo step', async ({ page, modifie
       const layer = store.getState().present.layers.vectorLayer.findLayerById(id);
       return layer.pathData.getPathString() as string;
     }, layerId);
-  const previewSquare = () =>
-    page.evaluate(id => {
-      // The canvas editor's hook for tests (components/canvaseditor/CanvasEditor.ts).
-      const { canvasEditor } = (window as any).shapeshifter;
-      canvasEditor.previewPath(id, 'M 0 0 L 24 0 L 24 24 L 0 24 Z');
-    }, layerId);
+  const previewBigSquare = () =>
+    page.evaluate(
+      ([id, pathData]) => {
+        // The canvas editor's hook for tests (components/canvaseditor/CanvasEditor.ts).
+        const { canvasEditor } = (window as any).shapeshifter;
+        canvasEditor.previewPath(id, pathData);
+      },
+      [layerId, BIG_SQUARE],
+    );
   const original = await getPathData();
 
   // The canvas shows the edit, but the document doesn't change until it's committed.
-  await previewSquare();
-  await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(triangle);
+  await previewBigSquare();
+  await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(small);
+  const big = await countDrawnPixels(page);
   expect(await getPathData()).toBe(original);
+
+  // After the commit, the canvas still shows it.
   await page.evaluate(() => (window as any).shapeshifter.canvasEditor.commit());
-  expect(await getPathData()).toBe('M 0 0 L 24 0 L 24 24 L 0 24 Z');
+  expect(await getPathData()).toBe(BIG_SQUARE);
+  await expect.poll(() => countDrawnPixels(page)).toBe(big);
   await page.keyboard.press(`${modifier}+z`);
   await expect.poll(getPathData).toBe(original);
-  await expect.poll(() => countDrawnPixels(page)).toBe(triangle);
+  await expect.poll(() => countDrawnPixels(page)).toBe(small);
 
   // Anything that changes the document cancels an edit in progress, like redo.
-  await previewSquare();
+  await previewBigSquare();
   await page.keyboard.press(`${modifier}+Shift+z`);
-  await expect.poll(getPathData).toBe('M 0 0 L 24 0 L 24 24 L 0 24 Z');
+  await expect.poll(getPathData).toBe(BIG_SQUARE);
   expect(await page.evaluate(() => (window as any).shapeshifter.canvasEditor.isEditing())).toBe(
     false,
   );

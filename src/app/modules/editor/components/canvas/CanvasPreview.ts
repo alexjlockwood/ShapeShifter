@@ -6,15 +6,18 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
+import { Animation } from 'app/modules/editor/model/timeline';
 import { LayerTimelineService } from 'app/modules/editor/services';
 import { State, Store } from 'app/modules/editor/store';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { getCurrentTime, getIsPlaying } from 'app/modules/editor/store/playback/selectors';
+import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { combineLatest, Subject, Subscription } from 'rxjs';
 
 interface Edit {
   // The document the edit started from, which it's saved to.
   readonly vectorLayer: VectorLayer;
+  readonly animation: Animation;
   readonly currentTime: number;
   readonly onCancel: (() => void) | undefined;
 }
@@ -25,6 +28,10 @@ interface Edit {
  * The gesture keeps working copies of the paths it changes, and commits them when it ends, as one
  * undo step. Anything else that changes the document or the time cancels it, since the copies were
  * made from a document that's gone: e.g. undo, deleting the layer, or playback.
+ *
+ * Edits change the layers' own paths, so a path that an animation block sets at the current time
+ * can't be edited: the change wouldn't show. Editing the block's value comes later
+ * (docs/canvas-editor.md, phase 5).
  */
 export class CanvasPreview {
   private edit: Edit | undefined;
@@ -44,13 +51,17 @@ export class CanvasPreview {
   init() {
     this.subscription = combineLatest([
       this.store.select(getVectorLayer),
+      this.store.select(getAnimation),
       this.store.select(getCurrentTime),
       this.store.select(getIsPlaying),
-    ]).subscribe(([vectorLayer, currentTime, isPlaying]) => {
+    ]).subscribe(([vectorLayer, animation, currentTime, isPlaying]) => {
       const { edit } = this;
       if (
         edit &&
-        (vectorLayer !== edit.vectorLayer || currentTime !== edit.currentTime || isPlaying)
+        (vectorLayer !== edit.vectorLayer ||
+          animation !== edit.animation ||
+          currentTime !== edit.currentTime ||
+          isPlaying)
       ) {
         this.cancel();
       }
@@ -72,17 +83,38 @@ export class CanvasPreview {
    */
   begin(onCancel?: () => void) {
     this.cancel();
+    const state = this.store.getState();
     this.edit = {
-      vectorLayer: getVectorLayer(this.store.getState()),
-      currentTime: getCurrentTime(this.store.getState()),
+      vectorLayer: getVectorLayer(state),
+      animation: getAnimation(state),
+      currentTime: getCurrentTime(state),
       onCancel,
     };
+  }
+
+  /**
+   * Returns whether the layer's path can be edited: it's a path layer, and no animation block sets
+   * its path at the current time. Blocks set the path from the time that the first one starts.
+   */
+  canEditPath(layerId: string) {
+    const state = this.store.getState();
+    const layer = getVectorLayer(state).findLayerById(layerId);
+    const currentTime = getCurrentTime(state);
+    return (
+      (layer instanceof PathLayer || layer instanceof ClipPathLayer) &&
+      !getAnimation(state).blocks.some(
+        b => b.layerId === layerId && b.propertyName === 'pathData' && b.startTime <= currentTime,
+      )
+    );
   }
 
   /** Shows the layer with a working copy of its path. */
   setPath(layerId: string, path: Path) {
     if (!this.edit) {
       throw new Error('Begin an edit before changing paths');
+    }
+    if (!this.canEditPath(layerId)) {
+      throw new Error("The layer's path can't be edited at this time");
     }
     this.paths.set(layerId, path);
     this.changed();

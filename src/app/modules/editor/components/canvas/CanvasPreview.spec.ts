@@ -110,6 +110,46 @@ describe('CanvasPreview', () => {
     expect(store.getState().past.length).toBe(numPastStates);
   });
 
+  it('only edits the paths of path layers that no animation block sets at the time', () => {
+    const { store, services, preview, path, other, group } = setUp();
+    services.layerTimelineService.addBlocks([
+      {
+        layerId: path.id,
+        propertyName: 'pathData',
+        fromValue: new Path(SQUARE),
+        toValue: new Path(TRIANGLE),
+        currentTime: 100,
+        duration: 100,
+      },
+    ]);
+    // Before the block starts, the layer's own path shows.
+    expect(preview.canEditPath(path.id)).toBe(true);
+    store.dispatch(new SetCurrentTime(100));
+    expect(preview.canEditPath(path.id)).toBe(false);
+    store.dispatch(new SetCurrentTime(250));
+    expect(preview.canEditPath(path.id)).toBe(false);
+    expect(preview.canEditPath(other.id)).toBe(true);
+    expect(preview.canEditPath(group.id)).toBe(false);
+    preview.begin();
+    expect(() => preview.setPath(path.id, new Path(TRIANGLE))).toThrow();
+  });
+
+  it('is canceled when the animation changes, e.g. by deleting a block', () => {
+    const { services, preview, path, other } = setUp();
+    preview.begin();
+    preview.setPath(path.id, new Path(TRIANGLE));
+    services.layerTimelineService.addBlocks([
+      {
+        layerId: other.id,
+        propertyName: 'fillAlpha',
+        fromValue: 1,
+        toValue: 0,
+        currentTime: 0,
+      },
+    ]);
+    expect(preview.isEditing()).toBe(false);
+  });
+
   it('is canceled by undo, other edits, scrubbing, and playback', () => {
     const { store, preview, path, rendered } = setUp();
     const onCancel = vi.fn<() => void>();

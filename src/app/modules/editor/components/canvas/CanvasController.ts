@@ -189,8 +189,9 @@ export class CanvasController extends DestroyableMixin() {
     this.canvasNavigation?.dispose();
     this.resizeObserver?.disconnect();
     this.stopWatchingPixelRatio?.();
-    this.canvasEditor?.dispose();
+    // Canceling an edit in progress tells the editor's gesture, so the editor goes after.
     this.canvasPreview?.dispose();
+    this.canvasEditor?.dispose();
     this.setEditorState(undefined);
     this.canvasLayers.dispose();
     this.canvasOverlay.dispose();
