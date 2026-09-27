@@ -125,6 +125,21 @@ describe('outlineStrokes', () => {
     ]);
   });
 
+  it('uses an even-odd fill where the stroke crosses itself without enclosing an area', () => {
+    // A bowtie: the stroke crosses itself, but the gap at the crossing isn't enclosed by it, so
+    // filling it with the default non-zero rule would wrongly paint over the gap.
+    const bowtie = new PathLayer({
+      name: 'bowtie',
+      children: [],
+      pathData: new Path('M 0 0 L 10 10 L 10 0 L 0 10 Z'),
+      strokeColor: '#f00',
+      strokeWidth: 1,
+    });
+    const { document: outlined, layerIds } = outlineStrokes(pk, document(bowtie), [bowtie.id]);
+    const outline = outlined.vectorLayer.findLayerById(layerIds[0]) as PathLayer;
+    expect(outline.fillType).toBe('evenOdd');
+  });
+
   it('applies the trim', () => {
     const line = new PathLayer({
       name: 'line',
