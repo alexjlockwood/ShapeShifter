@@ -22,7 +22,7 @@ export interface Rect {
 export const FIT_MARGIN = 36;
 
 // The zoom range, in CSS pixels per viewport unit, from 2% to 25600% like Figma. Fitting a tiny
-// viewport to a big panel can go past it.
+// or a huge viewport can go past it, and zooming from there only goes back toward it.
 export const MIN_SCALE = 0.02;
 export const MAX_SCALE = 256;
 
@@ -61,13 +61,9 @@ export class CanvasCamera {
     const panel = { w: toNonNegative(options.panel.w), h: toNonNegative(options.panel.h) };
     const viewport = { w: toPositive(options.viewport.w), h: toPositive(options.viewport.h) };
     const pixelRatio = toPositive(options.pixelRatio);
-    const scale = clamp(toPositive(view.scale), MIN_SCALE, MAX_SCALE);
+    const scale = toPositive(view.scale);
     const center = clampCenter(viewport, view.center);
-    const snap = (n: number) => Math.round(n * pixelRatio) / pixelRatio;
-    const origin = {
-      x: snap(panel.w / 2 - center.x * scale),
-      y: snap(panel.h / 2 - center.y * scale),
-    };
+    const origin = { x: panel.w / 2 - center.x * scale, y: panel.h / 2 - center.y * scale };
     return new CanvasCamera(panel, viewport, pixelRatio, scale, origin);
   }
 
@@ -84,10 +80,9 @@ export class CanvasCamera {
       Math.max(1, panel.w - margin * 2) / viewport.w,
       Math.max(1, panel.h - margin * 2) / viewport.h,
     );
-    const snap = (n: number) => Math.round(n * pixelRatio) / pixelRatio;
     const origin = {
-      x: snap((panel.w - viewport.w * scale) / 2),
-      y: snap((panel.h - viewport.h * scale) / 2),
+      x: (panel.w - viewport.w * scale) / 2,
+      y: (panel.h - viewport.h * scale) / 2,
     };
     return new CanvasCamera(panel, viewport, pixelRatio, scale, origin);
   }
@@ -98,9 +93,18 @@ export class CanvasCamera {
     readonly pixelRatio: number,
     /** CSS pixels per viewport unit. */
     readonly scale: number,
-    /** The panel coordinates of the viewport's origin. */
-    private readonly origin: Point,
-  ) {}
+    /** The panel coordinates of the viewport's origin, before it's snapped to a device pixel. */
+    private readonly exactOrigin: Point,
+  ) {
+    const snap = (n: number) => Math.round(n * pixelRatio) / pixelRatio;
+    this.origin = { x: snap(exactOrigin.x), y: snap(exactOrigin.y) };
+  }
+
+  /**
+   * The panel coordinates of the viewport's origin, snapped to a device pixel so that the
+   * artboard's edges and the pixel grid stay sharp.
+   */
+  private readonly origin: Point;
 
   /** Device pixels per viewport unit. */
   get deviceScale() {
@@ -149,15 +153,28 @@ export class CanvasCamera {
     return new Matrix(deviceScale, 0, 0, deviceScale, origin.x * pixelRatio, origin.y * pixelRatio);
   }
 
-  /** Returns what this camera shows as a view, e.g. to start zooming from fit. */
+  /**
+   * Returns what this camera shows as a view, e.g. to start zooming from fit. It's from before the
+   * snapping, so that pans of less than half a device pixel add up.
+   */
   getView(): ManualView {
-    const center = this.panelToViewport({ x: this.panel.w / 2, y: this.panel.h / 2 });
-    return { type: 'manual', scale: this.scale, center };
+    const { panel, scale, exactOrigin } = this;
+    const center = {
+      x: (panel.w / 2 - exactOrigin.x) / scale,
+      y: (panel.h / 2 - exactOrigin.y) / scale,
+    };
+    return { type: 'manual', scale, center };
   }
 
   /** Zooms to the scale, keeping the viewport point under the panel point where it is. */
   zoomAround(panelPoint: Point, scale: number): ManualView {
-    scale = clamp(toPositive(scale), MIN_SCALE, MAX_SCALE);
+    // A scale outside of the range stays there until it's zoomed back toward it, rather than
+    // jumping, e.g. zooming in on a tiny viewport that fits at more than the maximum.
+    scale = clamp(
+      toPositive(scale),
+      Math.min(MIN_SCALE, this.scale),
+      Math.max(MAX_SCALE, this.scale),
+    );
     const { x, y } = this.panelToViewport(panelPoint);
     const center = {
       x: x - (panelPoint.x - this.panel.w / 2) / scale,

@@ -214,6 +214,7 @@ These are still bugs, and the entry named here covers them.
 | #127       | Clicking empty canvas in a split or add points mode returns to selection mode               |
 | #129       | Auto fix has unit tests and a playground (`src/playground/autofix/`)                        |
 | #188       | Flattening transforms both the from and to values of path blocks                            |
+| #249       | The rulers are laid out from the canvas's camera, in viewport units (CANVAS-5)              |
 | #264       | `629387af`                                                                                  |
 | #265       | `5af30cf7` and `03d1a813`                                                                   |
 | #266, #284 | `7d0b789a`. Dropping a file in action mode (#284) now shows a message instead.              |
@@ -227,7 +228,6 @@ These are still bugs, and the entry named here covers them.
 | #283       | `7ae9d739` and `707764f0`                                                                   |
 | #291       | The theme switch is an MUI `Switch` now, and clicking it works in Chrome                    |
 | #293       | Rewritten auto fix. The attached paths weren't identical, and the result keeps both shapes. |
-| #249       | The rulers are laid out from the canvas's camera, in viewport units (CANVAS-5)              |
 | #301       | The preview draws the animated layer at t=0 (`BUGS.md`, "Fixed during the migration")       |
 | #320       | Ids are kept, so paths with ids stay separate layers. Paths without ids still merge.        |
 | #339       | `fc991051`. The reporter's file exports in all four formats.                                |

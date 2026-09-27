@@ -1,4 +1,5 @@
 import { MathUtil } from 'app/modules/editor/scripts/common';
+import type { ManualView } from 'app/modules/editor/services/canvasviewport.service';
 import { describe, expect, it } from 'vitest';
 
 import { CanvasCamera, clampCenter, getZoomStep, MAX_SCALE, MIN_SCALE } from './CanvasCamera';
@@ -165,10 +166,28 @@ describe('CanvasCamera views', () => {
         pixelRatio: 1,
         view: { type: 'manual', scale, center: { x: 12, y: 12 } },
       });
-    expect(view(1000).scale).toBe(MAX_SCALE);
-    expect(view(0).scale).toBe(1);
-    expect(view(0.001).scale).toBe(MIN_SCALE);
     expect(view(10).zoomTo(1000).scale).toBe(MAX_SCALE);
+    expect(view(10).zoomTo(0.001).scale).toBe(MIN_SCALE);
+    expect(view(0).scale).toBe(1);
+  });
+
+  it('only zooms a scale outside of the range back toward it', () => {
+    // A half-unit viewport fits at 656 CSS pixels per unit, past the maximum.
+    const fit = CanvasCamera.create({ panel, viewport: { w: 0.5, h: 0.5 }, pixelRatio: 1 });
+    expect(fit.scale).toBe(656);
+    expect(fit.zoomTo(getZoomStep(fit.scale, 1)).scale).toBe(656);
+    expect(fit.zoomAround({ x: 10, y: 10 }, 1000).scale).toBe(656);
+    expect(fit.zoomTo(getZoomStep(fit.scale, -1)).scale).toBe(512);
+  });
+
+  it('adds up pans of less than half a pixel', () => {
+    let view: ManualView = { type: 'manual', scale: 10, center: { x: 12, y: 12 } };
+    const create = () => CanvasCamera.create({ panel, viewport: VIEWPORT, pixelRatio: 1, view });
+    const { x } = create().getArtboardRect();
+    for (let i = 0; i < 5; i++) {
+      view = create().panBy(0.4, 0);
+    }
+    expect(create().getArtboardRect().x).toBe(x + 2);
   });
 });
 
