@@ -88,6 +88,11 @@ export class CanvasInput {
     this.removeListeners = [];
   }
 
+  /** Cancels the gesture in progress, if there is one, e.g. when a pinch takes over. */
+  cancelGesture() {
+    this.cancel();
+  }
+
   private cancel(pointerId?: number) {
     const gesturePointerId = this.router.getPointerId();
     if (!this.router.cancel(pointerId) || gesturePointerId === undefined) {

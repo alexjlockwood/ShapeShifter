@@ -20,17 +20,22 @@ import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { on } from 'app/modules/editor/scripts/dom';
 import type { CanvasSettings } from 'app/modules/editor/services/canvassettings.service';
-import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
+import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
 import { getGuides } from 'app/modules/editor/store/guides/selectors';
-import { getHiddenLayerIds, getSelectedLayerIds } from 'app/modules/editor/store/layers/selectors';
+import {
+  getHiddenLayerIds,
+  getSelectedLayerIds,
+  getVectorLayer,
+} from 'app/modules/editor/store/layers/selectors';
 import {
   getAnimatedVectorLayer,
   getCurrentTime,
   getIsPlaying,
 } from 'app/modules/editor/store/playback/selectors';
 import { environment } from 'environments/environment';
+import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { combineLatest, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
@@ -40,6 +45,14 @@ import { EditorToolbar, ToolName } from './EditorToolbar';
 import { GuideTool } from './GuideTool';
 import { getKeyframeStatus, KeyframeBadge } from './KeyframeBadge';
 import { getMeasurements } from './measuring';
+import {
+  combinePaths,
+  getBooleanLayerIds,
+  getOutlineLayerIds,
+  loadPathKit,
+  outlineStrokes,
+} from './pathOps';
+import { getPathOpShortcut, PathOpName, PathOpsBar } from './PathOpsBar';
 import { getLayerPath, PathEditTool } from './PathEditTool';
 import { PencilTool } from './PencilTool';
 import { PenTool } from './PenTool';
@@ -47,6 +60,9 @@ import { ShapeTool } from './ShapeTool';
 import { Modifiers, SelectTool } from './SelectTool';
 import type { SnapThresholds } from './snapping';
 import { duplicateLayers, getTopmostLayerIds, translateLayers } from './transformLayers';
+
+// The property inspector shows it for paths when the editor is on (CanvasEditorApi.ts).
+export { PathInspector } from './PathInspector';
 
 // How far the arrow keys move the selection, in viewport units, and with Shift held.
 const NUDGE = 1;
@@ -69,6 +85,8 @@ const GRID_SNAP_THRESHOLD = 4;
 // Presses closer together than this, in milliseconds and CSS pixels, are a double-click.
 const DOUBLE_CLICK_TIME = 500;
 const DOUBLE_CLICK_DISTANCE = 4;
+// Fingers are less precise than a mouse, so tolerances are this much bigger for them.
+const TOUCH_TOLERANCE_SCALE = 2;
 
 interface Nudge {
   // Shows the selection moved by a distance.
@@ -109,6 +127,8 @@ class Editor implements CanvasEditor {
   private hoverPoint: Point | undefined;
   private isAltHeld = false;
   private isOverRuler = false;
+  // Scales the tolerances for the kind of pointer in use.
+  private toleranceScale = 1;
   // The path whose points are being edited, if any. The select tool is used otherwise.
   private pathEdit: PathEditTool | undefined;
   // The drawing tool picked in the toolbar, which gets the pointer before the others.
@@ -117,6 +137,9 @@ class Editor implements CanvasEditor {
   private toolbar: EditorToolbar | undefined;
   // Says whether the selected path still morphs while it's edited at a keyframe.
   private keyframeBadge: KeyframeBadge | undefined;
+  // Combines the selected paths and outlines their strokes.
+  private pathOpsBar: PathOpsBar | undefined;
+  private isDisposed = false;
   // Whether the pointer is pressed, so that tools don't change in the middle of a gesture.
   private isPressing = false;
   private lastPress: { readonly time: number; readonly point: Point; count: number } | undefined;
@@ -147,7 +170,7 @@ class Editor implements CanvasEditor {
       getSelectedLayerIds: () => this.selectedLayerIds,
       setSelectedLayerIds: layerIds =>
         services.layerTimelineService.setSelectedLayers(new Set(layerIds)),
-      toViewportLength: length => this.camera?.toViewportLength(length) ?? length,
+      toViewportLength: length => this.toViewportLength(length),
       render: document => this.render(document),
       preview,
       redraw: () => this.draw(),
@@ -243,6 +266,7 @@ class Editor implements CanvasEditor {
       onAutoFix: blockIds => this.autoFix(blockIds),
       onSeek: time => playbackService.setCurrentTime(time),
     });
+    this.pathOpsBar = new PathOpsBar(this.context.root, op => void this.runPathOp(op));
     this.removeTestHooks = environment.production ? undefined : addTestHooks(preview, this);
   }
 
@@ -263,6 +287,7 @@ class Editor implements CanvasEditor {
   }
 
   onPress(event: PointerEvent, point: Point) {
+    this.toleranceScale = event.pointerType === 'touch' ? TOUCH_TOLERANCE_SCALE : 1;
     this.isPressing = true;
     this.endNudge();
     const ruler = getRuler(event);
@@ -285,7 +310,7 @@ class Editor implements CanvasEditor {
     if (pathEdit && !this.drawTool && !pathEdit.isOverPath(point)) {
       const hitLayerId = hitTestLayer(this.vectorLayer, point, {
         hiddenLayerIds: this.hiddenLayerIds,
-        tolerance: this.camera?.toViewportLength(LAYER_HIT_TOLERANCE) ?? 0,
+        tolerance: this.toViewportLength(LAYER_HIT_TOLERANCE),
       })?.id;
       if (
         (hitLayerId && hitLayerId !== pathEdit.layerId) ||
@@ -300,6 +325,9 @@ class Editor implements CanvasEditor {
   }
 
   onMove(event: PointerEvent, point: Point) {
+    if (!this.isPressing) {
+      this.toleranceScale = event.pointerType === 'touch' ? TOUCH_TOLERANCE_SCALE : 1;
+    }
     this.hoverPoint = point;
     this.setAltHeld(event.altKey);
     if (this.guideTool.isDragging()) {
@@ -386,8 +414,10 @@ class Editor implements CanvasEditor {
     return axis === 'x' ? x <= rect.x + rect.w : y <= rect.y + rect.h;
   }
 
+  /** A tolerance in CSS pixels in viewport units, bigger for touches. */
   private toViewportLength(length: number) {
-    return this.camera?.toViewportLength(length) ?? length;
+    const scaled = length * this.toleranceScale;
+    return this.camera?.toViewportLength(scaled) ?? scaled;
   }
 
   /** How close things snap, with the pixel grid left out if its snapping is off. */
@@ -444,6 +474,8 @@ class Editor implements CanvasEditor {
     this.drawTool = undefined;
     this.toolbar?.dispose();
     this.keyframeBadge?.dispose();
+    this.pathOpsBar?.dispose();
+    this.isDisposed = true;
     this.removeTestHooks?.();
     this.renderer.clear();
     delete this.context.root.dataset.editorCursor;
@@ -516,8 +548,8 @@ class Editor implements CanvasEditor {
 
   /** Returns 2 for the second press of a double-click, and so on. */
   private countClicks(event: PointerEvent, point: Point) {
-    const { lastPress, camera } = this;
-    const maxDistance = camera ? camera.toViewportLength(DOUBLE_CLICK_DISTANCE) : 0;
+    const { lastPress } = this;
+    const maxDistance = this.toViewportLength(DOUBLE_CLICK_DISTANCE);
     if (
       lastPress &&
       event.timeStamp - lastPress.time < DOUBLE_CLICK_TIME &&
@@ -606,6 +638,13 @@ class Editor implements CanvasEditor {
       document.activeElement?.matches('input, textarea, [contenteditable]')
     ) {
       return undefined;
+    }
+    const pathOp = getPathOpShortcut(event);
+    if (pathOp && !this.drawTool && !this.pathEdit) {
+      if (!event.repeat && !this.isPressing) {
+        void this.runPathOp(pathOp);
+      }
+      return false;
     }
     const setting = getSettingShortcut(event);
     if (setting) {
@@ -736,7 +775,7 @@ class Editor implements CanvasEditor {
       key === 'Delete' ||
       (key === 'Tab' && !isCommand && !event.altKey && !isControlFocused()) ||
       (!!arrow && !event.altKey && !isCommand && !event.ctrlKey) ||
-      (isCommand && (key.toLowerCase() === 'a' || key.toLowerCase() === 'd'));
+      (isCommand && ['a', 'd', 'j'].includes(key.toLowerCase()));
     if (!isHandled) {
       return undefined;
     }
@@ -773,6 +812,9 @@ class Editor implements CanvasEditor {
       pathEdit.setPointType(pointType);
     } else if (key.toLowerCase() === 'a') {
       pathEdit.selectAll();
+    } else if (key.toLowerCase() === 'j') {
+      // Rather than opening the browser's downloads.
+      pathEdit.joinSelected();
     }
     // Cmd+D does nothing while points are edited, rather than bookmarking the page.
     return false;
@@ -845,9 +887,11 @@ class Editor implements CanvasEditor {
     if (this.isActionMode) {
       // Action mode has its own selections, drawn by the canvases.
       this.renderer.clear();
+      this.pathOpsBar?.setAvailable({ booleans: false, outline: false });
       delete this.context.root.dataset.editorCursor;
       return;
     }
+    this.pathOpsBar?.setAvailable(this.getAvailablePathOps());
     const { drawTool } = this;
     const pathEdit = this.pathEdit?.getDrawing();
     const overlay = drawTool?.getOverlay();
@@ -875,6 +919,85 @@ class Editor implements CanvasEditor {
       this.context.root.dataset.editorCursor = cursor;
     } else {
       delete this.context.root.dataset.editorCursor;
+    }
+  }
+
+  /** Which path operations apply to the selection, with the select tool. */
+  private getAvailablePathOps() {
+    if (this.drawTool || this.pathEdit || !this.selectedLayerIds.size) {
+      return { booleans: false, outline: false };
+    }
+    const document = this.getStoreDocument();
+    return {
+      booleans: !!getBooleanLayerIds(document, this.selectedLayerIds),
+      outline: !!getOutlineLayerIds(document, this.selectedLayerIds),
+    };
+  }
+
+  private getStoreDocument() {
+    const state = this.context.store.getState();
+    return { vectorLayer: getVectorLayer(state), animation: getAnimation(state) };
+  }
+
+  /**
+   * Combines the selected paths, or outlines their strokes, as one undo step. PathKit is
+   * downloaded the first time, so it happens once that's done, to the selection at that point.
+   */
+  private async runPathOp(op: PathOpName) {
+    const { snackBarService, layerTimelineService } = this.context.services;
+    let pk: Awaited<ReturnType<typeof loadPathKit>>;
+    try {
+      pk = await loadPathKit();
+    } catch (error) {
+      // E.g. offline, before it was ever loaded.
+      bugsnagClient.notify(error instanceof Error ? error : String(error), { severity: 'info' });
+      snackBarService.show(
+        "Couldn't load the path operations. Try again once you're online.",
+        'Dismiss',
+        Duration.Long,
+      );
+      return;
+    }
+    if (this.isDisposed || this.isActionMode || this.drawTool || this.pathEdit) {
+      return;
+    }
+    this.endNudge();
+    const document = this.getStoreDocument();
+    const selected = this.selectedLayerIds;
+    try {
+      if (op === 'outline') {
+        const layerIds = getOutlineLayerIds(document, selected);
+        if (layerIds) {
+          const outlined = outlineStrokes(pk, document, layerIds);
+          layerTimelineService.commitCanvasEdit(
+            outlined.document.vectorLayer,
+            outlined.document.animation,
+            { selectedLayerIds: new Set(outlined.layerIds) },
+          );
+        }
+        return;
+      }
+      const layerIds = getBooleanLayerIds(document, selected);
+      if (!layerIds) {
+        return;
+      }
+      const combined = combinePaths(pk, document, layerIds, op);
+      if (!combined) {
+        snackBarService.show(
+          "The paths don't overlap, so nothing's left",
+          'Dismiss',
+          Duration.Short,
+        );
+        return;
+      }
+      layerTimelineService.commitCanvasEdit(
+        combined.document.vectorLayer,
+        combined.document.animation,
+        { selectedLayerIds: new Set([combined.layerId]) },
+      );
+    } catch (error) {
+      bugsnagClient.notify(error instanceof Error ? error : String(error));
+      snackBarService.show("Couldn't change these paths", 'Dismiss', Duration.Long);
     }
   }
 

@@ -57,6 +57,17 @@
         .spi-property-color-preview {
             box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
         }
+        .spi-path-inspector {
+            color: mat-color($foreground, secondary-text);
+            button {
+                background-color: mat-color($background, base);
+                color: mat-color($foreground, primary-text);
+                box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
+                &:disabled {
+                    color: mat-color($foreground, disabled-text);
+                }
+            }
+        }
     }
     .spi-empty {
         color: mat-color($foreground, disabled-text);

@@ -4,6 +4,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import { Tip } from 'app/modules/editor/components/common/Tip';
 import { Icon, type IconName } from 'app/modules/editor/components/icons/Icon';
+import { useCanvasEditorModule } from 'app/modules/editor/components/canvas/useCanvasEditorModule';
 import { Splitter } from 'app/modules/editor/components/splitter';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
@@ -43,7 +44,9 @@ const TEXT_INPUT_TYPE_NAMES = new Set([
 // TODO: when you enter a 'start time' larger than 'end time', transform 'end time' correctly
 export function PropertyInput() {
   const store = useEditorStore();
-  const { actionModeService, layerTimelineService, playbackService } = useServices();
+  const { actionModeService, layerTimelineService, playbackService, features } = useServices();
+  // With the canvas editor on, paths get its structured inspector.
+  const editorModule = useCanvasEditorModule(features.canvasEditor);
   const propertyInputState = useAppSelector(getPropertyInputState);
   // Tracks values that have been entered into text fields but may not have been saved.
   const [enteredValueMap] = useState(() => new Map<string, any>());
@@ -121,51 +124,73 @@ export function PropertyInput() {
               {!model.inspectedProperties.length && (
                 <div className="spi-empty fx-flex">No shared properties to view or edit</div>
               )}
-              {model.inspectedProperties.map(ip => (
-                <div className="spi-property" key={ip.propertyName}>
-                  <div className="spi-property-name">{ip.propertyName}</div>
-                  <div className="spi-property-value fx-row">
-                    {ip.typeName === 'ColorProperty' && (
-                      <div
-                        className="spi-property-color-preview"
-                        style={{ backgroundColor: ColorUtil.androidToCssHexColor(ip.value) }}
-                      />
-                    )}
-                    {!ip.isEditable() && (
-                      // Only show text if the property isn't inspectable.
-                      <span className="spi-property-value-static fx-flex">
-                        {ip.getDisplayValue()}
-                      </span>
-                    )}
-                    {ip.isEditable() && (
-                      <div className="spi-property-value-editor fx-column fx-flex">
-                        {TEXT_INPUT_TYPE_NAMES.has(ip.typeName) && (
-                          <input
-                            className={
-                              ip.typeName === 'PathProperty' &&
-                              shouldShowInvalidPathAnimationBlockMsg(model)
-                                ? 'has-input-error'
-                                : undefined
-                            }
-                            name={ip.propertyName}
-                            value={ip.editableValue ?? ''}
-                            onChange={event => {
-                              ip.editableValue = event.target.value;
-                              forceUpdate();
-                            }}
-                            onKeyDown={event => onValueEditorKeyDown(event, ip)}
-                            onBlur={() => {
-                              ip.resolveEnteredValue();
-                              forceUpdate();
-                            }}
-                          />
-                        )}
-                        {ip.typeName === 'EnumProperty' && <EnumPropertyEditor ip={ip} />}
-                      </div>
-                    )}
+              {model.inspectedProperties.map(ip => {
+                const textInput = TEXT_INPUT_TYPE_NAMES.has(ip.typeName) && (
+                  <input
+                    className={
+                      ip.typeName === 'PathProperty' &&
+                      shouldShowInvalidPathAnimationBlockMsg(model)
+                        ? 'has-input-error'
+                        : undefined
+                    }
+                    name={ip.propertyName}
+                    value={ip.editableValue ?? ''}
+                    onChange={event => {
+                      ip.editableValue = event.target.value;
+                      forceUpdate();
+                    }}
+                    onKeyDown={event => onValueEditorKeyDown(event, ip)}
+                    onBlur={() => {
+                      ip.resolveEnteredValue();
+                      forceUpdate();
+                    }}
+                  />
+                );
+                const PathInspector =
+                  ip.typeName === 'PathProperty' && ip.isEditable()
+                    ? editorModule?.PathInspector
+                    : undefined;
+                return (
+                  <div
+                    className={PathInspector ? 'spi-property spi-property-path' : 'spi-property'}
+                    key={ip.propertyName}
+                  >
+                    <div className="spi-property-name">{ip.propertyName}</div>
+                    <div className="spi-property-value fx-row">
+                      {ip.typeName === 'ColorProperty' && (
+                        <div
+                          className="spi-property-color-preview"
+                          style={{ backgroundColor: ColorUtil.androidToCssHexColor(ip.value) }}
+                        />
+                      )}
+                      {!ip.isEditable() && (
+                        // Only show text if the property isn't inspectable.
+                        <span className="spi-property-value-static fx-flex">
+                          {ip.getDisplayValue()}
+                        </span>
+                      )}
+                      {ip.isEditable() && (
+                        <div className="spi-property-value-editor fx-column fx-flex">
+                          {PathInspector ? (
+                            <PathInspector
+                              path={ip.value}
+                              onChange={path => {
+                                ip.resolveEnteredValue();
+                                ip.value = path;
+                                forceUpdate();
+                              }}
+                              advanced={textInput}
+                            />
+                          ) : (
+                            textInput
+                          )}
+                          {ip.typeName === 'EnumProperty' && <EnumPropertyEditor ip={ip} />}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {shouldShowInvalidPathAnimationBlockMsg(model) && (
                 <InvalidPathAnimationBlockMessage
                   block={model.model}

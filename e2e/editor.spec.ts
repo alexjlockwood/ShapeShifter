@@ -467,3 +467,62 @@ test('edits an animated path at the ends of its morph, and auto fixes it', async
     ),
   ).toBe(true);
 });
+
+test("edits a path's points, and reverses and closes subpaths, in the inspector", async ({
+  page,
+}) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  const point = page.getByRole('group', { name: 'Point 2' });
+  await point.getByLabel('x').fill('8');
+  await point.getByLabel('x').press('Enter');
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 2 L 6 6 L 2 6 Z');
+  await page.getByRole('button', { name: 'Reverse' }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 2 6 L 6 6 L 8 2 Z');
+  // The text field is under "Advanced".
+  await page.getByText('Advanced').click();
+  await expect(page.locator('input[name="pathData"]')).toHaveValue('M 2 2 L 2 6 L 6 6 L 8 2 Z');
+});
+
+test('joins the ends of a path with Cmd+J', async ({ page, modifier }) => {
+  await openSquares(page);
+  await page.keyboard.press('p');
+  await click(page, 16, 2);
+  await click(page, 20, 2);
+  await click(page, 20, 6);
+  await page.keyboard.press('Escape');
+  await expect.poll(() => getPathData(page, 'path')).toBe('M 16 2 L 20 2 L 20 6');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await click(page, 16, 2);
+  await click(page, 20, 6, { shift: true });
+  await page.keyboard.press(`${modifier}+j`);
+  await expect.poll(() => getPathData(page, 'path')).toBe('M 16 2 L 20 2 L 20 6 Z');
+});
+
+test('combines paths and outlines strokes, as undo steps', async ({ page, modifier }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await click(page, 12, 4, { shift: true });
+  await page.getByRole('button', { name: 'Union' }).click();
+  await expect
+    .poll(() => getState(page, s => s.layers.vectorLayer.children.map((l: any) => l.name)))
+    .toEqual(['a', 'c']);
+  expect((await getPathData(page, 'a'))?.match(/M/g)).toHaveLength(2);
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(3);
+
+  // A line is a stroke, which becomes a filled outline.
+  await page.keyboard.press('l');
+  await drag(page, [4, 20], [20, 20]);
+  await expect.poll(() => getToolName(page)).toBe('select');
+  await page.keyboard.press(`${modifier}+Alt+o`);
+  await expect
+    .poll(() =>
+      getState(page, s => {
+        const line = s.layers.vectorLayer.findLayerByName('line');
+        return line && [line.fillColor, line.strokeColor];
+      }),
+    )
+    .toEqual(['#000000', '']);
+});

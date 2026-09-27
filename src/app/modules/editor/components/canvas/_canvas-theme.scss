@@ -15,6 +15,7 @@
     }
     // The canvas editor's toolbar.
     .app-canvas .canvas-editor-toolbar,
+    .app-canvas .canvas-editor-pathops,
     .app-canvas .canvas-editor-keyframe {
         background-color: mat-color($background, base100);
         color: mat-color($foreground, secondary-text);
@@ -22,7 +23,7 @@
     .app-canvas .canvas-editor-toolbar-separator {
         background-color: mat-color($foreground, divider);
     }
-    .app-canvas .canvas-editor-tool:hover {
+    .app-canvas .canvas-editor-tool:hover:not(:disabled) {
         background-color: mat-color($foreground, divider);
     }
     .app-canvas .canvas-editor-tool[aria-pressed='true'] {

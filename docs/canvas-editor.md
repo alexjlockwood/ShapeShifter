@@ -215,9 +215,14 @@ Figma's mapping is the default, since it's also a web app and avoids shortcuts t
 | Point types                | 1 to 4, as in Sketch                                |
 | Bend a segment             | Cmd-drag                                            |
 | Next point, previous point | Tab, Shift+Tab                                      |
+| Join ends                  | Cmd+J                                               |
 | Rulers                     | Shift+R                                             |
+| Pixel grid, snap to it     | Shift+', Cmd+Shift+'                                |
 | Measure distances          | Hold Alt                                            |
 | Turn snapping off          | Hold Ctrl                                           |
+| Union, subtract            | Alt+Shift+U, Alt+Shift+S                            |
+| Intersect, exclude         | Alt+Shift+I, Alt+Shift+E                            |
+| Outline stroke             | Cmd+Alt+O                                           |
 
 Some of these clash with the app's shortcuts (`services/shortcut.service.ts`):
 
@@ -233,7 +238,7 @@ while held and plays or pauses when tapped. Repeat and slow motion keep their to
 ## Roadmap
 
 Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395), phase 1 (#396 to #399),
-phase 2 (#400), phase 3 (#402), phase 4 (#403), and phase 5 (#404). Phase 1's snapping covers the artboard,
+phase 2 (#400), phase 3 (#402), phase 4 (#403), phase 5 (#404), and phase 6 (PHASE_6_PR). Phase 1's snapping covers the artboard,
 other paths' bounds, and the pixel grid, and phase 4 added the guides. In phase 2, points snap to
 those, to the path's other points, and onto the closest curve. Editing a path has no cursors of its own yet, so
 hovering a segment or holding Cmd over one looks the same as anywhere else.
@@ -281,6 +286,33 @@ because of it, unlike auto fix in action mode. Some gaps are left for later:
 
 - The property inspector still shows the layer's own path rather than the one at the current time.
 - There's no way to jump to the next or previous keyframe from the keyboard.
+
+Phase 6 finishes the roadmap:
+
+- With the editor on, the property inspector lists a path's subpaths and points, with fields for
+  each point's x and y and buttons that reverse and close subpaths, and keeps the text field
+  under "Advanced" (`components/canvaseditor/PathInspector.tsx`). It's part of the editor's
+  lazily loaded code, which `CanvasEditorApi.ts` hands to the inspector.
+- While a path's points are edited, Cmd+J joins the two selected ends: the ends of one subpath
+  close it, and ends of two subpaths join them into one, with a line between them or with the ends
+  merged if they're in the same place.
+- Union, subtract, intersect, and exclude (Alt+Shift+U, S, I, and E) combine the selected paths
+  into the bottom one, and outline stroke (Cmd+Alt+O) turns strokes into filled outlines, from a
+  bar at the top right of the canvas panel (`components/canvaseditor/pathOps.ts`). They use
+  Skia's PathOps through `pathkit-wasm`, which is only downloaded the first time one of them is
+  used, into the editor's own assets so that the service worker doesn't precache it.
+- On a touch screen, two fingers pinch to zoom and drag to pan, which cancels what the first
+  finger started, and the editor's tolerances are twice as big for fingers.
+
+Some gaps are left:
+
+- Booleans flatten into one path, rather than keeping a boolean group that can be edited later,
+  and they don't work on animated paths. Outline stroke doesn't work on animated layers, and round
+  caps and joins come out as many short quadratic curves.
+- The path inspector lists points but not their handles, and for an animated path it shows the
+  layer's own path rather than the keyframe at the current time.
+- Joining doesn't average the ends, and there's no way to open a closed subpath.
+- Touches have no long press, and the handles are no bigger for them.
 
 Phase 0 is the foundation, and it's split into small pull requests:
 

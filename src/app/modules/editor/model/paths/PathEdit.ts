@@ -387,10 +387,20 @@ export function closeSubPath(
   return toPath(subPaths);
 }
 
-/** Reverses an open subpath, keeping its anchors' ids. */
+/**
+ * Reverses a subpath, keeping its anchors' ids. A closed one keeps its first anchor, and goes
+ * around the other way from it.
+ */
 export function reverseSubPath(path: Path, subIdx: number) {
   const subPaths = toSubPaths(path);
-  const subPath = getOpenSubPath(subPaths, subIdx);
+  const subPath = subPaths[subIdx];
+  if (!subPath) {
+    throw new Error(`No subpath at ${subIdx}`);
+  }
+  if (subPath.closed) {
+    subPaths[subIdx] = reverseClosedSubPath(subPath);
+    return toPath(subPaths);
+  }
   const ids = subPath.anchors.map((_, i) => getAnchorId(subPath, i)).reverse();
   subPath.anchors.reverse();
   // Each segment keeps the id of the anchor it ends at, which has moved to the other end.
@@ -400,6 +410,72 @@ export function reverseSubPath(path: Path, subIdx: number) {
     controls: [...segment.controls].reverse(),
   }));
   subPath.moveId = ids[0];
+  return toPath(subPaths);
+}
+
+function reverseClosedSubPath(subPath: EditSubPath): EditSubPath {
+  const { anchors, segments } = subPath;
+  const count = anchors.length;
+  const ids = anchors.map((_, i) => getAnchorId(subPath, i));
+  // The segment back to the first anchor keeps the id of the one that was.
+  const closingId = segments[count - 1].id;
+  return {
+    ...subPath,
+    anchors: [anchors[0], ...anchors.slice(1).reverse()],
+    // The new segment k is the old segment count - 1 - k, backwards. It ends at the old anchor
+    // count - 1 - k, whose id it takes, except the last one, which goes back to the first.
+    segments: segments.map((_, k) => {
+      const old = segments[count - 1 - k];
+      const isClosing = k === count - 1;
+      const type = old.type === 'Z' ? 'L' : old.type;
+      return {
+        type: isClosing && type === 'L' ? 'Z' : type,
+        id: isClosing ? closingId : ids[count - 1 - k],
+        controls: [...old.controls].reverse(),
+      };
+    }),
+  };
+}
+
+/**
+ * Joins two ends of open subpaths, like Illustrator's Join: the two ends of one subpath close it,
+ * and ends of two subpaths become one subpath, with a line between them, or with the ends merged
+ * if they're in the same place. The joined subpath goes where the first end's was. Returns
+ * undefined if the anchors aren't ends of open subpaths.
+ */
+export function joinEnds(path: Path, anchorId1: string, anchorId2: string) {
+  const ends = getSubPathEnds(path);
+  const a = ends.find(end => end.anchorId === anchorId1);
+  const b = ends.find(end => end.anchorId === anchorId2);
+  if (!a || !b || anchorId1 === anchorId2) {
+    return undefined;
+  }
+  if (a.subIdx === b.subIdx) {
+    return getAnchorCount(path, a.subIdx) > 1 ? closeSubPath(path, a.subIdx) : undefined;
+  }
+  // The first subpath ends at a, and the second starts at b.
+  let oriented = path;
+  if (a.isStart) {
+    oriented = reverseSubPath(oriented, a.subIdx);
+  }
+  if (!b.isStart && getAnchorCount(path, b.subIdx) > 1) {
+    oriented = reverseSubPath(oriented, b.subIdx);
+  }
+  const subPaths = toSubPaths(oriented);
+  const first = subPaths[a.subIdx];
+  const second = subPaths[b.subIdx];
+  const isMerged = MathUtil.arePointsEqual(first.anchors[first.anchors.length - 1], b.point);
+  const joined: EditSubPath = {
+    ...first,
+    anchors: [...first.anchors, ...(isMerged ? second.anchors.slice(1) : second.anchors)],
+    segments: [
+      ...first.segments,
+      ...(isMerged ? [] : [{ type: 'L' as const, id: second.moveId, controls: [] }]),
+      ...second.segments,
+    ],
+  };
+  subPaths[a.subIdx] = joined;
+  subPaths.splice(b.subIdx, 1);
   return toPath(subPaths);
 }
 

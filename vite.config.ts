@@ -91,11 +91,16 @@ export default defineConfig({
         // The canvas editor's lazily loaded code goes in its own directory, so that the service
         // worker can tell it apart. Only its entry point is routed here, so the editor mustn't
         // import CSS, and code it loads lazily in turn needs routing here too, or it would be
-        // precached for everyone.
+        // precached for everyone: PathKit, which its path operations load, and its WASM code.
         chunkFileNames: chunk =>
-          chunk.facadeModuleId?.includes('/components/canvaseditor/')
+          chunk.facadeModuleId?.includes('/components/canvaseditor/') ||
+          chunk.facadeModuleId?.includes('/pathkit-wasm/')
             ? `${EDITOR_ASSETS_DIR}/[name]-[hash].js`
             : 'assets/[name]-[hash].js',
+        assetFileNames: asset =>
+          asset.names.some(name => name.endsWith('.wasm'))
+            ? `${EDITOR_ASSETS_DIR}/[name]-[hash][extname]`
+            : 'assets/[name]-[hash][extname]',
       },
     },
   },

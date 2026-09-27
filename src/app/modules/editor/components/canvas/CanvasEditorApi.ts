@@ -4,9 +4,11 @@
 // but never imports it directly, which would bundle it with the rest of the app
 // (src/test/lazyChunks.spec.ts checks this).
 
+import type { Path } from 'app/modules/editor/model/paths';
 import type { Point } from 'app/modules/editor/scripts/common';
 import type { EditorServices } from 'app/modules/editor/services/createEditorServices';
 import type { State, Store } from 'app/modules/editor/store';
+import type { ComponentType, ReactNode } from 'react';
 
 import type { CanvasCamera } from './CanvasCamera';
 import type { CanvasPreview } from './CanvasPreview';
@@ -38,7 +40,17 @@ export interface CanvasEditor {
   dispose(): void;
 }
 
+/** What the property inspector gives the editor's path inspector, for a path property. */
+export interface PathInspectorProps {
+  readonly path: Path | undefined;
+  readonly onChange: (path: Path) => void;
+  /** The path's text field, which goes under "Advanced". */
+  readonly advanced: ReactNode;
+}
+
 /** What components/canvaseditor/CanvasEditor.ts exports. */
 export interface CanvasEditorModule {
   createCanvasEditor(context: CanvasEditorContext): CanvasEditor;
+  /** Lists a path's subpaths and points in the property inspector. */
+  PathInspector: ComponentType<PathInspectorProps>;
 }

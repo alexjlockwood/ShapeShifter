@@ -135,6 +135,26 @@
         height: 1px;
         margin: 2px 4px;
     }
+    // The canvas editor's path operations, at the top right, inside of where the horizontal ruler
+    // goes when it's pinned to the top.
+    .canvas-editor-pathops {
+        position: absolute;
+        z-index: 4;
+        top: 36px;
+        right: 8px;
+        display: flex;
+        gap: 2px;
+        padding: 4px;
+        border-radius: 6px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+        &[hidden] {
+            display: none;
+        }
+        .canvas-editor-tool:disabled {
+            opacity: 0.38;
+            cursor: default;
+        }
+    }
     // The canvas editor's note about editing an animated path, at the bottom of the panel, where the
     // fit leaves a margin (FIT_MARGIN in CanvasCamera.ts).
     .canvas-editor-keyframe {

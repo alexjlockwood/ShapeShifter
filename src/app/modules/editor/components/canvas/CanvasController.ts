@@ -103,7 +103,12 @@ export class CanvasController extends DestroyableMixin() {
     ];
     // Zooming and panning come with the editor.
     this.canvasNavigation = features.canvasEditor
-      ? new CanvasNavigation(elements.root, canvasViewportService, () => this.camera)
+      ? new CanvasNavigation(
+          elements.root,
+          canvasViewportService,
+          () => this.camera,
+          () => this.canvasInput.cancelGesture(),
+        )
       : undefined;
     // With the editor, the main canvas takes the pointer anywhere in the panel, e.g. to start a
     // marquee selection off of the artboard. Otherwise only on the artboard, like before.
