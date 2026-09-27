@@ -31,6 +31,12 @@ so playback never re-renders React. Mouse gestures on the canvas go to
 `components/canvas/CanvasOverlay.ts`, which calls `actionModeService` in action mode and
 `layerTimelineService` otherwise.
 
+The new canvas editor is in `components/canvaseditor/`, and it's only downloaded when its feature
+is on (`src/environments/features.ts`). `components/canvas/CanvasController.ts` loads it through
+`components/canvas/loadCanvasEditor.ts` and talks to it through the types in
+`components/canvas/CanvasEditorApi.ts`. Nothing else may import it, or it would be bundled with the
+rest of the app (`src/test/lazyChunks.spec.ts` checks this).
+
 ## Styling
 
 - Styles are SCSS. MUI components are themed in `styles/muiTheme.ts` and restyled with SCSS that

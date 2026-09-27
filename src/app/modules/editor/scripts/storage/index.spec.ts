@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getStoredItem, setStoredItem } from '.';
+import { getStoredItem, removeStoredItem, setStoredItem } from '.';
 
 describe('storage', () => {
   afterEach(() => {
@@ -12,6 +12,8 @@ describe('storage', () => {
     setStoredItem('key', 'value');
     expect(getStoredItem('key')).toBe('value');
     expect(getStoredItem('missing')).toBeNull();
+    removeStoredItem('key');
+    expect(getStoredItem('key')).toBeNull();
   });
 
   it('does nothing when reading localStorage throws', () => {
@@ -19,6 +21,7 @@ describe('storage', () => {
       throw new DOMException('Access is denied for this document.', 'SecurityError');
     });
     expect(() => setStoredItem('key', 'value')).not.toThrow();
+    expect(() => removeStoredItem('key')).not.toThrow();
     expect(getStoredItem('key')).toBeNull();
   });
 

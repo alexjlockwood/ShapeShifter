@@ -11,16 +11,24 @@ import {
   isServiceWorkerDeployError,
   startBugsnag,
 } from 'app/modules/editor/scripts/bugsnag';
+import { getStoredItem, removeStoredItem, setStoredItem } from 'app/modules/editor/scripts/storage';
 import { createEditorServices } from 'app/modules/editor/services/createEditorServices';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { createEditorStore } from 'app/modules/editor/store';
 import { getThemeType } from 'app/modules/editor/store/theme/selectors';
 import { environment } from 'environments/environment';
+import { getBuildFeatures, resolveFeatures } from 'environments/features';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 
-startBugsnag();
+const features = resolveFeatures({
+  search: window.location.search,
+  storage: { getItem: getStoredItem, setItem: setStoredItem, removeItem: removeStoredItem },
+  buildDefault: getBuildFeatures(import.meta.env),
+});
+
+startBugsnag(features);
 const bugsnagReactPlugin = Bugsnag.getPlugin('react');
 if (!bugsnagReactPlugin) {
   throw new Error("Bugsnag's React plugin wasn't added when Bugsnag started");
@@ -31,7 +39,7 @@ startAnalytics();
 // Created once, outside of React, since the services subscribe to the store for the lifetime
 // of the app.
 const store = createEditorStore({ logActions: !environment.production });
-const services = createEditorServices(store);
+const services = createEditorServices(store, { features });
 
 // Apply the theme before the first render, so that the page doesn't flash the wrong colors.
 document.body.classList.toggle(

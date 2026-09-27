@@ -1,6 +1,7 @@
 import Bugsnag from '@bugsnag/js';
 import BugsnagPluginReact from '@bugsnag/plugin-react';
 import { environment } from 'environments/environment';
+import type { Features } from 'environments/features';
 import { isShapeShifterSite } from 'environments/site';
 import { version } from 'environments/version';
 
@@ -18,10 +19,12 @@ const INJECTED_SCRIPT_PREFIXES = [
 ];
 
 /** Starts error reporting. Must be called once at startup, before the app renders. */
-export function startBugsnag() {
+export function startBugsnag(features: Features) {
   Bugsnag.start({
     apiKey: 'd662c2c8a7e13ac94f67e81e26bf3a4e',
     appVersion: version,
+    // Reports from browsers with unfinished features turned on can be told apart.
+    featureFlags: features.canvasEditor ? [{ name: 'canvas-editor' }] : [],
     releaseStage: environment.production ? 'production' : 'development',
     enabledReleaseStages: ['production'],
     autoTrackSessions: false,

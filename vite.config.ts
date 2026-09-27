@@ -37,6 +37,9 @@ const playgroundBaseline = (): Plugin => {
   };
 };
 
+// Where the build puts the canvas editor's code (src/app/modules/editor/components/canvaseditor/).
+const EDITOR_ASSETS_DIR = 'assets/editor';
+
 export default defineConfig({
   plugins: [
     react(),
@@ -54,6 +57,19 @@ export default defineConfig({
           'assets/tools/**',
           // Replaces the old Angular service worker (see public/ngsw-worker.js).
           'ngsw-worker.js',
+          // Cached when it's first used instead (see runtimeCaching).
+          `${EDITOR_ASSETS_DIR}/**`,
+        ],
+        // The canvas editor is only downloaded when it's turned on (src/environments/features.ts),
+        // so it's cached the first time instead of being precached for everyone. Its files have
+        // content hashes in their names, so a cached file never goes stale. The catch is that it
+        // only works offline once it has been loaded online since the last deploy.
+        runtimeCaching: [
+          {
+            urlPattern: new RegExp(`/${EDITOR_ASSETS_DIR}/`),
+            handler: 'CacheFirst',
+            options: { cacheName: 'canvas-editor', expiration: { maxEntries: 20 } },
+          },
         ],
         navigateFallback: 'index.html',
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
@@ -73,6 +89,18 @@ export default defineConfig({
   build: {
     // Bugsnag uses the deployed source maps to show the original code in stack traces.
     sourcemap: true,
+    rolldownOptions: {
+      output: {
+        // The canvas editor's lazily loaded code goes in its own directory, so that the service
+        // worker can tell it apart. Only its entry point is routed here, so the editor mustn't
+        // import CSS, and code it loads lazily in turn needs routing here too, or it would be
+        // precached for everyone.
+        chunkFileNames: chunk =>
+          chunk.facadeModuleId?.includes('/components/canvaseditor/')
+            ? `${EDITOR_ASSETS_DIR}/[name]-[hash].js`
+            : 'assets/[name]-[hash].js',
+      },
+    },
   },
   test: {
     globals: true,
