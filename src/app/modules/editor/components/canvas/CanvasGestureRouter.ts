@@ -51,11 +51,10 @@ export class CanvasGestureRouter {
   }
 
   /**
-   * Returns whether an event before the release, a move or the loss of the pointer's capture, ends
-   * the gesture as the release would, since the mouse's main button is already up. A macOS
-   * trackpad can send a move like that right before the release, and Chrome takes the capture away
-   * first. The release that follows is ignored, and a release can also go missing. The gesture is
-   * over by the time the event is handled.
+   * Returns whether a move before the release ends the gesture as the release would, since the
+   * mouse's main button is already up. A macOS trackpad can send a move like that right before the
+   * release, and a release can also go missing. The release that follows is ignored. The gesture
+   * is over by the time the move is handled.
    */
   upWithoutRelease({ pointerId, pointerType, buttons }: MoveInfo) {
     if (

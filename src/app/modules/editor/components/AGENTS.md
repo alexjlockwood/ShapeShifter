@@ -29,10 +29,13 @@ The canvas and the timeline grid are drawn imperatively. The component renders t
 creates a controller in a layout effect, and the controller subscribes to the store and redraws,
 so playback never re-renders React. `components/canvas/CanvasInput.ts` turns the canvas's pointer
 events into gestures, capturing the pointer so that drags keep going outside of the canvas, and
-canceling them on blur and Escape. A mouse event that shows the button is already up ends the
-gesture like its release, since a macOS trackpad can send one right before the release. The
-gestures go to `components/canvas/CanvasOverlay.ts`, which calls `actionModeService` in action
-mode and `layerTimelineService` otherwise.
+canceling them on pointercancel, context menus, blur, and Escape. A mouse move that shows the
+button is already up ends the gesture like its release, where it last was, since a macOS trackpad
+can send one right before the release. So does losing the capture, which Chrome does first for
+that move. Safari's lostpointercapture never reports buttons, so it can't tell whether the button
+is still down, and a mouse gesture is kept in every case. The gestures go to
+`components/canvas/CanvasOverlay.ts`, which calls `actionModeService` in action mode and
+`layerTimelineService` otherwise.
 
 Each canvas covers its whole panel. `components/canvas/CanvasCamera.ts` maps between its three
 coordinate spaces: viewport coordinates (the vector layer's units), panel coordinates (CSS pixels

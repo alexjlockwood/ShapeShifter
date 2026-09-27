@@ -105,6 +105,85 @@ test('selects every visible layer with Cmd+A', async ({ page, modifier }) => {
   await expect.poll(() => getSelectedNames(page)).toEqual([groupName]);
 });
 
+/** Sends a synthetic Cmd+A (Ctrl+A outside of Macs), and returns whether it was taken. */
+function pressSelectAll(
+  page: Page,
+  modifier: string,
+  init: { repeat?: boolean; ctrlKey?: boolean; metaKey?: boolean } = {},
+) {
+  return page.evaluate(
+    key => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'a',
+        code: 'KeyA',
+        keyCode: 65,
+        bubbles: true,
+        cancelable: true,
+        ...key,
+      });
+      (document.activeElement ?? document.body).dispatchEvent(event);
+      return event.defaultPrevented;
+    },
+    { ...(modifier === 'Meta' ? { metaKey: true } : { ctrlKey: true }), ...init },
+  );
+}
+
+test('swallows Cmd+A during a drag and on key repeat', async ({ page, modifier }) => {
+  await openSquares(page);
+  // The press selects a. A click first would make it a double-click, which edits the path.
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, 4, 4);
+  const middle = await artboardPoint(canvas, 6, 7);
+  const end = await artboardPoint(canvas, 8, 10);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(middle.x, middle.y, { steps: 5 });
+  // The new selection would cancel the drag.
+  expect(await pressSelectAll(page, modifier)).toBe(true);
+  expect(await getSelectedNames(page)).toEqual(['a']);
+  await page.mouse.move(end.x, end.y, { steps: 5 });
+  await page.mouse.up();
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'a')))
+    .toBe('M 6 8 L 10 8 L 10 12 L 6 12 Z');
+
+  // Holding the keys down doesn't select everything again, e.g. after a click cleared it.
+  await click(page, 20, 20);
+  await expect.poll(() => getSelectedNames(page)).toEqual([]);
+  expect(await pressSelectAll(page, modifier, { repeat: true })).toBe(true);
+  expect(await getSelectedNames(page)).toEqual([]);
+  // Nor does it with the other command key held too, which is left to the browser.
+  const other = modifier === 'Meta' ? { ctrlKey: true } : { metaKey: true };
+  expect(await pressSelectAll(page, modifier, other)).toBe(false);
+  expect(await getSelectedNames(page)).toEqual([]);
+});
+
+test('handles Cmd+A with the focus on the toolbar', async ({ page, modifier }) => {
+  await openSquares(page);
+  const toolbar = page.getByRole('toolbar', { name: 'Tools' });
+  // The pen goes back to the select tool, rather than staying on with every layer selected.
+  await page.keyboard.press('p');
+  await expect.poll(() => getToolName(page)).toBe('pen');
+  await toolbar.getByRole('button', { name: 'Pen', exact: true }).focus();
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getToolName(page)).toBe('select');
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a', 'b', 'c']);
+
+  // While editing a path, it selects every point rather than every layer, which would stop the
+  // edit.
+  const point = await artboardPoint(page.locator('.app-canvas'), 4, 4);
+  await page.mouse.dblclick(point.x, point.y);
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await toolbar.getByRole('button', { name: 'Move' }).focus();
+  await page.keyboard.press(`${modifier}+a`);
+  expect(await isEditingPath(page)).toBe(true);
+  expect(await getSelectedNames(page)).toEqual(['a']);
+  // The arrow keys belong to the toolbar while it has the focus.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 3 2 L 7 2 L 7 6 L 3 6 Z');
+});
+
 test('selects every layer with Cmd+A with the canvas editor off, except while typing', async ({
   page,
   modifier,

@@ -16,9 +16,10 @@ export interface CanvasInputHandler {
 
 /**
  * Turns the element's pointer events into gestures and hovers. A gesture captures the pointer, so
- * a drag keeps going outside of the element and ends wherever the pointer is released, or as soon
- * as an event shows that the mouse's button is already up. It's canceled if the browser takes the
- * pointer away, the window loses focus, a context menu opens, or Escape is pressed.
+ * a drag keeps going outside of the element and ends wherever the pointer is released. A mouse
+ * gesture also ends, where it last was, as soon as a move shows that the button is already up or
+ * the element loses the capture. It's canceled if the browser takes the pointer away
+ * (pointercancel), the window loses focus, a context menu opens, or Escape is pressed.
  */
 export class CanvasInput {
   private readonly router = new CanvasGestureRouter(ShortcutService.isMac());
@@ -69,10 +70,12 @@ export class CanvasInput {
           handler.onRelease(event);
         }
       }),
-      // A release also loses the capture, but the gesture has already ended by then.
       on(element, 'pointercancel', event => this.cancel(event.pointerId)),
+      // A release also loses the capture, but the gesture has already ended by then.
       on(element, 'lostpointercapture', event => {
-        if (!this.releaseIfButtonUp(event)) {
+        if (event.pointerType === 'mouse') {
+          this.releaseOnCaptureLost(event);
+        } else {
           this.cancel(event.pointerId);
         }
       }),
@@ -116,20 +119,37 @@ export class CanvasInput {
   }
 
   /**
-   * Ends the gesture as its release would, if the event shows that the mouse's main button is
-   * already up, and returns whether it did. A macOS trackpad can send a move like that right
-   * before the release, which Chrome takes the capture away for first. Canceling would throw away
-   * e.g. the pen's new point. The gesture ends where it last was, rather than where the event is,
-   * and the release that follows is ignored.
+   * Ends the gesture as its release would, if the move shows that the mouse's main button is
+   * already up. A macOS trackpad can send a move like that right before the release, and a
+   * context menu or another window can take the release. Canceling would throw away e.g. the
+   * pen's new point. The gesture ends where it last was, rather than where the move is, and the
+   * release that follows is ignored.
    */
   private releaseIfButtonUp(event: PointerEvent) {
-    const { lastGestureEvent } = this;
-    if (!this.router.upWithoutRelease(event)) {
-      return false;
+    if (this.router.upWithoutRelease(event)) {
+      this.releaseAtLastEvent(event);
     }
+  }
+
+  /**
+   * Ends the mouse's gesture as its release would, when the element loses the pointer's capture
+   * before the release. Chrome takes the capture away when a move shows that the button is
+   * already up (see releaseIfButtonUp), before it sends the move. The event's buttons can't tell
+   * that apart from the page taking the capture with the button still down, since Safari reports
+   * no buttons in either case (Chrome and Firefox report the button held). So it's kept in every
+   * browser rather than canceled in some. The browser takes touches and pens away with
+   * pointercancel instead, which still cancels.
+   */
+  private releaseOnCaptureLost(event: PointerEvent) {
+    if (this.router.up(event)) {
+      this.releaseAtLastEvent(event);
+    }
+  }
+
+  private releaseAtLastEvent(event: PointerEvent) {
+    const { lastGestureEvent } = this;
     this.endGesture(event.pointerId);
     this.handler.onRelease(lastGestureEvent ?? event);
-    return true;
   }
 
   /** Cleans up after a gesture that ended without the pointer's release. */
