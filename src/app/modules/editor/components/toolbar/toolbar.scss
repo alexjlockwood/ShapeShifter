@@ -18,6 +18,14 @@
     }
     .toolbar-action-button {
         margin-left: 16px;
+        // The activated pill is 16px wider than the button, and spreads into the margins around
+        // it, so that the other buttons don't move.
+        &.activated {
+            padding-inline: 16px;
+            margin-left: 8px;
+            margin-right: -8px;
+            border-radius: 20px;
+        }
     }
 }
 

@@ -53,12 +53,18 @@ $ss-dark-theme-background: (
 $light-accent: mat-palette($mat-blue, A400, A200, A700);
 $dark-accent: mat-palette($mat-deep-orange, A200, A100, A400);
 
+// Accent colors that pass WCAG AA in both themes. accent-fill is for backgrounds with white text
+// or icons on them (white on it is 4.9:1), and accent-text is for text and icons on the theme's
+// background (5.96:1 on #303030 and 4.54:1 on #424242 in the dark theme).
+$accent-fill: map.get($mat-blue, A700);
+
 $light-theme: (
     primary: mat-palette($mat-blue-grey, 500),
     accent: $light-accent,
+    accent-fill: $accent-fill,
+    accent-text: $accent-fill,
     warn: mat-palette($mat-red),
     is-dark: false,
-    accent-inverse: $dark-accent,
     ss-foreground: $ss-light-theme-foreground,
     ss-background: $ss-light-theme-background,
 );
@@ -66,9 +72,10 @@ $light-theme: (
 $dark-theme: (
     primary: mat-palette($mat-indigo, 700),
     accent: $dark-accent,
+    accent-fill: $accent-fill,
+    accent-text: map.get($mat-blue, 300),
     warn: mat-palette($mat-red),
     is-dark: true,
-    accent-inverse: $light-accent,
     ss-foreground: $ss-dark-theme-foreground,
     ss-background: $ss-dark-theme-background,
 );
