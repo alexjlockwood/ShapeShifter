@@ -2,6 +2,10 @@ import { ActionSource } from 'app/modules/editor/model/actionmode';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { getCanvasPixelRatio, watchDevicePixelRatio } from 'app/modules/editor/scripts/dom';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
+import type {
+  CanvasView,
+  CanvasViewportService,
+} from 'app/modules/editor/services/canvasviewport.service';
 import type { EditorServices } from 'app/modules/editor/services/createEditorServices';
 import { Duration, SnackBarService } from 'app/modules/editor/services/snackbar.service';
 import { State, Store } from 'app/modules/editor/store';
@@ -33,6 +37,7 @@ export interface CanvasElements {
  */
 export class CanvasController extends DestroyableMixin() {
   private viewport: Size | undefined;
+  private view: CanvasView | undefined;
   private camera: CanvasCamera | undefined;
   private resizeObserver: ResizeObserver | undefined;
   private stopWatchingPixelRatio: (() => void) | undefined;
@@ -41,6 +46,7 @@ export class CanvasController extends DestroyableMixin() {
   private readonly canvasRulers: ReadonlyArray<CanvasRuler>;
   private readonly features: Features;
   private readonly snackBarService: SnackBarService;
+  private readonly canvasViewportService: CanvasViewportService;
   private canvasEditor: CanvasEditor | undefined;
   private isDisposed = false;
 
@@ -50,6 +56,7 @@ export class CanvasController extends DestroyableMixin() {
     private readonly store: Store<State>,
     {
       actionModeService,
+      canvasViewportService,
       layerTimelineService,
       themeService,
       snackBarService,
@@ -59,6 +66,7 @@ export class CanvasController extends DestroyableMixin() {
     super();
     this.features = features;
     this.snackBarService = snackBarService;
+    this.canvasViewportService = canvasViewportService;
     this.canvasLayers = new CanvasLayers(elements.layers, actionSource, store);
     this.canvasOverlay = new CanvasOverlay(
       elements.overlay,
@@ -93,6 +101,12 @@ export class CanvasController extends DestroyableMixin() {
           }
           this.layout();
         }),
+    );
+    this.registerSubscription(
+      this.canvasViewportService.asObservable().subscribe(view => {
+        this.view = view;
+        this.layout();
+      }),
     );
     // Resize observers call back after layout and before paint, so the canvases never show at
     // the wrong size.
@@ -173,16 +187,17 @@ export class CanvasController extends DestroyableMixin() {
     }
   }
 
-  /** Fits the artboard to the panel, and redraws everything at the new size. */
+  /** Shows the view in the panel, and redraws everything. */
   private layout() {
-    if (!this.viewport) {
+    if (!this.viewport || !this.view) {
       return;
     }
     const { width, height } = this.elements.root.getBoundingClientRect();
-    const camera = CanvasCamera.fit({
+    const camera = CanvasCamera.create({
       panel: { w: width, h: height },
       viewport: this.viewport,
       pixelRatio: getCanvasPixelRatio(width, height),
+      view: this.view,
     });
     this.camera = camera;
     const { x, y, w, h } = camera.getArtboardRect();
@@ -220,9 +235,11 @@ export class CanvasController extends DestroyableMixin() {
     if (!this.camera) {
       return;
     }
-    const { left, top } = this.elements.artboard.getBoundingClientRect();
-    const x = (event.clientX - left) / Math.max(1, this.camera.scale);
-    const y = (event.clientY - top) / Math.max(1, this.camera.scale);
+    const { left, top } = this.elements.root.getBoundingClientRect();
+    const { x, y } = this.camera.panelToViewport({
+      x: event.clientX - left,
+      y: event.clientY - top,
+    });
     this.canvasRulers.forEach(r => r.showMouse({ x: round(x), y: round(y) }));
   }
 

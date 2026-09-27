@@ -35,9 +35,11 @@ Each canvas covers its whole panel. `components/canvas/CanvasCamera.ts` maps bet
 coordinate spaces: viewport coordinates (the vector layer's units), panel coordinates (CSS pixels
 from the panel's top left), and device coordinates (pixels in the backing store). Draw and hit
 test through it rather than scaling by hand, and convert pixel sizes like tolerances with
-`toViewportLength`. For now it only fits the artboard to the panel. The white artboard is a div
-under the canvases, which ignore the mouse, so mouse events go to it and clicks around it reach
-the workspace.
+`toViewportLength`. The view it shows, fit or a scale and a center, is in
+`services/canvasviewport.service.ts`, outside the store so that undo leaves it alone, and the
+three canvases in action mode share it. Nothing zooms yet. The white artboard is a div under the
+canvases, which ignore the mouse, so mouse events go to it and clicks around it reach the
+workspace. The rulers are inside of it too, so hovering over it shows them.
 
 The new canvas editor is in `components/canvaseditor/`, and it's only downloaded when its feature
 is on (`src/environments/features.ts`). `components/canvas/CanvasController.ts` loads it through

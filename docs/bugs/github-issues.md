@@ -193,7 +193,6 @@ These are still bugs, and the entry named here covers them.
 | #185  | MODEL-9 (bounds of rotated groups)                                                          |
 | #186  | `BUGS.md` "The editor draws strokes in scaled groups at the wrong width", and CANVAS-3      |
 | #224  | MODEL-5 (gradients import as black). Gradient support itself is #144.                       |
-| #249  | CANVAS-5 (rulers show CSS pixels)                                                           |
 | #257  | EXP-1 (empty `android:pathData`)                                                            |
 | #286  | CANVAS-1 (stroke drawn under the fill)                                                      |
 | #292  | `BUGS.md` stroke width entry and CANVAS-4. Its "expected" screenshot shows EXP-2.           |
@@ -228,6 +227,7 @@ These are still bugs, and the entry named here covers them.
 | #283       | `7ae9d739` and `707764f0`                                                                   |
 | #291       | The theme switch is an MUI `Switch` now, and clicking it works in Chrome                    |
 | #293       | Rewritten auto fix. The attached paths weren't identical, and the result keeps both shapes. |
+| #249       | The rulers are laid out from the canvas's camera, in viewport units (CANVAS-5)              |
 | #301       | The preview draws the animated layer at t=0 (`BUGS.md`, "Fixed during the migration")       |
 | #320       | Ids are kept, so paths with ids stay separate layers. Paths without ids still merge.        |
 | #339       | `fc991051`. The reporter's file exports in all four formats.                                |
