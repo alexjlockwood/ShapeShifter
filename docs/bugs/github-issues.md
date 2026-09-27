@@ -229,6 +229,7 @@ These are still bugs, and the entry named here covers them.
 | #291       | The theme switch is an MUI `Switch` now, and clicking it works in Chrome                    |
 | #293       | Rewritten auto fix. The attached paths weren't identical, and the result keeps both shapes. |
 | #301       | The preview draws the animated layer at t=0 (`BUGS.md`, "Fixed during the migration")       |
+| #304       | Paths have their own rotation, scale, pivot, and translation, and the exports wrap them     |
 | #320       | Ids are kept, so paths with ids stay separate layers. Paths without ids still merge.        |
 | #332       | "Convert to clip path" only checks the layer's own blocks (`buildContextMenu.ts`)           |
 | #339       | `fc991051`. The reporter's file exports in all four formats.                                |
@@ -346,7 +347,6 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #290  | Show the exported XML in the page        | Not implemented                                                           |
 | #298  | Red toolbar for incompatible paths       | A red status strip under the app bar says why the paths don't morph       |
 | #302  | Optimize imported VectorDrawables        | Not implemented (redundant moves are kept)                                |
-| #304  | Animate transforms on paths              | Works by grouping the path                                                |
 | #307  | Bulk import                              | Several files import at once (see the mixed drop entry above)             |
 | #315  | Export one animated SVG                  | Not implemented (see CSS keyframes in `IMPROVEMENTS.md`)                  |
 | #318  | Flutter export                           | Not implemented. Lottie would cover it.                                   |

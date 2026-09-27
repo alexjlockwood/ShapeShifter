@@ -8,6 +8,7 @@ import {
 } from 'app/modules/editor/model/layers';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
 import { isNil } from 'lodash-es';
+import { wrapPathTransforms } from './wrapPathTransforms';
 import * as XmlSerializer from './XmlSerializer';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
@@ -17,6 +18,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * Serializes an VectorLayer to a SVG string.
  */
 export function toSvgString(vl: VectorLayer, width?: number, height?: number) {
+  vl = wrapPathTransforms(vl);
   const xmlDoc = document.implementation.createDocument(null, 'svg', null);
   const rootNode = xmlDoc.documentElement;
   rootNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
@@ -37,6 +39,7 @@ export function toSvgSpriteFrameString(
   translateY = 0,
   frameNumber = '',
 ) {
+  vectorLayer = wrapPathTransforms(vectorLayer);
   const xmlDoc = document.implementation.createDocument(null, 'g', null);
   const rootNode = xmlDoc.documentElement;
   vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, false, frameNumber);

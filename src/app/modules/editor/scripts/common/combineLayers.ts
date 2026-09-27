@@ -38,10 +38,12 @@ export function getCombinedLayerIds(
 
 /**
  * Combines the selected paths into the bottom one, as one path with a subpath for each of theirs,
- * and removes the others. Each path is mapped into the bottom one's coordinates, so that it stays
- * where it's drawn. The combined path keeps the bottom one's style, name, id, and animations, and
- * gets an even-odd fill, so that a shape inside of another one is a hole in it (e.g. two ellipses
- * make a donut). Returns the new document and the combined path's id, or why it can't.
+ * and removes the others. Each path is mapped into the bottom one's coordinates, inside its own
+ * transform, so that it stays where it's drawn (LayerUtil.getCanvasTransformForLayer includes a
+ * path's transform). The combined path keeps the bottom one's style, transform, name, id, and
+ * animations, and gets an even-odd fill, so that a shape inside of another one is a hole in it
+ * (e.g. two ellipses make a donut). Returns the new document and the combined path's id, or why it
+ * can't.
  */
 export function combineLayers(
   document: LayerDocument,
@@ -116,10 +118,11 @@ export function getBrokenApartLayerIds(
 
 /**
  * Splits each of the selected paths that has several subpaths into a path for each one, in their
- * order, so the first is drawn at the bottom. The first piece keeps the path's id, name, and
- * animations. The others go right above it, with new ids, unique names, and copies of its
- * animation blocks, and they're hidden if it is. Returns the new document, the pieces' ids, and the
- * hidden layer ids, or why it can't.
+ * order, so the first is drawn at the bottom. Every piece keeps the path's style and transform,
+ * so it stays where it's drawn. The first piece keeps the path's id, name, and animations. The
+ * others go right above it, with new ids, unique names, and copies of its animation blocks, and
+ * they're hidden if it is. Returns the new document, the pieces' ids, and the hidden layer ids, or
+ * why it can't.
  */
 export function breakApartLayers(
   document: LayerDocument,

@@ -204,6 +204,28 @@ describe('buildContextMenu', () => {
     expect(find(build([outer, empty]), 'flatten')).toBeUndefined();
   });
 
+  it("says when a path's animated transform or a skew keeps a group from being flattened", () => {
+    const spinning = path('spinning');
+    const withPath = new GroupLayer({ name: 'withPath', children: [spinning, path('still')] });
+    const turned = new GroupLayer({ name: 'turned', children: [path('b')], rotation: 30 });
+    const stretched = new GroupLayer({ name: 'stretched', children: [turned], scaleX: 2 });
+    // A transformed path would be skewed too, but its transform goes into its path instead.
+    const turnedPath = path('turnedPath', { rotation: 30 });
+    const stretchedPath = new GroupLayer({
+      name: 'stretchedPath',
+      children: [turnedPath],
+      scaleX: 2,
+    });
+    load([withPath, stretched, stretchedPath], [block(spinning.id, 'rotation', 0, 90)]);
+    expect(find(build([withPath]), 'flatten')?.disabledReason).toBe(
+      "spinning's transform is animated",
+    );
+    expect(find(build([stretched]), 'flatten')?.disabledReason).toBe(
+      'Flattening would skew turned',
+    );
+    expect(find(build([stretchedPath]), 'flatten')?.disabledReason).toBeUndefined();
+  });
+
   it('combines paths, breaks them apart, and offers the boolean operations', () => {
     const a = path('a');
     const b = path('b', { pathData: new Path('M 12 12 L 20 12 L 20 20 Z') });

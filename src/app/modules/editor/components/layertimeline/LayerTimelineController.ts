@@ -271,10 +271,12 @@ export class LayerTimelineController extends DestroyableMixin() {
 
   onAddPathLayerClick() {
     const vl = getVectorLayer(this.store.getState());
+    const parentId = this.services.layerTimelineService.getParentIdForNewLayer();
     const layer = new PathLayer({
       name: LayerUtil.getUniqueLayerName([vl], 'path'),
       children: [],
       pathData: undefined,
+      ...LayerUtil.getCenterPivot(vl, parentId),
     });
     this.services.layerTimelineService.addLayer(layer);
   }

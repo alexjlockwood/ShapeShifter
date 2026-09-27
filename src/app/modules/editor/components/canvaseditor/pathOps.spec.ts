@@ -82,6 +82,24 @@ describe('combinePaths', () => {
     ]);
   });
 
+  it('combines paths into a transformed one inside of its transform, which it keeps', () => {
+    // a is drawn twice as big, from (4, 4) to (20, 20), and b 4 units to the right, from (6, 2)
+    // to (14, 10).
+    const scaled = square('a', 2, 2, 8, { scaleX: 2, scaleY: 2 });
+    const moved = square('b', 2, 2, 8, { translateX: 4 });
+    const doc = document(scaled, moved);
+    const result = combinePaths(pk, doc, [scaled.id, moved.id], 'union');
+    const combined = result?.document.vectorLayer.findLayerById(scaled.id) as PathLayer;
+    expect([combined.scaleX, combined.scaleY]).toEqual([2, 2]);
+    // Half the size in a's coordinates.
+    expect(bounds(combined)).toEqual([2, 1, 10, 10]);
+    // From (6, 4) to (14, 10) on the canvas, and 4 units to the left in b's coordinates.
+    const other = combinePaths(pk, doc, [moved.id, scaled.id], 'intersect');
+    expect(bounds(other?.document.vectorLayer.findLayerById(moved.id) as PathLayer)).toEqual([
+      2, 4, 10, 10,
+    ]);
+  });
+
   it("only combines two or more paths that aren't animated", () => {
     const doc = document(a, b);
     expect(getBooleanLayerIds(doc, [a.id])).toBeUndefined();
