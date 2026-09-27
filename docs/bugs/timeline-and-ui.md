@@ -26,9 +26,9 @@
 - **"Convert to clip path" is hidden whenever any layer has a non-path animation.** The menu
   button's visibility check looks at every block in the whole animation instead of just the blocks
   on the layer being converted, so an unrelated layer's rotation block hides the button on a path
-  with only a `pathData` animation (`components/layertimeline/LayerListTree.tsx`). (UI-5, confirmed
-  by an e2e test; a candidate fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, needs
-  a rebase before reuse)
+  with only a `pathData` animation (`components/layertimeline/LayerListTree.tsx`). (UI-5, GitHub
+  #332, confirmed by an e2e test; a candidate fix exists on the unmerged `alex/fix-sweep-quick-wins`
+  branch, needs a rebase before reuse)
 - **Shift-scaling several blocks of one property can make them overlap.** With blocks from 0 to
   100 and 100 to 200 selected, Shift-dragging the second one's end to 10 ms gives 0 to 10 and 5
   to 15. Each block's minimum length is enforced by pushing its end out. Clamp the scale so every
@@ -57,11 +57,11 @@
   (`components/propertyinput/buildPropertyInputModel.ts`). (UI-12, confirmed by a test; a
   candidate fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, needs a rebase before
   reuse)
-- **The inspector accepts block times that the timeline would reject.** The inspector stores an
-  end time before the start time, past the duration, or overlapping another block of the same
-  property. An end before the start exports a negative `android:duration`. Validate against the
-  block's neighbors and the duration (`components/propertyinput/buildPropertyInputModel.ts`).
-  (UI-13, low, confirmed by reading)
+- **The inspector accepts block times that the timeline would reject.** The inspector stores an end
+  time before the start time, past the duration, or overlapping another block of the same property.
+  An end before the start exports a negative `android:duration`. Validate against the block's
+  neighbors and the duration (`components/propertyinput/buildPropertyInputModel.ts`). (UI-13, GitHub
+  #184, low, confirmed by reading)
 - **The wheel zoom can start from a stale zoom level.** Zoom in to the maximum, scroll one more
   notch, zoom to fit, then zoom out a little: the zoom jumps far in instead. The extra notch leaves
   `targetHorizZoom` at the maximum, and it's only reset when the zoom changes (the same happens at

@@ -122,6 +122,9 @@ explains why, and what's worth reusing. `model/paper/` and `store/paper/` are co
   records the port from Angular. A large batch found by an automated sweep lives in `docs/bugs/`,
   one file per area of the app, linked from `BUGS.md`; add a new sweep's findings the same way if
   the batch is too big for `BUGS.md` itself.
+- `docs/bugs/github-issues.md` triages the open GitHub issues. Entries cite the issues they cover
+  as "GitHub #N". The live site lags `master`, so an issue should only be closed once its fix is
+  deployed.
 - `IMPROVEMENTS.md` surveys possible improvements, with rough estimates.
 
 ## Commits and pull requests
