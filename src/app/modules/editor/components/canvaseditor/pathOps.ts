@@ -1,4 +1,5 @@
 import type { CanvasDocument } from 'app/modules/editor/components/canvas/CanvasPreview';
+import type { FillType } from 'app/modules/editor/model/layers';
 import { LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Matrix } from 'app/modules/editor/scripts/common';
@@ -137,15 +138,15 @@ export function outlineStrokes(
     if (!(layer instanceof PathLayer) || !layer.pathData) {
       continue;
     }
-    const pathData = outlineStroke(pk, layer);
-    if (!pathData) {
+    const outlined = outlineStroke(pk, layer);
+    if (!outlined) {
       continue;
     }
     const outline = layer.clone();
-    outline.pathData = new Path(pathData);
+    outline.pathData = new Path(outlined.pathData);
     outline.fillColor = layer.strokeColor;
     outline.fillAlpha = layer.strokeAlpha;
-    outline.fillType = 'nonZero';
+    outline.fillType = outlined.fillType;
     outline.strokeColor = '';
     outline.strokeWidth = 0;
     outline.trimPathStart = 0;
@@ -201,9 +202,19 @@ function outlineStroke(pk: PathKit, layer: PathLayer) {
       cap: caps[layer.strokeLinecap] ?? pk.StrokeCap.BUTT,
       miter_limit: layer.strokeMiterLimit,
     });
-    // The outline overlaps itself where the path turns sharply or crosses itself.
+    // The outline overlaps itself where the path turns sharply or crosses itself. Its fill type
+    // says which of the overlaps are gaps, e.g. where two strokes just cross without enclosing
+    // an area, rather than everything simplify touched.
     const simplified = stroked?.simplify();
-    return simplified?.toSVGString() || undefined;
+    if (!simplified) {
+      return undefined;
+    }
+    const pathData = simplified.toSVGString();
+    if (!pathData) {
+      return undefined;
+    }
+    const fillType: FillType = simplified.getFillTypeString() === 'evenodd' ? 'evenOdd' : 'nonZero';
+    return { pathData, fillType };
   } finally {
     skPath.delete();
   }
