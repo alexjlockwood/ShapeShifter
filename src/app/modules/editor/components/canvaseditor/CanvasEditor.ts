@@ -6,9 +6,9 @@ import type {
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
 import type { CanvasPreview } from 'app/modules/editor/components/canvas/CanvasPreview';
 import { VectorLayer } from 'app/modules/editor/model/layers';
-import { Path } from 'app/modules/editor/model/paths';
+import { Path, PathEdit } from 'app/modules/editor/model/paths';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
-import { Point } from 'app/modules/editor/scripts/common';
+import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { on } from 'app/modules/editor/scripts/dom';
 import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
@@ -22,6 +22,7 @@ import { combineLatest, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
 import { EditorRenderer } from './EditorRenderer';
+import { getLayerPath, PathEditTool } from './PathEditTool';
 import { Modifiers, SelectTool } from './SelectTool';
 import { duplicateLayers, getTopmostLayerIds, translateLayers } from './transformLayers';
 
@@ -38,10 +39,13 @@ const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
 // Pressing or releasing these during a drag changes what it does, e.g. Shift keeps a move straight.
 const MODIFIER_KEYS: ReadonlySet<string> = new Set(['Shift', 'Alt', 'Meta', 'Control']);
 
+// Presses closer together than this, in milliseconds and CSS pixels, are a double-click.
+const DOUBLE_CLICK_TIME = 500;
+const DOUBLE_CLICK_DISTANCE = 4;
+
 interface Nudge {
-  readonly base: CanvasDocument;
-  readonly rendered: VectorLayer;
-  readonly layerIds: ReadonlyArray<string>;
+  // Shows the selection moved by a distance.
+  readonly apply: (x: number, y: number) => void;
   // How far it's moved the selection so far.
   x: number;
   y: number;
@@ -70,6 +74,9 @@ class Editor implements CanvasEditor {
   private isActionMode = false;
   private readonly renderer: EditorRenderer;
   private readonly selectTool: SelectTool;
+  // The path whose points are being edited, if any. The select tool is used otherwise.
+  private pathEdit: PathEditTool | undefined;
+  private lastPress: { readonly time: number; readonly point: Point; count: number } | undefined;
   private subscription: Subscription | undefined;
   private removeKeyListeners: (() => void) | undefined;
   // An arrow key nudge in progress, which is one undo step however long the key is held.
@@ -90,6 +97,7 @@ class Editor implements CanvasEditor {
       render: document => this.render(document),
       preview,
       redraw: () => this.draw(),
+      editPath: layerId => this.startPathEdit(layerId),
     });
   }
 
@@ -109,6 +117,18 @@ class Editor implements CanvasEditor {
         this.selectTool.onLeave();
       }
       this.isActionMode = actionMode;
+      const { pathEdit } = this;
+      if (
+        pathEdit &&
+        (actionMode ||
+          selectedLayerIds.size !== 1 ||
+          !selectedLayerIds.has(pathEdit.layerId) ||
+          !getLayerPath(this.vectorLayer, pathEdit.layerId) ||
+          (!preview.isEditing() && !preview.canEditPath(pathEdit.layerId)))
+      ) {
+        // E.g. another layer was selected in the layer list, or undo took the path away.
+        this.stopPathEdit();
+      }
       this.draw();
     });
     // Before the keyboard shortcuts, so that the arrow keys nudge instead of rewinding.
@@ -118,7 +138,12 @@ class Editor implements CanvasEditor {
       on(window, 'blur', () => this.endNudge()),
     ];
     this.removeKeyListeners = () => removeListeners.forEach(remove => remove());
-    this.removeTestHooks = environment.production ? undefined : addTestHooks(preview);
+    this.removeTestHooks = environment.production ? undefined : addTestHooks(preview, this);
+  }
+
+  /** Whether a path's points are being edited, for the end-to-end tests. */
+  isEditingPath() {
+    return !!this.pathEdit;
   }
 
   setCamera(camera: CanvasCamera) {
@@ -129,25 +154,26 @@ class Editor implements CanvasEditor {
 
   onPress(event: PointerEvent, point: Point) {
     this.endNudge();
-    this.selectTool.onPress(point, getModifiers(event));
+    this.getTool().onPress(point, getModifiers(event), this.countClicks(event, point));
   }
 
   onMove(event: PointerEvent, point: Point) {
-    this.selectTool.onMove(point, getModifiers(event));
+    this.getTool().onMove(point, getModifiers(event));
   }
 
   onRelease(_: PointerEvent, point: Point) {
-    this.selectTool.onRelease(point);
+    this.getTool().onRelease(point);
   }
 
   onLeave() {
-    this.selectTool.onLeave();
+    this.getTool().onLeave();
   }
 
   dispose() {
     this.subscription?.unsubscribe();
     this.removeKeyListeners?.();
     this.nudge = undefined;
+    this.pathEdit = undefined;
     this.removeTestHooks?.();
     this.renderer.clear();
     delete this.context.root.dataset.editorCursor;
@@ -161,18 +187,86 @@ class Editor implements CanvasEditor {
     );
   }
 
+  private getTool() {
+    return this.pathEdit ?? this.selectTool;
+  }
+
+  /** Returns 2 for the second press of a double-click, and so on. */
+  private countClicks(event: PointerEvent, point: Point) {
+    const { lastPress, camera } = this;
+    const maxDistance = camera ? camera.toViewportLength(DOUBLE_CLICK_DISTANCE) : 0;
+    if (
+      lastPress &&
+      event.timeStamp - lastPress.time < DOUBLE_CLICK_TIME &&
+      MathUtil.distance(lastPress.point, point) <= maxDistance
+    ) {
+      this.lastPress = { time: event.timeStamp, point, count: lastPress.count + 1 };
+    } else {
+      this.lastPress = { time: event.timeStamp, point, count: 1 };
+    }
+    return this.lastPress.count;
+  }
+
+  /** Starts editing the layer's points, if its path can be edited now. */
+  private startPathEdit(layerId: string) {
+    const { preview, services } = this.context;
+    if (this.isActionMode || !preview.canEditPath(layerId)) {
+      return;
+    }
+    this.endNudge();
+    this.selectTool.onLeave();
+    services.layerTimelineService.setSelectedLayers(new Set([layerId]));
+    this.pathEdit = new PathEditTool({
+      layerId,
+      getVectorLayer: () => this.vectorLayer,
+      getHiddenLayerIds: () => this.hiddenLayerIds,
+      toViewportLength: length => this.camera?.toViewportLength(length) ?? length,
+      preview,
+      redraw: () => this.draw(),
+    });
+    this.draw();
+  }
+
+  private stopPathEdit() {
+    const { pathEdit } = this;
+    if (pathEdit) {
+      this.endNudge();
+      this.pathEdit = undefined;
+      pathEdit.onLeave();
+      this.draw();
+    }
+  }
+
   private onKeyDown(event: KeyboardEvent) {
     if (MODIFIER_KEYS.has(event.key)) {
-      this.selectTool.onModifiersChange(getModifiers(event));
+      this.getTool().onModifiersChange(getModifiers(event));
       return undefined;
     }
     const target = event.target instanceof Element ? event.target : undefined;
     if (
+      // E.g. Escape, which the canvas took to cancel a drag.
+      event.defaultPrevented ||
       this.isActionMode ||
       !this.selectedLayerIds.size ||
       target?.closest('.MuiModal-root') ||
       document.activeElement?.matches('input, textarea, [contenteditable]')
     ) {
+      return undefined;
+    }
+    if (this.pathEdit) {
+      return this.onPathEditKeyDown(event, this.pathEdit);
+    }
+    if (
+      event.key === 'Enter' &&
+      !hasModifiers(event) &&
+      this.selectedLayerIds.size === 1 &&
+      !document.activeElement?.matches('button, a, [role="button"], [role="menuitem"]')
+    ) {
+      const [layerId] = this.selectedLayerIds;
+      if (getLayerPath(this.vectorLayer, layerId)) {
+        this.startPathEdit(layerId);
+        return false;
+      }
       return undefined;
     }
     const arrow = ARROWS[event.key];
@@ -212,9 +306,53 @@ class Editor implements CanvasEditor {
     return false;
   }
 
+  private onPathEditKeyDown(event: KeyboardEvent, pathEdit: PathEditTool) {
+    const { key } = event;
+    const isCommand = ShortcutService.isOsDependentModifierKey(event);
+    const arrow = ARROWS[key];
+    const pointType = /^[1-4]$/.test(key) ? PathEdit.POINT_TYPES[Number(key) - 1] : undefined;
+    const isHandled =
+      (!hasModifiers(event) && (key === 'Escape' || key === 'Enter' || !!pointType)) ||
+      key === 'Backspace' ||
+      key === 'Delete' ||
+      (key === 'Tab' && !isCommand && !event.altKey) ||
+      (!!arrow && !event.altKey && !isCommand && !event.ctrlKey) ||
+      (isCommand && (key.toLowerCase() === 'a' || key.toLowerCase() === 'd'));
+    if (!isHandled) {
+      return undefined;
+    }
+    if (this.context.preview.isEditing() && !this.nudge) {
+      // A drag is in progress.
+      return false;
+    }
+    if (arrow) {
+      const distance = event.shiftKey ? BIG_NUDGE : NUDGE;
+      this.nudgeBy(arrow[0] * distance, arrow[1] * distance);
+      return false;
+    }
+    this.endNudge();
+    if (key === 'Escape' || key === 'Enter') {
+      this.stopPathEdit();
+    } else if (key === 'Backspace' || key === 'Delete') {
+      if (pathEdit.deleteSelected() === 'empty') {
+        // Deleting every point deletes the layer, like Figma.
+        this.stopPathEdit();
+        this.context.services.layerTimelineService.deleteSelectedModels();
+      }
+    } else if (key === 'Tab') {
+      pathEdit.selectAdjacent(event.shiftKey ? -1 : 1);
+    } else if (pointType) {
+      pathEdit.setPointType(pointType);
+    } else if (key.toLowerCase() === 'a') {
+      pathEdit.selectAll();
+    }
+    // Cmd+D does nothing while points are edited, rather than bookmarking the page.
+    return false;
+  }
+
   private onKeyUp(event: KeyboardEvent) {
     if (MODIFIER_KEYS.has(event.key)) {
-      this.selectTool.onModifiersChange(getModifiers(event));
+      this.getTool().onModifiersChange(getModifiers(event));
     }
     if (ARROWS[event.key]) {
       this.endNudge();
@@ -230,20 +368,35 @@ class Editor implements CanvasEditor {
         this.nudge = undefined;
       });
       const base = preview.getBase();
-      const layerIds = base ? getTopmostLayerIds(base.vectorLayer, this.selectedLayerIds) : [];
-      if (!base || !layerIds.length) {
-        // E.g. an empty vector layer is selected.
+      const apply = base && this.getNudge(base);
+      if (!apply) {
+        // E.g. an empty vector layer, or no points, are selected.
         preview.cancel();
         return;
       }
-      this.nudge = { base, rendered: this.render(base), layerIds, x: 0, y: 0 };
+      this.nudge = { apply, x: 0, y: 0 };
     }
     const nudge = this.nudge;
     nudge.x += dx;
     nudge.y += dy;
-    preview.setDocument(
-      translateLayers(nudge.base, nudge.rendered, nudge.layerIds, nudge.x, nudge.y),
-    );
+    nudge.apply(nudge.x, nudge.y);
+  }
+
+  /** Returns what moves the selected points, or else the selected layers, by a distance. */
+  private getNudge(base: CanvasDocument) {
+    const { preview } = this.context;
+    const { pathEdit } = this;
+    if (pathEdit) {
+      const move = pathEdit.getPointsMove(base);
+      return move && ((x: number, y: number) => preview.setPath(pathEdit.layerId, move.move(x, y)));
+    }
+    const layerIds = getTopmostLayerIds(base.vectorLayer, this.selectedLayerIds);
+    if (!layerIds.length) {
+      return undefined;
+    }
+    const rendered = this.render(base);
+    return (x: number, y: number) =>
+      preview.setDocument(translateLayers(base, rendered, layerIds, x, y));
   }
 
   /** Commits the nudge in progress, e.g. when the arrow key is released. */
@@ -265,22 +418,28 @@ class Editor implements CanvasEditor {
       delete this.context.root.dataset.editorCursor;
       return;
     }
+    const pathEdit = this.pathEdit?.getDrawing();
     this.renderer.draw(camera, {
       vectorLayer: this.vectorLayer,
-      hoveredLayerId: this.selectTool.getHoveredLayerId(),
+      hoveredLayerId: pathEdit ? undefined : this.selectTool.getHoveredLayerId(),
       selectedLayerIds: this.selectedLayerIds,
       isShowingHandles: this.selectTool.isShowingHandles(),
-      marquee: this.selectTool.getMarquee(),
-      guides: this.selectTool.getGuides(),
+      marquee: pathEdit ? pathEdit.marquee : this.selectTool.getMarquee(),
+      guides: pathEdit ? pathEdit.guides : this.selectTool.getGuides(),
+      pathEdit,
     });
     // The panel's styles turn this into a cursor (components/canvas/canvas.scss).
-    const cursor = this.selectTool.getCursor();
+    const cursor = this.pathEdit ? undefined : this.selectTool.getCursor();
     if (cursor) {
       this.context.root.dataset.editorCursor = cursor;
     } else {
       delete this.context.root.dataset.editorCursor;
     }
   }
+}
+
+function hasModifiers(event: KeyboardEvent) {
+  return event.shiftKey || event.altKey || event.metaKey || event.ctrlKey;
 }
 
 function getModifiers(event: MouseEvent | KeyboardEvent): Modifiers {
@@ -292,7 +451,7 @@ function getModifiers(event: MouseEvent | KeyboardEvent): Modifiers {
   };
 }
 
-function addTestHooks(preview: CanvasPreview) {
+function addTestHooks(preview: CanvasPreview, editor: { isEditingPath(): boolean }) {
   const devGlobal = (window as { shapeshifter?: { canvasEditor?: unknown } }).shapeshifter;
   if (!devGlobal) {
     return undefined;
@@ -308,6 +467,7 @@ function addTestHooks(preview: CanvasPreview) {
     commit: () => preview.commit(),
     cancel: () => preview.cancel(),
     isEditing: () => preview.isEditing(),
+    isEditingPath: () => editor.isEditingPath(),
   };
   return () => {
     delete devGlobal.canvasEditor;

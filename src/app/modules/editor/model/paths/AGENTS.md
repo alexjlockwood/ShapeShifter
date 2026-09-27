@@ -30,6 +30,9 @@ splitting, deleting, and index mapping in `model/paths/Path.ts`. Read the tests 
 - `services/actionmode.service.ts` and the helpers in `components/canvas/` (splitting, selecting,
   and hover previews) call the mutators. After each edit in action mode, `autoAddCollapsingSubPaths`
   and `autoConvert` run against the other path, so the two stay morphable.
+- The canvas editor edits points with `model/paths/PathEdit.ts`, which sees each subpath as anchors
+  joined by segments. It builds a new `Path` from commands, which keeps the command ids (an
+  anchor's id is the id of the command that ends at it) but drops the action mode state above.
 - Two paths are morphable (`isMorphableWith`) when their commands match type for type.
 - Auto fix (`scripts/algorithms/AutoAwesome.ts`) lines up the commands of two paths with the
   Needleman-Wunsch algorithm (`scripts/algorithms/NeedlemanWunsch.ts`), trying every reversal and

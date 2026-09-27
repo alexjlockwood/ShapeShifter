@@ -8,6 +8,7 @@ import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Rect } from 'app/modules/editor/scripts/common';
 import { getContext2d } from 'app/modules/editor/scripts/dom';
 
+import type { PathEditDrawing } from './PathEditTool';
 import { getHandlePoint, getVisibleHandles, HANDLE_SIZE } from './selectionHandles';
 import type { SnapGuide } from './snapping';
 
@@ -21,6 +22,11 @@ const GUIDE_LINE_WIDTH = 1;
 const HOVER_LINE_WIDTH = 2;
 const SELECTED_LINE_WIDTH = 1;
 const BOUNDS_LINE_WIDTH = 1;
+// The radii of a path's points and handles, and of the one a click would add, in CSS pixels.
+const ANCHOR_RADIUS = 3.5;
+const HOVERED_ANCHOR_RADIUS = 4.5;
+const CONTROL_RADIUS = 3;
+const INSERT_POINT_RADIUS = 3;
 
 export interface EditorDrawing {
   readonly vectorLayer: VectorLayer;
@@ -29,6 +35,8 @@ export interface EditorDrawing {
   readonly isShowingHandles: boolean;
   readonly marquee: Rect | undefined;
   readonly guides: ReadonlyArray<SnapGuide>;
+  /** The points of the path being edited, which replace the selection's bounds. */
+  readonly pathEdit?: PathEditDrawing;
 }
 
 /** Draws the editor's outlines, bounds, and marquee on its own canvas, over the others. */
@@ -52,8 +60,15 @@ export class EditorRenderer {
     // Line widths are in viewport units under the transform.
     const toViewport = (length: number) => camera.toViewportLength(length);
 
-    const { vectorLayer, hoveredLayerId, selectedLayerIds, isShowingHandles, marquee, guides } =
-      drawing;
+    const {
+      vectorLayer,
+      hoveredLayerId,
+      selectedLayerIds,
+      isShowingHandles,
+      marquee,
+      guides,
+      pathEdit,
+    } = drawing;
     const outline = (layerId: string, lineWidth: number) => {
       const layer = vectorLayer.findLayerById(layerId);
       if (isMorphableLayer(layer) && layer.pathData) {
@@ -69,7 +84,10 @@ export class EditorRenderer {
       outline(hoveredLayerId, HOVER_LINE_WIDTH);
     }
 
-    const bounds = getLayersBounds(vectorLayer, selectedLayerIds);
+    const bounds = pathEdit ? undefined : getLayersBounds(vectorLayer, selectedLayerIds);
+    if (pathEdit) {
+      drawPathEdit(ctx, pathEdit, toViewport);
+    }
     if (bounds) {
       ctx.beginPath();
       ctx.rect(bounds.l, bounds.t, bounds.r - bounds.l, bounds.b - bounds.t);
@@ -113,5 +131,66 @@ export class EditorRenderer {
       ctx.stroke();
     }
     ctx.restore();
+  }
+}
+
+function drawPathEdit(
+  ctx: CanvasRenderingContext2D,
+  drawing: PathEditDrawing,
+  toViewport: (length: number) => number,
+) {
+  const { hoveredSegment, handles, anchors, insertPoint } = drawing;
+  const circle = (x: number, y: number, radius: number, fill: string, stroke: string) => {
+    ctx.beginPath();
+    ctx.arc(x, y, toViewport(radius), 0, 2 * Math.PI);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = toViewport(SELECTED_LINE_WIDTH);
+    ctx.stroke();
+  };
+  if (hoveredSegment) {
+    const [start, ...rest] = hoveredSegment;
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    if (rest.length === 3) {
+      ctx.bezierCurveTo(rest[0].x, rest[0].y, rest[1].x, rest[1].y, rest[2].x, rest[2].y);
+    } else if (rest.length === 2) {
+      ctx.quadraticCurveTo(rest[0].x, rest[0].y, rest[1].x, rest[1].y);
+    } else {
+      ctx.lineTo(rest[0].x, rest[0].y);
+    }
+    ctx.strokeStyle = EDITOR_COLOR;
+    ctx.lineWidth = toViewport(HOVER_LINE_WIDTH);
+    ctx.stroke();
+  }
+  for (const { anchor, handle } of handles) {
+    ctx.beginPath();
+    ctx.moveTo(anchor.x, anchor.y);
+    ctx.lineTo(handle.x, handle.y);
+    ctx.strokeStyle = EDITOR_COLOR;
+    ctx.lineWidth = toViewport(SELECTED_LINE_WIDTH);
+    ctx.stroke();
+  }
+  for (const { handle, isHovered } of handles) {
+    circle(
+      handle.x,
+      handle.y,
+      CONTROL_RADIUS,
+      isHovered ? EDITOR_COLOR : HANDLE_FILL,
+      EDITOR_COLOR,
+    );
+  }
+  for (const { point, isSelected, isHovered } of anchors) {
+    circle(
+      point.x,
+      point.y,
+      isHovered ? HOVERED_ANCHOR_RADIUS : ANCHOR_RADIUS,
+      isSelected ? EDITOR_COLOR : HANDLE_FILL,
+      isSelected ? HANDLE_FILL : EDITOR_COLOR,
+    );
+  }
+  if (insertPoint) {
+    circle(insertPoint.x, insertPoint.y, INSERT_POINT_RADIUS, EDITOR_COLOR, EDITOR_COLOR);
   }
 }

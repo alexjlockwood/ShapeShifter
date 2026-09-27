@@ -230,9 +230,10 @@ while held and plays or pauses when tapped. Repeat and slow motion keep their to
 
 ## Roadmap
 
-Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395) and phase 1 (#396 to #399).
-Phase 1's snapping only covers the artboard, other paths' bounds, and the pixel grid; guides come
-in phase 4.
+Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395), phase 1 (#396 to #399),
+and phase 2. Phase 1's snapping only covers the artboard, other paths' bounds, and the pixel grid;
+guides come in phase 4. In phase 2, points snap to those, to the path's other points, and onto
+the closest curve.
 
 Phase 0 is the foundation, and it's split into small pull requests:
 

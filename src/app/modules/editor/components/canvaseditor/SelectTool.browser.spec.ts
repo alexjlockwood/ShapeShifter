@@ -83,7 +83,9 @@ describe('SelectTool', () => {
         ),
       preview,
       redraw: () => {},
+      editPath: layerId => editedPaths.push(layerId),
     });
+    const editedPaths: string[] = [];
     const click = (x: number, y: number, modifiers = NONE) => {
       tool.onPress({ x, y }, modifiers);
       tool.onRelease({ x, y });
@@ -99,7 +101,21 @@ describe('SelectTool', () => {
       (
         getVectorLayer(store.getState()).findLayerById(layerId) as PathLayer
       ).pathData?.getPathString();
-    return { store, services, tool, preview, a, b, c, group, click, drag, selected, pathDataOf };
+    return {
+      store,
+      services,
+      tool,
+      preview,
+      a,
+      b,
+      c,
+      group,
+      click,
+      drag,
+      selected,
+      pathDataOf,
+      editedPaths,
+    };
   }
 
   describe('selecting', () => {
@@ -164,6 +180,18 @@ describe('SelectTool', () => {
       expect(selected()).toEqual([a.id]);
       tool.onMove({ x: 0, y: 0 }, NONE);
       expect(tool.getMarquee()).toEqual({ l: 0, t: 0, r: 20, b: 20 });
+    });
+
+    it('edits the path that is double-clicked', () => {
+      const { a, tool, click, editedPaths } = setUp();
+      click(4, 4);
+      tool.onPress({ x: 4, y: 4 }, NONE, 2);
+      tool.onRelease({ x: 4, y: 4 });
+      expect(editedPaths).toEqual([a.id]);
+      // Not nothing.
+      tool.onPress({ x: 20, y: 20 }, NONE, 2);
+      tool.onRelease({ x: 20, y: 20 });
+      expect(editedPaths).toEqual([a.id]);
     });
 
     it('hovers the path under the pointer, and forgets it when the pointer leaves', () => {

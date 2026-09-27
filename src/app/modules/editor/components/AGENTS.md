@@ -65,6 +65,10 @@ state machines that take points in viewport coordinates, and
 `components/canvaseditor/EditorRenderer.ts` draws their outlines, handles, and snap guides on a
 canvas of their own. Snapping is in `components/canvaseditor/snapping.ts`. Hit testing and bounds
 are in `components/canvas/LayerGeometry.ts`, which clicks on the canvas use with the editor off too.
+Double-clicking a path, or Enter, switches from the select tool to
+`components/canvaseditor/PathEditTool.ts`, which edits the path's points with the operations in
+`model/paths/PathEdit.ts` until Enter or Escape, or until the selection changes. Its point
+selection is kept by anchor id, in the tool rather than the store.
 
 ## Styling
 
