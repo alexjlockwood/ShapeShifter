@@ -32,6 +32,22 @@ describe('CanvasGestureRouter', () => {
     expect(router.isActive()).toBe(false);
   });
 
+  it('treats a click with Ctrl held as a right-click on Macs', () => {
+    expect(new CanvasGestureRouter(true).down({ ...MOUSE, ctrlKey: true }).started).toBe(false);
+    expect(new CanvasGestureRouter(false).down({ ...MOUSE, ctrlKey: true }).started).toBe(true);
+  });
+
+  it('notices a missed release, when the mouse moves with its button up', () => {
+    const router = new CanvasGestureRouter();
+    router.down(MOUSE);
+    expect(router.isReleaseMissed({ ...MOUSE, pointerType: 'mouse', buttons: 1 })).toBe(false);
+    expect(router.isReleaseMissed({ ...MOUSE, pointerType: 'mouse', buttons: 0 })).toBe(true);
+    // Pens and touches report buttons differently, and hovers have nothing to miss.
+    expect(router.isReleaseMissed({ ...MOUSE, pointerType: 'pen', buttons: 0 })).toBe(false);
+    router.up(MOUSE);
+    expect(router.isReleaseMissed({ ...MOUSE, pointerType: 'mouse', buttons: 0 })).toBe(false);
+  });
+
   it('ignores other pointers during a gesture, and a second finger', () => {
     const router = new CanvasGestureRouter();
     const finger = { pointerId: 2, button: 0, isPrimary: true };

@@ -1,4 +1,5 @@
 import { on } from 'app/modules/editor/scripts/dom';
+import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 
 import { CanvasGestureRouter } from './CanvasGestureRouter';
 
@@ -16,10 +17,11 @@ export interface CanvasInputHandler {
 /**
  * Turns the element's pointer events into gestures and hovers. A gesture captures the pointer, so
  * a drag keeps going outside of the element and ends wherever the pointer is released. It's
- * canceled if the browser takes the pointer away, the window loses focus, or Escape is pressed.
+ * canceled if the browser takes the pointer away, the window loses focus, a context menu opens,
+ * or Escape is pressed.
  */
 export class CanvasInput {
-  private readonly router = new CanvasGestureRouter();
+  private readonly router = new CanvasGestureRouter(ShortcutService.isMac());
   private removeListeners: ReadonlyArray<() => void> = [];
 
   constructor(
@@ -48,7 +50,9 @@ export class CanvasInput {
         handler.onPress(event);
       }),
       on(element, 'pointermove', event => {
-        if (router.move(event)) {
+        if (router.isReleaseMissed(event)) {
+          this.cancel(event.pointerId);
+        } else if (router.move(event)) {
           handler.onMove(event);
         }
       }),
@@ -64,6 +68,9 @@ export class CanvasInput {
         if (router.leave()) {
           handler.onLeave();
         }
+      }),
+      on(element, 'contextmenu', () => {
+        this.cancel();
       }),
       on(window, 'blur', () => this.cancel()),
       // This listens before the keyboard shortcuts, so that Escape only cancels the gesture.
@@ -82,8 +89,13 @@ export class CanvasInput {
   }
 
   private cancel(pointerId?: number) {
-    if (!this.router.cancel(pointerId)) {
+    const gesturePointerId = this.router.getPointerId();
+    if (!this.router.cancel(pointerId) || gesturePointerId === undefined) {
       return false;
+    }
+    // Otherwise the element keeps getting the pointer's moves, as hovers, until it's released.
+    if (this.element.hasPointerCapture(gesturePointerId)) {
+      this.element.releasePointerCapture(gesturePointerId);
     }
     this.handler.onLeave();
     return true;

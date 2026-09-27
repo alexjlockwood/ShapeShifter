@@ -242,7 +242,9 @@ Phase 0 is the foundation, and it's split into small pull requests:
    the same pixels on the artboard as a canvas the size of the artboard, the way it used to be.
 6. Camera state, and ruler ticks that follow the zoom, which fixes CANVAS-5 (the rulers labeled
    CSS pixels when the viewport had more units than the canvas had pixels).
-7. Pointer input (CANVAS-10, part of CANVAS-11, and UI-1 in `docs/bugs/timeline-and-ui.md`).
+7. Pointer input, which fixes CANVAS-10 (the shape splitter's hover highlight stuck after the
+   pointer left), the canvas's half of CANVAS-11 (right-clicks started gestures), and UI-1 (a
+   click that ended a drag could clear the selection).
 8. Zoom and pan, with the flag on. Once the artboard can be bigger than the panel, the rulers run
    over it along the panel's edges, so they need a background and a corner square.
 9. Previewing edits during a gesture, committed as one undo step.

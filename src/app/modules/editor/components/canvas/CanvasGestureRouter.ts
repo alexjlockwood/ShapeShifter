@@ -2,6 +2,14 @@ export interface PointerInfo {
   readonly pointerId: number;
   readonly button: number;
   readonly isPrimary: boolean;
+  readonly ctrlKey?: boolean;
+}
+
+interface MoveInfo {
+  readonly pointerId: number;
+  readonly isPrimary: boolean;
+  readonly pointerType?: string;
+  readonly buttons?: number;
 }
 
 /**
@@ -12,17 +20,24 @@ export interface PointerInfo {
 export class CanvasGestureRouter {
   private gesturePointerId: number | undefined;
 
+  constructor(private readonly isMac = false) {}
+
   isActive() {
     return this.gesturePointerId !== undefined;
   }
 
+  getPointerId() {
+    return this.gesturePointerId;
+  }
+
   /**
    * Returns whether the press starts a gesture, and whether a gesture that never saw its release
-   * was canceled first (which only happens if the pointer couldn't be captured).
+   * was canceled first (e.g. because the pointer couldn't be captured).
    */
-  down({ pointerId, button, isPrimary }: PointerInfo) {
-    // Right and middle clicks, and a second finger, don't start gestures.
-    if (button !== 0 || !isPrimary) {
+  down({ pointerId, button, isPrimary, ctrlKey }: PointerInfo) {
+    // Right and middle clicks, and a second finger, don't start gestures. On Macs, a click with
+    // Ctrl held is a right-click too.
+    if (button !== 0 || !isPrimary || (this.isMac && ctrlKey)) {
       return { canceled: false, started: false };
     }
     const canceled = this.isActive();
@@ -31,8 +46,22 @@ export class CanvasGestureRouter {
   }
 
   /** Returns whether to handle the move, as part of the gesture or as a hover. */
-  move({ pointerId, isPrimary }: Omit<PointerInfo, 'button'>) {
+  move({ pointerId, isPrimary }: MoveInfo) {
     return this.isActive() ? pointerId === this.gesturePointerId : isPrimary;
+  }
+
+  /**
+   * Returns whether the move shows that the gesture missed its release, since the mouse's main
+   * button is up. A context menu can take the release, for example.
+   */
+  isReleaseMissed({ pointerId, pointerType, buttons }: MoveInfo) {
+    return (
+      this.isActive() &&
+      pointerId === this.gesturePointerId &&
+      pointerType === 'mouse' &&
+      buttons !== undefined &&
+      (buttons & 1) === 0
+    );
   }
 
   /** Returns whether the release ends the gesture, which is over by the time it's handled. */
