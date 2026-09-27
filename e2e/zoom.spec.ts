@@ -142,5 +142,10 @@ test("doesn't zoom or pan without the canvas editor", async ({ page }) => {
   await page.keyboard.up('Control');
   await page.mouse.wheel(0, 100);
   await page.keyboard.press('Shift+Digit0');
-  expect(await artboard(page)).toEqual(before);
+  // The canvas still fits. (Firefox zooms the page for Ctrl and the wheel when nothing else does,
+  // which moves the artboard on the screen.)
+  const view = await page.evaluate(() =>
+    (window as any).shapeshifter.services.canvasViewportService.getView(),
+  );
+  expect(view).toEqual({ type: 'fit' });
 });
