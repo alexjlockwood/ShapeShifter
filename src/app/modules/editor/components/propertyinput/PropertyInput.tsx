@@ -109,6 +109,8 @@ export function PropertyInput() {
     () => collectDocumentColors(propertyInputState.vectorLayer, propertyInputState.animation),
     [propertyInputState.vectorLayer, propertyInputState.animation],
   );
+  // Only a single selected layer has one, so a batch edit's rows have no per-row animate button,
+  // no Layout section, and no point editing; see buildPropertyInputModel.ts's batch branches.
   const layer = model.numSelections === 1 && model.model instanceof Layer ? model.model : undefined;
   const pointEdit =
     editorModule && layer && bridgeState.pointEdit?.layerId === layer.id
@@ -161,6 +163,9 @@ export function PropertyInput() {
       field={field}
       ariaLabel={field.label ? `${row.label} ${field.label}` : row.label}
       modelId={model.model?.id}
+      // A batch edit's shared value is undefined where the selected models differ (see
+      // buildPropertyInputModel.ts's getSharedValue), which single-selection properties never are.
+      isMixed={model.numSelections > 1 && field.ip.value === undefined}
       hasError={
         field.ip.typeName === 'PathProperty' && shouldShowInvalidPathAnimationBlockMsg(model)
       }
@@ -401,6 +406,7 @@ function PropertyField({
   field: { ip, label },
   ariaLabel,
   modelId,
+  isMixed,
   hasError,
   colorProps,
   onTextChange,
@@ -410,6 +416,8 @@ function PropertyField({
   field: InspectorField;
   ariaLabel: string;
   modelId: string | undefined;
+  /** Whether a batch edit's selected models disagree on this field's value. */
+  isMixed: boolean;
   hasError: boolean;
   colorProps: { documentColors: readonly string[]; alphaMultiplier: number };
   onTextChange: (ip: InspectedProperty<any>, value: string) => void;
@@ -421,17 +429,20 @@ function PropertyField({
     // Only show text if the property isn't inspectable.
     content = <span className="spi-property-value-static">{ip.getDisplayValue()}</span>;
   } else if (ip.typeName === 'EnumProperty') {
-    content = <EnumPropertyEditor ip={ip} />;
+    content = <EnumPropertyEditor ip={ip} isMixed={isMixed} />;
   } else if (ip.typeName === 'InterpolatorProperty') {
-    content = <InterpolatorEditor key={modelId} ip={ip} />;
+    content = <InterpolatorEditor key={modelId} ip={ip} isMixed={isMixed} />;
   } else if (TEXT_INPUT_TYPE_NAMES.has(ip.typeName)) {
     content = (
       <>
-        {ip.typeName === 'ColorProperty' && <ColorPropertyEditor ip={ip} {...colorProps} />}
+        {ip.typeName === 'ColorProperty' && (
+          <ColorPropertyEditor ip={ip} isMixed={isMixed} {...colorProps} />
+        )}
         <input
           className={hasError ? 'has-input-error' : undefined}
           name={ip.propertyName}
           aria-label={ariaLabel}
+          placeholder={isMixed ? 'Mixed' : undefined}
           value={ip.editableValue ?? ''}
           onChange={event => onTextChange(ip, event.target.value)}
           onKeyDown={event => onKeyDown(event, ip)}
@@ -617,11 +628,11 @@ function RowAnimateButton({
   );
 }
 
-function EnumPropertyEditor({ ip }: { ip: InspectedProperty<any> }) {
+function EnumPropertyEditor({ ip, isMixed }: { ip: InspectedProperty<any>; isMixed: boolean }) {
   const { options } = ip.property as EnumProperty;
   return (
     <MenuSelect
-      label={ip.getDisplayValue()}
+      label={isMixed ? 'Mixed' : ip.getDisplayValue()}
       options={options}
       onSelect={value => setValue(ip, value)}
     />

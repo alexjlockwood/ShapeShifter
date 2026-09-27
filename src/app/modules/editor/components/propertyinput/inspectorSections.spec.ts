@@ -192,6 +192,29 @@ describe('buildInspectorSections', () => {
     ).toEqual([['animation', ['Name', 'Duration']]]);
   });
 
+  it('treats a Mixed strokeLinejoin (a batch edit whose selection disagrees) as not miter', () => {
+    // buildInspectorSections only reads an InspectedProperty's value, so a batch edit's Mixed
+    // value (undefined, see buildPropertyInputModel.ts's getSharedValue) hides the miter limit row
+    // exactly like a non-miter join would, since it can't tell every selected layer is a miter join.
+    const path = newPath();
+    const properties = inspect(path).map(ip =>
+      ip.propertyName === 'strokeLinejoin'
+        ? new InspectedProperty<any>(
+            path,
+            ip.property,
+            'strokeLinejoin',
+            new Map(),
+            () => {},
+            () => undefined,
+          )
+        : ip,
+    );
+    const stroke = buildInspectorSections(properties, optionsFor(path)).find(
+      s => s.id === 'stroke',
+    );
+    expect(stroke?.rows.map(r => r.label)).toEqual(['Color', 'Alpha', 'Width', 'Cap', 'Join']);
+  });
+
   it('leaves out excluded properties, and shows properties it has no place for', () => {
     const path = newPath();
     const unplaced = new InspectedProperty<number>(

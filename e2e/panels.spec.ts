@@ -274,3 +274,90 @@ test('animates a property from its row, and marks the rows that are animated', a
   await page.getByRole('menuitem', { name: 'Add another keyframe' }).click();
   await expect.poll(getBlockNames).toEqual(['fillAlpha', 'fillAlpha']);
 });
+
+/** Selects several layers by name at once, as a Shift-click extending a selection would. */
+function selectLayers(page: Page, names: string[]) {
+  return page.evaluate(layerNames => {
+    const { services } = (window as any).shapeshifter;
+    const vl = services.layerTimelineService.getVectorLayer();
+    const ids = layerNames.map(name => vl.findLayerByName(name).id);
+    services.layerTimelineService.setSelectedLayers(new Set(ids));
+  }, names);
+}
+
+function getStrokeWidths(page: Page, names: string[]) {
+  return page.evaluate(
+    layerNames =>
+      layerNames.map(
+        name =>
+          (window as any).shapeshifter.store
+            .getState()
+            .present.layers.vectorLayer.findLayerByName(name).strokeWidth,
+      ),
+    names,
+  );
+}
+
+test('batch edits several selected layers as one undo step, showing Mixed where they differ', async ({
+  page,
+  modifier,
+}) => {
+  await openShapes(page, 'square');
+  // SVG paths default to a black fill, so both shapes start out agreeing on fillColor: give the
+  // square a different one, so the batch selection below actually disagrees.
+  const fillColorInput = page.locator('.spi-property input[name="fillColor"]');
+  await fillColorInput.fill('#ff0000');
+  await fillColorInput.press('Tab');
+
+  await selectLayers(page, ['square', 'line']);
+  await expect(page.locator('.spi-selection-description')).toHaveText('2 layers');
+
+  // A batch edit never shows the path itself, or a name (which must stay unique).
+  await expect(page.locator('.spi-property input[name="pathData"]')).toHaveCount(0);
+  await expect(page.locator('.spi-property input[name="name"]')).toHaveCount(0);
+  await expect(fillColorInput).toHaveValue('');
+  await expect(fillColorInput).toHaveAttribute('placeholder', 'Mixed');
+
+  const originalStrokeWidths = await getStrokeWidths(page, ['square', 'line']);
+  // Past the app's 1 second undo-grouping window (metareducer.ts's UNDO_DEBOUNCE_MILLIS), so the
+  // edit below gets its own undo step instead of joining the selection change above.
+  await page.waitForTimeout(1100);
+  const strokeWidthInput = page.locator('.spi-property input[name="strokeWidth"]');
+  await strokeWidthInput.fill('3');
+  await strokeWidthInput.press('Tab');
+  await expect.poll(() => getStrokeWidths(page, ['square', 'line'])).toEqual([3, 3]);
+
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getStrokeWidths(page, ['square', 'line'])).toEqual(originalStrokeWidths);
+});
+
+test('batch edits several selected blocks as one undo step', async ({ page, modifier }) => {
+  await openShapes(page, 'square');
+  await page.getByRole('button', { name: 'Animate fillAlpha' }).click();
+  await selectLayer(page, 'line');
+  await page.getByRole('button', { name: 'Animate fillAlpha' }).click();
+
+  const blockIds = await getState(page, s =>
+    s.timeline.animation.blocks.map((b: { id: string }) => b.id),
+  );
+  await page.evaluate(ids => {
+    const { services } = (window as any).shapeshifter;
+    services.layerTimelineService.selectBlock(ids[0], true);
+    services.layerTimelineService.selectBlock(ids[1], false);
+  }, blockIds);
+  await expect(page.locator('.spi-selection-description')).toHaveText('2 property animations');
+
+  const getStartTimes = () =>
+    getState(page, s => s.timeline.animation.blocks.map((b: { startTime: number }) => b.startTime));
+  const originalStartTimes = await getStartTimes();
+  // Past the app's 1 second undo-grouping window, so the edit below gets its own undo step
+  // instead of joining adding the blocks and selecting them.
+  await page.waitForTimeout(1100);
+  const startTimeInput = page.locator('.spi-property input[name="startTime"]');
+  await startTimeInput.fill('50');
+  await startTimeInput.press('Tab');
+  await expect.poll(getStartTimes).toEqual([50, 50]);
+
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(getStartTimes).toEqual(originalStartTimes);
+});

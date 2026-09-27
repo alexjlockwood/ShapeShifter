@@ -113,7 +113,14 @@ interface Drag {
  * Drags are previews saved as one undo step on release. Double-clicking the curve adds a point,
  * and double-clicking a point, or Delete with it selected, removes it.
  */
-export function InterpolatorEditor({ ip }: { ip: InspectedProperty<string> }) {
+export function InterpolatorEditor({
+  ip,
+  isMixed = false,
+}: {
+  ip: InspectedProperty<string>;
+  /** Whether a batch edit's selected blocks disagree on the interpolator. */
+  isMixed?: boolean;
+}) {
   const menu = useMenu();
   const resolved = resolveInterpolator(ip.value);
   const curve = resolved.curve;
@@ -337,21 +344,23 @@ export function InterpolatorEditor({ ip }: { ip: InspectedProperty<string> }) {
         aria-expanded={menu.open}
         onClick={menu.openMenu}
       >
-        <span className="spi-property-value-menu-current-value">{ip.getDisplayValue()}</span>
+        <span className="spi-property-value-menu-current-value">
+          {isMixed ? 'Mixed' : ip.getDisplayValue()}
+        </span>
         <Icon className="spi-property-value-menu-arrow" name="arrow_drop_down" />
       </button>
       <Menu anchorEl={menu.anchorEl} open={menu.open} onClose={menu.closeMenu}>
         {INTERPOLATORS.map(option => (
           <MenuItem
             key={option.value}
-            selected={resolved.type === 'preset' && resolved.preset === option}
+            selected={!isMixed && resolved.type === 'preset' && resolved.preset === option}
             onClick={() => onPresetClick(option.value)}
           >
             {option.label}
           </MenuItem>
         ))}
         <Divider />
-        <MenuItem selected={resolved.type === 'custom'} onClick={onCustomClick}>
+        <MenuItem selected={!isMixed && resolved.type === 'custom'} onClick={onCustomClick}>
           {CUSTOM_INTERPOLATOR_LABEL}
         </MenuItem>
       </Menu>
