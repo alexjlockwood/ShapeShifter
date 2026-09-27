@@ -176,11 +176,12 @@ export class LayerTimelineService {
   }
 
   /**
-   * Imports a list of vector layers into the workspace.
+   * Imports a list of vector layers into the workspace, e.g. one for each imported file. Returns
+   * the ids of the top-level layers that each one added, in the same order.
    */
-  importLayers(vls: ReadonlyArray<VectorLayer>) {
+  importLayers(vls: ReadonlyArray<VectorLayer>): ReadonlyArray<ReadonlyArray<string>> {
     if (!vls.length) {
-      return;
+      return [];
     }
     const importedVls = [...vls];
     const vectorLayer = this.getVectorLayer();
@@ -199,6 +200,10 @@ export class LayerTimelineService {
         : newVectorLayers.reduce(LayerUtil.mergeVectorLayers);
     this.store.dispatch(
       new BatchAction(...this.getClearSelectionsActions(), new SetVectorLayer(newVl)),
+    );
+    // Merging keeps the layers' ids.
+    return importedVls.map(vl =>
+      vl.children.map(l => l.id).filter(id => !!newVl.findLayerById(id)),
     );
   }
 

@@ -73,6 +73,37 @@ describe('LayerTimelineService', () => {
     return services.layerTimelineService.getAnimation().blocks;
   }
 
+  describe('importLayers', () => {
+    function newFile(...children: Layer[]) {
+      return new VectorLayer({ name: 'file', children, width: 12, height: 12 });
+    }
+
+    it('returns the ids of the layers each file added', () => {
+      load([newPath('existing')]);
+      const a = newPath('a');
+      const b = newPath('b');
+      const c = newGroup('c', [newPath('d')]);
+      const ids = services.layerTimelineService.importLayers([newFile(a, b), newFile(c)]);
+
+      expect(ids).toEqual([[a.id, b.id], [c.id]]);
+      expect(getTree()).toEqual({ vector: ['existing', 'a', 'b', { c: ['d'] }] });
+    });
+
+    it('returns the ids when the first file replaces an empty document', () => {
+      load([]);
+      const a = newPath('a');
+      const b = newPath('b');
+      const ids = services.layerTimelineService.importLayers([newFile(a), newFile(b)]);
+
+      expect(ids).toEqual([[a.id], [b.id]]);
+      expect(getTree()).toEqual({ vector: ['a', 'b'] });
+    });
+
+    it('returns nothing without any files', () => {
+      expect(services.layerTimelineService.importLayers([])).toEqual([]);
+    });
+  });
+
   describe('flattenGroupLayer', () => {
     it('keeps the stroke width of paths in groups that are only rotated', () => {
       load([

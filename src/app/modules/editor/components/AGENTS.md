@@ -116,7 +116,8 @@ once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are 
 - Each panel is wrapped in `components/root/PanelErrorBoundary.tsx`, so a render error only
   replaces that panel (with a "Try again" button) and is reported to Bugsnag.
 - Dialogs (`components/dialogs/dialog.service.ts`) and the snackbar (`services/snackbar.service.ts`)
-  have small stores of their own, outside Redux. Dialog methods return promises.
+  have small stores of their own, outside Redux. Dialog methods return promises, and the
+  snackbar's button calls the `onAction` passed to `snackBarService.show`.
 
 ## Tests
 
