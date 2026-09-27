@@ -577,6 +577,34 @@ describe('LayerTimelineService', () => {
     });
   });
 
+  describe('updateLayers', () => {
+    it('updates several layers as one dispatch, e.g. a batch edit', () => {
+      load([newPath('path'), newPath('other')]);
+      const path = getLayer<PathLayer>('path').clone();
+      path.fillColor = '#ff0000';
+      const other = getLayer<PathLayer>('other').clone();
+      other.fillColor = '#ff0000';
+      const numPastStates = store.getState().past.length;
+
+      services.layerTimelineService.updateLayers([path, other]);
+
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#ff0000');
+      expect(getLayer<PathLayer>('other').fillColor).toBe('#ff0000');
+      // One dispatch is one undo step.
+      expect(store.getState().past.length).toBe(numPastStates + 1);
+      store.dispatch(ActionCreators.undo());
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#000000');
+      expect(getLayer<PathLayer>('other').fillColor).toBe('#000000');
+    });
+
+    it('does nothing without any layers', () => {
+      load([newPath('path')]);
+      const numPastStates = store.getState().past.length;
+      services.layerTimelineService.updateLayers([]);
+      expect(store.getState().past.length).toBe(numPastStates);
+    });
+  });
+
   describe('previews', () => {
     beforeEach(() => {
       vi.useFakeTimers();
@@ -634,6 +662,27 @@ describe('LayerTimelineService', () => {
       store.dispatch(ActionCreators.undo());
       expect(getLayer<PathLayer>('path').fillColor).toBe('#000000');
       expect(services.layerTimelineService.getSelectedLayers().map(l => l.name)).toEqual(['other']);
+    });
+
+    it('previews several layers at once, e.g. a batch color drag, and commits them as one step', () => {
+      load([newPath('path'), newPath('other')]);
+      vi.advanceTimersByTime(2000);
+      const numPastStates = store.getState().past.length;
+      const path = getLayer<PathLayer>('path').clone();
+      path.fillColor = '#ff0000';
+      const other = getLayer<PathLayer>('other').clone();
+      other.fillColor = '#ff0000';
+
+      services.layerTimelineService.previewLayers([path, other]);
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#ff0000');
+      expect(getLayer<PathLayer>('other').fillColor).toBe('#ff0000');
+      expect(store.getState().past.length).toBe(numPastStates);
+
+      services.layerTimelineService.commitPreview();
+      expect(store.getState().past.length).toBe(numPastStates + 1);
+      store.dispatch(ActionCreators.undo());
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#000000');
+      expect(getLayer<PathLayer>('other').fillColor).toBe('#000000');
     });
 
     it('previews blocks', () => {

@@ -399,6 +399,19 @@
         4px -4px,
         -4px 0;
 }
+// A batch edit whose selected layers disagree on the color: diagonal stripes instead of the
+// checkerboard, so it reads differently from both a real color and "no color".
+.spi-color-swatch.is-mixed {
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(128, 128, 128, 0.5) 0,
+        rgba(128, 128, 128, 0.5) 2px,
+        transparent 2px,
+        transparent 5px
+    );
+    background-size: auto;
+    background-position: 0 0;
+}
 .spi-color-swatch-empty-icon {
     width: 12px;
     height: 12px;

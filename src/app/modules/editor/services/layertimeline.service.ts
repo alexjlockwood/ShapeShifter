@@ -307,12 +307,43 @@ export class LayerTimelineService {
   }
 
   /**
+   * Updates several existing layers in the tree as one undo step, e.g. a batch edit applied to
+   * every selected layer at once.
+   */
+  updateLayers(layers: ReadonlyArray<Layer>) {
+    if (!layers.length) {
+      return;
+    }
+    this.store.dispatch(new SetVectorLayer(this.getVectorLayerWithLayers(layers)));
+  }
+
+  /**
    * Shows an edit to an existing layer without an undo step, e.g. on every move of a drag. Call
    * commitPreview when it ends, or cancelPreview to go back.
    */
   previewLayer(layer: Layer) {
     const vl = LayerUtil.updateLayer(this.getVectorLayer(), layer);
     this.store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(vl)));
+  }
+
+  /**
+   * Shows edits to several existing layers without an undo step, like previewLayer, e.g. a batch
+   * color drag applied to every selected layer at once.
+   */
+  previewLayers(layers: ReadonlyArray<Layer>) {
+    if (!layers.length) {
+      return;
+    }
+    const vl = this.getVectorLayerWithLayers(layers);
+    this.store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(vl)));
+  }
+
+  private getVectorLayerWithLayers(layers: ReadonlyArray<Layer>) {
+    let vl = this.getVectorLayer();
+    for (const layer of layers) {
+      vl = LayerUtil.updateLayer(vl, layer);
+    }
+    return vl;
   }
 
   /**

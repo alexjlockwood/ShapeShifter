@@ -14,16 +14,20 @@ import type { InspectedProperty } from '../propertyinput/InspectedProperty';
  * document" swatches (see documentColors.ts), computed once for every color property in the panel.
  * alphaMultiplier combines with the color's own alpha for the swatch, matching what the canvas
  * draws (see getColorAlphaMultiplier in buildPropertyInputModel.ts); it defaults to 1 for a color
- * with no separate alpha of its own.
+ * with no separate alpha of its own. isMixed shows a striped swatch instead, for a batch edit whose
+ * selected models disagree on the color; picking or typing one in the popover applies it to all of
+ * them (see buildPropertyInputModel.ts's buildBatchProperties).
  */
 export function ColorPropertyEditor({
   ip,
   documentColors,
   alphaMultiplier = 1,
+  isMixed = false,
 }: {
   ip: InspectedProperty<string>;
   documentColors: readonly string[];
   alphaMultiplier?: number;
+  isMixed?: boolean;
 }) {
   const menu = useMenu();
 
@@ -51,12 +55,20 @@ export function ColorPropertyEditor({
     <>
       <button
         type="button"
-        className="spi-property-color-preview spi-color-swatch"
-        style={{ backgroundColor: ColorUtil.androidToCssRgbaColor(value, alphaMultiplier) }}
-        aria-label="Edit color"
+        className={
+          isMixed
+            ? 'spi-property-color-preview spi-color-swatch is-mixed'
+            : 'spi-property-color-preview spi-color-swatch'
+        }
+        style={
+          isMixed
+            ? undefined
+            : { backgroundColor: ColorUtil.androidToCssRgbaColor(value, alphaMultiplier) }
+        }
+        aria-label={isMixed ? 'Edit color (Mixed)' : 'Edit color'}
         onClick={menu.openMenu}
       >
-        {!value && <Icon name="block" className="spi-color-swatch-empty-icon" />}
+        {!isMixed && !value && <Icon name="block" className="spi-color-swatch-empty-icon" />}
       </button>
       <Popover
         open={menu.open}

@@ -41,6 +41,9 @@ export function ColorPickerPanel({
   documentColors: readonly string[];
 }) {
   const value = ip.value;
+  // Undefined means a batch edit whose selected models disagree (see
+  // buildPropertyInputModel.ts's getSharedValue); '' is a color property's own "no color".
+  const isMixed = value === undefined;
   const rgba = androidColorToRgba(value);
   return (
     <div className="spi-color-picker">
@@ -50,8 +53,8 @@ export function ColorPickerPanel({
         onChangeEnd={() => ip.commitPreview()}
       />
       <div className="spi-color-picker-fields fx-row">
-        <HexField ip={ip} />
-        <AlphaField ip={ip} />
+        <HexField ip={ip} isMixed={isMixed} />
+        <AlphaField ip={ip} isMixed={isMixed} />
         {isEyeDropperSupported() && (
           <Tooltip title="Pick color from screen">
             <IconButton
@@ -67,7 +70,7 @@ export function ColorPickerPanel({
       <button
         type="button"
         className="spi-color-picker-none"
-        aria-pressed={!value}
+        aria-pressed={value === ''}
         onClick={() => {
           // ip is an InspectedProperty, not a plain data prop: its editableValue setter is how a
           // click or a keystroke is meant to change it (see InspectedProperty.ts).
@@ -104,14 +107,15 @@ export function ColorPickerPanel({
   );
 }
 
-function HexField({ ip }: { ip: InspectedProperty<string> }) {
+function HexField({ ip, isMixed }: { ip: InspectedProperty<string>; isMixed: boolean }) {
   const [draft, setDraft] = useState<string | undefined>(undefined);
-  const displayValue = draft ?? androidColorToHex(ip.value);
+  const displayValue = draft ?? (isMixed ? '' : androidColorToHex(ip.value));
   return (
     <input
       className="spi-color-picker-hex"
       name="colorPickerHex"
       aria-label="Hex"
+      placeholder={isMixed && draft === undefined ? 'Mixed' : undefined}
       value={displayValue}
       onChange={event => {
         const next = event.target.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
@@ -130,14 +134,15 @@ function HexField({ ip }: { ip: InspectedProperty<string> }) {
   );
 }
 
-function AlphaField({ ip }: { ip: InspectedProperty<string> }) {
+function AlphaField({ ip, isMixed }: { ip: InspectedProperty<string>; isMixed: boolean }) {
   const [draft, setDraft] = useState<string | undefined>(undefined);
-  const displayValue = draft ?? String(androidColorToAlphaPercent(ip.value));
+  const displayValue = draft ?? (isMixed ? '' : String(androidColorToAlphaPercent(ip.value)));
   return (
     <input
       className="spi-color-picker-alpha"
       name="colorPickerAlpha"
       aria-label="Alpha percentage"
+      placeholder={isMixed && draft === undefined ? 'Mixed' : undefined}
       value={displayValue}
       onChange={event => {
         const next = event.target.value.replace(/[^0-9]/g, '').slice(0, 3);

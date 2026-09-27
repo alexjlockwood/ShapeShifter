@@ -244,6 +244,14 @@ Ideas under consideration, not yet scoped or scheduled:
   (`compose/ui/ui/.../graphics/vector/Vector.kt:50-51`), `DrawScope.rotate` and `scale` default
   to the center, and only `graphicsLayer`'s `TransformOrigin` uses fractions.
 
+- **A batch edit's Layout section.** Selecting several layers shows the sections they share
+  (`components/propertyinput/buildPropertyInputModel.ts`'s batch branches), but not Layout, which
+  isn't made of properties: it's the union of `getLayerBounds` for one layer
+  (`components/propertyinput/layoutValues.ts`). Showing the selection's combined bounds and moving
+  or resizing every layer together through `components/canvas/transformLayers.ts` (as a single
+  layer's Layout already does) is a follow-up once there's a helper for a bounding box's union and
+  for scaling several layers from one anchor.
+
 - **Fix AnimatedVectorDrawable import.** `scripts/import/VectorDrawableLoader.ts` doesn't
   special-case the `animated-vector` root tag, so an AVD's
   `<aapt:attr name="android:drawable"><vector>` wrapper produces an extra nested `GroupLayer`, and
