@@ -27,9 +27,10 @@ Paths are relative to `src/app/modules/editor/`.
 
 The canvas and the timeline grid are drawn imperatively. The component renders the elements and
 creates a controller in a layout effect, and the controller subscribes to the store and redraws,
-so playback never re-renders React. Mouse gestures on the canvas go to
-`components/canvas/CanvasOverlay.ts`, which calls `actionModeService` in action mode and
-`layerTimelineService` otherwise.
+so playback never re-renders React. `components/canvas/CanvasInput.ts` turns the canvas's pointer
+events into gestures, capturing the pointer so that drags keep going outside of the canvas, and
+canceling them on blur and Escape. The gestures go to `components/canvas/CanvasOverlay.ts`, which
+calls `actionModeService` in action mode and `layerTimelineService` otherwise.
 
 Each canvas covers its whole panel. `components/canvas/CanvasCamera.ts` maps between its three
 coordinate spaces: viewport coordinates (the vector layer's units), panel coordinates (CSS pixels
@@ -64,7 +65,8 @@ rest of the app (`src/test/lazyChunks.spec.ts` checks this).
 - Clicking the workspace background clears the selection. Clicks inside the panels bubble up to
   it too, so panels stop propagation. Clicks in menus and dialogs also bubble up through their
   React portals, but `components/root/Root.tsx` ignores those, since their targets are outside the
-  workspace element.
+  workspace element. It also ignores clicks that didn't start where they ended, which the browser
+  sends to the elements' common ancestor, past the panels.
 - StrictMode runs effects twice in dev. Service `init()` methods guard against it, and controllers
   are created without side effects and started in a layout effect.
 - React's wheel listeners are passive, so the timeline adds a native listener to prevent

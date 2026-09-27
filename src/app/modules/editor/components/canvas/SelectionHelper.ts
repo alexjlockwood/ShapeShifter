@@ -168,8 +168,7 @@ export class SelectionHelper {
     this.component.draw();
   }
 
-  onMouseLeave(mouseLeave: Point) {
-    this.lastKnownMouseLocation = mouseLeave;
+  onMouseLeave() {
     this.reset();
     this.component.actionModeService.clearHover();
     this.component.draw();

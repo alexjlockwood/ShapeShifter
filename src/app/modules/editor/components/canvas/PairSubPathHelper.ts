@@ -39,7 +39,7 @@ export class PairSubPathHelper {
     this.component.draw();
   }
 
-  onMouseLeave(mouseLeave: Point) {
+  onMouseLeave() {
     this.component.actionModeService.clearHover();
     this.component.draw();
   }

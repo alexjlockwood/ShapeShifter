@@ -134,6 +134,27 @@ test('remembers the theme', async ({ page }) => {
   await expect(page.locator('body')).toHaveClass(/ss-dark-theme/);
 });
 
+test('only clears the selection when a click starts and ends on the workspace', async ({
+  page,
+}) => {
+  await loadDemo(page);
+  await page.locator('.slt-layer', { hasText: 'path' }).click();
+  const getSelectedLayerCount = () => getState(page, s => s.layers.selectedLayerIds.size);
+  expect(await getSelectedLayerCount()).toBe(1);
+
+  // E.g. selecting the text in a field, and letting go over the workspace.
+  const input = await boundingBox(page.locator('.spi-property input[name="name"]'));
+  const panel = await boundingBox(page.locator('.app-canvas'));
+  await page.mouse.move(input.x + 4, input.y + input.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(panel.x + 10, panel.y + 10, { steps: 5 });
+  await page.mouse.up();
+  expect(await getSelectedLayerCount()).toBe(1);
+
+  await page.mouse.click(panel.x + 10, panel.y + 10);
+  await expect.poll(getSelectedLayerCount).toBe(0);
+});
+
 test('reverses subpaths in action mode', async ({ page }) => {
   await loadDemo(page);
   const getFromValue = () =>

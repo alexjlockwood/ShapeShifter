@@ -20,7 +20,6 @@ export function Canvas({ actionSource, className }: CanvasProps) {
   const verticalRulerRef = useRef<HTMLCanvasElement>(null);
   const layersRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
-  const controllerRef = useRef<CanvasController>(undefined);
 
   useLayoutEffect(() => {
     const controller = new CanvasController(
@@ -37,24 +36,17 @@ export function Canvas({ actionSource, className }: CanvasProps) {
       services,
     );
     controller.init();
-    controllerRef.current = controller;
-    return () => {
-      controller.dispose();
-      controllerRef.current = undefined;
-    };
+    return () => controller.dispose();
   }, [actionSource, store, services]);
 
   return (
     <div ref={rootRef} className={className ? `app-canvas ${className}` : 'app-canvas'}>
-      {/* The canvases cover the panel and ignore the mouse, so mouse events go to the artboard
-          under them, and clicks around it still reach the workspace. */}
+      {/* The canvases cover the panel and ignore the mouse, so pointer events go to the artboard
+          under them (CanvasController listens to them), and clicks around it still reach the
+          workspace. */}
       <div
         ref={artboardRef}
         className="canvas-artboard mat-elevation-z4"
-        onMouseDown={event => controllerRef.current?.onMouseDown(event.nativeEvent)}
-        onMouseMove={event => controllerRef.current?.onMouseMove(event.nativeEvent)}
-        onMouseUp={event => controllerRef.current?.onMouseUp(event.nativeEvent)}
-        onMouseLeave={event => controllerRef.current?.onMouseLeave(event.nativeEvent)}
         onClick={event => event.stopPropagation()}
       >
         <canvas ref={horizontalRulerRef} className="canvas-ruler orientation-horizontal" />

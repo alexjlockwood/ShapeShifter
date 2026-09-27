@@ -1,11 +1,5 @@
 # Timeline and UI bugs found by the 2026-09-25 sweep
 
-- **A click that ends a drag reaches the workspace and clears the selection or exits action
-  mode.** Drag-selecting text in the inspector and releasing over the canvas deselects the layer,
-  and a split line drawn from one canvas to another resets action mode. When a press and release
-  land on different elements, the browser sends the click to their common ancestor, past the
-  panels' `stopPropagation`. Only clear when the press started on the workspace too
-  (`components/root/Root.tsx`). (UI-1, medium, confirmed by a test)
 - **The inspector's typed text outlives undo and selection changes, and is applied to the wrong
   layer.** Type in a path's name field, undo twice, and select a group: the group's field shows
   the path's text, and typing renames the group from it. Typed text is keyed by property name only,

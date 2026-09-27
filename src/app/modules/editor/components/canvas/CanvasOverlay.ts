@@ -937,21 +937,19 @@ export class CanvasOverlay extends DestroyableMixin() {
     }
   }
 
-  // Called by the CanvasController.
-  onMouseLeave(event: MouseEvent) {
+  // Called by the CanvasController when the pointer stops hovering, or a gesture is canceled.
+  onMouseLeave() {
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
       return;
     }
-    const mouseLeave = this.mouseEventToViewportCoords(event);
     if (this.actionMode === ActionMode.Selection) {
-      // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
-      this.selectionHelper?.onMouseLeave(mouseLeave);
+      this.selectionHelper?.onMouseLeave();
     } else if (this.actionMode === ActionMode.PairSubPaths) {
-      this.pairSubPathHelper?.onMouseLeave(mouseLeave);
+      this.pairSubPathHelper?.onMouseLeave();
     } else if (this.actionMode === ActionMode.SplitCommands) {
-      this.segmentSplitter?.onMouseLeave(mouseLeave);
+      this.segmentSplitter?.onMouseLeave();
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
-      this.subPathSplitter?.onMouseLeave(mouseLeave);
+      this.subPathSplitter?.onMouseLeave();
     }
     this.actionModeService.clearHover();
   }
