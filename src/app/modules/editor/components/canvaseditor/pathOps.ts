@@ -1,4 +1,5 @@
 import type { CanvasDocument } from 'app/modules/editor/components/canvas/CanvasPreview';
+import { getTopmostLayerIds } from 'app/modules/editor/components/canvas/transformLayers';
 import type { FillType } from 'app/modules/editor/model/layers';
 import { LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
@@ -6,8 +7,6 @@ import { Matrix } from 'app/modules/editor/scripts/common';
 import { uniqueId } from 'lodash-es';
 import type { PathKit, SkPath } from 'pathkit-wasm/bin/pathkit.js';
 import wasmUrl from 'pathkit-wasm/bin/pathkit.wasm?url';
-
-import { getTopmostLayerIds } from './transformLayers';
 
 // Boolean operations and outlining strokes use Skia's PathOps, through PathKit, which is loaded the
 // first time one of them is used (docs/canvas-editor.md, phase 6).
