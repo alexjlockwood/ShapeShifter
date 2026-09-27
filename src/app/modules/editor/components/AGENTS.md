@@ -62,9 +62,9 @@ With the editor loaded, the main canvas takes the pointer anywhere in its panel 
 editor (`components/canvaseditor/CanvasEditor.ts`), except in action mode, and the panel's clicks
 don't reach the workspace. The editor's tools, like `components/canvaseditor/SelectTool.ts`, are
 state machines that take points in viewport coordinates, and
-`components/canvaseditor/EditorRenderer.ts` draws their outlines and handles on a canvas of their
-own. Hit testing and bounds are in `components/canvas/LayerGeometry.ts`, which clicks on the canvas
-use with the editor off too.
+`components/canvaseditor/EditorRenderer.ts` draws their outlines, handles, and snap guides on a
+canvas of their own. Snapping is in `components/canvaseditor/snapping.ts`. Hit testing and bounds
+are in `components/canvas/LayerGeometry.ts`, which clicks on the canvas use with the editor off too.
 
 ## Styling
 

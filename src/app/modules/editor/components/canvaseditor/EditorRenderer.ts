@@ -9,11 +9,15 @@ import { Rect } from 'app/modules/editor/scripts/common';
 import { getContext2d } from 'app/modules/editor/scripts/dom';
 
 import { getHandlePoint, getVisibleHandles, HANDLE_SIZE } from './selectionHandles';
+import type { SnapGuide } from './snapping';
 
 // Figma's blue, and line widths in CSS pixels.
 const EDITOR_COLOR = '#0d99ff';
 const MARQUEE_FILL = 'rgba(13, 153, 255, 0.1)';
 const HANDLE_FILL = '#fff';
+// Figma's snapping red.
+const GUIDE_COLOR = '#f24822';
+const GUIDE_LINE_WIDTH = 1;
 const HOVER_LINE_WIDTH = 2;
 const SELECTED_LINE_WIDTH = 1;
 const BOUNDS_LINE_WIDTH = 1;
@@ -24,6 +28,7 @@ export interface EditorDrawing {
   readonly selectedLayerIds: ReadonlySet<string>;
   readonly isShowingHandles: boolean;
   readonly marquee: Rect | undefined;
+  readonly guides: ReadonlyArray<SnapGuide>;
 }
 
 /** Draws the editor's outlines, bounds, and marquee on its own canvas, over the others. */
@@ -47,7 +52,8 @@ export class EditorRenderer {
     // Line widths are in viewport units under the transform.
     const toViewport = (length: number) => camera.toViewportLength(length);
 
-    const { vectorLayer, hoveredLayerId, selectedLayerIds, isShowingHandles, marquee } = drawing;
+    const { vectorLayer, hoveredLayerId, selectedLayerIds, isShowingHandles, marquee, guides } =
+      drawing;
     const outline = (layerId: string, lineWidth: number) => {
       const layer = vectorLayer.findLayerById(layerId);
       if (isMorphableLayer(layer) && layer.pathData) {
@@ -81,6 +87,20 @@ export class EditorRenderer {
           ctx.stroke();
         }
       }
+    }
+
+    for (const { axis, value, from, to } of guides) {
+      ctx.beginPath();
+      if (axis === 'x') {
+        ctx.moveTo(value, from);
+        ctx.lineTo(value, to);
+      } else {
+        ctx.moveTo(from, value);
+        ctx.lineTo(to, value);
+      }
+      ctx.strokeStyle = GUIDE_COLOR;
+      ctx.lineWidth = toViewport(GUIDE_LINE_WIDTH);
+      ctx.stroke();
     }
 
     if (marquee) {
