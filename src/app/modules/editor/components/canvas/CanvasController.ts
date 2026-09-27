@@ -20,6 +20,7 @@ import { CanvasInput } from './CanvasInput';
 import { CanvasLayers } from './CanvasLayers';
 import { CanvasNavigation } from './CanvasNavigation';
 import { CanvasOverlay } from './CanvasOverlay';
+import { CanvasPreview } from './CanvasPreview';
 import { CanvasRuler, getRulerCorner } from './CanvasRuler';
 import { loadCanvasEditor } from './loadCanvasEditor';
 
@@ -46,6 +47,7 @@ export class CanvasController extends DestroyableMixin() {
   private stopWatchingPixelRatio: (() => void) | undefined;
   private readonly canvasInput: CanvasInput;
   private readonly canvasNavigation: CanvasNavigation | undefined;
+  private readonly canvasPreview: CanvasPreview | undefined;
   private readonly canvasLayers: CanvasLayers;
   private readonly canvasOverlay: CanvasOverlay;
   private readonly canvasRulers: ReadonlyArray<CanvasRuler>;
@@ -59,26 +61,33 @@ export class CanvasController extends DestroyableMixin() {
     private readonly elements: CanvasElements,
     private readonly actionSource: ActionSource,
     private readonly store: Store<State>,
-    {
+    private readonly services: EditorServices,
+  ) {
+    super();
+    const {
       actionModeService,
       canvasViewportService,
       layerTimelineService,
       themeService,
       snackBarService,
       features,
-    }: EditorServices,
-  ) {
-    super();
+    } = services;
     this.features = features;
     this.snackBarService = snackBarService;
     this.canvasViewportService = canvasViewportService;
-    this.canvasLayers = new CanvasLayers(elements.layers, actionSource, store);
+    // The editor only works on the canvas that shows the current time.
+    this.canvasPreview =
+      features.canvasEditor && actionSource === ActionSource.Animated
+        ? new CanvasPreview(store, layerTimelineService)
+        : undefined;
+    this.canvasLayers = new CanvasLayers(elements.layers, actionSource, store, this.canvasPreview);
     this.canvasOverlay = new CanvasOverlay(
       elements.overlay,
       actionSource,
       store,
       actionModeService,
       layerTimelineService,
+      this.canvasPreview,
     );
     this.canvasRulers = [
       new CanvasRuler(elements.horizontalRuler, 'horizontal', themeService),
@@ -109,6 +118,7 @@ export class CanvasController extends DestroyableMixin() {
   }
 
   init() {
+    this.canvasPreview?.init();
     this.canvasLayers.init();
     this.canvasOverlay.init();
     this.canvasInput.init();
@@ -180,6 +190,7 @@ export class CanvasController extends DestroyableMixin() {
     this.resizeObserver?.disconnect();
     this.stopWatchingPixelRatio?.();
     this.canvasEditor?.dispose();
+    this.canvasPreview?.dispose();
     this.setEditorState(undefined);
     this.canvasLayers.dispose();
     this.canvasOverlay.dispose();
@@ -202,7 +213,14 @@ export class CanvasController extends DestroyableMixin() {
       return;
     }
     try {
-      this.canvasEditor = editorModule.createCanvasEditor();
+      if (!this.canvasPreview) {
+        throw new Error('The canvas editor needs a preview');
+      }
+      this.canvasEditor = editorModule.createCanvasEditor({
+        store: this.store,
+        services: this.services,
+        preview: this.canvasPreview,
+      });
     } catch (error) {
       this.onEditorFailed(error, 'error');
       return;

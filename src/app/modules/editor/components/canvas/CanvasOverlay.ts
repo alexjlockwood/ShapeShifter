@@ -35,10 +35,11 @@ import {
 import { getCanvasOverlayState } from 'app/modules/editor/store/common/selectors';
 import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
 import { flatMap, remove, uniq } from 'lodash-es';
-import { combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { combineLatest, of } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 
 import { CanvasCamera } from './CanvasCamera';
+import type { CanvasPreview } from './CanvasPreview';
 import * as CanvasUtil from './CanvasUtil';
 import { PairSubPathHelper } from './PairSubPathHelper';
 import { SegmentSplitter } from './SegmentSplitter';
@@ -120,6 +121,8 @@ export class CanvasOverlay extends DestroyableMixin() {
     readonly store: Store<State>,
     readonly actionModeService: ActionModeService,
     private readonly layerTimelineService: LayerTimelineService,
+    // Edits in progress, which only the animated canvas shows.
+    private readonly preview?: CanvasPreview,
   ) {
     super();
   }
@@ -127,16 +130,19 @@ export class CanvasOverlay extends DestroyableMixin() {
   init() {
     if (this.actionSource === ActionSource.Animated) {
       // Animated canvas specific setup.
+      const { preview } = this;
       this.registerSubscription(
         combineLatest([
-          this.store.select(getAnimatedVectorLayer).pipe(map(event => event.vl)),
+          this.store.select(getAnimatedVectorLayer),
           this.store.select(getCanvasOverlayState),
+          preview ? preview.asObservable().pipe(startWith(undefined)) : of(undefined),
         ]).subscribe(
           ([
-            vectorLayer,
+            { vl, currentTime },
             { hiddenLayerIds, selectedLayerIds, isActionMode, selectedBlockLayerIds },
           ]) => {
-            this.vectorLayer = vectorLayer;
+            // Selections and hit tests follow the edit too.
+            this.vectorLayer = preview ? preview.apply(vl, currentTime) : vl;
             this.hiddenLayerIds = hiddenLayerIds;
             this.selectedLayerIds = selectedLayerIds;
             this.isActionMode = isActionMode;

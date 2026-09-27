@@ -41,6 +41,50 @@ test('loads the canvas editor with ?editor=1', async ({ page }) => {
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
 });
 
+test('previews an edit, and commits it as one undo step', async ({ page, modifier }) => {
+  await page.goto('/?project=demos/playtopause.shapeshifter&editor=1');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
+  const triangle = await countDrawnPixels(page);
+  const layerId = await page.evaluate(() => {
+    const { store } = (window as any).shapeshifter;
+    const find = (layer: any): any =>
+      layer.name === 'path' ? layer : layer.children.map(find).find(Boolean);
+    return find(store.getState().present.layers.vectorLayer).id as string;
+  });
+  const getPathData = () =>
+    page.evaluate(id => {
+      const { store } = (window as any).shapeshifter;
+      const layer = store.getState().present.layers.vectorLayer.findLayerById(id);
+      return layer.pathData.getPathString() as string;
+    }, layerId);
+  const previewSquare = () =>
+    page.evaluate(id => {
+      // The canvas editor's hook for tests (components/canvaseditor/CanvasEditor.ts).
+      const { canvasEditor } = (window as any).shapeshifter;
+      canvasEditor.previewPath(id, 'M 0 0 L 24 0 L 24 24 L 0 24 Z');
+    }, layerId);
+  const original = await getPathData();
+
+  // The canvas shows the edit, but the document doesn't change until it's committed.
+  await previewSquare();
+  await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(triangle);
+  expect(await getPathData()).toBe(original);
+  await page.evaluate(() => (window as any).shapeshifter.canvasEditor.commit());
+  expect(await getPathData()).toBe('M 0 0 L 24 0 L 24 24 L 0 24 Z');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(getPathData).toBe(original);
+  await expect.poll(() => countDrawnPixels(page)).toBe(triangle);
+
+  // Anything that changes the document cancels an edit in progress, like redo.
+  await previewSquare();
+  await page.keyboard.press(`${modifier}+Shift+z`);
+  await expect.poll(getPathData).toBe('M 0 0 L 24 0 L 24 24 L 0 24 Z');
+  expect(await page.evaluate(() => (window as any).shapeshifter.canvasEditor.isEditing())).toBe(
+    false,
+  );
+});
+
 test('plays and rewinds with keyboard shortcuts', async ({ page }) => {
   await page.goto('/?project=demos/searchtoclose.shapeshifter');
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
