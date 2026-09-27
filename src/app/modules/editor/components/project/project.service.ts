@@ -10,6 +10,12 @@ interface Project {
   readonly animation: Animation;
   readonly hiddenLayerIds: ReadonlySet<string>;
   readonly guides: ReadonlyArray<Guide>;
+  /**
+   * True when the project was saved by a newer version of Shape Shifter. This service has no
+   * snackbar of its own, so the caller (Root.tsx or LayerTimelineController.ts) shows the
+   * warning.
+   */
+  readonly newerVersion: boolean;
 }
 
 export class ProjectService {
@@ -23,10 +29,12 @@ export class ProjectService {
       throw new Error(`Failed to fetch ${url} (${response.status})`);
     }
     const jsonObj = await response.json();
-    const { vectorLayer, animation, hiddenLayerIds, guides } = FileExportService.fromJSON(jsonObj);
+    const { vectorLayer, animation, hiddenLayerIds, guides, newerVersion } =
+      FileExportService.fromJSON(jsonObj);
     return {
       ...ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds),
       guides,
+      newerVersion,
     } as Project;
   }
 }

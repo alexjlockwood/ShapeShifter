@@ -1,5 +1,6 @@
 import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
+import { NEWER_VERSION_WARNING } from 'app/modules/editor/model/projectVersion';
 import { Animation } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
@@ -106,6 +107,7 @@ export class FileImportService {
           let animation: Animation;
           let hiddenLayerIds: ReadonlySet<string>;
           let guides: ReadonlyArray<Guide>;
+          let newerVersion: boolean;
           try {
             const jsonObj = JSON.parse(text);
             const parsedObj = FileExportService.fromJSON(jsonObj);
@@ -113,6 +115,7 @@ export class FileImportService {
             animation = parsedObj.animation;
             hiddenLayerIds = parsedObj.hiddenLayerIds;
             guides = parsedObj.guides;
+            newerVersion = parsedObj.newerVersion;
             const regeneratedModels = ModelUtil.regenerateModelIds(vl, animation, hiddenLayerIds);
             vl = regeneratedModels.vectorLayer;
             animation = regeneratedModels.animation;
@@ -122,7 +125,15 @@ export class FileImportService {
             this.onFailure();
             return;
           }
-          this.onSuccess(importType, resetWorkspace, [vl], animation, hiddenLayerIds, guides);
+          this.onSuccess(
+            importType,
+            resetWorkspace,
+            [vl],
+            animation,
+            hiddenLayerIds,
+            guides,
+            newerVersion,
+          );
         }
       };
 
@@ -166,10 +177,14 @@ export class FileImportService {
     animation?: Animation,
     hiddenLayerIds?: ReadonlySet<string>,
     guides?: ReadonlyArray<Guide>,
+    newerVersion?: boolean,
   ) {
     if (importType === ImportType.Json) {
       trackEvent('import_shapeshifter');
       this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds, guides));
+      if (newerVersion) {
+        this.snackBarService.show(NEWER_VERSION_WARNING, 'Dismiss', Duration.Long);
+      }
     } else {
       if (importType === ImportType.Svg) {
         trackEvent('import_svg');

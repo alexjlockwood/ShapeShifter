@@ -8,6 +8,7 @@ import { Toolbar } from 'app/modules/editor/components/toolbar/Toolbar';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { ActionMode, ActionSource } from 'app/modules/editor/model/actionmode';
+import { NEWER_VERSION_WARNING } from 'app/modules/editor/model/projectVersion';
 import { on } from 'app/modules/editor/scripts/dom';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import {
@@ -83,8 +84,11 @@ function Workspace() {
     const controller = new AbortController();
     projectService
       .getProject(projectUrl, controller.signal)
-      .then(({ vectorLayer, animation, hiddenLayerIds, guides }) => {
+      .then(({ vectorLayer, animation, hiddenLayerIds, guides, newerVersion }) => {
         store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds, guides));
+        if (newerVersion) {
+          snackBarService.show(NEWER_VERSION_WARNING, 'Dismiss', Duration.Long);
+        }
       })
       .catch(() => {
         if (!controller.signal.aborted) {
