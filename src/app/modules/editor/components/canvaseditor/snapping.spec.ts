@@ -220,6 +220,27 @@ describe('snapping to even gaps', () => {
     expect(agree.guides.filter(g => !g.isGap)).toHaveLength(1);
   });
 
+  it("only spaces out from neighbors, and doesn't land on a box", () => {
+    // Three boxes, 2 apart: from 0 to 2, 4 to 6, and 8 to 10.
+    const three: SnapTargets = {
+      x: [],
+      y: [],
+      boxes: [0, 4, 8].map(l => ({ l, t: 0, r: l + 2, b: 2 })),
+    };
+    const snapX = (l: number, width: number) =>
+      snapBounds({ l, t: 0, r: l + width, b: 2 }, three, THRESHOLDS, undefined, gaps);
+    const isGapSnap = (snap: { guides: ReadonlyArray<{ isGap?: boolean }> }) =>
+      snap.guides.some(g => g.isGap);
+    // In the middle of the gap from 2 to 8 would be on the box from 4 to 6.
+    expect(isGapSnap(snapX(4.3, 1))).toBe(false);
+    // 6 past the end, as far as the first and last boxes are apart, skips the one between.
+    expect(isGapSnap(snapX(16.3, 2))).toBe(false);
+    // 2 past the end is the row's spacing.
+    const spaced = snapX(12.3, 2);
+    expect(isGapSnap(spaced)).toBe(true);
+    expect(spaced.dx).toBeCloseTo(-0.3, 9);
+  });
+
   it('beats the pixel grid', () => {
     // The left edge is 0.2 from the grid, but the gap snap is 0.3 away.
     const snap = snapBounds({ l: 18.3, t: 2, r: 22.3, b: 6 }, targets, THRESHOLDS, undefined, gaps);

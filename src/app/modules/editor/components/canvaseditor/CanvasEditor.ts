@@ -258,7 +258,7 @@ class Editor implements CanvasEditor {
     }
     const guide = this.getGuideAt(point);
     if (guide) {
-      this.guideTool.startMove(guide, point, getModifiers(event));
+      this.guideTool.startMove(guide, point);
       return;
     }
     const clickCount = this.countClicks(event, point);

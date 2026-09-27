@@ -74,13 +74,13 @@ describe('GuideTool', () => {
     const [guide] = guides;
     expect(tool.hitTest({ x: 12.3, y: 3 })).toBe(guide);
     expect(tool.hitTest({ x: 12.5, y: 3 })).toBeUndefined();
-    tool.startMove(guide, { x: 12, y: 3 }, NONE);
+    tool.startMove(guide, { x: 12, y: 3 });
     tool.onMove({ x: 17.3, y: 3 }, NONE);
     expect(tool.getCursor()).toBe('col-resize');
     tool.onRelease();
     expect(guides).toEqual([{ id: 'g', axis: 'x', value: 17 }]);
 
-    tool.startMove(guides[0], { x: 17, y: 3 }, NONE);
+    tool.startMove(guides[0], { x: 17, y: 3 });
     tool.onMove({ x: -3, y: 3 }, NONE);
     expect(tool.getDrawing().guides).toEqual([]);
     tool.onRelease();
@@ -89,12 +89,24 @@ describe('GuideTool', () => {
   });
 
   it("doesn't save a guide that's put back where it was, or a drag that's canceled", () => {
-    tool.startMove(guides[0], { x: 12, y: 3 }, NONE);
+    tool.startMove(guides[0], { x: 12, y: 3 });
     tool.onRelease();
-    tool.startMove(guides[0], { x: 12, y: 3 }, NONE);
+    tool.startMove(guides[0], { x: 12, y: 3 });
     tool.onMove({ x: 20, y: 3 }, NONE);
     tool.onLeave();
     expect(tool.isDragging()).toBe(false);
     expect(saves).toBe(0);
+  });
+
+  it("keeps a guide's distance from the pointer, so that a click doesn't move it", () => {
+    // Pressed 0.3 to the right of the guide at 12.
+    tool.startMove(guides[0], { x: 12.3, y: 3 });
+    expect(tool.getDrawing().label?.text).toBe('12');
+    tool.onRelease();
+    expect(saves).toBe(0);
+    tool.startMove(guides[0], { x: 12.3, y: 3 });
+    tool.onMove({ x: 14.7, y: 3 }, CTRL);
+    tool.onRelease();
+    expect(guides[0].value).toBe(14.4);
   });
 });

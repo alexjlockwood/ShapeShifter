@@ -165,9 +165,10 @@ function pickSnap(line: AxisSnap, gap: AxisSnap | undefined): AxisSnap {
 
 /**
  * Snaps the box along an axis so that it spaces out evenly with the boxes beside it, like Figma:
- * in the middle of the gap between two of them, or as far past one end of a pair as they are
- * apart. Only boxes that overlap the box across the axis count, e.g. the ones in the same row for
- * x. Returns the snap that moves the box the least, within the threshold, with the gaps to draw.
+ * in the middle of the gap between two neighbors, or as far past one end of a pair of neighbors as
+ * they are apart. Only boxes that overlap the box across the axis count, e.g. the ones in the same
+ * row for x, and the box can't land on one of them. Returns the snap that moves the box the least,
+ * within the threshold, with the gaps to draw.
  */
 export function snapGap(
   box: Rect,
@@ -186,6 +187,9 @@ export function snapGap(
     .map(span)
     .filter(other => other.from < moving.to && moving.from < other.to)
     .sort((a, b) => a.start - b.start);
+  // Whether no box in the row is between the two values.
+  const isClear = (start: number, end: number) =>
+    !row.some(other => other.start < end && start < other.end);
   let best: { delta: number; gaps: SnapGuide[] } | undefined;
   const consider = (delta: number, gaps: () => SnapGuide[]) => {
     if (Math.abs(delta) <= threshold && (!best || Math.abs(delta) < Math.abs(best.delta))) {
@@ -214,7 +218,7 @@ export function snapGap(
       const a = row[i];
       const b = row[j];
       const gap = b.start - a.end;
-      if (i === j || gap <= 0) {
+      if (i === j || gap <= 0 || !isClear(a.end, b.start)) {
         continue;
       }
       // In the middle.
@@ -227,15 +231,19 @@ export function snapGap(
       }
       // Past b, and before a.
       const after = b.end + gap;
-      consider(after - moving.start, () => [
-        gapGuide(a.end, b.start, a, b),
-        gapGuide(b.end, after, b, moving),
-      ]);
+      if (isClear(b.end, after + size)) {
+        consider(after - moving.start, () => [
+          gapGuide(a.end, b.start, a, b),
+          gapGuide(b.end, after, b, moving),
+        ]);
+      }
       const before = a.start - gap - size;
-      consider(before - moving.start, () => [
-        gapGuide(before + size, a.start, moving, a),
-        gapGuide(a.end, b.start, a, b),
-      ]);
+      if (isClear(before, a.start)) {
+        consider(before - moving.start, () => [
+          gapGuide(before + size, a.start, moving, a),
+          gapGuide(a.end, b.start, a, b),
+        ]);
+      }
     }
   }
   return best && { delta: best.delta, lines: [], gaps: best.gaps };

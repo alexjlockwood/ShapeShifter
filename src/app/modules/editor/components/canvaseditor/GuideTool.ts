@@ -4,7 +4,7 @@ import { Point } from 'app/modules/editor/scripts/common';
 import { uniqueId } from 'lodash-es';
 
 import type { Modifiers } from './SelectTool';
-import { getSnapTargets, snapPoint, SnapThresholds } from './snapping';
+import { getSnapTargets, snapPoint, SnapTargets, SnapThresholds } from './snapping';
 
 /** What the guide tool reads and changes. */
 export interface GuideToolContext {
@@ -40,7 +40,11 @@ interface Drag {
   readonly isNew: boolean;
   readonly value: number;
   readonly point: Point;
+  /** How far the guide is from the pointer along its axis, so that it doesn't jump to it. */
+  readonly offset: number;
   readonly isRemoving: boolean;
+  /** What it snaps to, which doesn't change during the drag. */
+  readonly targets: SnapTargets;
 }
 
 /**
@@ -91,21 +95,26 @@ export class GuideTool {
       isNew: true,
       value: point[axis],
       point,
+      offset: 0,
       isRemoving: true,
+      targets: this.getSnapTargets(),
     };
     this.onMove(point, modifiers);
   }
 
-  startMove(guide: Guide, point: Point, modifiers: Modifiers) {
+  /** Starts moving a guide, which stays where it is until the pointer moves. */
+  startMove(guide: Guide, point: Point) {
     this.drag = {
       id: guide.id,
       axis: guide.axis,
       isNew: false,
       value: guide.value,
       point,
+      offset: guide.value - point[guide.axis],
       isRemoving: false,
+      targets: this.getSnapTargets(),
     };
-    this.onMove(point, modifiers);
+    this.context.redraw();
   }
 
   onMove(point: Point, modifiers: Modifiers) {
@@ -116,7 +125,7 @@ export class GuideTool {
     this.drag = {
       ...drag,
       point,
-      value: this.snap(drag.axis, point, modifiers),
+      value: this.snap(drag, point[drag.axis] + drag.offset, modifiers),
       isRemoving: this.context.isRemoving(drag.axis, point),
     };
     this.context.redraw();
@@ -192,16 +201,15 @@ export class GuideTool {
     };
   }
 
-  private snap(axis: Guide['axis'], point: Point, modifiers: Modifiers) {
-    const value = point[axis];
+  private getSnapTargets() {
+    return getSnapTargets(this.context.getVectorLayer(), [], this.context.getHiddenLayerIds());
+  }
+
+  private snap({ axis, targets }: Drag, value: number, modifiers: Modifiers) {
     if (modifiers.ctrl) {
       return roundGuideValue(value);
     }
-    const targets = getSnapTargets(
-      this.context.getVectorLayer(),
-      [],
-      this.context.getHiddenLayerIds(),
-    );
+    const point = axis === 'x' ? { x: value, y: 0 } : { x: 0, y: value };
     const snap = snapPoint(point, targets, this.context.getSnapThresholds(), {
       x: axis === 'x',
       y: axis === 'y',
