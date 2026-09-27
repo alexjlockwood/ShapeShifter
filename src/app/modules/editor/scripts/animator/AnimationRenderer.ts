@@ -19,9 +19,11 @@ export class AnimationRenderer {
   private readonly animDataByLayer: Dictionary<RendererData> = {};
 
   constructor(originalVectorLayer: VectorLayer, activeAnimation: Animation) {
-    // TODO: technically this could be more performant if we only cloned the affected layers
-    this.renderedVectorLayer = originalVectorLayer.deepClone();
     const animDataByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(activeAnimation);
+    this.renderedVectorLayer = cloneAnimatedLayers(
+      originalVectorLayer,
+      new Set(Object.keys(animDataByLayer)),
+    ) as VectorLayer;
     Object.keys(animDataByLayer).forEach(layerId => {
       const originalLayer = originalVectorLayer.findLayerById(layerId);
       const renderedLayer = this.renderedVectorLayer.findLayerById(layerId);
@@ -87,6 +89,20 @@ export class AnimationRenderer {
     });
     return this.renderedVectorLayer;
   }
+}
+
+// Copies only what setCurrentTime writes to (animated layers and their ancestors), sharing the rest.
+function cloneAnimatedLayers(layer: Layer, animatedLayerIds: ReadonlySet<string>): Layer {
+  const children = layer.children.map(child => cloneAnimatedLayers(child, animatedLayerIds));
+  if (
+    !animatedLayerIds.has(layer.id) &&
+    children.every((child, i) => child === layer.children[i])
+  ) {
+    return layer;
+  }
+  const clone = layer.clone();
+  clone.children = children;
+  return clone;
 }
 
 interface RendererData {
