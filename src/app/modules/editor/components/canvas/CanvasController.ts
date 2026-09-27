@@ -36,7 +36,8 @@ import { loadCanvasEditor } from './loadCanvasEditor';
 
 // How close to a layer's outline a right-click hits it, in CSS pixels, as in the select tool.
 const LAYER_HIT_TOLERANCE = 6;
-// The canvas editor's toolbars, which a right-click on doesn't open the context menu for.
+// The canvas editor's toolbars, which a right-click on doesn't open the layers' context menu for.
+// The keyframe badge opens one for its blocks instead (KeyframeBadge.ts).
 const EDITOR_CONTROLS_SELECTOR =
   '.canvas-editor-toolbar, .canvas-editor-pathops, .canvas-editor-keyframe';
 

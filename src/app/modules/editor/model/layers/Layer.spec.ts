@@ -126,4 +126,78 @@ describe('GroupLayer.bounds', () => {
     expect(r).toBeCloseTo(0, 9);
     expect(b).toBeCloseTo(10, 9);
   });
+
+  it('contains children that are transformed themselves', () => {
+    const path = new PathLayer({
+      name: 'path',
+      children: [],
+      pathData: new Path('M 0 0 L 10 0 L 10 2 L 0 2 Z'),
+      rotation: 90,
+    });
+    const group = new GroupLayer({ name: 'group', children: [path], translateX: 5 });
+    const { l, t, r, b } = group.bounds!;
+    expect([l, t, r, b].map(n => Math.round(n * 1e6) / 1e6)).toEqual([3, 0, 5, 10]);
+  });
+});
+
+describe('PathLayer transforms', () => {
+  function newPath(props: object = {}) {
+    return new PathLayer({
+      name: 'path',
+      children: [],
+      pathData: new Path('M 0 0 L 10 0 L 10 2 L 0 2 Z'),
+      ...props,
+    });
+  }
+
+  it("has a group's transform properties, with the same names, after its own", () => {
+    const names = [...newPath().inspectableProperties.keys()];
+    const transformNames = [
+      'rotation',
+      'scaleX',
+      'scaleY',
+      'pivotX',
+      'pivotY',
+      'translateX',
+      'translateY',
+    ];
+    expect(names.slice(-7)).toEqual(transformNames);
+    expect([...newPath().animatableProperties.keys()]).toEqual(
+      expect.arrayContaining(transformNames),
+    );
+    const group = new GroupLayer({ name: 'group', children: [] });
+    expect([...group.animatableProperties.keys()]).toEqual(transformNames);
+  });
+
+  it('defaults to the identity, which its JSON leaves out', () => {
+    const path = newPath();
+    expect([path.rotation, path.scaleX, path.scaleY, path.pivotX, path.translateY]).toEqual([
+      0, 1, 1, 0, 0,
+    ]);
+    expect(Object.keys(path.toJSON())).toEqual(['id', 'name', 'type', 'pathData']);
+    const json = newPath({ rotation: 30, pivotX: 5, scaleY: 1 }).toJSON();
+    expect(json).toMatchObject({ rotation: 30, pivotX: 5 });
+    expect(json).not.toHaveProperty('scaleY');
+  });
+
+  it('keeps its transform when cloned or loaded from JSON', () => {
+    const path = newPath({ rotation: 30, scaleX: 2, translateY: -1 });
+    expect(path.clone()).toMatchObject({ rotation: 30, scaleX: 2, translateY: -1 });
+    const vl = new VectorLayer({
+      name: 'vector',
+      children: [path.toJSON() as any],
+    });
+    expect(vl.children[0]).toMatchObject({ rotation: 30, scaleX: 2, translateY: -1 });
+  });
+
+  it('replaces values that are not numbers with the defaults', () => {
+    const path = newPath({ rotation: 'abc', scaleX: null, translateX: '3', pivotY: Infinity });
+    expect([path.rotation, path.scaleX, path.translateX, path.pivotY]).toEqual([0, 1, 3, 0]);
+  });
+
+  it('has bounds in its parent coordinates, through its own transform', () => {
+    expect(newPath().bounds).toEqual({ l: 0, t: 0, r: 10, b: 2 });
+    const { l, t, r, b } = newPath({ rotation: 90, pivotX: 5, pivotY: 1 }).bounds!;
+    expect([l, t, r, b].map(n => Math.round(n * 1e6) / 1e6)).toEqual([4, -4, 6, 6]);
+  });
 });

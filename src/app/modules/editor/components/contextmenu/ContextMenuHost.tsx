@@ -8,6 +8,8 @@ import { Icon } from 'app/modules/editor/components/icons/Icon';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 import { getSelectedLayerIds } from 'app/modules/editor/store/layers/selectors';
+import { getCurrentTime } from 'app/modules/editor/store/playback/selectors';
+import { getSelectedBlockIds } from 'app/modules/editor/store/timeline/selectors';
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -42,11 +44,14 @@ export function ContextMenuHost() {
     readonly sections: ReadonlyArray<ContextMenuSection>;
   }>();
   if (request && request !== shown?.request) {
+    const state = store.getState();
     const sections = buildContextMenu(
       {
         document: layerTimelineService.getDocument(),
-        selectedLayerIds: getSelectedLayerIds(store.getState()),
+        selectedLayerIds: getSelectedLayerIds(state),
         target: request.target,
+        blockIds: request.blockIds ?? Array.from(getSelectedBlockIds(state)),
+        currentTime: getCurrentTime(state),
         editor: canvasEditorBridgeService.getMenuState(),
       },
       services,

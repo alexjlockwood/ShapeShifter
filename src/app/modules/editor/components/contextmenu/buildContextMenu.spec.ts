@@ -2,6 +2,7 @@ import type {
   CanvasEditorCommands,
   CanvasEditorMenuState,
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
+import { ActionMode } from 'app/modules/editor/model/actionmode';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -26,6 +27,7 @@ import {
   type ContextMenuSection,
   formatShortcut,
 } from './buildContextMenu';
+import type { ContextMenuTarget } from './contextmenu.service';
 
 describe('buildContextMenu', () => {
   let store: Store<State>;
@@ -77,6 +79,24 @@ describe('buildContextMenu', () => {
         document: services.layerTimelineService.getDocument(),
         selectedLayerIds: getSelectedLayerIds(store.getState()),
         target: 'canvas',
+        blockIds: [],
+        currentTime: 0,
+        editor: services.canvasEditorBridgeService.getMenuState(),
+      },
+      services,
+    );
+  }
+
+  /** Builds the menu for blocks, in the timeline or the canvas editor's keyframe badge. */
+  function buildForBlocks(blockIds: ReadonlyArray<string>, target: ContextMenuTarget) {
+    services.canvasEditorBridgeService.attach(editor);
+    return buildContextMenu(
+      {
+        document: services.layerTimelineService.getDocument(),
+        selectedLayerIds: getSelectedLayerIds(store.getState()),
+        target,
+        blockIds,
+        currentTime: 0,
         editor: services.canvasEditorBridgeService.getMenuState(),
       },
       services,
@@ -154,10 +174,16 @@ describe('buildContextMenu', () => {
   it('offers the layer commands for a path, in sections', () => {
     const a = path('a');
     load([a]);
-    expect(ids(build([a]))).toEqual([['duplicate', 'group', 'convert'], ['animate'], ['delete']]);
+    expect(ids(build([a]))).toEqual([
+      ['duplicate', 'group', 'convert'],
+      ['morphInto'],
+      ['animate'],
+      ['delete'],
+    ]);
     // With the editor off, as on the live site, its commands are left out.
     expect(ids(build([a], { withEditor: false }))).toEqual([
       ['group', 'convert'],
+      ['morphInto'],
       ['animate'],
       ['delete'],
     ]);
@@ -279,12 +305,35 @@ describe('buildContextMenu', () => {
     expect(find(build([outer, empty]), 'flatten')).toBeUndefined();
   });
 
+  it("says when a path's animated transform or a skew keeps a group from being flattened", () => {
+    const spinning = path('spinning');
+    const withPath = new GroupLayer({ name: 'withPath', children: [spinning, path('still')] });
+    const turned = new GroupLayer({ name: 'turned', children: [path('b')], rotation: 30 });
+    const stretched = new GroupLayer({ name: 'stretched', children: [turned], scaleX: 2 });
+    // A transformed path would be skewed too, but its transform goes into its path instead.
+    const turnedPath = path('turnedPath', { rotation: 30 });
+    const stretchedPath = new GroupLayer({
+      name: 'stretchedPath',
+      children: [turnedPath],
+      scaleX: 2,
+    });
+    load([withPath, stretched, stretchedPath], [block(spinning.id, 'rotation', 0, 90)]);
+    expect(find(build([withPath]), 'flatten')?.disabledReason).toBe(
+      "spinning's transform is animated",
+    );
+    expect(find(build([stretched]), 'flatten')?.disabledReason).toBe(
+      'Flattening would skew turned',
+    );
+    expect(find(build([stretchedPath]), 'flatten')?.disabledReason).toBeUndefined();
+  });
+
   it('combines paths, breaks them apart, and offers the boolean operations', () => {
     const a = path('a');
     const b = path('b', { pathData: new Path('M 12 12 L 20 12 L 20 20 Z') });
     load([a, b]);
     const menu = build([a, b]);
     expect(ids(menu)[1]).toEqual(['combine', 'boolean']);
+    expect(ids(menu)[2]).toEqual([`morph.${a.id}.${b.id}`, `morph.${b.id}.${a.id}`]);
     const booleans = find(menu, 'boolean')?.submenu ?? [];
     expect(booleans.map(item => [item.label, item.shortcut])).toEqual([
       ['Union', 'Alt+Shift+U'],
@@ -362,6 +411,168 @@ describe('buildContextMenu', () => {
     const b = path('b');
     load([a, b]);
     expect(find(build([a, b]), 'animate')).toBeUndefined();
+  });
+
+  describe('morph into', () => {
+    const TRIANGLE = 'M 14 14 L 22 14 L 18 22 Z';
+
+    it('lists the other paths without blocks, and says why some are refused', () => {
+      const a = path('a');
+      const b = path('b', { pathData: new Path(TRIANGLE) });
+      const animated = path('animated');
+      const clip = new ClipPathLayer({ name: 'clip', children: [], pathData: new Path(TRIANGLE) });
+      const spinning = new GroupLayer({ name: 'spinning', children: [path('inSpinning')] });
+      const group = new GroupLayer({ name: 'group', children: [] });
+      load(
+        [a, b, animated, clip, spinning, group],
+        [block(animated.id, 'fillAlpha', 1, 0), block(spinning.id, 'rotation', 0, 90)],
+      );
+      const morphInto = find(build([a]), 'morphInto');
+      expect(morphInto?.disabledReason).toBeUndefined();
+      expect(
+        morphInto?.submenu?.map(item => ({ label: item.label, reason: item.disabledReason })),
+      ).toEqual([
+        { label: 'b', reason: undefined },
+        { label: 'inSpinning', reason: "spinning's transform is animated" },
+      ]);
+
+      run(morphInto?.submenu?.[0]);
+      const { layerTimelineService, actionModeService } = services;
+      expect(layerTimelineService.getVectorLayer().findLayerById(b.id)).toBeUndefined();
+      expect(actionModeService.isActionMode()).toBe(true);
+    });
+
+    it('is disabled, with the reason, when nothing can be morphed into', () => {
+      const a = path('a');
+      load([a]);
+      expect(find(build([a]), 'morphInto')?.disabledReason).toBe('There are no other paths');
+      const b = path('b');
+      load([a, b], [block(b.id, 'fillAlpha', 1, 0)]);
+      expect(find(build([a]), 'morphInto')?.disabledReason).toBe('The other paths are animated');
+      const empty = new PathLayer({ name: 'empty', children: [], pathData: undefined });
+      load([empty, path('c')]);
+      expect(find(build([empty]), 'morphInto')?.disabledReason).toBe('empty has no path');
+    });
+
+    it('morphs either of two selected paths into the other', () => {
+      const a = path('a');
+      const b = path('b', { pathData: new Path(TRIANGLE) });
+      load([a, b], [block(a.id, 'fillAlpha', 1, 0)]);
+      // In the layer list's order, whichever was selected first.
+      const menu = build([b, a]);
+      expect(find(menu, 'morphInto')).toBeUndefined();
+      const [aIntoB, bIntoA] = menu[2];
+      expect(aIntoB).toMatchObject({ label: "Morph 'a' into 'b'", disabledReason: undefined });
+      expect(bIntoA).toMatchObject({
+        label: "Morph 'b' into 'a'",
+        disabledReason: 'a is animated',
+      });
+      run(aIntoB);
+      expect(services.layerTimelineService.getVectorLayer().children.map(l => l.name)).toEqual([
+        'a',
+      ]);
+    });
+
+    it('is only offered for one or two paths', () => {
+      const a = path('a');
+      const b = path('b');
+      const c = path('c');
+      const group = new GroupLayer({ name: 'group', children: [] });
+      load([a, b, c, group]);
+      const isOffered = (layers: Layer[]) =>
+        build(layers)
+          .flat()
+          .some(item => item.id === 'morphInto' || item.id.startsWith('morph.'));
+      expect(isOffered([a])).toBe(true);
+      expect(isOffered([a, b])).toBe(true);
+      expect(isOffered([a, b, c])).toBe(false);
+      expect(isOffered([a, group])).toBe(false);
+      expect(isOffered([group])).toBe(false);
+    });
+  });
+
+  describe('for blocks', () => {
+    const SQUARE = 'M 2 2 L 10 2 L 10 10 L 2 10 Z';
+    const TRIANGLE = 'M 14 14 L 22 14 L 18 22 Z';
+
+    function pathBlock(layerId: string, from: string, to: string, startTime: number) {
+      return AnimationBlock.from({
+        layerId,
+        propertyName: 'pathData',
+        type: 'path',
+        startTime,
+        endTime: startTime + 100,
+        fromValue: new Path(from),
+        toValue: new Path(to),
+      });
+    }
+
+    it('edits, auto fixes, and deletes a path block in the timeline', () => {
+      const a = path('a');
+      const broken = pathBlock(a.id, SQUARE, TRIANGLE, 0);
+      load([a], [broken]);
+      services.layerTimelineService.selectBlock(broken.id, true);
+      const menu = buildForBlocks([broken.id], 'timelineBlock');
+      expect(ids(menu)).toEqual([[`editMorph.${broken.id}`, 'autoFix'], ['delete']]);
+      expect(find(menu, 'autoFix')?.disabledReason).toBeUndefined();
+      run(find(menu, 'autoFix'));
+      const [fixed] = services.layerTimelineService.getAnimation().blocks;
+      expect(fixed.isAnimatable()).toBe(true);
+      expect(find(buildForBlocks([broken.id], 'timelineBlock'), 'autoFix')?.disabledReason).toBe(
+        'The paths already morph',
+      );
+
+      run(find(menu, `editMorph.${broken.id}`));
+      expect(services.actionModeService.isActionMode()).toBe(true);
+      services.actionModeService.setActionMode(ActionMode.None);
+      run(find(menu, 'delete'));
+      expect(services.layerTimelineService.getAnimation().blocks).toEqual([]);
+    });
+
+    it('only deletes blocks that have no morph', () => {
+      const a = path('a');
+      const fade = block(a.id, 'fillAlpha', 1, 0);
+      load([a], [fade]);
+      services.layerTimelineService.selectBlock(fade.id, true);
+      expect(ids(buildForBlocks([fade.id], 'timelineBlock'))).toEqual([['delete']]);
+    });
+
+    it("offers both morphs where two meet at the keyframe badge's time", () => {
+      const a = path('a');
+      const first = pathBlock(a.id, SQUARE, SQUARE, 0);
+      const second = pathBlock(a.id, SQUARE, TRIANGLE, 100);
+      load([a], [first, second]);
+      // The badge is about the selected path, which stays selected.
+      services.layerTimelineService.setSelectedLayers(new Set([a.id]));
+      const menu = buildForBlocks([first.id, second.id], 'keyframeBadge');
+      expect(menu.map(section => section.map(item => item.label))).toEqual([
+        ['Edit previous morph', 'Edit next morph', 'Auto fix'],
+        ['Delete previous morph', 'Delete next morph'],
+      ]);
+      run(menu[1][1]);
+      expect(services.layerTimelineService.getAnimation().blocks.map(b => b.id)).toEqual([
+        first.id,
+      ]);
+      expect(services.layerTimelineService.getSelectedLayerIds()).toEqual(new Set([a.id]));
+    });
+
+    it('says why a morph with an empty path is disabled', () => {
+      const a = path('a');
+      const empty = AnimationBlock.from({
+        layerId: a.id,
+        propertyName: 'pathData',
+        type: 'path',
+        fromValue: new Path(SQUARE),
+        toValue: undefined,
+      });
+      load([a], [empty]);
+      const menu = buildForBlocks([empty.id], 'keyframeBadge');
+      expect(find(menu, `editMorph.${empty.id}`)?.disabledReason).toBe(
+        'Set both of the paths before editing the morph',
+      );
+      expect(find(menu, 'autoFix')?.disabledReason).toBe('Set both of the paths first');
+      expect(find(menu, 'delete')?.label).toBe('Delete morph');
+    });
   });
 
   it('deletes the selection', () => {

@@ -1,6 +1,5 @@
 import {
   ClipPathLayer,
-  GroupLayer,
   Layer,
   LayerUtil,
   PathLayer,
@@ -48,15 +47,19 @@ export function hitTestLayer(vl: VectorLayer, point: Point, opts: HitTestOptions
     if (hiddenLayerIds.has(layer.id)) {
       return;
     }
+    const layerMatrix = getLayerMatrix(layer, matrix);
     if (isMorphableLayer(layer)) {
       // A group scaled to 0 collapses its paths to lines, which shouldn't be clickable.
-      if (layer.pathData && layer.pathData.getCommands().length && matrix.invert()) {
-        paths.push({ layer, path: toViewportPath(layer.pathData.getPathString(), matrix), matrix });
+      if (layer.pathData && layer.pathData.getCommands().length && layerMatrix.invert()) {
+        paths.push({
+          layer,
+          path: toViewportPath(layer.pathData.getPathString(), layerMatrix),
+          matrix: layerMatrix,
+        });
       }
       return;
     }
-    const childMatrix = getChildMatrix(layer, matrix);
-    layer.children.forEach(child => recurseFn(child, childMatrix));
+    layer.children.forEach(child => recurseFn(child, layerMatrix));
   })(vl, Matrix.identity());
   // Later layers are drawn on top.
   paths.reverse();
@@ -99,11 +102,13 @@ function toViewportPath(pathData: string, matrix: Matrix) {
   return path;
 }
 
-/** Returns the layer's transform for its children, from its own transform. */
-function getChildMatrix(layer: Layer, matrix: Matrix) {
-  return layer instanceof GroupLayer
-    ? Matrix.flatten([matrix, ...LayerUtil.getCanvasTransformsForGroupLayer(layer)])
-    : matrix;
+/**
+ * Returns the matrix from the layer's coordinates to the viewport's, from its parent's: a group's
+ * for its children, and a path's for its path.
+ */
+function getLayerMatrix(layer: Layer, parentMatrix: Matrix) {
+  const transforms = LayerUtil.getLayerTransforms(layer);
+  return transforms.length ? Matrix.flatten([parentMatrix, ...transforms]) : parentMatrix;
 }
 
 /**
@@ -116,7 +121,8 @@ export function getLayerBounds(vl: VectorLayer, layerId: string): Rect | undefin
     return undefined;
   }
   let bounds: { l: number; t: number; r: number; b: number } | undefined;
-  (function recurseFn(current: Layer, matrix: Matrix) {
+  (function recurseFn(current: Layer, parentMatrix: Matrix) {
+    const matrix = getLayerMatrix(current, parentMatrix);
     if (isMorphableLayer(current)) {
       const box = getPathBounds(current, matrix);
       if (box && [box.l, box.t, box.r, box.b].every(Number.isFinite)) {
@@ -131,9 +137,8 @@ export function getLayerBounds(vl: VectorLayer, layerId: string): Rect | undefin
       }
       return;
     }
-    const childMatrix = getChildMatrix(current, matrix);
-    current.children.forEach(child => recurseFn(child, childMatrix));
-  })(layer, LayerUtil.getCanvasTransformForLayer(vl, layerId));
+    current.children.forEach(child => recurseFn(child, matrix));
+  })(layer, LayerUtil.getParentTransformForLayer(vl, layerId));
   return bounds;
 }
 
@@ -168,10 +173,11 @@ function getPathBounds(layer: MorphableLayer, matrix: Matrix): Rect | undefined 
  */
 export function getPathLayerBounds(vl: VectorLayer, hiddenLayerIds: ReadonlySet<string>) {
   const bounds = new Map<string, Rect>();
-  (function recurseFn(layer: Layer, matrix: Matrix) {
+  (function recurseFn(layer: Layer, parentMatrix: Matrix) {
     if (hiddenLayerIds.has(layer.id)) {
       return;
     }
+    const matrix = getLayerMatrix(layer, parentMatrix);
     if (layer instanceof PathLayer) {
       const box = getPathBounds(layer, matrix);
       if (box) {
@@ -179,8 +185,7 @@ export function getPathLayerBounds(vl: VectorLayer, hiddenLayerIds: ReadonlySet<
       }
       return;
     }
-    const childMatrix = getChildMatrix(layer, matrix);
-    layer.children.forEach(child => recurseFn(child, childMatrix));
+    layer.children.forEach(child => recurseFn(child, matrix));
   })(vl, Matrix.identity());
   return bounds;
 }

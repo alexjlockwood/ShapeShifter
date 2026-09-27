@@ -2,7 +2,7 @@ import { ClipPathLayer, GroupLayer, PathLayer, VectorLayer } from 'app/modules/e
 import { Path } from 'app/modules/editor/model/paths';
 import { describe, expect, it } from 'vitest';
 
-import { getLayerBounds, getLayersBounds, hitTestLayer } from './LayerGeometry';
+import { getLayerBounds, getLayersBounds, getPathLayerBounds, hitTestLayer } from './LayerGeometry';
 
 function path(name: string, pathData: string, props: Partial<PathLayer> = {}) {
   return new PathLayer({ name, children: [], pathData: new Path(pathData), ...props });
@@ -93,6 +93,21 @@ describe('hitTestLayer', () => {
     expect(hitTestLayer(vector(clip), { x: 12, y: 4.2 }, TOLERANCE)).toBe(clip);
   });
 
+  it('hits a path where its own transform draws it', () => {
+    // A bar along the top, turned a quarter turn clockwise around the canvas's center, so it's
+    // drawn down the right side.
+    const bar = path('bar', 'M 0 0 L 24 0 L 24 4 L 0 4 Z', {
+      fillColor: '#000',
+      rotation: 90,
+      pivotX: 12,
+      pivotY: 12,
+    });
+    expect(hitTestLayer(vector(bar), { x: 22, y: 12 }, TOLERANCE)).toBe(bar);
+    expect(hitTestLayer(vector(bar), { x: 12, y: 2 }, TOLERANCE)).toBeUndefined();
+    const flat = path('flat', 'M 2 12 L 22 12', { scaleY: 0 });
+    expect(hitTestLayer(vector(flat), { x: 12, y: 12 }, TOLERANCE)).toBeUndefined();
+  });
+
   it('misses everything in a group scaled to 0', () => {
     const square = path('square', 'M 0 0 L 24 0 L 24 24 L 0 24 Z', { fillColor: '#000' });
     const group = new GroupLayer({ name: 'group', children: [square], scaleX: 0 });
@@ -113,6 +128,18 @@ describe('getLayerBounds', () => {
       const { l, t, r, b } = getLayerBounds(vl, id)!;
       expect([l, t, r, b].map(n => Math.round(n * 1e6) / 1e6)).toEqual([-2, 0, 0, 10]);
     }
+  });
+
+  it('bounds transformed paths, in groups too', () => {
+    const bar = path('bar', 'M 0 0 L 10 0 L 10 2 L 0 2 Z', { rotation: 90 });
+    const moved = new GroupLayer({ name: 'moved', children: [bar], translateX: 5 });
+    const vl = vector(moved);
+    for (const id of [bar.id, moved.id]) {
+      const { l, t, r, b } = getLayerBounds(vl, id)!;
+      expect([l, t, r, b].map(n => Math.round(n * 1e6) / 1e6)).toEqual([3, 0, 5, 10]);
+    }
+    const bounds = getPathLayerBounds(vl, new Set()).get(bar.id)!;
+    expect(Math.round(bounds.l * 1e6) / 1e6).toBe(3);
   });
 
   it('joins the bounds of several layers, and leaves out layers without paths', () => {

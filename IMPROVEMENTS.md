@@ -200,6 +200,12 @@ roadmap.
   animated layers, and turns round caps and joins into many short quadratic curves
   (`docs/canvas-editor.md`, phase 6). The follow-up is making it work with the editor off and on
   animated paths, and fitting the rounds as cubics.
+- **Morph into gaps.** "Morph into" (`scripts/common/morphLayers.ts`, in the context menu and the
+  import snackbar) animates the path, the fill and stroke colors, their alphas, and the stroke
+  width. The other path's trim isn't animated, and its caps, joins, miter limit, and fill rule are
+  lost, since they can't animate. It also needs a free 300 ms at the current time or after the
+  last path block, and refuses otherwise, rather than lengthening the animation or picking a
+  shorter morph. Animating the trim, and asking before lengthening, are the obvious follow-ups.
 
 ## Planned features
 
@@ -223,9 +229,10 @@ Export formats the maintainer wants to add, decided while triaging the GitHub is
 
 Ideas under consideration, not yet scoped or scheduled:
 
-- **A pivot relative to the layer's bounds, as a percentage.** New groups pivot at the canvas's
-  center (`getCenterPivot` in `model/layers/LayerUtil.ts`), but pivots are absolute, so the pivot
-  stays put when the layer's contents move or the canvas is resized. Three options were weighed:
+- **A pivot relative to the layer's bounds, as a percentage.** New groups and paths pivot at the
+  canvas's center (`getCenterPivot` in `model/layers/LayerUtil.ts`), but pivots are absolute, so
+  the pivot stays put when the layer's contents move or the canvas is resized. Three options were
+  weighed:
   - edit it as a percentage in the inspector but store it absolute (about 2 days, no format
     change);
   - store a fraction of the bounds at the start of the animation (about 1 week, with a version

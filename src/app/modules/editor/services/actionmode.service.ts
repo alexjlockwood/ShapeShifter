@@ -7,11 +7,19 @@ import {
   Selection,
   SelectionType,
 } from 'app/modules/editor/model/actionmode';
-import { MorphableLayer } from 'app/modules/editor/model/layers';
+import { autoFixPathBlocks } from 'app/modules/editor/components/canvas/pathKeyframes';
+import { LayerUtil, MorphableLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path, PathMutator, PathUtil } from 'app/modules/editor/model/paths';
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { AutoAwesome } from 'app/modules/editor/scripts/algorithms';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
+import {
+  getImportMorphOffer,
+  getMorphBlockRefusal,
+  morphIntoLayer,
+  morphLayerSets,
+} from 'app/modules/editor/scripts/common/morphLayers';
+import type { LayerDocument } from 'app/modules/editor/scripts/common/pathOpLayers';
 import { Action, State, Store } from 'app/modules/editor/store';
 import {
   SetActionMode,
@@ -29,13 +37,20 @@ import {
   isActionMode,
 } from 'app/modules/editor/store/actionmode/selectors';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
+import { SetSelectedLayers, SetVectorLayer } from 'app/modules/editor/store/layers/actions';
+import { getCurrentTime } from 'app/modules/editor/store/playback/selectors';
 import { createSelector } from 'app/modules/editor/store/selectors';
-import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
+import {
+  SelectAnimation,
+  SetAnimation,
+  SetSelectedBlocks,
+} from 'app/modules/editor/store/timeline/actions';
 import { getSingleSelectedPathBlock } from 'app/modules/editor/store/timeline/selectors';
+import { IsolateUndoStep } from 'app/modules/editor/store/undoredo/actions';
 import { findIndex, isEqual, remove } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { LayerTimelineService } from './layertimeline.service';
-import { Duration, SnackBarService } from './snackbar.service';
+import { Duration, type SnackBar, SnackBarService } from './snackbar.service';
 
 // True when action mode has lost the block it edits. The timeline is disabled in action mode, so
 // that mostly happens through undo and redo.
@@ -49,6 +64,8 @@ const hasLostEditedBlock = createSelector(
  */
 export class ActionModeService {
   private readonly subscription = new Subscription();
+  // The snackbar with the last import's offer to morph (offerImportMorph).
+  private importMorphSnackBar: SnackBar | undefined;
 
   // The services are created once, outside of React (src/main.tsx), so StrictMode can't subscribe
   // twice.
@@ -84,12 +101,9 @@ export class ActionModeService {
       console.warn(`Block ${blockId} isn't a path block, so it has no morph to edit`);
       return false;
     }
-    if (!block.fromValue?.getPathString() || !block.toValue?.getPathString()) {
-      this.snackBarService.show(
-        'Set both of the paths before editing the morph',
-        'Dismiss',
-        Duration.Short,
-      );
+    const refusal = getMorphBlockRefusal(block);
+    if (refusal) {
+      this.snackBarService.show(refusal, 'Dismiss', Duration.Short);
       return false;
     }
     if (this.isActionMode()) {
@@ -102,6 +116,126 @@ export class ActionModeService {
     this.layerTimelineService.selectBlock(blockId, true);
     this.setActionMode(ActionMode.Selection);
     return true;
+  }
+
+  /**
+   * Morphs one path into another, deleting the other one, as one undo step
+   * (scripts/common/morphLayers.ts), and edits the morph in action mode. If it can't, it says why
+   * in a snackbar. Returns whether it morphed.
+   */
+  morphInto(fromId: string, toId: string) {
+    const document = this.layerTimelineService.getDocument();
+    return this.commitMorph(
+      document,
+      morphIntoLayer(document, fromId, toId, this.queryStore(getCurrentTime)),
+    );
+  }
+
+  /**
+   * Like morphInto, for the layers of two imported files, whose paths are combined into one path
+   * on each side first (morphLayerSets).
+   */
+  morphLayerSets(fromIds: ReadonlyArray<string>, toIds: ReadonlyArray<string>) {
+    const document = this.layerTimelineService.getDocument();
+    return this.commitMorph(
+      document,
+      morphLayerSets(document, fromIds, toIds, this.queryStore(getCurrentTime)),
+    );
+  }
+
+  /** Saves the morph made from the document as one undo step, or says why there's none. */
+  private commitMorph(document: LayerDocument, morphed: ReturnType<typeof morphIntoLayer>) {
+    if ('reason' in morphed) {
+      this.snackBarService.show(morphed.reason, 'Dismiss', Duration.Long);
+      return false;
+    }
+    if (morphed.autoFixError) {
+      // The morph is kept as it is, and action mode says what doesn't match.
+      bugsnagClient.notify(morphed.autoFixError);
+    }
+    if (this.isActionMode()) {
+      // Its selections, hover, and pairings are for the other block.
+      this.setActionMode(ActionMode.None);
+    }
+    const { vectorLayer, animation } = morphed.document;
+    const removedIds = LayerUtil.runPreorderTraversal(document.vectorLayer)
+      .map(l => l.id)
+      .filter(id => !vectorLayer.findLayerById(id));
+    this.store.dispatch(
+      new BatchAction(
+        new IsolateUndoStep(),
+        new SetVectorLayer(vectorLayer),
+        new SetAnimation(animation),
+        ...this.layerTimelineService.buildCleanupLayerIdActions(...removedIds),
+        new SelectAnimation(false),
+        new SetSelectedLayers(new Set()),
+        new SetSelectedBlocks(new Set([morphed.blockId])),
+      ),
+    );
+    return this.editMorph(morphed.blockId);
+  }
+
+  /**
+   * After an import, offers to morph what was there into what was imported, or one file into
+   * the other, in a snackbar, if that would work (getImportMorphOffer). Returns whether it did,
+   * so the caller can say what it imported otherwise.
+   *
+   * @param before the vector layer before the import
+   * @param importedIds the top-level layers each file added, from importLayers
+   * @param fileNames the files' names, in the same order, if they came from files
+   */
+  offerImportMorph(
+    before: VectorLayer,
+    importedIds: ReadonlyArray<ReadonlyArray<string>>,
+    fileNames?: ReadonlyArray<string>,
+  ) {
+    const offer = getImportMorphOffer(
+      before,
+      this.layerTimelineService.getDocument(),
+      importedIds,
+      this.queryStore(getCurrentTime),
+      fileNames,
+    );
+    const { snackBarService } = this;
+    if (!offer) {
+      // An earlier offer would morph into the layers imported before, so it goes.
+      if (this.importMorphSnackBar && snackBarService.getSnackBar() === this.importMorphSnackBar) {
+        snackBarService.dismiss();
+      }
+      this.importMorphSnackBar = undefined;
+      return false;
+    }
+    snackBarService.show(offer.message, 'Morph', Duration.Long, () =>
+      this.morphLayerSets(offer.fromIds, offer.toIds),
+    );
+    this.importMorphSnackBar = snackBarService.getSnackBar();
+    return true;
+  }
+
+  /**
+   * Auto fixes the path blocks that don't morph, and the rest of the chains of morphs they're in
+   * (autoFixPathBlocks), as one undo step. It says so if auto fix fails.
+   */
+  autoFixBlocks(blockIds: Iterable<string>) {
+    const document = this.layerTimelineService.getDocument();
+    let fixed: typeof document;
+    try {
+      fixed = autoFixPathBlocks(document, new Set(blockIds));
+    } catch (e) {
+      bugsnagClient.notify(e instanceof Error ? e : String(e));
+      this.snackBarService.show("Couldn't auto fix these paths", 'Dismiss', Duration.Long);
+      return;
+    }
+    if (fixed === document) {
+      return;
+    }
+    this.store.dispatch(
+      new BatchAction(
+        new IsolateUndoStep(),
+        new SetVectorLayer(fixed.vectorLayer),
+        new SetAnimation(fixed.animation),
+      ),
+    );
   }
 
   isActionMode() {

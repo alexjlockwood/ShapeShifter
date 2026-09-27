@@ -2,11 +2,13 @@ import {
   ClipPathLayer,
   GroupLayer,
   type Layer,
+  LayerUtil,
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { MathUtil } from 'app/modules/editor/scripts/common';
 import { createEditorStore, type State, type Store } from 'app/modules/editor/store';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { ActionCreators } from 'redux-undo';
@@ -223,6 +225,101 @@ describe('LayerTimelineService', () => {
       expect(child.translateY).toBe(7);
       expect(child.rotation).toBeCloseTo(45);
     });
+
+    // MODEL-1: the transform's rotation and scales used to be read off of the matrix in a way
+    // that only worked for positive scales and turns of less than 90 degrees.
+    it('moves mirrored and turned transforms into child groups', () => {
+      for (const transform of [{ scaleX: -1 }, { rotation: 135 }, { scaleY: -2, rotation: 200 }]) {
+        load([
+          newGroup('group', [newGroup('child', [newPath('path', 'M 1 1 L 5 2')], transform)], {
+            translateX: 3,
+            rotation: 20,
+          }),
+        ]);
+        const before = [drawnAt('path', 1, 1), drawnAt('path', 5, 2)];
+        services.layerTimelineService.flattenGroupLayer(getLayer('group').id);
+        expect(getTree()).toEqual({ vector: [{ child: ['path'] }] });
+        expect([drawnAt('path', 1, 1), drawnAt('path', 5, 2)]).toEqual(before);
+      }
+    });
+
+    // STORE-14: only the static width used to be scaled.
+    it("scales the paths' stroke width blocks too", () => {
+      const path = newPath('path', 'M 1 1 L 5 1', 1);
+      const group = newGroup('group', [path], { scaleX: 3, scaleY: 3 });
+      load(
+        [group],
+        [
+          AnimationBlock.from({
+            type: 'number',
+            layerId: path.id,
+            propertyName: 'strokeWidth',
+            fromValue: 1,
+            toValue: 2,
+          }),
+        ],
+      );
+      services.layerTimelineService.flattenGroupLayer(group.id);
+      expect(getLayer<PathLayer>('path').strokeWidth).toBe(3);
+      const [block] = getBlocks();
+      expect([block.fromValue, block.toValue]).toEqual([3, 6]);
+    });
+
+    /** Where the layer's point is drawn. */
+    function drawnAt(name: string, x: number, y: number) {
+      const vl = services.layerTimelineService.getVectorLayer();
+      const layer = getLayer(name);
+      const point = MathUtil.transformPoint(
+        { x, y },
+        LayerUtil.getCanvasTransformForLayer(vl, layer.id),
+      );
+      return [point.x, point.y].map(n => Math.round(n * 1e6) / 1e6);
+    }
+
+    it('moves the transform into paths that use their own, and keeps their paths', () => {
+      const path = newPath('path', 'M 1 1 L 5 1', 2);
+      path.rotation = 90;
+      path.pivotX = 3;
+      path.pivotY = 1;
+      load([newGroup('group', [path], { rotation: 180, translateX: 10 })]);
+      const before = drawnAt('path', 5, 1);
+      services.layerTimelineService.flattenGroupLayer(getLayer('group').id);
+
+      expect(getTree()).toEqual({ vector: ['path'] });
+      const flattened = getLayer<PathLayer>('path');
+      expect(flattened.pathData!.getPathString()).toBe('M 1 1 L 5 1');
+      // The stroke is scaled by the path's transform, as it was.
+      expect(flattened.strokeWidth).toBe(2);
+      expect(flattened.rotation).toBeCloseTo(-90);
+      expect(drawnAt('path', 5, 1)).toEqual(before);
+    });
+
+    it("bakes a path's transform into its path when the group's would skew it", () => {
+      const path = newPath('path', 'M 1 1 L 5 1 L 5 3', 1);
+      path.rotation = 30;
+      load([newGroup('group', [path], { scaleX: 2 })]);
+      const before = [drawnAt('path', 1, 1), drawnAt('path', 5, 1), drawnAt('path', 5, 3)];
+      services.layerTimelineService.flattenGroupLayer(getLayer('group').id);
+
+      const flattened = getLayer<PathLayer>('path');
+      expect([flattened.rotation, flattened.scaleX, flattened.translateX]).toEqual([0, 1, 0]);
+      const points = flattened.pathData!.getCommands().map(c => c.end);
+      expect(points.map(p => [p.x, p.y].map(n => Math.round(n * 1e3) / 1e3))).toEqual(
+        before.map(p => p.map(n => Math.round(n * 1e3) / 1e3)),
+      );
+    });
+
+    it('moves the pivots of other paths with them', () => {
+      const path = newPath('path');
+      path.pivotX = 12;
+      path.pivotY = 12;
+      load([newGroup('group', [path], { translateX: 3 })]);
+      services.layerTimelineService.flattenGroupLayer(getLayer('group').id);
+
+      const flattened = getLayer<PathLayer>('path');
+      expect(flattened.pathData!.getPathString()).toBe('M 4 1 L 8 1');
+      expect([flattened.pivotX, flattened.pivotY, flattened.translateX]).toEqual([15, 12, 0]);
+    });
   });
 
   describe('groupOrUngroupSelectedLayers', () => {
@@ -347,6 +444,29 @@ describe('LayerTimelineService', () => {
       expect(getLayer<PathLayer>('path').pathData?.getPathString()).toBe('M 1 1 L 5 1');
       expect(getBlocks().map(b => [b.layerId, b.propertyName])).toEqual([[path.id, 'pathData']]);
     });
+
+    it("bakes a path's transform into the clip path's path and path blocks", () => {
+      const path = newPath('path', 'M 1 1 L 5 1');
+      path.translateX = 2;
+      path.scaleY = 3;
+      load(
+        [path],
+        [
+          AnimationBlock.from({
+            type: 'path',
+            layerId: path.id,
+            propertyName: 'pathData',
+            fromValue: new Path('M 1 1 L 5 1'),
+            toValue: new Path('M 1 2 L 5 2'),
+          }),
+        ],
+      );
+      services.layerTimelineService.convertLayer(path.id);
+
+      expect(getLayer<ClipPathLayer>('path').pathData?.getPathString()).toBe('M 3 3 L 7 3');
+      const [block] = getBlocks() as PathAnimationBlock[];
+      expect(block.toValue?.getPathString()).toBe('M 3 6 L 7 6');
+    });
   });
 
   describe('combineSelectedLayers and breakApartSelectedLayers', () => {
@@ -388,6 +508,47 @@ describe('LayerTimelineService', () => {
       );
       expect(getTree()).toEqual({ vector: ['a', { g: [] }] });
     });
+
+    it('combines into a transformed path in its coordinates, and breaks apart keeping it', () => {
+      const a = newPath('a', 'M 0 0 L 2 0 L 2 2 Z');
+      a.rotation = 90;
+      a.translateX = 10;
+      const b = newPath('b', 'M 10 0 L 10 2 L 8 2 Z');
+      load([a, b]);
+      services.layerTimelineService.setSelectedLayers(new Set([a.id, b.id]));
+
+      expect(services.layerTimelineService.combineSelectedLayers()).toBeUndefined();
+      const combined = getLayer<PathLayer>('a');
+      expect([combined.rotation, combined.translateX]).toEqual([90, 10]);
+      // b is drawn where it was, through a's rotation.
+      expect(combined.pathData?.getPathString()).toBe('M 0 0 L 2 0 L 2 2 Z M 0 0 L 2 0 L 2 2 Z');
+
+      expect(services.layerTimelineService.breakApartSelectedLayers()).toBeUndefined();
+      expect(getTree()).toEqual({ vector: ['a', 'a_1'] });
+      const piece = getLayer<PathLayer>('a_1');
+      expect([piece.rotation, piece.translateX]).toEqual([90, 10]);
+    });
+
+    it('refuses to combine paths whose transforms are animated', () => {
+      const a = newPath('a');
+      const b = newPath('b', 'M 1 3 L 5 3');
+      load(
+        [a, b],
+        [
+          AnimationBlock.from({
+            type: 'number',
+            layerId: a.id,
+            propertyName: 'rotation',
+            fromValue: 0,
+            toValue: 90,
+          }),
+        ],
+      );
+      services.layerTimelineService.setSelectedLayers(new Set([a.id, b.id]));
+      expect(services.layerTimelineService.combineSelectedLayers()).toBe(
+        "a's transform is animated",
+      );
+    });
   });
 
   describe('addBlockForProperty', () => {
@@ -406,7 +567,7 @@ describe('LayerTimelineService', () => {
       });
       expect(services.layerTimelineService.getSelectedBlocks()).toEqual([block]);
       // Properties the layer doesn't have are ignored.
-      services.layerTimelineService.addBlockForProperty(path.id, 'rotation');
+      services.layerTimelineService.addBlockForProperty(path.id, 'canvasColor');
       expect(getBlocks()).toHaveLength(1);
     });
   });

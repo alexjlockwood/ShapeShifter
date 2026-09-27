@@ -2,19 +2,43 @@ import { Path } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { environment } from 'environments/environment';
 import { findIndex, flatMap, round } from 'lodash-es';
-import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from './Layer';
+import {
+  ClipPathLayer,
+  getTransformMatrices,
+  GroupLayer,
+  isTransformed,
+  Layer,
+  PathLayer,
+  type Transform,
+  TRANSFORM_DEFAULTS,
+  TRANSFORM_PROPERTY_NAMES,
+  VectorLayer,
+} from './Layer';
 
 const IS_DEV_BUILD = !environment.production;
 
 /**
- * Returns a single flattened transform matrix that can be used to perform canvas
- * transform operations. The resulting matrix will transform path coordinates to
- * canvas drawing coordinates. The inverse of the matrix will transform canvas
- * drawing coordinates back to path coordinates.
+ * Returns the matrix that maps the layer's coordinates to the viewport's, for drawing it: its
+ * parents' transforms, and a path's own. Its inverse maps the viewport back to the layer's
+ * coordinates, e.g. to edit a path's points. A group's own transform isn't included, since it
+ * applies to its children, and neither is a clip path's, since clip paths have none. It's the
+ * identity if the layer doesn't exist.
  */
 export function getCanvasTransformForLayer(root: Layer, layerId: string) {
-  // The transform is the identity if the layer doesn't exist.
-  return Matrix.flatten(getCanvasTransformsForLayer(root, layerId) ?? []);
+  const layer = root.findLayerById(layerId);
+  return Matrix.flatten([
+    getParentTransformForLayer(root, layerId),
+    ...(layer instanceof PathLayer ? getLayerTransforms(layer) : []),
+  ]);
+}
+
+/**
+ * Returns the matrix that maps the coordinates of the layer's parent to the viewport's: the
+ * transforms of the groups it's in, without its own. E.g. a distance on the canvas goes through its
+ * inverse to move a path by its translation. It's the identity if the layer doesn't exist.
+ */
+export function getParentTransformForLayer(root: Layer, layerId: string) {
+  return Matrix.flatten(getParentTransformsForLayer(root, layerId) ?? []);
 }
 
 /**
@@ -22,12 +46,10 @@ export function getCanvasTransformForLayer(root: Layer, layerId: string) {
  * are returned in top-down order (i.e. the transform for the layer's
  * immediate parent will be the very last matrix in the returned list).
  */
-function getCanvasTransformsForLayer(root: Layer, layerId: string) {
+function getParentTransformsForLayer(root: Layer, layerId: string) {
   return (function recurseFn(parents: Layer[], current: Layer): Matrix[] | undefined {
     if (current.id === layerId) {
-      return flatMap(parents, l => {
-        return l instanceof GroupLayer ? getCanvasTransformsForGroupLayer(l) : [];
-      });
+      return flatMap(parents, getLayerTransforms);
     }
     for (const child of current.children) {
       const transforms = recurseFn([...parents, current], child);
@@ -40,19 +62,74 @@ function getCanvasTransformsForLayer(root: Layer, layerId: string) {
 }
 
 /**
- * Returns a list of matrix transforms for a given group layer.
+ * Returns the matrices of the layer's own transform, which map its coordinates to its parent's
+ * (see getTransformMatrices), for a group or a path. Other layers have no transform.
  */
-export function getCanvasTransformsForGroupLayer(l: GroupLayer) {
-  // First negative pivot, then scale, then rotation, then translation, then pivot.
-  // When drawing a path, the transforms are applied at the bottom up, which
-  // is why the order appears to be reversed below.
-  return [
-    Matrix.translation(l.pivotX, l.pivotY),
-    Matrix.translation(l.translateX, l.translateY),
-    Matrix.rotation(l.rotation),
-    Matrix.scaling(l.scaleX, l.scaleY),
-    Matrix.translation(-l.pivotX, -l.pivotY),
-  ];
+export function getLayerTransforms(layer: Layer) {
+  return layer instanceof GroupLayer || layer instanceof PathLayer
+    ? getTransformMatrices(layer)
+    : [];
+}
+
+/**
+ * Returns the transform, with its pivot at 0, whose matrix is the given one: a scale, then a
+ * rotation, then a translation. A mirror is a negative y scale. A transform can't skew, so for a
+ * matrix that does (see isSkewed), it returns the closest one, which keeps the x axis.
+ */
+export function toTransform(m: Matrix): Transform {
+  const { a, b, c, d, e, f } = m;
+  let scaleX = Math.hypot(a, b);
+  let scaleY: number;
+  let radians: number;
+  if (scaleX) {
+    radians = Math.atan2(b, a);
+    // The determinant is scaleX * scaleY, and it's negative for a mirror.
+    scaleY = (a * d - b * c) / scaleX;
+  } else {
+    // The x axis collapses to nothing, so the y axis says how it's rotated.
+    scaleX = 0;
+    scaleY = Math.hypot(c, d);
+    radians = scaleY ? Math.atan2(-c, d) : 0;
+  }
+  return {
+    ...TRANSFORM_DEFAULTS,
+    rotation: MathUtil.round((radians * 180) / Math.PI),
+    scaleX: MathUtil.round(scaleX),
+    scaleY: MathUtil.round(scaleY),
+    translateX: MathUtil.round(e),
+    translateY: MathUtil.round(f),
+  };
+}
+
+/**
+ * Returns whether the matrix skews, which no transform can do: its axes aren't at right angles,
+ * e.g. after scaling a rotated shape along one axis.
+ */
+export function isSkewed({ a, b, c, d }: Matrix) {
+  return Math.abs(a * c + b * d) > 1e-6 * Math.max(1, Math.hypot(a, b) * Math.hypot(c, d));
+}
+
+/** The part of an animation that says whether a layer's properties are animated. */
+interface BlockList {
+  readonly blocks: ReadonlyArray<{ readonly layerId: string; readonly propertyName: string }>;
+}
+
+/** Returns whether any of the layer's transform properties are animated. */
+export function hasTransformBlocks(animation: BlockList, layerId: string) {
+  const names: ReadonlySet<string> = new Set(TRANSFORM_PROPERTY_NAMES);
+  return animation.blocks.some(b => b.layerId === layerId && names.has(b.propertyName));
+}
+
+/**
+ * Returns whether the layer is a path that uses its transform: its rotation, scale, or translation
+ * isn't the default, or it's animated. A pivot alone doesn't count, since it moves nothing. The
+ * exports wrap such a path in a group, and paths that don't are moved by their path data.
+ */
+export function pathUsesTransform(layer: Layer | undefined, animation?: BlockList) {
+  return (
+    layer instanceof PathLayer &&
+    (isTransformed(layer) || (!!animation && hasTransformBlocks(animation, layer.id)))
+  );
 }
 
 /**
@@ -64,8 +141,8 @@ export function getCanvasTransformsForGroupLayer(l: GroupLayer) {
 export function getCenterPivot(vl: VectorLayer, parentId: string) {
   const parent = vl.findLayerById(parentId);
   const transform = Matrix.flatten([
-    getCanvasTransformForLayer(vl, parentId),
-    ...(parent instanceof GroupLayer ? getCanvasTransformsForGroupLayer(parent) : []),
+    getParentTransformForLayer(vl, parentId),
+    ...(parent ? getLayerTransforms(parent) : []),
   ]);
   const center = { x: vl.width / 2, y: vl.height / 2 };
   // A parent scaled to 0 can't be inverted, and hides the layer anyway.
@@ -128,11 +205,25 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
   }
 
   const transformLayerFn = (vl: VectorLayer, scale: number, tx: number, ty: number) => {
-    const transforms = Matrix.flatten([Matrix.scaling(scale, scale), Matrix.translation(tx, ty)]);
+    // Scales the layers, and then centers them, since the offset is in the new viewport's units.
+    const transforms = Matrix.flatten([Matrix.translation(tx, ty), Matrix.scaling(scale, scale)]);
+    // Every layer's coordinates are scaled and offset the same way, so each transform gets the
+    // same matrix on both sides: its pivot moves with the layers, and its translation only
+    // scales, since it's a distance. That keeps rotations and scales around the same place.
+    const transformFn = (l: GroupLayer | PathLayer) => {
+      const pivot = MathUtil.transformPoint({ x: l.pivotX, y: l.pivotY }, transforms);
+      l.pivotX = pivot.x;
+      l.pivotY = pivot.y;
+      l.translateX *= scale;
+      l.translateY *= scale;
+    };
     (function recurseFn(layer: Layer) {
       if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
-        if (layer instanceof PathLayer && layer.isStroked()) {
-          layer.strokeWidth *= scale;
+        if (layer instanceof PathLayer) {
+          if (layer.isStroked()) {
+            layer.strokeWidth *= scale;
+          }
+          transformFn(layer);
         }
         if (layer.pathData) {
           layer.pathData = new Path(
@@ -142,11 +233,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
         return;
       }
       if (layer instanceof GroupLayer) {
-        const l = layer as GroupLayer;
-        l.translateX *= scale;
-        l.translateY *= scale;
-        l.pivotX *= scale;
-        l.pivotY *= scale;
+        transformFn(layer);
       }
       layer.children.forEach(l => recurseFn(l));
     })(vl);

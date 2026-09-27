@@ -1,4 +1,14 @@
 import { findPreset } from 'app/modules/editor/model/interpolators';
+import {
+  type Transform,
+  TRANSFORM_DEFAULTS,
+  TRANSFORM_PROPERTY_NAMES,
+} from 'app/modules/editor/model/layers';
+
+// The transform properties that move a path. A pivot alone doesn't, so it needs no new version.
+const PATH_TRANSFORM_KEYS: ReadonlyArray<keyof Transform> = TRANSFORM_PROPERTY_NAMES.filter(
+  key => key !== 'pivotX' && key !== 'pivotY',
+);
 
 /**
  * The parsed (but not yet reconstructed into model objects) JSON shape that
@@ -44,6 +54,40 @@ const VERSION_RULES: readonly ProjectVersionRule[] = [
       return (
         Array.isArray(blocks) &&
         blocks.some(b => typeof b?.interpolator === 'string' && !findPreset(b.interpolator))
+      );
+    },
+  },
+  {
+    // Builds before transforms on paths ignore a path's transform, and drop its transform
+    // blocks, so the path is drawn where its path data is.
+    version: 3,
+    test: json => {
+      const pathIds = new Set<string>();
+      let isTransformed = false;
+      (function recurseFn(layer: any) {
+        if (!layer || typeof layer !== 'object') {
+          return;
+        }
+        if (layer.type === 'path') {
+          pathIds.add(layer.id);
+          isTransformed ||= PATH_TRANSFORM_KEYS.some(key => {
+            // Loading replaces a missing value, or one that isn't a number, with the default.
+            const value = layer[key] ?? TRANSFORM_DEFAULTS[key];
+            return Number.isFinite(Number(value)) && Number(value) !== TRANSFORM_DEFAULTS[key];
+          });
+        }
+        if (Array.isArray(layer.children)) {
+          layer.children.forEach(recurseFn);
+        }
+      })(json.layers.vectorLayer);
+      if (isTransformed) {
+        return true;
+      }
+      const blocks = json.timeline.animation?.blocks;
+      const transformNames: ReadonlySet<string> = new Set(TRANSFORM_PROPERTY_NAMES);
+      return (
+        Array.isArray(blocks) &&
+        blocks.some(b => pathIds.has(b?.layerId) && transformNames.has(b?.propertyName))
       );
     },
   },

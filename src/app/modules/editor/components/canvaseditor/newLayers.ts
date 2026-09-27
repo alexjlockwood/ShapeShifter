@@ -113,6 +113,7 @@ function getToLocal(
  * Returns a new path layer, filled or stroked, with a name that no other layer has. A stroke is a
  * viewport unit wide, whatever the artboard's size, so a line on a big artboard isn't drawn with a
  * thick stroke. It's in the place's coordinates, so it still looks a unit wide in a scaled group.
+ * Like a new group, it pivots at the canvas's center.
  */
 export function createPathLayer(
   vl: VectorLayer,
@@ -126,6 +127,7 @@ export function createPathLayer(
     name: LayerUtil.getUniqueLayerName([vl], name),
     children: [],
     pathData,
+    ...LayerUtil.getCenterPivot(vl, place.parentId),
     ...(style === 'filled'
       ? { fillColor: FILL_COLOR }
       : { strokeColor: STROKE_COLOR, strokeWidth: round(width, 3) || STROKE_WIDTH }),

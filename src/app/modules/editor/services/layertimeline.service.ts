@@ -1,12 +1,15 @@
 import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 import {
   ClipPathLayer,
+  getTransformMatrix,
   GroupLayer,
   Layer,
   LayerUtil,
   PathLayer,
+  TRANSFORM_DEFAULTS,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
+import type { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { breakApartLayers, combineLayers } from 'app/modules/editor/scripts/common/combineLayers';
@@ -375,14 +378,20 @@ export class LayerTimelineService {
   /**
    * Turns a path into a clip path, or a clip path into a path. It keeps the layer's id, so that
    * it stays selected, hidden, and animated. Blocks that the new type can't animate are dropped,
-   * which the context menu avoids by only offering it without them (getConvertRefusal).
+   * which the context menu avoids by only offering it without them (getConvertRefusal). Clip paths
+   * have no transform, so a path's transform goes into its path and its path blocks.
    */
   convertLayer(layerId: string) {
     const vl = this.getVectorLayer();
     const layer = vl.findLayerById(layerId);
     let converted: Layer;
+    // The path's transform, which the clip path's path data takes.
+    let pathTransform = Matrix.identity();
     if (layer instanceof PathLayer) {
-      converted = new ClipPathLayer(layer);
+      pathTransform = getTransformMatrix(layer);
+      const clipPath = new ClipPathLayer(layer);
+      clipPath.pathData = clipPath.pathData && transformPath(clipPath.pathData, pathTransform);
+      converted = clipPath;
     } else if (layer instanceof ClipPathLayer) {
       converted = new PathLayer(layer);
     } else {
@@ -390,10 +399,13 @@ export class LayerTimelineService {
     }
     const actions: Action[] = [new SetVectorLayer(LayerUtil.replaceLayer(vl, layerId, converted))];
     const animation = this.getAnimation();
-    const blocks = animation.blocks.filter(
-      b => b.layerId !== layerId || converted.animatableProperties.has(b.propertyName),
-    );
-    if (blocks.length !== animation.blocks.length) {
+    const blocks = animation.blocks
+      .filter(b => b.layerId !== layerId || converted.animatableProperties.has(b.propertyName))
+      .map(b => (b.layerId === layerId ? transformPathBlock(b, pathTransform) : b));
+    if (
+      blocks.length !== animation.blocks.length ||
+      blocks.some((b, i) => b !== animation.blocks[i])
+    ) {
       const newAnimation = animation.clone();
       newAnimation.blocks = blocks;
       actions.push(new SetAnimation(newAnimation));
@@ -452,7 +464,10 @@ export class LayerTimelineService {
   }
 
   /**
-   * Merges the specified group layer into its children layers.
+   * Merges the specified group layer into its children layers. Child groups, and paths that use
+   * their transform, take the group's transform into theirs, unless that would skew a path, whose
+   * transform is then baked into its path. Other paths are transformed, along with their path
+   * blocks. getFlattenRefusal says when it can't be done.
    * TODO: make it possible to merge groups that contain animation blocks?
    */
   flattenGroupLayer(layerId: string) {
@@ -461,42 +476,42 @@ export class LayerTimelineService {
     if (!layer.children.length) {
       return;
     }
-    const layerTransform = Matrix.flatten(LayerUtil.getCanvasTransformsForGroupLayer(layer));
+    const animation = this.getAnimation();
+    const layerTransform = getTransformMatrix(layer);
+    // The paths whose path data and path blocks change, and how.
+    const pathTransforms = new Map<string, Matrix>();
+    // The paths whose stroke widths and their blocks are scaled, and by how much.
+    const strokeScales = new Map<string, number>();
     // A group's children are groups, paths, and clip paths.
     const groupChildren = layer.children as ReadonlyArray<GroupLayer | PathLayer | ClipPathLayer>;
     const layerChildren = groupChildren.map((l): Layer => {
-      if (l instanceof GroupLayer) {
-        const flattenedTransform = Matrix.flatten([
-          layerTransform,
-          ...LayerUtil.getCanvasTransformsForGroupLayer(l),
-        ]);
-        const { sx, sy } = flattenedTransform.getScaling();
-        const degrees = flattenedTransform.getRotation();
-        const { tx, ty } = flattenedTransform.getTranslation();
-        l = l.clone();
-        l.pivotX = 0;
-        l.pivotY = 0;
-        l.translateX = tx;
-        l.translateY = ty;
-        l.rotation = degrees;
-        l.scaleX = sx;
-        l.scaleY = sy;
-        return l;
-      }
       l = l.clone();
-      if (l instanceof PathLayer && l.strokeWidth) {
-        // Group transforms scale strokes too (as they do on Android), so scale the width by the
-        // same amount as the path.
-        l.strokeWidth = MathUtil.round(l.strokeWidth * layerTransform.getScaleFactor());
-      }
-      const path = l.pathData;
-      if (!path || !path.getPathString()) {
+      if (l instanceof ClipPathLayer) {
+        pathTransforms.set(l.id, layerTransform);
+        l.pathData = l.pathData && transformPath(l.pathData, layerTransform);
         return l;
       }
-      l.pathData = path.mutate().transform(layerTransform).build();
+      const flattened = layerTransform.dot(getTransformMatrix(l));
+      if (l instanceof GroupLayer) {
+        Object.assign(l, LayerUtil.toTransform(flattened));
+        return l;
+      }
+      if (LayerUtil.pathUsesTransform(l, animation) && !LayerUtil.isSkewed(flattened)) {
+        Object.assign(l, LayerUtil.toTransform(flattened));
+        return l;
+      }
+      // The path's own transform goes into its path along with the group's. Its pivot stays
+      // where it was on the canvas, for a transform added later.
+      pathTransforms.set(l.id, flattened);
+      const pivot = MathUtil.transformPoint({ x: l.pivotX, y: l.pivotY }, layerTransform);
+      Object.assign(l, TRANSFORM_DEFAULTS, { pivotX: pivot.x, pivotY: pivot.y });
+      // Group transforms scale strokes too (as they do on Android), so scale the width, and its
+      // blocks, by the same amount as the path.
+      strokeScales.set(l.id, flattened.getScaleFactor());
+      l.strokeWidth = MathUtil.round(l.strokeWidth * flattened.getScaleFactor());
+      l.pathData = l.pathData && transformPath(l.pathData, flattened);
       return l;
     });
-    const layerChildrenIds = new Set(layerChildren.map(l => l.id));
     const parent = LayerUtil.findParent(vl, layerId)?.clone();
     if (!parent) {
       return;
@@ -512,28 +527,32 @@ export class LayerTimelineService {
       new SetVectorLayer(LayerUtil.updateLayer(vl, parent)),
       ...this.buildCleanupLayerIdActions(layerId),
     ];
-    const newAnimation = this.getAnimation().clone();
+    const newAnimation = animation.clone();
     // TODO: show a dialog if the user is about to unknowingly delete any blocks?
     newAnimation.blocks = newAnimation.blocks.filter(b => b.layerId !== layerId);
     // TODO: also attempt to merge children group animation blocks?
     newAnimation.blocks = newAnimation.blocks.map(b => {
-      if (!(b instanceof PathAnimationBlock) || !layerChildrenIds.has(b.layerId)) {
-        return b;
+      const pathTransform = pathTransforms.get(b.layerId);
+      const strokeScale = strokeScales.get(b.layerId);
+      if (b.propertyName === 'strokeWidth' && strokeScale !== undefined && strokeScale !== 1) {
+        const block = b.clone();
+        const scale = (value: AnimationBlock['fromValue']) =>
+          typeof value === 'number' ? MathUtil.round(value * strokeScale) : value;
+        block.fromValue = scale(block.fromValue);
+        block.toValue = scale(block.toValue);
+        return block;
       }
-      const block = b.clone();
-      if (block.fromValue) {
-        block.fromValue = block.fromValue.mutate().transform(layerTransform).build();
-      }
-      if (block.toValue) {
-        block.toValue = block.toValue.mutate().transform(layerTransform).build();
-      }
-      return block;
+      return pathTransform ? transformPathBlock(b, pathTransform) : b;
     });
     actions.push(new SetAnimation(newAnimation));
     this.store.dispatch(new BatchAction(...actions));
   }
 
-  private buildCleanupLayerIdActions(...deletedLayerIds: string[]) {
+  /**
+   * Returns the actions that take the deleted layers out of the collapsed, hidden, and selected
+   * layers, for a change that deletes them.
+   */
+  buildCleanupLayerIdActions(...deletedLayerIds: string[]) {
     const collapsedLayerIds = this.getCollapsedLayerIds();
     const hiddenLayerIds = this.getHiddenLayerIds();
     const selectedLayerIds = this.getSelectedLayerIds();
@@ -705,6 +724,26 @@ export class LayerTimelineService {
       new SetAnimation(animation),
       new SetSelectedBlocks(new Set()),
     ];
+  }
+
+  /** Deletes the blocks, e.g. the ones the canvas's keyframe badge is about, and deselects them. */
+  deleteBlocks(blockIds: Iterable<string>) {
+    const ids = new Set(blockIds);
+    const animation = this.getAnimation();
+    const blocks = animation.blocks.filter(b => !ids.has(b.id));
+    if (blocks.length === animation.blocks.length) {
+      return;
+    }
+    const newAnimation = animation.clone();
+    newAnimation.blocks = blocks;
+    const selectedBlockIds = this.getSelectedBlockIds();
+    const actions: Action[] = [new SetAnimation(newAnimation)];
+    if (Array.from(ids).some(id => selectedBlockIds.has(id))) {
+      actions.push(
+        new SetSelectedBlocks(new Set(difference(Array.from(selectedBlockIds), [...ids]))),
+      );
+    }
+    this.store.dispatch(new BatchAction(...actions));
   }
 
   updateBlocks(blocks: ReadonlyArray<AnimationBlock>) {
@@ -926,4 +965,22 @@ export class LayerTimelineService {
   private queryStore<T>(selector: (state: State) => T) {
     return selector(this.store.getState());
   }
+}
+
+/** Returns the path transformed by the matrix, or the path itself if it's empty or the identity. */
+function transformPath(path: Path, matrix: Matrix) {
+  return !path.getPathString() || matrix.equals(Matrix.identity())
+    ? path
+    : path.mutate().transform(matrix).build();
+}
+
+/** Returns a path block with its paths transformed, or any other block as it is. */
+function transformPathBlock(b: AnimationBlock, matrix: Matrix) {
+  if (!(b instanceof PathAnimationBlock) || matrix.equals(Matrix.identity())) {
+    return b;
+  }
+  const block = b.clone();
+  block.fromValue = block.fromValue && transformPath(block.fromValue, matrix);
+  block.toValue = block.toValue && transformPath(block.toValue, matrix);
+  return block;
 }

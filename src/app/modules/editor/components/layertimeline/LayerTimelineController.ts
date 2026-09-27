@@ -271,10 +271,12 @@ export class LayerTimelineController extends DestroyableMixin() {
 
   onAddPathLayerClick() {
     const vl = getVectorLayer(this.store.getState());
+    const parentId = this.services.layerTimelineService.getParentIdForNewLayer();
     const layer = new PathLayer({
       name: LayerUtil.getUniqueLayerName([vl], 'path'),
       children: [],
       pathData: undefined,
+      ...LayerUtil.getCenterPivot(vl, parentId),
     });
     this.services.layerTimelineService.addLayer(layer);
   }
@@ -782,6 +784,21 @@ export class LayerTimelineController extends DestroyableMixin() {
       layerTimelineService.setSelectedLayers(new Set(selection));
     }
     contextMenuService.open(position, 'layerList');
+  }
+
+  /**
+   * Opens the context menu for a right-click on the block, selecting it first if it isn't
+   * selected, so that the menu acts on all of the selected blocks otherwise.
+   */
+  onTimelineBlockContextMenu(
+    block: AnimationBlock,
+    position: { readonly x: number; readonly y: number },
+  ) {
+    const { layerTimelineService, contextMenuService } = this.services;
+    if (!layerTimelineService.getSelectedBlocks().some(b => b.id === block.id)) {
+      layerTimelineService.selectBlock(block.id, true);
+    }
+    contextMenuService.open(position, 'timelineBlock');
   }
 
   onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
