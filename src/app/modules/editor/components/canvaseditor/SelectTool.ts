@@ -7,6 +7,14 @@ import {
   getPathLayerBounds,
   hitTestLayer,
 } from 'app/modules/editor/components/canvas/LayerGeometry';
+import {
+  duplicateLayers,
+  getTopmostLayerIds,
+  rotationAround,
+  scalingAround,
+  transformLayers,
+  translateLayers,
+} from 'app/modules/editor/components/canvas/transformLayers';
 import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { MathUtil, Matrix, Point, Rect } from 'app/modules/editor/scripts/common';
@@ -31,14 +39,6 @@ import {
   isInside,
   isSmall,
 } from './selectionHandles';
-import {
-  duplicateLayers,
-  getTopmostLayerIds,
-  rotationAround,
-  scalingAround,
-  transformLayers,
-  translateLayers,
-} from './transformLayers';
 
 /** What the select tool reads and changes. */
 export interface SelectToolContext {

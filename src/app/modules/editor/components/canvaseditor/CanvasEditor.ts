@@ -11,6 +11,11 @@ import {
   getPathKeyframe,
 } from 'app/modules/editor/components/canvas/pathKeyframes';
 import { getLayersBounds, hitTestLayer } from 'app/modules/editor/components/canvas/LayerGeometry';
+import {
+  duplicateLayers,
+  getTopmostLayerIds,
+  translateLayers,
+} from 'app/modules/editor/components/canvas/transformLayers';
 import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
@@ -60,7 +65,6 @@ import { PenTool } from './PenTool';
 import { ShapeTool } from './ShapeTool';
 import { Modifiers, SelectTool } from './SelectTool';
 import type { SnapThresholds } from './snapping';
-import { duplicateLayers, getTopmostLayerIds, translateLayers } from './transformLayers';
 
 // The property inspector shows it for paths when the editor is on (CanvasEditorApi.ts).
 export { PathInspector } from './PathInspector';
