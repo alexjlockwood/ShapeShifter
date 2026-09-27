@@ -1,6 +1,8 @@
 import { Command } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
 
+import { CanvasCamera } from './CanvasCamera';
+
 type Context = CanvasRenderingContext2D;
 
 /**
@@ -54,4 +56,38 @@ export function executeCommands(ctx: Context, commands: ReadonlyArray<Command>, 
     previousEndPoint = end;
   });
   ctx.restore();
+}
+
+/**
+ * Sizes the canvas to cover the camera's panel. Resizing a canvas clears it and reallocates its
+ * memory, so it's skipped when the size is the same, e.g. after a zoom.
+ */
+export function setCanvasSize(canvas: HTMLCanvasElement, camera: CanvasCamera) {
+  const { w, h } = camera.getDeviceSize();
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  // The CSS size is rounded like the backing store, so that each device pixel in it maps to
+  // exactly one on the screen.
+  canvas.style.width = `${w / camera.pixelRatio}px`;
+  canvas.style.height = `${h / camera.pixelRatio}px`;
+}
+
+/**
+ * Clips the context to the artboard. The context must have no transform. The clip is rounded to
+ * whole device pixels, so that the artboard's edges are sharp, like the edges of the canvas were
+ * when it was the size of the artboard.
+ */
+export function clipToArtboard(ctx: Context, camera: CanvasCamera) {
+  const { x, y, w, h } = camera.getArtboardRect();
+  const { pixelRatio } = camera;
+  ctx.beginPath();
+  ctx.rect(
+    Math.round(x * pixelRatio),
+    Math.round(y * pixelRatio),
+    Math.round(w * pixelRatio),
+    Math.round(h * pixelRatio),
+  );
+  ctx.clip();
 }

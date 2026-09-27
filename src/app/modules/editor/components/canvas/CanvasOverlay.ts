@@ -38,7 +38,7 @@ import { flatMap, remove, uniq } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { CanvasLayoutMixin } from './CanvasLayoutMixin';
+import { CanvasCamera } from './CanvasCamera';
 import * as CanvasUtil from './CanvasUtil';
 import { PairSubPathHelper } from './PairSubPathHelper';
 import { SegmentSplitter } from './SegmentSplitter';
@@ -91,7 +91,8 @@ type Context = CanvasRenderingContext2D;
 /**
  * Draws overlay selections and other content on top of the currently active vector layer.
  */
-export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
+export class CanvasOverlay extends DestroyableMixin() {
+  private camera: CanvasCamera | undefined;
   vectorLayer: VectorLayer | undefined;
   // Normal mode variables.
   private hiddenLayerIds: ReadonlySet<string> = new Set<string>();
@@ -268,6 +269,11 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     return getContext2d(this.canvas);
   }
 
+  // CSS pixels per viewport unit.
+  private get cssScale() {
+    return this.camera?.scale ?? 1;
+  }
+
   private get highlightLineWidth() {
     return HIGHLIGHT_LINE_WIDTH / this.cssScale;
   }
@@ -331,33 +337,37 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
     return !layer.isFilled() && layer.isStroked() ? this.segmentSplitter : this.shapeSplitter;
   }
 
-  // @Override
-  protected onDimensionsChanged() {
-    const { w, h } = this.getViewport();
-    this.canvas.setAttribute('width', `${w * this.attrScale}`);
-    this.canvas.setAttribute('height', `${h * this.attrScale}`);
-    this.canvas.style.width = `${w * this.cssScale}px`;
-    this.canvas.style.height = `${h * this.cssScale}px`;
+  setCamera(camera: CanvasCamera) {
+    this.camera = camera;
+    CanvasUtil.setCanvasSize(this.canvas, camera);
     this.draw();
   }
 
   draw() {
+    const { camera } = this;
+    if (!camera) {
+      return;
+    }
     const ctx = this.overlayCtx;
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.save();
+    // The overlay covers the whole panel, but only draws on the artboard.
+    CanvasUtil.clipToArtboard(ctx, camera);
     if (this.vectorLayer) {
-      const { w, h } = this.getViewport();
       ctx.save();
-      ctx.scale(this.attrScale, this.attrScale);
-      ctx.clearRect(0, 0, w, h);
+      const { a, b, c, d, e, f } = camera.getDeviceTransform();
+      ctx.setTransform(a, b, c, d, e, f);
       this.drawLayerSelections(ctx, this.vectorLayer, this.vectorLayer);
       this.drawHighlights(ctx);
       ctx.restore();
       // Draw points in terms of physical pixels, not viewport pixels.
-      this.drawLabeledPoints(ctx);
-      this.drawDraggingPoints(ctx);
-      this.drawFloatingPreviewPoint(ctx);
-      this.drawFloatingSplitFilledPathPreviewPoints(ctx);
+      this.drawLabeledPoints(ctx, camera);
+      this.drawDraggingPoints(ctx, camera);
+      this.drawFloatingPreviewPoint(ctx, camera);
+      this.drawFloatingSplitFilledPathPreviewPoints(ctx, camera);
     }
-    this.drawPixelGrid(ctx);
+    this.drawPixelGrid(ctx, camera);
+    ctx.restore();
   }
 
   // Recursively draws all layer selections to the canvas.
@@ -565,7 +575,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
   }
 
   // Draw any labeled points.
-  private drawLabeledPoints(ctx: Context) {
+  private drawLabeledPoints(ctx: Context, camera: CanvasCamera) {
     const activePath = this.activePath;
     if (
       !this.isActionMode ||
@@ -687,7 +697,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       );
       executeLabeledPoint(
         ctx,
-        this.attrScale,
+        camera,
         applyGroupTransform(cmd.end, flattenedTransform),
         radius,
         color,
@@ -697,7 +707,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
   }
 
   // Draw any actively dragged points along the path in selection mode.
-  private drawDraggingPoints(ctx: Context) {
+  private drawDraggingPoints(ctx: Context, camera: CanvasCamera) {
     if (
       !this.isActionMode ||
       this.actionSource === ActionSource.Animated ||
@@ -728,13 +738,13 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
         ? applyGroupTransform(projection, flattenedTransform)
         : this.selectionHelper.getLastKnownMouseLocation();
     if (point) {
-      executeLabeledPoint(ctx, this.attrScale, point, this.splitPointRadius, SPLIT_POINT_COLOR);
+      executeLabeledPoint(ctx, camera, point, this.splitPointRadius, SPLIT_POINT_COLOR);
     }
   }
 
   // Draw a floating point preview over the canvas in split commands mode
   // and split subpaths mode for stroked paths.
-  private drawFloatingPreviewPoint(ctx: Context) {
+  private drawFloatingPreviewPoint(ctx: Context, camera: CanvasCamera) {
     if (
       !this.isActionMode ||
       this.actionSource === ActionSource.Animated ||
@@ -762,7 +772,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       );
       executeLabeledPoint(
         ctx,
-        this.attrScale,
+        camera,
         applyGroupTransform(projection, flattenedTransform),
         this.splitPointRadius,
         SPLIT_POINT_COLOR,
@@ -771,7 +781,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
   }
 
   // Draw the floating points on top of the drag line in split filled subpath mode.
-  private drawFloatingSplitFilledPathPreviewPoints(ctx: Context) {
+  private drawFloatingSplitFilledPathPreviewPoints(ctx: Context, camera: CanvasCamera) {
     if (
       !this.isActionMode ||
       this.actionSource === ActionSource.Animated ||
@@ -793,7 +803,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
       executeLabeledPoint(
         ctx,
-        this.attrScale,
+        camera,
         applyGroupTransform(proj1.projection, flattenedTransform),
         this.splitPointRadius,
         SPLIT_POINT_COLOR,
@@ -803,13 +813,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
           ? applyGroupTransform(proj2.projection, flattenedTransform)
           : this.shapeSplitter.getLastKnownMouseLocation();
         if (endPoint) {
-          executeLabeledPoint(
-            ctx,
-            this.attrScale,
-            endPoint,
-            this.splitPointRadius,
-            SPLIT_POINT_COLOR,
-          );
+          executeLabeledPoint(ctx, camera, endPoint, this.splitPointRadius, SPLIT_POINT_COLOR);
         }
       }
     } else {
@@ -817,7 +821,7 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
       if (projection && projection.d < this.minSnapThreshold) {
         executeLabeledPoint(
           ctx,
-          this.attrScale,
+          camera,
           applyGroupTransform(projection, flattenedTransform),
           this.splitPointRadius,
           SPLIT_POINT_COLOR,
@@ -827,28 +831,33 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
   }
 
   // Draws the pixel grid on top of the canvas content.
-  private drawPixelGrid(ctx: Context) {
+  private drawPixelGrid(ctx: Context, camera: CanvasCamera) {
     // Note that we draw the pixel grid in terms of physical pixels,
     // not viewport pixels.
-    if (this.cssScale > 4) {
+    if (camera.scale > 4) {
       ctx.save();
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
-      const devicePixelRatio = window.devicePixelRatio || 1;
-      const viewport = this.getViewport();
-      for (let x = 1; x < viewport.w; x++) {
+      const { pixelRatio, deviceScale, viewport, panel } = camera;
+      const origin = camera.viewportToDevice({ x: 0, y: 0 });
+      // Only the lines in the panel, since a zoomed in artboard can have many more.
+      const topLeft = camera.panelToViewport({ x: 0, y: 0 });
+      const bottomRight = camera.panelToViewport({ x: panel.w, y: panel.h });
+      const lastX = Math.min(viewport.w, bottomRight.x + 1);
+      const lastY = Math.min(viewport.h, bottomRight.y + 1);
+      for (let x = Math.max(1, Math.ceil(topLeft.x)); x < lastX; x++) {
         ctx.fillRect(
-          x * this.attrScale - devicePixelRatio / 2,
-          0,
-          devicePixelRatio,
-          viewport.h * this.attrScale,
+          origin.x + x * deviceScale - pixelRatio / 2,
+          origin.y,
+          pixelRatio,
+          viewport.h * deviceScale,
         );
       }
-      for (let y = 1; y < viewport.h; y++) {
+      for (let y = Math.max(1, Math.ceil(topLeft.y)); y < lastY; y++) {
         ctx.fillRect(
-          0,
-          y * this.attrScale - devicePixelRatio / 2,
-          viewport.w * this.attrScale,
-          devicePixelRatio,
+          origin.x,
+          origin.y + y * deviceScale - pixelRatio / 2,
+          viewport.w * deviceScale,
+          pixelRatio,
         );
       }
       ctx.restore();
@@ -948,10 +957,10 @@ export class CanvasOverlay extends CanvasLayoutMixin(DestroyableMixin()) {
   }
 
   private mouseEventToViewportCoords(event: MouseEvent) {
+    // The overlay's top left corner is the panel's.
     const { left, top } = this.canvas.getBoundingClientRect();
-    const x = (event.clientX - left) / this.cssScale;
-    const y = (event.clientY - top) / this.cssScale;
-    return { x, y };
+    const point = { x: event.clientX - left, y: event.clientY - top };
+    return this.camera ? this.camera.panelToViewport(point) : point;
   }
 
   private hitTestForLayer(point: Point) {
@@ -1055,7 +1064,7 @@ function executeHighlights(
 // Draws a labeled point with optional text.
 function executeLabeledPoint(
   ctx: Context,
-  attrScale: number,
+  camera: CanvasCamera,
   point: Point,
   radius: number,
   color: string,
@@ -1064,8 +1073,8 @@ function executeLabeledPoint(
   // Convert the point and the radius to physical pixel coordinates.
   // We do this to avoid fractional font sizes less than 1px, which
   // show up OK on Chrome but not on Firefox or Safari.
-  point = MathUtil.transformPoint(point, Matrix.scaling(attrScale, attrScale));
-  radius *= attrScale;
+  point = camera.viewportToDevice(point);
+  radius *= camera.deviceScale;
 
   ctx.save();
   ctx.beginPath();

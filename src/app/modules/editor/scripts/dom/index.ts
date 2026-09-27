@@ -103,3 +103,23 @@ const MAX_CANVAS_SIZE = 16384;
 export function getCanvasPixelRatio(width: number, height: number) {
   return Math.min(devicePixelRatio, MAX_CANVAS_SIZE / width, MAX_CANVAS_SIZE / height);
 }
+
+/**
+ * Calls onChange whenever the device pixel ratio changes, e.g. when the window moves to a display
+ * with a different density. Returns a function that stops watching.
+ */
+export function watchDevicePixelRatio(onChange: () => void) {
+  let query: MediaQueryList | undefined;
+  const listener = () => {
+    watch();
+    onChange();
+  };
+  // A resolution query only matches one ratio, so it's replaced after each change.
+  const watch = () => {
+    query?.removeEventListener('change', listener);
+    query = matchMedia(`(resolution: ${devicePixelRatio}dppx)`);
+    query.addEventListener('change', listener);
+  };
+  watch();
+  return () => query?.removeEventListener('change', listener);
+}

@@ -1,33 +1,29 @@
 import { ActionSource } from 'app/modules/editor/model/actionmode';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
-import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
+import { getCanvasPixelRatio, watchDevicePixelRatio } from 'app/modules/editor/scripts/dom';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
 import type { EditorServices } from 'app/modules/editor/services/createEditorServices';
 import { Duration, SnackBarService } from 'app/modules/editor/services/snackbar.service';
 import { State, Store } from 'app/modules/editor/store';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
-import { getZoomPanInfo } from 'app/modules/editor/store/paper/selectors';
 import type { Features } from 'environments/features';
 import { isEqual, round } from 'lodash-es';
-import { ReplaySubject, combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
-import { CanvasContainer } from './CanvasContainer';
+import { CanvasCamera, Size } from './CanvasCamera';
 import type { CanvasEditor, CanvasEditorModule } from './CanvasEditorApi';
 import { CanvasLayers } from './CanvasLayers';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { CanvasOverlay } from './CanvasOverlay';
 import { CanvasRuler } from './CanvasRuler';
 import { loadCanvasEditor } from './loadCanvasEditor';
 
-// Canvas margin in css pixels.
-const CANVAS_MARGIN = 36;
-
 export interface CanvasElements {
+  /** The panel, which the canvases cover. */
   readonly root: HTMLElement;
+  /** The vector layer's bounds, under the canvases. It gets the mouse events. */
+  readonly artboard: HTMLElement;
   readonly horizontalRuler: HTMLCanvasElement;
   readonly verticalRuler: HTMLCanvasElement;
-  readonly container: HTMLElement;
   readonly layers: HTMLCanvasElement;
   readonly overlay: HTMLCanvasElement;
 }
@@ -35,9 +31,11 @@ export interface CanvasElements {
 /**
  * Lays out and draws one of the canvases, and forwards mouse events to its overlay.
  */
-export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
-  private readonly canvasBounds$ = new ReplaySubject<Size>(1);
-  private readonly canvasContainer: CanvasContainer;
+export class CanvasController extends DestroyableMixin() {
+  private viewport: Size | undefined;
+  private camera: CanvasCamera | undefined;
+  private resizeObserver: ResizeObserver | undefined;
+  private stopWatchingPixelRatio: (() => void) | undefined;
   private readonly canvasLayers: CanvasLayers;
   private readonly canvasOverlay: CanvasOverlay;
   private readonly canvasRulers: ReadonlyArray<CanvasRuler>;
@@ -61,7 +59,6 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
     super();
     this.features = features;
     this.snackBarService = snackBarService;
-    this.canvasContainer = new CanvasContainer(elements.container);
     this.canvasLayers = new CanvasLayers(elements.layers, actionSource, store);
     this.canvasOverlay = new CanvasOverlay(
       elements.overlay,
@@ -80,22 +77,28 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
     this.canvasLayers.init();
     this.canvasOverlay.init();
 
-    const activeViewport$ = this.store.select(getVectorLayer).pipe(
-      map(vl => ({ w: vl.width, h: vl.height })),
-      distinctUntilChanged((a, b) => isEqual(a, b)),
-    );
     this.registerSubscription(
-      combineLatest([this.canvasBounds$, activeViewport$]).subscribe(([bounds, viewport]) => {
-        const w = Math.max(1, bounds.w - CANVAS_MARGIN * 2);
-        const h = Math.max(1, bounds.h - CANVAS_MARGIN * 2);
-        this.setDimensions({ w, h }, viewport);
-      }),
+      this.store
+        .select(getVectorLayer)
+        .pipe(
+          map(vl => ({ w: vl.width, h: vl.height })),
+          distinctUntilChanged((a, b) => isEqual(a, b)),
+        )
+        .subscribe(viewport => {
+          this.viewport = viewport;
+          // Root's styles size the canvases in action mode by it.
+          const aspectRatio = viewport.w / viewport.h;
+          if (Number.isFinite(aspectRatio) && aspectRatio > 0) {
+            this.elements.root.style.setProperty('--viewport-aspect-ratio', `${aspectRatio}`);
+          }
+          this.layout();
+        }),
     );
-    this.registerSubscription(
-      this.store.select(getZoomPanInfo).subscribe(info => {
-        this.setZoomPan(info.zoom, info.translation);
-      }),
-    );
+    // Resize observers call back after layout and before paint, so the canvases never show at
+    // the wrong size.
+    this.resizeObserver = new ResizeObserver(() => this.layout());
+    this.resizeObserver.observe(this.elements.root);
+    this.stopWatchingPixelRatio = watchDevicePixelRatio(() => this.layout());
     // Only the canvas that shows the current time is editable. In action mode, the start and end
     // canvases next to it are for morphing.
     if (this.actionSource === ActionSource.Animated) {
@@ -111,6 +114,8 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
   dispose() {
     super.dispose();
     this.isDisposed = true;
+    this.resizeObserver?.disconnect();
+    this.stopWatchingPixelRatio?.();
     this.canvasEditor?.dispose();
     this.setEditorState(undefined);
     this.canvasLayers.dispose();
@@ -168,22 +173,27 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
     }
   }
 
-  setCanvasBounds(bounds: Size) {
-    this.canvasBounds$.next(bounds);
-  }
-
-  // @Override
-  protected onDimensionsChanged(bounds: Size, viewport: Size) {
-    this.layouts.forEach(l => l.setDimensions(bounds, viewport));
-  }
-
-  // @Override
-  protected onZoomPanChanged(zoom: number, translation: Readonly<{ tx: number; ty: number }>) {
-    this.layouts.forEach(l => l.setZoomPan(zoom, translation));
-  }
-
-  private get layouts() {
-    return [this.canvasContainer, this.canvasLayers, this.canvasOverlay, ...this.canvasRulers];
+  /** Fits the artboard to the panel, and redraws everything at the new size. */
+  private layout() {
+    if (!this.viewport) {
+      return;
+    }
+    const { width, height } = this.elements.root.getBoundingClientRect();
+    const camera = CanvasCamera.fit({
+      panel: { w: width, h: height },
+      viewport: this.viewport,
+      pixelRatio: getCanvasPixelRatio(width, height),
+    });
+    this.camera = camera;
+    const { x, y, w, h } = camera.getArtboardRect();
+    const { style } = this.elements.artboard;
+    style.left = `${x}px`;
+    style.top = `${y}px`;
+    style.width = `${w}px`;
+    style.height = `${h}px`;
+    this.canvasLayers.setCamera(camera);
+    this.canvasOverlay.setCamera(camera);
+    this.canvasRulers.forEach(r => r.setCamera(camera));
   }
 
   onMouseDown(event: MouseEvent) {
@@ -207,20 +217,12 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
   }
 
   private showRuler(event: MouseEvent) {
-    const { left, top } = this.elements.root.getBoundingClientRect();
-    const zoom = this.getZoom();
-    const { tx, ty } = this.getTranslation();
-    const inverseZoomPanMatrix = new Matrix(zoom, 0, 0, zoom, tx, ty).invert();
-    if (!inverseZoomPanMatrix) {
-      // Do nothing if matrix is non-invertible.
+    if (!this.camera) {
       return;
     }
-    const point = MathUtil.transformPoint(
-      { x: event.clientX - left, y: event.clientY - top },
-      inverseZoomPanMatrix,
-    );
-    const x = point.x / Math.max(1, this.cssScale);
-    const y = point.y / Math.max(1, this.cssScale);
+    const { left, top } = this.elements.artboard.getBoundingClientRect();
+    const x = (event.clientX - left) / Math.max(1, this.camera.scale);
+    const y = (event.clientY - top) / Math.max(1, this.camera.scale);
     this.canvasRulers.forEach(r => r.showMouse({ x: round(x), y: round(y) }));
   }
 

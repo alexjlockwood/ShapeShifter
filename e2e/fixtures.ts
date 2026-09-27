@@ -37,6 +37,20 @@ export async function boundingBox(locator: Locator) {
   return box;
 }
 
+/**
+ * Converts a point in a canvas's viewport, 24x24 unless specified, to page coordinates. The canvas
+ * covers its panel, and its `.canvas-artboard` shows the viewport.
+ */
+export async function artboardPoint(
+  canvas: Locator,
+  x: number,
+  y: number,
+  viewport = { w: 24, h: 24 },
+) {
+  const box = await boundingBox(canvas.locator('.canvas-artboard'));
+  return { x: box.x + (box.width * x) / viewport.w, y: box.y + (box.height * y) / viewport.h };
+}
+
 /** Evaluates fn against the store's present state in the page. */
 export function getState<T>(page: Page, fn: (state: any) => T) {
   return page.evaluate(
