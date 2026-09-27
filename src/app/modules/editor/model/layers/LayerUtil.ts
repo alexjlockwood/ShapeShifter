@@ -1,5 +1,5 @@
 import { Path } from 'app/modules/editor/model/paths';
-import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
+import { MathUtil, Matrix, type Point } from 'app/modules/editor/scripts/common';
 import { environment } from 'environments/environment';
 import { findIndex, flatMap, round } from 'lodash-es';
 import {
@@ -72,12 +72,13 @@ export function getLayerTransforms(layer: Layer) {
 }
 
 /**
- * Returns the transform, with its pivot at 0, whose matrix is the given one: a scale, then a
- * rotation, then a translation. A mirror is a negative y scale. A transform can't skew, so for a
- * matrix that does (see isSkewed), it returns the closest one, which keeps the x axis.
+ * Returns the transform, with the given pivot (0 by default), whose matrix is the given one: a
+ * scale, then a rotation, then a translation. A mirror is a negative y scale. A transform can't
+ * skew, so for a matrix that does (see isSkewed), it returns the closest one, which keeps the x
+ * axis.
  */
-export function toTransform(m: Matrix): Transform {
-  const { a, b, c, d, e, f } = m;
+export function toTransform(m: Matrix, pivot: Point = { x: 0, y: 0 }): Transform {
+  const { a, b, c, d } = m;
   let scaleX = Math.hypot(a, b);
   let scaleY: number;
   let radians: number;
@@ -91,13 +92,18 @@ export function toTransform(m: Matrix): Transform {
     scaleY = Math.hypot(c, d);
     radians = scaleY ? Math.atan2(-c, d) : 0;
   }
+  // The matrix maps a point x to pivot + translation + L(x - pivot), where L is its scale and
+  // rotation, so it maps the pivot itself to pivot + translation.
+  const moved = MathUtil.transformPoint(pivot, m);
   return {
     ...TRANSFORM_DEFAULTS,
     rotation: MathUtil.round((radians * 180) / Math.PI),
     scaleX: MathUtil.round(scaleX),
     scaleY: MathUtil.round(scaleY),
-    translateX: MathUtil.round(e),
-    translateY: MathUtil.round(f),
+    pivotX: MathUtil.round(pivot.x),
+    pivotY: MathUtil.round(pivot.y),
+    translateX: MathUtil.round(moved.x - pivot.x),
+    translateY: MathUtil.round(moved.y - pivot.y),
   };
 }
 

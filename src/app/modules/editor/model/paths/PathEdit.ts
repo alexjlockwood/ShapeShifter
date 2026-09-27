@@ -542,10 +542,13 @@ export function setFirstAnchor(path: Path, anchorId: string) {
   const segments = rotate(subPath.segments).map((segment, k) => {
     const isOldClosing = k === count - 1 - index;
     const isNewClosing = k === count - 1;
-    // Only the last segment can be the Z that draws the way back.
+    // Only the last segment can be the Z that draws the way back. A subpath that ended with a
+    // line back to its start and then a Z with no length keeps that form, so the command count
+    // (which a morph needs to match) stays the same.
     const type = segment.type === 'Z' ? 'L' : segment.type;
+    const isZ = isNewClosing && type === 'L' && subPath.closeId === undefined;
     return {
-      type: isNewClosing && type === 'L' ? ('Z' as const) : type,
+      type: isZ ? ('Z' as const) : type,
       id: isNewClosing ? uniqueId() : isOldClosing ? oldMoveId : segment.id,
       controls: [...segment.controls],
     };

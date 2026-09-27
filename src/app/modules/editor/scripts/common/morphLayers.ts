@@ -1,6 +1,12 @@
 import { autoFixPathBlocks } from 'app/modules/editor/components/canvas/pathKeyframes';
 import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
-import { GroupLayer, LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import {
+  type FillType,
+  GroupLayer,
+  LayerUtil,
+  PathLayer,
+  VectorLayer,
+} from 'app/modules/editor/model/layers';
 import type { Path } from 'app/modules/editor/model/paths';
 import { AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
@@ -33,6 +39,7 @@ interface MorphPlan {
   readonly fromPath: Path;
   readonly toPath: Path;
   readonly styleBlocks: ReadonlyArray<BlockValues>;
+  readonly fillType: FillType;
 }
 
 /**
@@ -102,7 +109,7 @@ export function morphIntoLayer(
   if ('reason' in planned) {
     return planned;
   }
-  const { startTime, fromPath, toPath, styleBlocks } = planned;
+  const { startTime, fromPath, toPath, styleBlocks, fillType } = planned;
   const endTime = startTime + MORPH_DURATION;
   const interpolator = INTERPOLATORS[0].value;
   const pathBlock = AnimationBlock.from({
@@ -132,10 +139,14 @@ export function morphIntoLayer(
       }),
     ),
   ];
-  const morphed = {
-    vectorLayer: LayerUtil.removeLayers(document.vectorLayer, toId),
-    animation,
-  };
+  let vectorLayer = LayerUtil.removeLayers(document.vectorLayer, toId);
+  const from = vectorLayer.findLayerById(fromId);
+  if (from instanceof PathLayer && from.fillType !== fillType) {
+    const updated = from.clone();
+    updated.fillType = fillType;
+    vectorLayer = LayerUtil.updateLayer(vectorLayer, updated);
+  }
+  const morphed = { vectorLayer, animation };
   try {
     return {
       document: autoFixPathBlocks(morphed, new Set([pathBlock.id])),
@@ -319,7 +330,15 @@ function planMorph(
       b => b.endTime <= startTime || b.startTime >= startTime + MORPH_DURATION,
     );
     if (isFree) {
-      return { startTime, fromPath, toPath, styleBlocks };
+      // The fill rule can't be animated, so the path takes the other path's only where that
+      // doesn't change how it looks before the morph: when it's the path's only shape, with a
+      // single subpath, since the rule only matters where subpaths (or a subpath and itself)
+      // overlap. Otherwise the other path's holes can fill in at the end (see BUGS.md).
+      const fillType =
+        pathBlocks.length === 0 && from.pathData?.getSubPaths().length === 1
+          ? to.fillType
+          : from.fillType;
+      return { startTime, fromPath, toPath, styleBlocks, fillType };
     }
   }
   return { reason: `There's no room for a ${MORPH_DURATION} ms morph in ${from.name}'s timeline` };

@@ -736,13 +736,15 @@ describe('setFirstAnchor', () => {
     expect(PathEdit.setFirstAnchor(rotated, a0).getPathString()).toBe(path.getPathString());
   });
 
-  it('keeps a line back to the start that the Z follows', () => {
+  it('keeps a line back to the start that the Z follows, and the command count', () => {
     const path = new Path('M 0 0 L 10 0 L 10 10 L 0 0 Z');
     const [a0, a1, a2] = ids(path);
     const rotated = PathEdit.setFirstAnchor(path, a1);
-    expect(rotated.getPathString()).toBe('M 10 0 L 10 10 L 0 0 Z');
-    expect(ids(rotated)).toEqual([a1, a2, a0]);
+    expect(rotated.getPathString()).toBe('M 10 0 L 10 10 L 0 0 L 10 0 Z');
+    expect(ids(rotated).slice(0, 3)).toEqual([a1, a2, a0]);
+    expect(rotated.getCommands().length).toBe(path.getCommands().length);
     expectUniqueIds(rotated);
+    expect(PathEdit.setFirstAnchor(rotated, a0).getPathString()).toBe(path.getPathString());
   });
 
   it('only changes the subpath the point is in', () => {

@@ -16,6 +16,10 @@ describe('SnackBarService', () => {
     service.clickAction(snackBar);
     expect(calls).toEqual(['dismissed']);
     expect(service.getSnackBar()).toBeUndefined();
+
+    // A second click while the message animates away does nothing.
+    service.clickAction(snackBar);
+    expect(calls).toEqual(['dismissed']);
   });
 
   it('keeps a message that the action shows', () => {

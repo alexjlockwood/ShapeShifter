@@ -130,6 +130,21 @@ describe('morphIntoLayer', () => {
     expect(pathBlock.toValue?.getBoundingBox()).toMatchObject({ l: -5, t: 0, r: 3, b: 8 });
   });
 
+  it("takes the other path's fill rule only where it can't change how the path starts", () => {
+    const donut = 'M 0 0 L 20 0 L 20 20 L 0 20 Z M 5 5 L 15 5 L 15 15 L 5 15 Z';
+    const single = path('single', SQUARE);
+    const b = path('b', donut, { fillType: 'evenOdd' });
+    const morphed = morph(document([single, b]), single.id, b.id);
+    const singleAfter = morphed.document.vectorLayer.findLayerById(single.id) as PathLayer;
+    expect(singleAfter.fillType).toBe('evenOdd');
+
+    const double = path('double', `${SQUARE} M 14 14 L 22 14 L 18 22 Z`);
+    const c = path('c', donut, { fillType: 'evenOdd' });
+    const kept = morph(document([double, c]), double.id, c.id);
+    const doubleAfter = kept.document.vectorLayer.findLayerById(double.id) as PathLayer;
+    expect(doubleAfter.fillType).toBe('nonZero');
+  });
+
   it("starts from the path as it is at the block's start, after its last path block", () => {
     const a = path('a', SQUARE);
     const b = path('b', TRIANGLE);

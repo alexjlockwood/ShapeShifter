@@ -844,6 +844,39 @@ test('shows and edits the selected point in the inspector while editing points',
   );
 });
 
+test('applies a typed value when the canvas is pressed instead of Enter', async ({ page }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.getByRole('button', { name: 'Edit points' }).click();
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  const pointX = (n: number) =>
+    page
+      .getByRole('region', { name: `Point ${n}`, exact: true })
+      .getByRole('group', { name: 'Position' })
+      .getByLabel('X');
+
+  // Pressing another point selects it, which replaces the field.
+  await click(page, 6, 2);
+  await pointX(2).fill('8');
+  await click(page, 6, 6);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 2 L 6 6 L 2 6 Z');
+
+  // Pressing the empty artboard starts a gesture, which the editor won't edit points during.
+  await pointX(3).fill('7');
+  await click(page, 20, 20);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 2 L 7 6 L 2 6 Z');
+
+  // The same goes for the Layout section when another layer is pressed.
+  if (await isEditingPath(page)) {
+    await page.getByRole('button', { name: 'Done' }).click();
+  }
+  await click(page, 4, 4);
+  await page.getByRole('region', { name: 'Layout' }).getByLabel('Layout X').fill('3');
+  await click(page, 12, 4);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['b']);
+  expect(await getPathData(page, 'a')).toBe('M 3 2 L 9 2 L 8 6 L 3 6 Z');
+});
+
 test('reverses, opens, and closes a subpath in the inspector', async ({ page }) => {
   await openSquares(page);
   await click(page, 4, 4);

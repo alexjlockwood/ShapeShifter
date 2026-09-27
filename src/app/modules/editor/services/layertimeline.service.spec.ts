@@ -217,13 +217,15 @@ describe('LayerTimelineService', () => {
           translateY: 7,
         }),
       ]);
+      const before = drawnAt('path', 5, 1);
       services.layerTimelineService.flattenGroupLayer(getLayer('group').id);
 
       expect(getTree()).toEqual({ vector: [{ child: ['path'] }] });
       const child = getLayer<GroupLayer>('child');
-      expect(child.translateX).toBe(5);
-      expect(child.translateY).toBe(7);
       expect(child.rotation).toBeCloseTo(45);
+      // Its pivot stays where it was on the canvas.
+      expect([child.pivotX, child.pivotY]).toEqual([5, 7]);
+      expect(drawnAt('path', 5, 1)).toEqual(before);
     });
 
     // MODEL-1: the transform's rotation and scales used to be read off of the matrix in a way
@@ -292,6 +294,9 @@ describe('LayerTimelineService', () => {
       expect(flattened.strokeWidth).toBe(2);
       expect(flattened.rotation).toBeCloseTo(-90);
       expect(drawnAt('path', 5, 1)).toEqual(before);
+      // Its pivot moves with the group's transform, so a later rotation turns around the same
+      // point on the canvas.
+      expect([flattened.pivotX, flattened.pivotY]).toEqual([7, -1]);
     });
 
     it("bakes a path's transform into its path when the group's would skew it", () => {

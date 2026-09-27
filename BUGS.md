@@ -25,10 +25,10 @@ These existed before the migration and are still there.
   should go, or the service should check `isUnsplittable()`. The pair and selection helpers also
   prefer "split" subpaths when hits overlap, so that preference never applies either
   (`model/paths/PathState.ts`, `isSubPathSplit`).
-- **The editor draws strokes in scaled groups at the wrong width.** `CanvasLayers` multiplies
-  the stroke width by the scale of the canvas-to-layer matrix instead of the layer-to-canvas
-  one, so a stroke of width 2 in a group scaled by 2 is drawn 1 unit wide, but Android (and the
-  exported SVGs) draw it 4 units wide. The exports and flattening scale strokes the Android way
+- **The editor draws strokes in scaled groups and paths at the wrong width.** `CanvasLayers`
+  multiplies the stroke width by the scale of the canvas-to-layer matrix instead of the
+  layer-to-canvas one, so a stroke of width 2 in a group (or a path) scaled by 2 is drawn 1 unit
+  wide, but Android (and the exported SVGs) draw it 4 units wide. The exports and flattening scale strokes the Android way
   (`components/canvas/CanvasLayers.ts`). (GitHub #186, #292, and #308)
 - **The inspector edits an animated property's value from before its first keyframe.** Once a
   property has blocks, the canvas draws their values, but the inspector's field shows and saves the
@@ -38,6 +38,18 @@ These existed before the migration and are still there.
   an edit into the block that sets it there, as the canvas editor does for paths
   (`components/canvas/pathKeyframes.ts`), is a follow-up
   (`components/propertyinput/buildPropertyInputModel.ts`, the TODO on the rendered value).
+- **Opening and then closing a subpath can drop a command.** A subpath that ends with a line
+  back to its start and then a `Z` (`M 0 0 L 10 0 L 10 10 L 0 0 Z`, a common export form) opens
+  by dropping the `Z`, and closing that merges the last point into the first, which gives
+  `M 0 0 L 10 0 L 10 10 Z`. The shape is the same, but a morph that matched command for command
+  breaks. `closeSubPath` can't tell that end apart from an opened `Z`; remembering how a subpath
+  was opened would fix it (`model/paths/PathEdit.ts`, `closeSubPath`).
+- **Morph into keeps the first path's fill rule, trim, and stroke caps and joins.** They can't be
+  animated, so the end of the morph can look different from the path it morphed into: e.g. an
+  even-odd donut's hole fills in when the first path is non-zero. The first path only takes the
+  other's fill rule when it's a single subpath with no other path blocks, where the rule can't
+  change how it starts. Otherwise, a warning or a choice would help
+  (`scripts/common/morphLayers.ts`).
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
 

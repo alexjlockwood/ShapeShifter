@@ -18,6 +18,9 @@ export interface SnackBar {
 export class SnackBarService {
   private snackBar: SnackBar | undefined;
   private numSnackBars = 0;
+  // The messages whose button was clicked. The host keeps showing a dismissed message while it
+  // animates away, so its button can be clicked again.
+  private readonly clicked = new WeakSet<SnackBar>();
   private readonly listeners = new Set<() => void>();
 
   /**
@@ -42,9 +45,13 @@ export class SnackBarService {
 
   /**
    * Handles a click on the message's button: it dismisses the message, if it's still showing, and
-   * calls its onAction. The action can show another message.
+   * calls its onAction, once per message. The action can show another message.
    */
   clickAction(snackBar: SnackBar) {
+    if (this.clicked.has(snackBar)) {
+      return;
+    }
+    this.clicked.add(snackBar);
     if (this.snackBar === snackBar) {
       this.dismiss();
     }

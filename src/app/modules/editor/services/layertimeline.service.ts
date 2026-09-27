@@ -492,18 +492,18 @@ export class LayerTimelineService {
         return l;
       }
       const flattened = layerTransform.dot(getTransformMatrix(l));
-      if (l instanceof GroupLayer) {
-        Object.assign(l, LayerUtil.toTransform(flattened));
-        return l;
-      }
-      if (LayerUtil.pathUsesTransform(l, animation) && !LayerUtil.isSkewed(flattened)) {
-        Object.assign(l, LayerUtil.toTransform(flattened));
-        return l;
-      }
-      // The path's own transform goes into its path along with the group's. Its pivot stays
-      // where it was on the canvas, for a transform added later.
-      pathTransforms.set(l.id, flattened);
+      // The pivot stays where it was on the canvas, so the layer still turns and scales around
+      // the same point when its transform is edited later.
       const pivot = MathUtil.transformPoint({ x: l.pivotX, y: l.pivotY }, layerTransform);
+      if (
+        l instanceof GroupLayer ||
+        (LayerUtil.pathUsesTransform(l, animation) && !LayerUtil.isSkewed(flattened))
+      ) {
+        Object.assign(l, LayerUtil.toTransform(flattened, pivot));
+        return l;
+      }
+      // The path's own transform goes into its path along with the group's.
+      pathTransforms.set(l.id, flattened);
       Object.assign(l, TRANSFORM_DEFAULTS, { pivotX: pivot.x, pivotY: pivot.y });
       // Group transforms scale strokes too (as they do on Android), so scale the width, and its
       // blocks, by the same amount as the path.

@@ -1,5 +1,5 @@
 import { on } from 'app/modules/editor/scripts/dom';
-import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
+import { ShortcutService, TEXT_FIELD_SELECTOR } from 'app/modules/editor/services/shortcut.service';
 
 import { CanvasGestureRouter } from './CanvasGestureRouter';
 
@@ -37,8 +37,14 @@ export class CanvasInput {
     const { element, router, handler } = this;
     this.removeListeners = [
       on(element, 'pointerdown', event => {
-        // The default isn't prevented, so pressing the canvas still takes the focus from a text
-        // field, which is when the property inspector applies what was typed.
+        // The property inspector applies what was typed when its field loses the focus. A press
+        // only takes the focus after this handler, by which time the press has started a gesture
+        // (so the editor refuses the edit) or selected something else (so the field is gone), and
+        // the value would be lost. Blurring the field first applies it.
+        const focused = document.activeElement;
+        if (focused instanceof HTMLElement && focused.matches(TEXT_FIELD_SELECTOR)) {
+          focused.blur();
+        }
         const { canceled, started } = router.down(event);
         if (canceled) {
           handler.onLeave();
