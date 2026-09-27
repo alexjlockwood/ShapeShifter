@@ -348,6 +348,15 @@ class Editor implements CanvasEditor {
     }
     this.hoverPoint = point;
     this.setAltHeld(event.altKey);
+    const { lastPress } = this;
+    if (
+      this.isPressing &&
+      lastPress &&
+      MathUtil.distance(lastPress.point, point) > this.toViewportLength(DOUBLE_CLICK_DISTANCE)
+    ) {
+      // A press that became a drag isn't a click, so the next press starts counting again.
+      this.lastPress = undefined;
+    }
     if (this.guideTool.isDragging()) {
       this.guideTool.onMove(point, getModifiers(event));
       return;

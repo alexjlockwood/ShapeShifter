@@ -377,6 +377,25 @@ test("edits a path's points after a double-click, until Escape", async ({ page, 
   await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
 });
 
+test("doesn't count a press right after a drag as a double-click", async ({ page }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  // Drags the top right point away and back in one drag, then drags it again right away.
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, 6, 2);
+  const away = await artboardPoint(canvas, 9, 9);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(away.x, away.y, { steps: 5 });
+  await page.mouse.move(start.x, start.y, { steps: 5 });
+  await page.mouse.up();
+  await drag(page, [6, 2], [8.1, 0.9]);
+  // A double-click would have made it a smooth point, with curves on either side.
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 1 L 6 6 L 2 6 Z');
+});
+
 test('adds, deletes, and changes points, with Enter to start and stop', async ({ page }) => {
   await openSquares(page);
   await click(page, 4, 4);
@@ -468,7 +487,7 @@ test('drags a copy out of a point with Alt held, or drops it back to leave nothi
     page.evaluate(() => (window as any).shapeshifter.store.getState().past.length as number);
   const steps = await getUndoSteps();
   const canvas = page.locator('.app-canvas');
-  // Another point, since a press right where the last one was counts as a double-click.
+  // Drags a copy out of another point, and drops it back.
   const start = await artboardPoint(canvas, 6, 6);
   const away = await artboardPoint(canvas, 9, 9);
   await page.keyboard.down('Alt');

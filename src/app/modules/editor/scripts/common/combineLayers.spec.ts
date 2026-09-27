@@ -135,13 +135,21 @@ describe('combineLayers', () => {
     expect(reason(document([a, b], [trim]))).toBe('a is trimmed');
   });
 
-  it("refuses paths in animated groups that the bottom one isn't in", () => {
+  it("refuses paths in animated groups that the others aren't in", () => {
     const a = ellipse('a', 6, 6, 4);
     const b = ellipse('b', 16, 16, 4);
     const spinning = new GroupLayer({ name: 'spinning', children: [b] });
     const rotation = block(spinning.id, 'rotation', 0, 90);
     expect(getCombinedLayerIds(document([a, spinning], [rotation]), [a.id, b.id])?.reason).toBe(
       "spinning's transform is animated",
+    );
+    // With the bottom path in the group, the other one would start turning with it.
+    const c = ellipse('c', 6, 6, 4);
+    const d = ellipse('d', 16, 16, 4);
+    const turning = new GroupLayer({ name: 'turning', children: [c] });
+    const turn = block(turning.id, 'rotation', 0, 90);
+    expect(getCombinedLayerIds(document([turning, d], [turn]), [c.id, d.id])?.reason).toBe(
+      "turning's transform is animated",
     );
     // Both paths turn with the group, and so does the combined one.
     const both = new GroupLayer({ name: 'both', children: [a, b] });

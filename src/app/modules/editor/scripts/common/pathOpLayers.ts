@@ -53,12 +53,16 @@ export function getMergedLayerIds(
   if (animated) {
     return { reason: `${animated.name}'s animations would be lost` };
   }
-  // The bottom path stays where it is, so it's only a problem if the others are in animated groups
-  // that it isn't in, since they'd stop moving with them.
-  const bottomAncestors = new Set(getAncestorIds(vectorLayer, bottomId));
+  // The merged path takes the bottom one's place, so the others move with the bottom one's groups
+  // instead of their own. That's only a problem for animated groups that some of them are in and
+  // others aren't: those paths would stop moving with the group, or start to.
+  const bottomAncestors = getAncestorIds(vectorLayer, bottomId);
   for (const id of otherIds) {
-    const group = getAncestorIds(vectorLayer, id)
-      .filter(ancestorId => !bottomAncestors.has(ancestorId))
+    const ancestors = getAncestorIds(vectorLayer, id);
+    const group = [
+      ...ancestors.filter(ancestorId => !bottomAncestors.includes(ancestorId)),
+      ...bottomAncestors.filter(ancestorId => !ancestors.includes(ancestorId)),
+    ]
       .map(ancestorId => vectorLayer.findLayerById(ancestorId))
       .find(layer => layer instanceof GroupLayer && hasBlocks(animation, layer.id));
     if (group) {

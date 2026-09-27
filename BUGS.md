@@ -30,12 +30,6 @@ These existed before the migration and are still there.
   one, so a stroke of width 2 in a group scaled by 2 is drawn 1 unit wide, but Android (and the
   exported SVGs) draw it 4 units wide. The exports and flattening scale strokes the Android way
   (`components/canvas/CanvasLayers.ts`). (GitHub #186, #292, and #308)
-- **A press soon after a quick drag can count as a double-click in the canvas editor.**
-  `CanvasEditor.countClicks` counts presses by their time and place only, so a press on a point
-  within half a second of a drag that started there is a second click, even though the first
-  press was a drag. In point edit, that makes the point smooth or straight instead of starting a
-  drag. A press that became a drag shouldn't count toward the next one
-  (`components/canvaseditor/CanvasEditor.ts`).
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
 
