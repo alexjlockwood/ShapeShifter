@@ -102,6 +102,10 @@ export class CanvasNavigation {
     });
   }
 
+  isPanning() {
+    return !!this.pan;
+  }
+
   dispose() {
     this.endPan();
     this.removeListeners.forEach(remove => remove());

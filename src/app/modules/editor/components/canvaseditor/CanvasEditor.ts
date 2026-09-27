@@ -22,7 +22,15 @@ import { Modifiers, SelectTool } from './SelectTool';
 // also let the end-to-end tests drive its preview, as window.shapeshifter.canvasEditor.
 
 export function createCanvasEditor(context: CanvasEditorContext): CanvasEditor {
-  return new Editor(context);
+  const editor = new Editor(context);
+  try {
+    editor.init();
+  } catch (error) {
+    // Nothing it started is left listening.
+    editor.dispose();
+    throw error;
+  }
+  return editor;
 }
 
 class Editor implements CanvasEditor {
@@ -33,11 +41,11 @@ class Editor implements CanvasEditor {
   private isActionMode = false;
   private readonly renderer: EditorRenderer;
   private readonly selectTool: SelectTool;
-  private readonly subscription: Subscription;
-  private readonly removeTestHooks: (() => void) | undefined;
+  private subscription: Subscription | undefined;
+  private removeTestHooks: (() => void) | undefined;
 
   constructor(private readonly context: CanvasEditorContext) {
-    const { store, services, preview } = context;
+    const { store, services } = context;
     this.renderer = new EditorRenderer(context.canvas);
     this.vectorLayer = getAnimatedVectorLayer(store.getState()).vl;
     this.selectTool = new SelectTool({
@@ -49,6 +57,10 @@ class Editor implements CanvasEditor {
       toViewportLength: length => this.camera?.toViewportLength(length) ?? length,
       redraw: () => this.draw(),
     });
+  }
+
+  init() {
+    const { store, preview } = this.context;
     this.subscription = combineLatest([
       store.select(getAnimatedVectorLayer),
       preview.asObservable().pipe(startWith(undefined)),
@@ -91,7 +103,7 @@ class Editor implements CanvasEditor {
   }
 
   dispose() {
-    this.subscription.unsubscribe();
+    this.subscription?.unsubscribe();
     this.removeTestHooks?.();
     this.renderer.clear();
   }

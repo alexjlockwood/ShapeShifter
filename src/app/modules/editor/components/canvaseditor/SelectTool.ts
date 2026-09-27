@@ -1,5 +1,8 @@
-import { getLayerBounds, hitTestLayer } from 'app/modules/editor/components/canvas/LayerGeometry';
-import { Layer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import {
+  getPathLayerBounds,
+  hitTestLayer,
+} from 'app/modules/editor/components/canvas/LayerGeometry';
+import { VectorLayer } from 'app/modules/editor/model/layers';
 import { MathUtil, Point, Rect } from 'app/modules/editor/scripts/common';
 import { isEqual } from 'lodash-es';
 
@@ -41,6 +44,8 @@ type State =
       readonly modifiers: Modifiers;
       // The selection before the marquee, which it adds to with Shift held.
       readonly initialSelection: ReadonlySet<string>;
+      // The paths it can select, which don't change while it's drawn.
+      readonly boundsById: ReadonlyMap<string, Rect>;
     };
 
 /**
@@ -99,6 +104,10 @@ export class SelectTool {
         initialSelection: state.modifiers.isAdding
           ? this.context.getSelectedLayerIds()
           : new Set<string>(),
+        boundsById: getPathLayerBounds(
+          this.context.getVectorLayer(),
+          this.context.getHiddenLayerIds(),
+        ),
       };
     } else {
       this.state = { ...state, current: point };
@@ -153,37 +162,16 @@ export class SelectTool {
       return;
     }
     const marquee = toRect(state.start, state.current);
-    const vl = this.context.getVectorLayer();
     const selection = new Set(state.initialSelection);
-    for (const layer of getVisiblePathLayers(vl, this.context.getHiddenLayerIds())) {
-      const bounds = getLayerBounds(vl, layer.id);
-      if (
-        bounds &&
-        (state.modifiers.isContaining ? contains(marquee, bounds) : intersects(marquee, bounds))
-      ) {
-        selection.add(layer.id);
+    for (const [layerId, bounds] of state.boundsById) {
+      if (state.modifiers.isContaining ? contains(marquee, bounds) : intersects(marquee, bounds)) {
+        selection.add(layerId);
       }
     }
     if (!isEqual(selection, this.context.getSelectedLayerIds())) {
       this.context.setSelectedLayerIds(selection);
     }
   }
-}
-
-// Not clip paths, which often cover the whole artboard, so every marquee would select them. They
-// can still be clicked by their outline.
-function getVisiblePathLayers(vl: VectorLayer, hiddenLayerIds: ReadonlySet<string>) {
-  const layers: PathLayer[] = [];
-  (function recurseFn(layer: Layer) {
-    if (hiddenLayerIds.has(layer.id)) {
-      return;
-    }
-    if (layer instanceof PathLayer) {
-      layers.push(layer);
-    }
-    layer.children.forEach(recurseFn);
-  })(vl);
-  return layers;
 }
 
 function toRect(a: Point, b: Point): Rect {

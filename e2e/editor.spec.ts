@@ -55,6 +55,7 @@ test('selects layers by clicking them', async ({ page }) => {
   await click(page, 20, 20);
   await expect.poll(() => getSelectedNames(page)).toEqual([]);
   await click(page, 4, 12);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['c']);
   const panel = await boundingBox(page.locator('.app-canvas'));
   await page.mouse.click(panel.x + 10, panel.y + 10);
   await expect.poll(() => getSelectedNames(page)).toEqual([]);

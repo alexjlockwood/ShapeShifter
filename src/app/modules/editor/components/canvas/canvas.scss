@@ -37,10 +37,14 @@
         opacity: 0;
         visibility: hidden;
     }
-    .canvas-artboard:hover .canvas-ruler {
+    .canvas-artboard:hover .canvas-ruler,
+    &.is-pressing-artboard .canvas-ruler {
         transition: opacity 0.15s ease;
         opacity: 1;
         visibility: visible;
+    }
+    &.has-canvas-editor {
+        touch-action: none;
     }
     // The canvas can pan while the space bar is held.
     &.is-space-held {

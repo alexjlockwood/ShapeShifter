@@ -110,6 +110,11 @@ export class CanvasController extends DestroyableMixin() {
     this.canvasInput = new CanvasInput(inputElement, {
       onPress: event => {
         this.gestureTarget = this.getInputTarget();
+        // The pointer is captured by the panel, which takes the artboard's :hover away, and with
+        // it the rulers.
+        if (event.target instanceof Node && elements.artboard.contains(event.target)) {
+          elements.root.classList.add('is-pressing-artboard');
+        }
         if (this.gestureTarget === 'editor') {
           this.canvasEditor?.onPress(event, this.toViewport(event));
         } else {
@@ -118,6 +123,10 @@ export class CanvasController extends DestroyableMixin() {
         this.showRuler(event);
       },
       onMove: event => {
+        if (!this.gestureTarget && this.canvasNavigation?.isPanning()) {
+          // The pan has the pointer, so this isn't a hover.
+          return;
+        }
         if ((this.gestureTarget ?? this.getInputTarget()) === 'editor') {
           this.canvasEditor?.onMove(event, this.toViewport(event));
         } else {
@@ -132,6 +141,7 @@ export class CanvasController extends DestroyableMixin() {
           this.canvasOverlay.onMouseUp(event);
         }
         this.gestureTarget = undefined;
+        elements.root.classList.remove('is-pressing-artboard');
         this.showRuler(event);
       },
       onLeave: () => {
@@ -141,6 +151,7 @@ export class CanvasController extends DestroyableMixin() {
           this.canvasOverlay.onMouseLeave();
         }
         this.gestureTarget = undefined;
+        elements.root.classList.remove('is-pressing-artboard');
         this.hideRuler();
       },
     });
@@ -169,6 +180,8 @@ export class CanvasController extends DestroyableMixin() {
       }),
     );
     if (this.canvasPreview) {
+      // Touch drags anywhere on the panel are the editor's, e.g. a marquee off of the artboard.
+      this.elements.root.classList.add('has-canvas-editor');
       // Clicks on the main canvas are the editor's outside of action mode, so they don't reach the
       // workspace, which would clear the selection after a marquee.
       this.removeClickListener = on(this.elements.root, 'click', event => {
@@ -268,11 +281,12 @@ export class CanvasController extends DestroyableMixin() {
     if (this.isDisposed) {
       return;
     }
+    let editor: CanvasEditor | undefined;
     try {
       if (!this.canvasPreview) {
         throw new Error('The canvas editor needs a preview');
       }
-      this.canvasEditor = editorModule.createCanvasEditor({
+      editor = editorModule.createCanvasEditor({
         store: this.store,
         services: this.services,
         preview: this.canvasPreview,
@@ -280,13 +294,16 @@ export class CanvasController extends DestroyableMixin() {
         canvas: this.elements.editor,
       });
       if (this.camera) {
-        this.canvasEditor.setCamera(this.camera);
+        editor.setCamera(this.camera);
       }
-      this.canvasOverlay.setShowsLayerSelections(false);
     } catch (error) {
+      // An editor that didn't finish setting up doesn't get the canvas's input.
+      editor?.dispose();
       this.onEditorFailed(error, 'error');
       return;
     }
+    this.canvasEditor = editor;
+    this.canvasOverlay.setShowsLayerSelections(false);
     this.setEditorState('ready');
   }
 

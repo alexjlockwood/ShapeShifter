@@ -6,7 +6,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
-import { MathUtil, Matrix, Point, Rect } from 'app/modules/editor/scripts/common';
+import { Matrix, Point, Rect } from 'app/modules/editor/scripts/common';
 
 export type MorphableLayer = PathLayer | ClipPathLayer;
 
@@ -37,52 +37,66 @@ export function isMorphableLayer(layer: Layer | undefined): layer is MorphableLa
 /**
  * Returns the topmost path or clip path at the point, in viewport coordinates, like the canvas
  * draws them. Fills are hit by their fill rule, with open subpaths closed the way the fill closes
- * them, and strokes by their width. Anything within the tolerance of a path's outline counts too,
- * so thin and unfilled paths can be clicked, and clip paths are only hit by their outline.
+ * them, and strokes by the width they're drawn at. Only if nothing is hit that way, anything within
+ * the tolerance of a path's outline counts, so thin and unfilled paths can be clicked, without a
+ * near miss on a layer beating a hit on the one under it. Clip paths are only hit by their outline.
  */
 export function hitTestLayer(vl: VectorLayer, point: Point, opts: HitTestOptions) {
   const hiddenLayerIds = opts.hiddenLayerIds ?? new Set<string>();
-  return (function recurseFn(layer: Layer, matrix: Matrix): MorphableLayer | undefined {
+  const paths: { layer: MorphableLayer; path: Path2D; matrix: Matrix }[] = [];
+  (function recurseFn(layer: Layer, matrix: Matrix) {
     if (hiddenLayerIds.has(layer.id)) {
-      return undefined;
+      return;
     }
     if (isMorphableLayer(layer)) {
-      return isLayerHit(layer, matrix, point, opts.tolerance) ? layer : undefined;
+      // A group scaled to 0 collapses its paths to lines, which shouldn't be clickable.
+      if (layer.pathData && layer.pathData.getCommands().length && matrix.invert()) {
+        paths.push({ layer, path: toViewportPath(layer.pathData.getPathString(), matrix), matrix });
+      }
+      return;
     }
     const childMatrix = getChildMatrix(layer, matrix);
-    // Later children are drawn on top.
-    for (let i = layer.children.length - 1; i >= 0; i--) {
-      const hit = recurseFn(layer.children[i], childMatrix);
-      if (hit) {
-        return hit;
-      }
-    }
-    return undefined;
+    layer.children.forEach(child => recurseFn(child, childMatrix));
   })(vl, Matrix.identity());
-}
-
-function isLayerHit(layer: MorphableLayer, matrix: Matrix, point: Point, tolerance: number) {
-  const inverse = matrix.invert();
-  if (!layer.pathData || !layer.pathData.getCommands().length || !inverse) {
-    // A group scaled to 0 has no inverse, and nothing to hit.
-    return false;
-  }
-  const { x, y } = MathUtil.transformPoint(point, inverse);
-  const path = new Path2D(layer.pathData.getPathString());
+  // Later layers are drawn on top.
+  paths.reverse();
   const ctx = getHitTestContext();
-  if (layer instanceof PathLayer && layer.isFilled()) {
+  const { x, y } = point;
+  const exactHit = paths.find(({ layer, path, matrix }) => {
+    if (layer instanceof ClipPathLayer) {
+      return false;
+    }
     const fillRule = layer.fillType === 'evenOdd' ? 'evenodd' : 'nonzero';
-    if (ctx.isPointInPath(path, x, y, fillRule)) {
+    if (layer.isFilled() && ctx.isPointInPath(path, x, y, fillRule)) {
       return true;
     }
+    if (!layer.isStroked() || !layer.strokeWidth) {
+      return false;
+    }
+    // Like CanvasLayers, which scales the width by the inverse matrix (see BUGS.md).
+    const inverse = matrix.invert();
+    ctx.lineWidth = layer.strokeWidth * (inverse ? inverse.getScaleFactor() : 1);
+    ctx.lineCap = layer.strokeLinecap;
+    ctx.lineJoin = layer.strokeLinejoin;
+    return ctx.isPointInStroke(path, x, y);
+  });
+  if (exactHit) {
+    return exactHit.layer;
   }
-  // The tolerance is in viewport units, and the layer's own units can be scaled (CANVAS-3).
-  const scale = matrix.getScaleFactor() || 1;
-  const strokeWidth = layer instanceof PathLayer && layer.isStroked() ? layer.strokeWidth : 0;
-  ctx.lineWidth = Math.max(strokeWidth, (tolerance * 2) / scale);
+  // The tolerance is in viewport units, like the path now is, so it's the same on the screen
+  // inside of scaled groups (CANVAS-3).
+  ctx.lineWidth = opts.tolerance * 2;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  return ctx.isPointInStroke(path, x, y);
+  return paths.find(({ path }) => ctx.isPointInStroke(path, x, y))?.layer;
+}
+
+/** Returns the path in viewport coordinates, as a Path2D. */
+function toViewportPath(pathData: string, matrix: Matrix) {
+  const { a, b, c, d, e, f } = matrix;
+  const path = new Path2D();
+  path.addPath(new Path2D(pathData), new DOMMatrix([a, b, c, d, e, f]));
+  return path;
 }
 
 /** Returns the layer's transform for its children, from its own transform. */
@@ -104,7 +118,7 @@ export function getLayerBounds(vl: VectorLayer, layerId: string): Rect | undefin
   let bounds: { l: number; t: number; r: number; b: number } | undefined;
   (function recurseFn(current: Layer, matrix: Matrix) {
     if (isMorphableLayer(current)) {
-      const box = current.pathData?.transform(matrix).getBoundingBox();
+      const box = getPathBounds(current, matrix);
       if (box && [box.l, box.t, box.r, box.b].every(Number.isFinite)) {
         bounds = bounds
           ? {
@@ -139,5 +153,34 @@ export function getLayersBounds(vl: VectorLayer, layerIds: Iterable<string>): Re
         : box;
     }
   }
+  return bounds;
+}
+
+function getPathBounds(layer: MorphableLayer, matrix: Matrix): Rect | undefined {
+  // Without Path.transform's clone, which prints and parses the path again.
+  const box = layer.pathData?.mutate().transform(matrix).build().getBoundingBox();
+  return box && [box.l, box.t, box.r, box.b].every(Number.isFinite) ? box : undefined;
+}
+
+/**
+ * Returns the bounds of every visible path layer (not clip paths) in viewport coordinates, in one
+ * walk over the tree, e.g. for a marquee to test.
+ */
+export function getPathLayerBounds(vl: VectorLayer, hiddenLayerIds: ReadonlySet<string>) {
+  const bounds = new Map<string, Rect>();
+  (function recurseFn(layer: Layer, matrix: Matrix) {
+    if (hiddenLayerIds.has(layer.id)) {
+      return;
+    }
+    if (layer instanceof PathLayer) {
+      const box = getPathBounds(layer, matrix);
+      if (box) {
+        bounds.set(layer.id, box);
+      }
+      return;
+    }
+    const childMatrix = getChildMatrix(layer, matrix);
+    layer.children.forEach(child => recurseFn(child, childMatrix));
+  })(vl, Matrix.identity());
   return bounds;
 }

@@ -49,6 +49,23 @@ describe('hitTestLayer', () => {
     expect(hitTestLayer(vector(small), { x: 12, y: 12.6 }, TOLERANCE)).toBeUndefined();
   });
 
+  it('hits a fill under the pointer before a path it just misses above it', () => {
+    const big = path('big', 'M 0 0 L 24 0 L 24 24 L 0 24 Z', { fillColor: '#000' });
+    const dot = path('dot', 'M 11 11 L 13 11 L 13 13 L 11 13 Z', { fillColor: '#000' });
+    // Within the tolerance of the dot, but inside of the big square.
+    expect(hitTestLayer(vector(big, dot), { x: 13.3, y: 12 }, TOLERANCE)).toBe(big);
+    // With nothing under the pointer, the near miss counts.
+    expect(hitTestLayer(vector(dot), { x: 13.3, y: 12 }, TOLERANCE)).toBe(dot);
+  });
+
+  it('keeps the tolerance the same in every direction inside of a squashed group', () => {
+    // 20 times narrower than it is tall, like a flip animation halfway through.
+    const line = path('line', 'M 0 12 L 480 12');
+    const squashed = new GroupLayer({ name: 'squashed', children: [line], scaleX: 0.05 });
+    expect(hitTestLayer(vector(squashed), { x: 12, y: 12.4 }, TOLERANCE)).toBe(line);
+    expect(hitTestLayer(vector(squashed), { x: 12, y: 13 }, TOLERANCE)).toBeUndefined();
+  });
+
   it('hits the topmost layer', () => {
     const bottom = path('bottom', 'M 0 0 L 24 0 L 24 24 L 0 24 Z', { fillColor: '#000' });
     const top = path('top', 'M 8 8 L 16 8 L 16 16 L 8 16 Z', { fillColor: '#000' });

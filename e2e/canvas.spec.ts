@@ -101,9 +101,8 @@ test('previews an edit, and commits it as one undo step', async ({ page, modifie
 test('selects a layer by clicking its fill', async ({ page }) => {
   await page.goto('/?project=demos/playtopause.shapeshifter');
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
-  // The triangle's subpaths aren't closed with a Z at the start of the morph, which the fill
-  // closes anyway.
-  const point = await artboardPoint(page.locator('.app-canvas'), 10, 12);
+  // Inside of the triangle's top half, away from its edges.
+  const point = await artboardPoint(page.locator('.app-canvas'), 10, 10);
   await page.mouse.click(point.x, point.y);
   await expect
     .poll(() =>
