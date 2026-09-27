@@ -161,7 +161,12 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
 3. **Pointer input.** Pointer events with pointer capture replace the React mouse handlers, so a
    drag keeps going when the pointer leaves the canvas, and touch and pen input can work later. A
    small router decides who gets each gesture: panning, the editor's tools, or the existing
-   action mode helpers.
+   action mode helpers. A mouse move that shows the main button is already up, before the
+   release arrives (a macOS trackpad can send one), ends the gesture as the release would, so
+   that the edit is kept. So does the canvas losing a mouse's capture, which Chrome does right
+   before that move. Safari's lostpointercapture reports no buttons, even with the button still
+   down, so it's treated as a release in every browser. Pointercancel, context menus, blur, and
+   Escape cancel the gesture.
 4. **Previewing edits.** A gesture keeps a working copy of the paths it changes, and the canvases
    draw that copy until the gesture ends. The edit is dispatched once, on pointer up, as its own
    undo step. Dispatching on every pointer move would rebuild the animation renderer each time
@@ -172,7 +177,7 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
    `Path`, that keep command ids:
    - moving an anchor (updating the command's end, the next command's start, and the start and
      `Z` of a closed subpath together)
-   - moving a handle, with a mode for mirrored, asymmetric, and disconnected handles
+   - moving a handle, on its own or with the other one mirroring it
    - inserting an anchor (a real split, not action mode's reversible one)
    - deleting an anchor, which merges its two segments with a fitted curve
    - setting a point's type, adding points at either end for the pen, closing and starting
@@ -200,7 +205,8 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
 ## Keyboard shortcuts
 
 Figma's mapping is the default, since it's also a web app and avoids shortcuts the browser takes
-(Cmd+R reloads, Cmd+1 switches tabs):
+(Cmd+R reloads, Cmd+1 switches tabs). Cmd means Ctrl on Windows and Linux, and Ctrl means Ctrl
+everywhere:
 
 | Action                     | Shortcut                                            |
 | -------------------------- | --------------------------------------------------- |
@@ -210,16 +216,19 @@ Figma's mapping is the default, since it's also a web app and avoids shortcuts t
 | Zoom to fit, zoom to 100%  | Shift+1, Shift+0                                    |
 | Pan                        | Hold Space and drag, or drag with the middle button |
 | Duplicate                  | Alt-drag, Cmd+D                                     |
+| Select all                 | Cmd+A (every point while editing a path)            |
 | Nudge                      | Arrow keys (1 unit), Shift+arrow keys (10 units)    |
 | Edit a path, stop editing  | Enter or double-click, Enter or Esc                 |
 | Point types                | 1 to 4, as in Sketch                                |
 | Bend a segment             | Cmd-drag                                            |
+| Move a handle, mirror it   | Drag, Cmd-drag (Ctrl on Windows and Linux)          |
+| Copy a point               | Alt-drag it while editing a path                    |
 | Next point, previous point | Tab, Shift+Tab                                      |
 | Join ends                  | Cmd+J                                               |
 | Rulers                     | Shift+R                                             |
 | Pixel grid, snap to it     | Shift+', Cmd+Shift+'                                |
 | Measure distances          | Hold Alt                                            |
-| Turn snapping off          | Hold Ctrl                                           |
+| Turn snapping off          | Hold Ctrl (for handles, only on a Mac)              |
 | Union, subtract            | Alt+Shift+U, Alt+Shift+S                            |
 | Intersect, exclude         | Alt+Shift+I, Alt+Shift+E                            |
 | Outline stroke             | Cmd+Alt+O                                           |
@@ -247,8 +256,8 @@ Phase 3 put the tools in a toolbar over the canvas panel's top left, with Figma'
 pen commits each point as its own undo step, Backspace takes the last one away, and the pen only
 adds a subpath to an existing path while that path's points are being edited (Enter, then P). The
 rectangle, ellipse, and line tools go back to the select tool once they've drawn, while the pencil
-stays on. Strokes are a unit wide on a 24 unit icon, in proportion on bigger artboards. Some gaps
-are left for later:
+stays on. Strokes are a viewport unit wide, whatever the artboard's size. Some gaps are left for
+later:
 
 - A click with a shape tool draws nothing, where Figma draws a shape of a default size.
 - On a Mac, Ctrl and a click is a right-click, so Ctrl can only turn snapping off once a drag has
@@ -280,38 +289,56 @@ value on the other side of the hold changes too when it's the same path, e.g. th
 block, or the layer's own path before the first one, so that a chain of morphs stays connected.
 While the path is morphing, it can't be edited. A badge at the bottom of the canvas panel says
 which end an edit changes and whether the morph still works, with a button that auto fixes it, or
-that the path is morphing, with buttons that go to either end. Auto fix changes both ends of the
-block, so it changes the values linked to them too, and fixes the linked blocks that stop morphing
-because of it, unlike auto fix in action mode. Some gaps are left for later:
+that the path is morphing, with buttons that go to either end. Either way, "Edit morph" opens the
+block in action mode, and where two morphs meet, there's a button for each. Auto fix changes both
+ends of the block, so it changes the values linked to them too, and fixes the linked blocks that
+stop morphing because of it, unlike auto fix in action mode. Right-clicking the badge opens a
+menu with the same commands and Delete, like the one on a timeline block. Some gaps are left for
+later:
 
 - The property inspector still shows the layer's own path rather than the one at the current time.
 - There's no way to jump to the next or previous keyframe from the keyboard.
 
 Phase 6 finishes the roadmap:
 
-- With the editor on, the property inspector lists a path's subpaths and points, with fields for
-  each point's x and y and buttons that reverse and close subpaths, and keeps the text field
-  under "Advanced" (`components/canvaseditor/PathInspector.tsx`). It's part of the editor's
-  lazily loaded code, which `CanvasEditorApi.ts` hands to the inspector.
+- While a path's points are edited, the property inspector shows the selected point's position,
+  handles, and type, with Set as first point and Delete, and lists the subpaths, collapsed until
+  they're opened, with their points and buttons that reverse, close, and open them. Clicking a
+  point there selects it on the canvas. It shows and saves the path the editor edits, which is a
+  path block's value at a keyframe (`components/canvaseditor/PathInspector.tsx`). It's part of the
+  editor's lazily loaded code, which `CanvasEditorApi.ts` hands to the inspector, and the editor
+  reports what it edits through `services/canvaseditorbridge.service.ts`, which the inspector
+  subscribes to. Otherwise, a path's row has an Edit points button, and its text is under
+  "Advanced". Right-clicking a point selects it, and the context menu adds the point's commands.
 - While a path's points are edited, Cmd+J joins the two selected ends: the ends of one subpath
   close it, and ends of two subpaths join them into one, with a line between them or with the ends
   merged if they're in the same place.
+- A dragged handle moves on its own, and Cmd (Ctrl on Windows and Linux) makes the other one
+  mirror it, for as long as it's held. Alt-dragging a point drags out a copy of it, joined to it by
+  a new segment, which extends the subpath at an open end. Dropping the copy back onto the point
+  leaves nothing to undo. Open cuts a closed subpath at its first point without changing its
+  shape, and Close closes it again (`openSubPath` and `duplicateAnchor` in
+  `model/paths/PathEdit.ts`).
 - Union, subtract, intersect, and exclude (Alt+Shift+U, S, I, and E) combine the selected paths
   into the bottom one, and outline stroke (Cmd+Alt+O) turns strokes into filled outlines, from a
-  bar at the top right of the canvas panel (`components/canvaseditor/pathOps.ts`). They use
-  Skia's PathOps through `pathkit-wasm`, which is only downloaded the first time one of them is
-  used, into the editor's own assets so that the service worker doesn't precache it.
+  bar at the top right of the canvas panel, or from the context menu
+  (`components/canvaseditor/pathOps.ts`). They use Skia's PathOps through `pathkit-wasm`, which is
+  only downloaded the first time one of them is used, into the editor's own assets so that the
+  service worker doesn't precache it.
+- Right-clicking the canvas opens a context menu instead of the browser's
+  (`components/contextmenu/`), with Duplicate, the booleans, and outline stroke while the editor is
+  loaded, and the rest of the layer commands, including Combine and Break apart, which keep every
+  subpath as it is. The menu reaches the editor through `services/canvaseditorbridge.service.ts`.
 - On a touch screen, two fingers pinch to zoom and drag to pan, which cancels what the first
   finger started, and the editor's tolerances are twice as big for fingers.
 
 Some gaps are left:
 
 - Booleans flatten into one path, rather than keeping a boolean group that can be edited later,
-  and they don't work on animated paths. Outline stroke doesn't work on animated layers, and round
-  caps and joins come out as many short quadratic curves.
-- The path inspector lists points but not their handles, and for an animated path it shows the
-  layer's own path rather than the keyframe at the current time.
-- Joining doesn't average the ends, and there's no way to open a closed subpath.
+  and they don't work on animated paths, or when the other paths have animations that would be
+  lost. Outline stroke doesn't work on animated layers, and round caps and joins come out as many
+  short quadratic curves.
+- Joining doesn't average the ends.
 - Touches have no long press, and the handles are no bigger for them.
 
 Phase 0 is the foundation, and it's split into small pull requests:
@@ -365,13 +392,18 @@ of the store, and its cursors are in `components/canvas/canvas.scss`.
 - **Morph compatibility.** Structural edits to one end of a morph break the pairing. Show that as
   it happens, never run auto fix without asking, and keep action mode as the place to fix morphs.
   The editor is off in action mode.
-- **Animated layers.** Paths have no position of their own, so moving a path layer transforms its
-  `pathData`. Its path animation blocks have to be transformed too, or the morph jumps, as
-  `LayerTimelineService.flattenGroupLayer` already does for groups. Don't allow edits in the middle
-  of an interpolation, and never write animated values into the base layers.
-- **Transforms.** Pointer positions are mapped into a layer's own coordinates with the inverse of
-  `LayerUtil.getCanvasTransformForLayer`. Group bounds have to transform all four corners (which
-  fixed MODEL-9). Decide how stroke widths behave when scaling
+- **Animated layers.** Moving a path that doesn't use its transform transforms its `pathData`. Its
+  path animation blocks have to be transformed too, or the morph jumps, as
+  `LayerTimelineService.flattenGroupLayer` already does for groups. A path that uses its transform
+  (`LayerUtil.pathUsesTransform`) moves by its translation and its blocks instead, like a group
+  (`components/canvas/transformLayers.ts`). Don't allow edits in the middle of an interpolation,
+  and never write animated values into the base layers.
+- **Transforms.** Paths have a group's transform too, so a path can rotate and scale without being
+  wrapped in a group, and the exports wrap it in one (`scripts/export/wrapPathTransforms.ts`).
+  Clip paths still need a group. Pointer positions are mapped into a layer's own coordinates with
+  the inverse of `LayerUtil.getCanvasTransformForLayer`, which includes a path's own transform.
+  Group bounds have to transform all four corners (which fixed MODEL-9). Decide how stroke widths
+  behave when scaling
   (the scaled group stroke width entry in `BUGS.md`), and scale trim paths the same way (CANVAS-4
   in `docs/bugs/canvas.md`).
 - **Path invariants.** The first `M` has no start point, each command starts where the previous

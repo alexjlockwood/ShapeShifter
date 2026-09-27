@@ -8,8 +8,8 @@ classes and the ngrx-style store).
 
 ## Commands
 
-Use Node 24 (`.nvmrc`) with npm 11.10 or later. Older npm refuses to install (`EBADENGINE`),
-because it would ignore `.npmrc`'s package age check.
+Use Node 24.15 or later (`.nvmrc`) with npm 11.10 or later. Older npm refuses to install
+(`EBADENGINE`), because it would ignore `.npmrc`'s package age check.
 
 - `npm start` runs the dev server with hot reloading. To run and drive the app in a browser, use
   the `run-app` skill (`.claude/skills/run-app/SKILL.md`).
@@ -58,7 +58,10 @@ Where to start for common changes:
 - **A layer property:** `model/layers/Layer.ts`, then drawing (`components/canvas/CanvasLayers.ts`),
   export (`scripts/export/AvdSerializer.ts` and `scripts/export/SvgSerializer.ts`), and import
   (`scripts/import/SvgLoader.ts` and `scripts/import/VectorDrawableLoader.ts`). The property
-  inspector finds it on its own.
+  inspector finds it on its own, and `components/propertyinput/inspectorSections.ts` places it in
+  a section. Prefer an optional field whose absence means the old behavior, and only raise the
+  required project version (`model/projectVersion.ts`) for something an older React build would
+  silently lose; see `model/README.md`'s "Project file versions".
 - **An export format:** a serializer in `scripts/export/`, a method in
   `services/fileexport.service.ts`, and the Export menu in
   `components/layertimeline/LayerTimeline.tsx`.
@@ -73,6 +76,9 @@ Where to start for common changes:
   settings, nudging, and editing points) are in `components/canvaseditor/CanvasEditor.ts`, which
   gets keys first.
 - **Copy and paste:** `services/clipboard.service.ts`.
+- **Context menus:** `components/contextmenu/buildContextMenu.ts` builds the items for the canvas
+  and the layer list, as sections. Commands that only the canvas editor runs go through
+  `services/canvaseditorbridge.service.ts`.
 - **Undo:** `store/undoredo/metareducer.ts`.
 - **Error reports and analytics:** `scripts/bugsnag/` and `scripts/analytics/`. Google Analytics
   event names may only contain letters, numbers, and underscores, and a new event parameter only

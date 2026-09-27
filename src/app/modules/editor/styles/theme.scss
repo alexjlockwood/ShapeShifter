@@ -6,6 +6,7 @@
 @use '../components/layertimeline/layertimeline-theme' as *;
 @use '../components/layertimeline/timelineanimationrow-theme' as *;
 @use '../components/playback/playback-theme' as *;
+@use '../components/propertyinput/interpolatoreditor-theme' as *;
 @use '../components/propertyinput/propertyinput-theme' as *;
 @use '../components/root/root-theme' as *;
 @use '../components/toolbar/toolbar-theme' as *;
@@ -53,22 +54,30 @@ $ss-dark-theme-background: (
 $light-accent: mat-palette($mat-blue, A400, A200, A700);
 $dark-accent: mat-palette($mat-deep-orange, A200, A100, A400);
 
+// Accent colors that pass WCAG AA in both themes. accent-fill is for backgrounds with white text
+// or icons on them (white on it is 4.9:1), and accent-text is for text and icons on the theme's
+// background (5.96:1 on #303030 and 4.54:1 on #424242 in the dark theme).
+$accent-fill: map.get($mat-blue, A700);
+
 $light-theme: (
-    primary: mat-palette($mat-blue-grey, 500),
+    // 700, not 500: white on 500 (#607d8b) was only 4.37:1 on the app bar.
+    primary: mat-palette($mat-blue-grey, 700),
     accent: $light-accent,
+    accent-fill: $accent-fill,
+    accent-text: $accent-fill,
     warn: mat-palette($mat-red),
     is-dark: false,
-    accent-inverse: $dark-accent,
     ss-foreground: $ss-light-theme-foreground,
-    ss-background: $ss-light-theme-background,
+    ss-background: $ss-light-theme-background
 );
 
 $dark-theme: (
     primary: mat-palette($mat-indigo, 700),
     accent: $dark-accent,
+    accent-fill: $accent-fill,
+    accent-text: map.get($mat-blue, 300),
     warn: mat-palette($mat-red),
     is-dark: true,
-    accent-inverse: $light-accent,
     ss-foreground: $ss-dark-theme-foreground,
     ss-background: $ss-dark-theme-background,
 );
@@ -81,6 +90,7 @@ $dark-theme: (
     @include ss-timelineanimationrow-theme($theme);
     @include ss-playback-theme($theme);
     @include ss-propertyinput-theme($theme);
+    @include ss-interpolatoreditor-theme($theme);
     @include ss-root-theme($theme);
     @include ss-toolbar-theme($theme);
 }
@@ -88,6 +98,15 @@ $dark-theme: (
 @include build-custom-theme($light-theme);
 .ss-dark-theme {
     @include build-custom-theme($dark-theme);
+}
+
+// MUI's snackbar is the opposite of the theme's background, so its button takes the other
+// theme's accent-text.
+.app-snackbar-action.MuiButton-root {
+    color: map.get($dark-theme, accent-text);
+}
+.ss-dark-theme .app-snackbar-action.MuiButton-root {
+    color: map.get($light-theme, accent-text);
 }
 
 // Fades between background colors when the theme changes (or action mode is toggled).

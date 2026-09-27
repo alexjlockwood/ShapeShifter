@@ -51,6 +51,9 @@ splitting, deleting, and index mapping in `model/paths/Path.ts`. Read the tests 
   collapse to a point and always come last.
 - **Reversing** and **shifting** are flags on a subpath, applied when it's built. Only closed
   subpaths can be shifted.
+- **Closed** means two things. `SubPath.isClosed()` checks that a subpath ends where it starts,
+  which is what action mode and auto fix use. `PathEdit.isSubPathClosed` checks for a `Z`, which
+  is what the canvas editor and the path inspector's Open and Close buttons use.
 
 ## Invariants and known problems
 

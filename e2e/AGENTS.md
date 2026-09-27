@@ -36,7 +36,9 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
   demos are short (`playtopause` is 300 ms), so turn on repeat before checking anything while one
   plays, or it can finish first on a slow runner.
 - Wait with `expect.poll` and auto-retrying assertions, never fixed timeouts. Drag with
-  `page.mouse` and several `steps`.
+  `page.mouse` and several `steps`. For input that `page.mouse` can't send, like real touches or
+  a move with the button already up, use a CDP session in Chromium (`e2e/zoom.spec.ts` and
+  `pressWithStrayMove` in `e2e/editor.spec.ts`).
 - Find elements by role and name, e.g. `page.getByRole('button', { name: 'Play (Spacebar)' })`.
 - Unfinished features are off in every test, as they are for users (`playwright.config.ts` turns
   them off on the dev server too). Turn one on with its URL parameter, e.g. `?editor=1` for the
@@ -59,6 +61,10 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
 - Playwright's WebKit can't navigate while offline, and it can't intercept Firefox's service worker
   scripts, so a few tests in `e2e/offline.preview.spec.ts` are skipped in those browsers.
 - Clicks don't land on exact coordinates, so round canvas positions before comparing them.
+- On a Mac, Chromium turns a mouse press with Control held into a right-click (a `contextmenu`
+  event, which cancels a canvas gesture and opens the context menu), even though its user agent
+  reports Windows and `modifier` is `Control`. Press the modifier once a drag has started (see
+  `e2e/editor.spec.ts`), and add to a selection with Shift instead (`e2e/contextmenu.spec.ts`).
 - Firefox on Linux (CI, not macOS) zooms the page for Ctrl and the wheel when the app doesn't
   handle them, which moves everything on the screen. With the canvas editor off, check the canvas's
   own state (`canvasViewportService.getView()`) rather than where things are.

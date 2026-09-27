@@ -1,5 +1,6 @@
 import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
+import { NEWER_VERSION_WARNING, ProjectFormatError } from 'app/modules/editor/model/projectVersion';
 import { Animation } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
@@ -8,6 +9,7 @@ import { State, Store } from 'app/modules/editor/store';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 
+import { ActionModeService } from './actionmode.service';
 import { FileExportService } from './fileexport.service';
 import { LayerTimelineService } from './layertimeline.service';
 import { Duration, SnackBarService } from './snackbar.service';
@@ -26,6 +28,7 @@ export class FileImportService {
     private readonly store: Store<State>,
     private readonly snackBarService: SnackBarService,
     private readonly layerTimelineService: LayerTimelineService,
+    private readonly actionModeService: ActionModeService,
   ) {}
 
   private get vectorLayer() {
@@ -44,6 +47,9 @@ export class FileImportService {
 
     let numCallbacks = 0;
     let numErrors = 0;
+    // The files load in any order, so each one's layers are kept at its index, which says which
+    // file a morph goes from and which it goes to (onLayersLoaded).
+    const loadedVls: Array<VectorLayer | undefined> = files.map(() => undefined);
     const addedVls: VectorLayer[] = [];
 
     let importType: ImportType;
@@ -52,12 +58,21 @@ export class FileImportService {
       if (numErrors === files.length) {
         this.onFailure();
       } else if (numCallbacks === files.length) {
-        this.onSuccess(importType, resetWorkspace, addedVls);
+        const loaded = files.flatMap((file, i) => {
+          const vl = loadedVls[i];
+          return vl ? [{ vl, name: file.name }] : [];
+        });
+        this.onLayersLoaded(
+          importType,
+          resetWorkspace,
+          loaded.map(l => l.vl),
+          loaded.map(l => l.name),
+        );
       }
     };
 
     const existingVl = this.vectorLayer;
-    for (const file of files) {
+    for (const [fileIndex, file] of files.entries()) {
       // FileReader is missing in some locked-down browsers, and reading can throw synchronously
       // (e.g. a dropped folder in older Firefox versions).
       let fileReader: FileReader;
@@ -78,6 +93,7 @@ export class FileImportService {
             maybeAddVectorLayersFn();
             return;
           }
+          loadedVls[fileIndex] = vectorLayer;
           addedVls.push(vectorLayer);
           maybeAddVectorLayersFn();
         };
@@ -106,6 +122,7 @@ export class FileImportService {
           let animation: Animation;
           let hiddenLayerIds: ReadonlySet<string>;
           let guides: ReadonlyArray<Guide>;
+          let newerVersion: boolean;
           try {
             const jsonObj = JSON.parse(text);
             const parsedObj = FileExportService.fromJSON(jsonObj);
@@ -113,16 +130,17 @@ export class FileImportService {
             animation = parsedObj.animation;
             hiddenLayerIds = parsedObj.hiddenLayerIds;
             guides = parsedObj.guides;
+            newerVersion = parsedObj.newerVersion;
             const regeneratedModels = ModelUtil.regenerateModelIds(vl, animation, hiddenLayerIds);
             vl = regeneratedModels.vectorLayer;
             animation = regeneratedModels.animation;
             hiddenLayerIds = regeneratedModels.hiddenLayerIds;
           } catch (e) {
             console.warn('Failed to parse the file', e);
-            this.onFailure();
+            this.onFailure(e instanceof ProjectFormatError ? e.message : undefined);
             return;
           }
-          this.onSuccess(importType, resetWorkspace, [vl], animation, hiddenLayerIds, guides);
+          this.onProjectLoaded(vl, animation, hiddenLayerIds, guides, newerVersion);
         }
       };
 
@@ -159,37 +177,52 @@ export class FileImportService {
     }
   }
 
-  private onSuccess(
-    importType: ImportType,
-    resetWorkspace: boolean,
-    vls: ReadonlyArray<VectorLayer>,
-    animation?: Animation,
-    hiddenLayerIds?: ReadonlySet<string>,
-    guides?: ReadonlyArray<Guide>,
+  private onProjectLoaded(
+    vl: VectorLayer,
+    animation: Animation,
+    hiddenLayerIds: ReadonlySet<string>,
+    guides: ReadonlyArray<Guide>,
+    newerVersion: boolean,
   ) {
-    if (importType === ImportType.Json) {
-      trackEvent('import_shapeshifter');
-      this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds, guides));
-    } else {
-      if (importType === ImportType.Svg) {
-        trackEvent('import_svg');
-      } else if (importType === ImportType.VectorDrawable) {
-        trackEvent('import_vector_drawable');
-      }
-      if (resetWorkspace) {
-        this.store.dispatch(new ResetWorkspace());
-      }
-      this.layerTimelineService.importLayers(vls);
-      // TODO: count number of individual layers?
-      this.snackBarService.show(
-        `Imported ${vls.length} layer${vls.length === 1 ? '' : 's'}`,
-        'Dismiss',
-        Duration.Short,
-      );
+    trackEvent('import_shapeshifter');
+    this.store.dispatch(new ResetWorkspace(vl, animation, hiddenLayerIds, guides));
+    if (newerVersion) {
+      this.snackBarService.show(NEWER_VERSION_WARNING, 'Dismiss', Duration.Long);
     }
   }
 
-  private onFailure() {
-    this.snackBarService.show(`Couldn't import layers from file`, 'Dismiss', Duration.Long);
+  /**
+   * Adds the layers of SVG and VectorDrawable files, and offers to morph them if that would work
+   * (ActionModeService.offerImportMorph), or says how many it imported.
+   */
+  private onLayersLoaded(
+    importType: ImportType,
+    resetWorkspace: boolean,
+    vls: ReadonlyArray<VectorLayer>,
+    fileNames: ReadonlyArray<string>,
+  ) {
+    if (importType === ImportType.Svg) {
+      trackEvent('import_svg');
+    } else if (importType === ImportType.VectorDrawable) {
+      trackEvent('import_vector_drawable');
+    }
+    if (resetWorkspace) {
+      this.store.dispatch(new ResetWorkspace());
+    }
+    const before = this.layerTimelineService.getVectorLayer();
+    const importedIds = this.layerTimelineService.importLayers(vls);
+    if (this.actionModeService.offerImportMorph(before, importedIds, fileNames)) {
+      return;
+    }
+    // TODO: count number of individual layers?
+    this.snackBarService.show(
+      `Imported ${vls.length} layer${vls.length === 1 ? '' : 's'}`,
+      'Dismiss',
+      Duration.Short,
+    );
+  }
+
+  private onFailure(message = `Couldn't import layers from file`) {
+    this.snackBarService.show(message, 'Dismiss', Duration.Long);
   }
 }

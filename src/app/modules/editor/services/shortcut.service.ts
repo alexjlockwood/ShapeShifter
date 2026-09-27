@@ -13,7 +13,8 @@ export enum Shortcut {
   ZoomToFit = 1,
 }
 
-const TEXT_FIELD_SELECTOR =
+/** The elements that type text, where shortcuts like select all belong to the browser. */
+export const TEXT_FIELD_SELECTOR =
   'input:not([type="checkbox"], [type="radio"], [type="button"]), textarea, [contenteditable]';
 
 interface ModifierKeyEvent {
@@ -21,7 +22,7 @@ interface ModifierKeyEvent {
   readonly ctrlKey?: boolean;
 }
 
-interface ZoomKeyEvent extends ModifierKeyEvent {
+interface ShortcutKeyEvent extends ModifierKeyEvent {
   readonly key: string;
   readonly code: string;
   readonly shiftKey: boolean;
@@ -29,11 +30,22 @@ interface ZoomKeyEvent extends ModifierKeyEvent {
 }
 
 /**
+ * Returns whether the key press is Cmd+A (Ctrl+A outside of Macs), with no other modifiers. It
+ * goes by the key's position on layouts without Latin letters, e.g. Cyrillic. Both the canvas
+ * editor and the shortcuts here use it, so it lives outside the editor's lazy chunk.
+ */
+export function isSelectAllShortcut(event: ShortcutKeyEvent, isMac: boolean) {
+  const [command, other] = isMac ? [event.metaKey, event.ctrlKey] : [event.ctrlKey, event.metaKey];
+  const isA = /^[a-z]$/i.test(event.key) ? event.key.toLowerCase() === 'a' : event.code === 'KeyA';
+  return !!command && !other && !event.shiftKey && !event.altKey && isA;
+}
+
+/**
  * Returns the canvas zoom that the key press asks for, using Figma's shortcuts: Cmd with plus or
  * minus zooms in and out (Ctrl on other platforms), Shift+1 fits, and Shift+0 zooms to 100%.
  * (Cmd+1 and Cmd+0 belong to the browser.)
  */
-export function getZoomShortcut(event: ZoomKeyEvent, isMac: boolean): ZoomCommand | undefined {
+export function getZoomShortcut(event: ShortcutKeyEvent, isMac: boolean): ZoomCommand | undefined {
   if ((isMac ? event.metaKey : event.ctrlKey) && !event.altKey) {
     // With or without Shift, since plus is Shift+= on most keyboards.
     if (['=', '+'].includes(event.key) || ['Equal', 'NumpadAdd'].includes(event.code)) {
@@ -128,6 +140,18 @@ export class ShortcutService {
       }
       if (event.keyCode === 'O'.charCodeAt(0)) {
         this.shortcutSubject.next(Shortcut.ZoomToFit);
+        return false;
+      }
+      if (
+        isSelectAllShortcut(event, ShortcutService.isMac()) &&
+        !event.defaultPrevented &&
+        !document.activeElement?.matches(TEXT_FIELD_SELECTOR) &&
+        !this.actionModeService.isActionMode()
+      ) {
+        // Selects every visible layer rather than the page's text. Once the canvas editor has
+        // loaded, it handles this first and stops the event, e.g. to select every point of the
+        // path being edited, so this is for when it's off or still loading.
+        this.layerTimelineService.selectAllLayers();
         return false;
       }
     }

@@ -1,5 +1,3 @@
-@use 'sass:math';
-
 // The inspector is as tall as the canvas and the playback controls next to it, and its body
 // scrolls. Its properties don't count toward the row's height, or selecting something with many of
 // them would make the workspace taller than the window and resize the canvas.
@@ -24,59 +22,171 @@
     z-index: 1;
     display: flex;
     flex-direction: row;
-    padding: 16px;
+    gap: 4px;
+    padding: 12px 8px 12px 12px;
     .spi-selection-icon {
-        margin-right: 12px;
-        width: 32px;
-        height: 32px;
-    }
-    .spi-selection-description-container {
-        padding: math.div(32px - 24px, 2) 0;
+        margin-right: 8px;
+        width: 24px;
+        height: 24px;
     }
     .spi-selection-description {
         font-weight: 500;
-        font-size: 20px;
-        line-height: 24px;
+        font-size: 15px;
+        line-height: 20px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .spi-selection-sub-description {
-        font-size: 14px;
-        line-height: 20px;
+        font-size: 12px;
+        line-height: 16px;
         &:empty {
             display: none;
         }
     }
+    .spi-selection-description-container {
+        min-width: 0;
+    }
+    .spi-done-button {
+        flex: none;
+        border: 0;
+        border-radius: 3px;
+        padding: 0 12px;
+        height: 28px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+    }
 }
 
+// Sections of compact rows, like Figma's design panel: a label on the left, and one or more fields
+// sharing the rest of the row (components/propertyinput/inspectorSections.ts).
 .spi-body {
     overflow-y: auto;
-    padding: 8px 0;
-    .spi-property {
+    .spi-section {
         display: flex;
-        flex-direction: row;
-        padding: 4px 16px;
-        min-height: 24px;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 12px 10px;
+        // The body scrolls instead of squeezing them.
+        flex-shrink: 0;
     }
-    .spi-property-name {
-        font-size: 14px;
+    .spi-section-title {
+        font-size: 12px;
+        font-weight: 500;
         line-height: 24px;
+    }
+    button.spi-section-toggle,
+    button.spi-subpath-toggle {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        border: 0;
+        background: none;
+        padding: 0;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: none;
+    }
+    button.spi-section-toggle {
+        font-size: 12px;
+        font-weight: 500;
+        margin-left: -4px;
+    }
+    .spi-chevron {
+        width: 16px;
+        height: 16px;
+        font-size: 16px;
+        transition: transform 120ms;
+        &.is-expanded {
+            transform: rotate(90deg);
+        }
+    }
+    .spi-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 28px;
+    }
+    .spi-row-label {
+        flex: 0 0 72px;
+        font-size: 12px;
+        line-height: 16px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .spi-row-fields {
+        display: flex;
         flex: 1 1 0;
-    }
-    .spi-property-value {
-        flex: 2 1 0;
+        align-items: center;
+        gap: 6px;
         min-width: 0;
-        font-size: 14px;
-        line-height: 24px;
+        > .spi-property-value-menu-target {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+    }
+    // The easing curve is too wide to share its row with the label.
+    .spi-row-wide {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        .spi-row-label {
+            flex: 1 1 auto;
+            line-height: 24px;
+        }
+        .spi-row-fields {
+            order: 1;
+            flex-basis: 100%;
+        }
+    }
+    .spi-field {
+        display: flex;
+        flex: 1 1 0;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        input {
+            flex: 1 1 0;
+            // Rather than the width of 20 characters that inputs have by default.
+            width: 0;
+            min-width: 0;
+        }
+        .spi-property-value-menu-target,
+        .spi-interpolator-editor,
+        .spi-property-value-static {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+    }
+    .spi-field-label {
+        flex: none;
+        font-size: 11px;
+        line-height: 16px;
+    }
+    .spi-row-note {
+        font-size: 12px;
+        line-height: 16px;
+    }
+    .spi-row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 2px;
     }
     .spi-property-value-static,
-    .spi-property-value-editor input,
+    input,
     .spi-property-value-menu-target {
         border: 0;
-        border-radius: 2px;
-        font-size: 14px;
-        line-height: 20px;
+        border-radius: 3px;
+        font: inherit;
+        font-size: 12px;
+        line-height: 16px;
         height: 24px;
         box-sizing: border-box;
-        padding: 2px 6px;
+        padding: 4px 6px;
         outline: 0;
     }
     .spi-property-value-static {
@@ -91,10 +201,10 @@
         cursor: text;
     }
     .spi-property-value-menu-target {
-        border: 0;
         text-align: left;
         position: relative;
         padding-right: 24px;
+        cursor: pointer;
         .spi-property-value-menu-arrow {
             position: absolute;
             right: 0;
@@ -109,83 +219,124 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    // A path, with the canvas editor's structured inspector under its name.
-    .spi-property-path {
-        flex-direction: column;
-        // It's taller than the other rows, and the body scrolls instead of squeezing it.
-        flex-shrink: 0;
-        .spi-property-value,
-        .spi-property-value-editor {
-            flex: none;
-            width: 100%;
-            min-width: 0;
-        }
-        .spi-path-advanced input {
-            width: 100%;
+    .spi-property-color-preview {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+    }
+    // A text button, like Edit points, Done, and the subpaths' Reverse, Open, and Close.
+    .spi-button,
+    .spi-point-edit
+        button:not(.spi-subpath-toggle, .spi-point-row, .spi-property-value-menu-target),
+    .spi-row-actions button {
+        flex: none;
+        border: 0;
+        border-radius: 3px;
+        padding: 0 8px;
+        height: 24px;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        &:disabled {
+            cursor: default;
         }
     }
-    .spi-path-inspector {
+    // The button at the end of a row whose properties can be animated: a keyframe diamond, filled
+    // once they are.
+    .spi-row-animate {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border: 0;
+        border-radius: 3px;
+        padding: 0;
+        background: none;
+        cursor: pointer;
+        opacity: 0.6;
+        &:hover,
+        &:focus-visible,
+        &.is-animated {
+            opacity: 1;
+        }
+    }
+    .spi-keyframe-diamond {
+        width: 7px;
+        height: 7px;
+        transform: rotate(45deg);
+        border-radius: 1px;
+        box-sizing: border-box;
+        border-width: 1.5px;
+        border-style: solid;
+    }
+    .spi-path-advanced {
+        summary {
+            font-size: 12px;
+            line-height: 24px;
+            cursor: pointer;
+        }
+        .spi-field-PathProperty {
+            flex: 1 1 auto;
+        }
+    }
+    // The points of a path while they're edited (components/canvaseditor/PathInspector.tsx).
+    .spi-point-edit {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        margin-top: 4px;
-        button {
-            border: 0;
-            border-radius: 2px;
-            padding: 0 8px;
-            height: 24px;
-            font: inherit;
-            font-size: 12px;
-            cursor: pointer;
-            &:disabled {
-                cursor: default;
-            }
-        }
+        flex-shrink: 0;
+    }
+    .spi-point-edit-hint {
+        padding: 8px 12px;
+        font-size: 12px;
+        line-height: 16px;
+    }
+    .spi-subpath {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
     }
     .spi-subpath-header {
         display: flex;
         align-items: center;
         gap: 4px;
+        min-height: 28px;
+    }
+    button.spi-subpath-toggle {
+        flex: 1 1 auto;
+        min-width: 0;
         font-size: 12px;
+        margin-left: -4px;
     }
     .spi-subpath-title {
-        flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
-    .spi-point {
+    .spi-subpath-points {
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        padding-left: 14px;
+    }
+    .spi-point-row {
+        display: flex;
         gap: 8px;
+        border: 0;
+        border-radius: 3px;
+        background: none;
+        padding: 3px 6px;
+        font: inherit;
         font-size: 12px;
-    }
-    .spi-point-label {
-        width: 20px;
-        text-align: right;
-    }
-    .spi-point-field {
-        display: flex;
-        flex: 1 1 0;
-        align-items: center;
-        gap: 4px;
-        min-width: 0;
-        input {
-            flex: 1 1 0;
-            // Rather than the width of 20 characters that inputs have by default.
-            width: 0;
-            min-width: 0;
-        }
-    }
-    .spi-path-advanced summary {
-        font-size: 12px;
+        line-height: 16px;
+        text-align: left;
         cursor: pointer;
-        margin-bottom: 4px;
+        font-variant-numeric: tabular-nums;
     }
-    .spi-property-color-preview {
-        width: 16px;
-        height: 16px;
+    .spi-point-number {
         min-width: 16px;
-        min-height: 16px;
-        margin: 4px 8px 4px 4px;
-        border-radius: 50%;
+        text-align: right;
     }
 }
 
@@ -221,4 +372,122 @@
 .paths-incompatible-text {
     font-size: 14px;
     line-height: 20px;
+}
+
+// The color picker: the swatch button that opens it, its popover panel, and the swatches inside
+// (the "No color" option and "In this document"). Colors that aren't layout are in
+// propertyinput-theme.scss.
+.spi-color-swatch {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    // A neutral checkerboard behind a translucent color, the same in both themes.
+    background-image:
+        linear-gradient(45deg, rgba(128, 128, 128, 0.3) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(128, 128, 128, 0.3) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(128, 128, 128, 0.3) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(128, 128, 128, 0.3) 75%);
+    background-size: 8px 8px;
+    background-position:
+        0 0,
+        0 4px,
+        4px -4px,
+        -4px 0;
+}
+// A batch edit whose selected layers disagree on the color: diagonal stripes instead of the
+// checkerboard, so it reads differently from both a real color and "no color".
+.spi-color-swatch.is-mixed {
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(128, 128, 128, 0.5) 0,
+        rgba(128, 128, 128, 0.5) 2px,
+        transparent 2px,
+        transparent 5px
+    );
+    background-size: auto;
+    background-position: 0 0;
+}
+.spi-color-swatch-empty-icon {
+    width: 12px;
+    height: 12px;
+}
+.spi-color-picker-popover {
+    .spi-color-picker {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        width: 232px;
+        .react-colorful {
+            width: 100%;
+            height: 200px;
+        }
+    }
+    .spi-color-picker-fields {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        input {
+            border: 0;
+            border-radius: 2px;
+            font-size: 14px;
+            height: 24px;
+            box-sizing: border-box;
+            padding: 2px 6px;
+            outline: 0;
+        }
+    }
+    .spi-color-picker-hex {
+        flex: 2 1 0;
+        min-width: 0;
+    }
+    .spi-color-picker-alpha {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+    .spi-color-picker-eyedropper.MuiIconButton-root {
+        padding: 4px;
+    }
+    .spi-color-picker-none {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        border: 0;
+        background: none;
+        padding: 4px;
+        font: inherit;
+        font-size: 14px;
+        text-align: left;
+        cursor: pointer;
+        border-radius: 2px;
+        .spi-color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    }
+    .spi-color-picker-swatches {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .spi-color-picker-swatches-label {
+        font-size: 12px;
+    }
+    .spi-color-picker-swatches-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        .spi-color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    }
 }

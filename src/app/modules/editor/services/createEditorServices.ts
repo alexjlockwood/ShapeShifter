@@ -1,9 +1,11 @@
+import { ContextMenuService } from 'app/modules/editor/components/contextmenu/contextmenu.service';
 import { DialogService } from 'app/modules/editor/components/dialogs/dialog.service';
 import { ProjectService } from 'app/modules/editor/components/project/project.service';
 import type { State, Store } from 'app/modules/editor/store';
 import { Features, NO_FEATURES } from 'environments/features';
 
 import { ActionModeService } from './actionmode.service';
+import { CanvasEditorBridgeService } from './canvaseditorbridge.service';
 import { CanvasSettingsService } from './canvassettings.service';
 import { CanvasViewportService } from './canvasviewport.service';
 import { ClipboardService } from './clipboard.service';
@@ -26,6 +28,8 @@ export function createEditorServices(
   { features = NO_FEATURES }: { readonly features?: Features } = {},
 ) {
   const dialogService = new DialogService();
+  const contextMenuService = new ContextMenuService();
+  const canvasEditorBridgeService = new CanvasEditorBridgeService();
   const projectService = new ProjectService();
   const snackBarService = new SnackBarService();
   const themeService = new ThemeService(store);
@@ -36,7 +40,12 @@ export function createEditorServices(
   const canvasSettingsService = new CanvasSettingsService();
   const guideService = new GuideService(store);
   const fileExportService = new FileExportService(store);
-  const fileImportService = new FileImportService(store, snackBarService, layerTimelineService);
+  const fileImportService = new FileImportService(
+    store,
+    snackBarService,
+    layerTimelineService,
+    actionModeService,
+  );
   const clipboardService = new ClipboardService(
     layerTimelineService,
     playbackService,
@@ -54,9 +63,11 @@ export function createEditorServices(
   return {
     features,
     actionModeService,
+    canvasEditorBridgeService,
     canvasSettingsService,
     canvasViewportService,
     clipboardService,
+    contextMenuService,
     dialogService,
     fileExportService,
     fileImportService,
@@ -72,6 +83,7 @@ export function createEditorServices(
       clipboardService.destroy();
       playbackService.dispose();
       canvasViewportService.dispose();
+      actionModeService.dispose();
     },
   };
 }

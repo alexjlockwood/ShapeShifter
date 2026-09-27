@@ -43,6 +43,21 @@ From the outside in: the action logger (dev only), freeze (dev and tests), undo,
   with an `IsolateUndoStep` (`store/undoredo/actions.ts`) in it, which is how
   `layerTimelineService.commitCanvasEdit` saves a gesture on the canvas. Undo and redo keep
   the current theme.
+- **Previews:** a batch with a `SkipUndoStep` isn't recorded at all, and doesn't count as a recent
+  edit. redux-undo keeps the last recorded state (`getLastRecordedState` in
+  `store/undoredo/metareducer.ts`), so undo still goes back to it. `layerTimelineService`'s
+  `previewLayer`, `previewLayers` (for a batch edit), and `previewBlocks` use it to show a value on
+  every move of a drag, and `commitPreview` saves the result as one isolated undo step (or
+  `cancelPreview` shows the recorded state again, with an `EndPreview` batch).
+  `InspectedProperty.previewValue` does the same for the inspector's colors and interpolators.
+- **Pending previews:** a preview stays pending (`isPreviewPending`) until `commitPreview`,
+  `cancelPreview`, undo, redo, or any recorded action. A recorded action during a preview (e.g. a
+  keyboard shortcut or a selection change) always starts a new undo step, which holds the preview
+  too, since redux-undo applies it to the previewed state. After that, `commitPreview` and
+  `cancelPreview` do nothing, and only undo takes the preview back. `commitPreview` also saves no
+  step when the previewed layers and animation serialize the same as the recorded ones. Whatever
+  previews (e.g. a color picker) must commit or cancel on release, and on unmount and blur too, or
+  the previewed values stay on screen and the next edit's undo step saves them.
 - **Batch:** `new BatchAction(a, b)` applies several actions as one undo step. Only one level is
   unpacked, so don't nest batches.
 - **Reset:** `ResetWorkspace` rebuilds every slice's initial state, then loads its payload. It's an

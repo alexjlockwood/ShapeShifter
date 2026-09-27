@@ -1,6 +1,21 @@
 import { Property } from 'app/modules/editor/model/properties';
 
 /**
+ * Shows values without saving them as undo steps, e.g. while a color or a curve is dragged (see
+ * LayerTimelineService.previewLayer). Whatever shows the previews must commit or cancel them when
+ * the drag ends, and also when it unmounts or loses focus, or the previewed value stays on screen
+ * and the next edit's undo step saves it.
+ */
+export interface ValuePreview<V> {
+  // Shows the value without an undo step.
+  readonly preview: (value: V) => void;
+  // Saves the previewed value as one undo step.
+  readonly commit: () => void;
+  // Shows the value from before the previews again.
+  readonly cancel: () => void;
+}
+
+/**
  * Stores information about an inspected property.
  * V is the property value type (number, string, or path).
  */
@@ -24,6 +39,8 @@ export class InspectedProperty<V> {
     private readonly transformEditedValueFn = (enteredValue: V) => enteredValue,
     // Returns whether or not this property name is editable.
     readonly isEditable = () => true,
+    // Previews values while they're dragged. Without it, previewing sets the value.
+    private readonly valuePreview?: ValuePreview<V>,
   ) {
     this.typeName = this.property.getTypeName();
   }
@@ -51,6 +68,35 @@ export class InspectedProperty<V> {
     this.setEnteredValue(enteredValue);
     enteredValue = this.transformEditedValueFn(enteredValue);
     this.property.setEditableValue(this, 'value', enteredValue);
+  }
+
+  /** Whether previewValue can show a value without saving it. */
+  get canPreview() {
+    return !!this.valuePreview;
+  }
+
+  /**
+   * Shows the value without an undo step, e.g. on every move of a drag. Call commitPreview when
+   * the drag ends, or cancelPreview to go back, and one of them on unmount or blur too. Without a
+   * preview, it sets the value.
+   */
+  previewValue(value: V) {
+    this.setEnteredValue(undefined);
+    if (this.valuePreview) {
+      this.valuePreview.preview(value);
+    } else {
+      this.value = value;
+    }
+  }
+
+  /** Saves the previewed value as one undo step. */
+  commitPreview() {
+    this.valuePreview?.commit();
+  }
+
+  /** Shows the value from before the previews again, without an undo step. */
+  cancelPreview() {
+    this.valuePreview?.cancel();
   }
 
   resolveEnteredValue() {

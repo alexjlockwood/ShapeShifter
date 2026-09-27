@@ -8,8 +8,19 @@ export type KeyframeStatus =
       readonly label: string;
       /** The blocks whose ends no longer morph, which auto fix fixes. */
       readonly brokenBlockIds: ReadonlyArray<string>;
+      /**
+       * The blocks with an end at the time, in order, whose morphs can be edited in action mode.
+       * Where two morphs meet, there's one on each side.
+       */
+      readonly morphBlockIds: ReadonlyArray<string>;
     }
-  | { readonly type: 'between'; readonly startTime: number; readonly endTime: number };
+  | {
+      readonly type: 'between';
+      readonly startTime: number;
+      readonly endTime: number;
+      /** The block that's morphing. */
+      readonly blockId: string;
+    };
 
 /**
  * Returns what to say about editing a path at the time: which end of a morph an edit changes and
@@ -24,8 +35,8 @@ export function getKeyframeStatus(
     return undefined;
   }
   if (keyframe.type === 'between') {
-    const { startTime, endTime } = keyframe.block;
-    return { type: 'between', startTime, endTime };
+    const { startTime, endTime, id } = keyframe.block;
+    return { type: 'between', startTime, endTime, blockId: id };
   }
   const kinds = new Set(keyframe.targets.map(t => t.kind));
   const place =
@@ -40,13 +51,27 @@ export function getKeyframeStatus(
     type: 'keyframe',
     label: `${place}, at ${time} ms`,
     brokenBlockIds: keyframe.blocks.filter(b => !b.isAnimatable()).map(b => b.id),
+    morphBlockIds: keyframe.blocks.map(b => b.id),
   };
+}
+
+/**
+ * Returns the blocks the badge is about: the one that's morphing, or those with an end at the
+ * time, in order.
+ */
+export function getKeyframeBlockIds(status: KeyframeStatus | undefined): ReadonlyArray<string> {
+  if (!status) {
+    return [];
+  }
+  return status.type === 'between' ? [status.blockId] : status.morphBlockIds;
 }
 
 /**
  * Says whether the selected path's morph still works while it's edited at one of its ends, with a
  * button that auto fixes it when it doesn't, or that it's morphing at the current time, with
- * buttons to go to either end. It's plain DOM at the bottom of the canvas panel, like the toolbar.
+ * buttons to go to either end. Either way, it has a button that edits the morph in action mode.
+ * Right-clicking it opens a menu for its blocks. It's plain DOM at the bottom of the canvas panel,
+ * like the toolbar.
  */
 export class KeyframeBadge {
   private readonly element: HTMLElement;
@@ -57,7 +82,16 @@ export class KeyframeBadge {
     root: HTMLElement,
     private readonly callbacks: {
       readonly onAutoFix: (blockIds: ReadonlyArray<string>) => void;
+      readonly onEditMorph: (blockId: string) => void;
       readonly onSeek: (time: number) => void;
+      /**
+       * Opens the context menu for the badge's blocks (getKeyframeBlockIds), at the point in
+       * client coordinates.
+       */
+      readonly onContextMenu: (
+        blockIds: ReadonlyArray<string>,
+        point: { readonly x: number; readonly y: number },
+      ) => void;
     },
   ) {
     this.element = document.createElement('div');
@@ -68,6 +102,14 @@ export class KeyframeBadge {
     this.removeListeners.push(
       on(this.element, 'pointerdown', event => event.stopPropagation()),
       on(this.element, 'pointermove', event => event.stopPropagation()),
+      // The canvas's own context menu leaves the badge alone (CanvasController).
+      on(this.element, 'contextmenu', event => {
+        event.preventDefault();
+        const blockIds = getKeyframeBlockIds(this.status);
+        if (blockIds.length) {
+          this.callbacks.onContextMenu(blockIds, { x: event.clientX, y: event.clientY });
+        }
+      }),
     );
     root.appendChild(this.element);
   }
@@ -88,6 +130,7 @@ export class KeyframeBadge {
       );
       this.addButton('Go to start', () => this.callbacks.onSeek(status.startTime));
       this.addButton('Go to end', () => this.callbacks.onSeek(status.endTime));
+      this.addButton('Edit morph', () => this.callbacks.onEditMorph(status.blockId));
       return;
     }
     this.addText(status.label);
@@ -98,6 +141,16 @@ export class KeyframeBadge {
       morph.title = 'Both ends of a morph need the same number and types of commands';
       this.addButton('Auto fix', () => this.callbacks.onAutoFix(status.brokenBlockIds));
     }
+    const { morphBlockIds } = status;
+    morphBlockIds.forEach((blockId, i) => {
+      const label =
+        morphBlockIds.length === 1
+          ? 'Edit morph'
+          : i === 0
+            ? 'Edit previous morph'
+            : 'Edit next morph';
+      this.addButton(label, () => this.callbacks.onEditMorph(blockId));
+    });
   }
 
   dispose() {

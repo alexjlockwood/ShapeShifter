@@ -34,9 +34,11 @@ export function getTopmostLayerIds(vl: VectorLayer, layerIds: Iterable<string>) 
 
 /**
  * Moves the layers by a distance in viewport coordinates, with their animations, so that they move
- * at every time. Paths have no position of their own, so their paths and path blocks move, and
- * groups move by their translation and its blocks. The distance is converted to each layer's
- * parent's coordinates with the parent's transform in the rendered vector layer, where it's seen.
+ * at every time. Groups, and paths that use their transform (LayerUtil.pathUsesTransform), move by
+ * their translation and its blocks. Other paths move their paths and path blocks, so that moving
+ * doesn't give them a transform. The distance is converted to the coordinates it's added in, the
+ * parent's for a translation and the path's own for a path, with the transforms in the rendered
+ * vector layer, where it's seen.
  */
 export function translateLayers(
   document: CanvasDocument,
@@ -50,8 +52,21 @@ export function translateLayers(
   }
   let { animation } = document;
   const moves = new Map<string, Point>();
+  const translatedIds = new Set<string>();
   for (const layerId of getTopmostLayerIds(document.vectorLayer, layerIds)) {
-    const inverse = LayerUtil.getCanvasTransformForLayer(rendered, layerId).invert();
+    const layer = document.vectorLayer.findLayerById(layerId);
+    const isTranslated =
+      layer instanceof GroupLayer || LayerUtil.pathUsesTransform(layer, animation);
+    if (isTranslated) {
+      translatedIds.add(layerId);
+    }
+    // A translation is in the parent's coordinates, and a path in its own, which a rotated path
+    // turns (not LayerUtil.getCanvasTransformForLayer, or a rotated path moves the wrong way).
+    const inverse = (
+      isTranslated
+        ? LayerUtil.getParentTransformForLayer(rendered, layerId)
+        : LayerUtil.getCanvasTransformForLayer(rendered, layerId)
+    ).invert();
     if (!inverse) {
       // A group scaled to 0 can't be moved from within.
       continue;
@@ -68,16 +83,10 @@ export function translateLayers(
       return layer;
     }
     const { x, y } = move;
-    if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
-      const translate = (path: Path) => path.mutate().transform(Matrix.translation(x, y)).build();
-      animation = mapBlocks(animation, layer.id, 'pathData', translate);
-      const clone = layer.clone();
-      if (clone.pathData) {
-        clone.pathData = translate(clone.pathData);
-      }
-      return clone;
-    }
-    if (layer instanceof GroupLayer) {
+    if (
+      translatedIds.has(layer.id) &&
+      (layer instanceof GroupLayer || layer instanceof PathLayer)
+    ) {
       // Rounded like the inspector shows them, so that moves don't leave long decimals behind.
       const translateX = (value: number) => round(value + x, 3);
       const translateY = (value: number) => round(value + y, 3);
@@ -86,6 +95,15 @@ export function translateLayers(
       const clone = layer.clone();
       clone.translateX = translateX(clone.translateX);
       clone.translateY = translateY(clone.translateY);
+      return clone;
+    }
+    if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
+      const translate = (path: Path) => path.mutate().transform(Matrix.translation(x, y)).build();
+      animation = mapBlocks(animation, layer.id, 'pathData', translate);
+      const clone = layer.clone();
+      if (clone.pathData) {
+        clone.pathData = translate(clone.pathData);
+      }
       return clone;
     }
     return layer;
@@ -218,8 +236,9 @@ export function duplicateLayers(
 
 /**
  * Transforms the layers by a matrix in viewport coordinates, with their animations. Every path in
- * them is transformed in its own coordinates, along with its path blocks. Groups keep their own
- * transforms, which can't express every matrix: scaling a rotated group along one axis skews it.
+ * them is transformed in its own coordinates (inside its own transform), along with its path
+ * blocks. Groups and paths keep their own transforms, which can't express every matrix: scaling a
+ * rotated group along one axis skews it.
  */
 export function transformLayers(
   document: CanvasDocument,

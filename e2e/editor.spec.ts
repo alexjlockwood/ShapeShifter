@@ -73,6 +73,150 @@ test('selects layers with a marquee, starting off of the artboard', async ({ pag
   await expect.poll(() => getSelectedNames(page)).toEqual(['a', 'b']);
 });
 
+test('selects every visible layer with Cmd+A', async ({ page, modifier }) => {
+  await openSquares(page);
+  // b and c in a group, which is selected as a whole.
+  await click(page, 12, 4);
+  await click(page, 4, 12, { shift: true });
+  await page.keyboard.press(`${modifier}+g`);
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(2);
+  const groupName = await getState<string>(page, s => s.layers.vectorLayer.children[1].name);
+  await click(page, 20, 20);
+  await expect.poll(() => getSelectedNames(page)).toEqual([]);
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a', groupName].sort());
+
+  // Hidden layers are skipped.
+  await page.evaluate(() => {
+    const { store, services } = (window as any).shapeshifter;
+    const [a] = store.getState().present.layers.vectorLayer.children;
+    services.layerTimelineService.toggleVisibleLayer(a.id);
+  });
+  await click(page, 20, 20);
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getSelectedNames(page)).toEqual([groupName]);
+
+  // With a drawing tool, it goes back to the select tool first.
+  await click(page, 20, 20);
+  await page.keyboard.press('p');
+  await expect.poll(() => getToolName(page)).toBe('pen');
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getToolName(page)).toBe('select');
+  await expect.poll(() => getSelectedNames(page)).toEqual([groupName]);
+});
+
+/** Sends a synthetic Cmd+A (Ctrl+A outside of Macs), and returns whether it was taken. */
+function pressSelectAll(
+  page: Page,
+  modifier: string,
+  init: { repeat?: boolean; ctrlKey?: boolean; metaKey?: boolean } = {},
+) {
+  return page.evaluate(
+    key => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'a',
+        code: 'KeyA',
+        keyCode: 65,
+        bubbles: true,
+        cancelable: true,
+        ...key,
+      });
+      (document.activeElement ?? document.body).dispatchEvent(event);
+      return event.defaultPrevented;
+    },
+    { ...(modifier === 'Meta' ? { metaKey: true } : { ctrlKey: true }), ...init },
+  );
+}
+
+test('swallows Cmd+A during a drag and on key repeat', async ({ page, modifier }) => {
+  await openSquares(page);
+  // The press selects a. A click first would make it a double-click, which edits the path.
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, 4, 4);
+  const middle = await artboardPoint(canvas, 6, 7);
+  const end = await artboardPoint(canvas, 8, 10);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(middle.x, middle.y, { steps: 5 });
+  // The new selection would cancel the drag.
+  expect(await pressSelectAll(page, modifier)).toBe(true);
+  expect(await getSelectedNames(page)).toEqual(['a']);
+  await page.mouse.move(end.x, end.y, { steps: 5 });
+  await page.mouse.up();
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'a')))
+    .toBe('M 6 8 L 10 8 L 10 12 L 6 12 Z');
+
+  // Holding the keys down doesn't select everything again, e.g. after a click cleared it.
+  await click(page, 20, 20);
+  await expect.poll(() => getSelectedNames(page)).toEqual([]);
+  expect(await pressSelectAll(page, modifier, { repeat: true })).toBe(true);
+  expect(await getSelectedNames(page)).toEqual([]);
+  // Nor does it with the other command key held too, which is left to the browser.
+  const other = modifier === 'Meta' ? { ctrlKey: true } : { metaKey: true };
+  expect(await pressSelectAll(page, modifier, other)).toBe(false);
+  expect(await getSelectedNames(page)).toEqual([]);
+});
+
+test('handles Cmd+A with the focus on the toolbar', async ({ page, modifier }) => {
+  await openSquares(page);
+  const toolbar = page.getByRole('toolbar', { name: 'Tools' });
+  // The pen goes back to the select tool, rather than staying on with every layer selected.
+  await page.keyboard.press('p');
+  await expect.poll(() => getToolName(page)).toBe('pen');
+  await toolbar.getByRole('button', { name: 'Pen', exact: true }).focus();
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getToolName(page)).toBe('select');
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a', 'b', 'c']);
+
+  // While editing a path, it selects every point rather than every layer, which would stop the
+  // edit.
+  const point = await artboardPoint(page.locator('.app-canvas'), 4, 4);
+  await page.mouse.dblclick(point.x, point.y);
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await toolbar.getByRole('button', { name: 'Move' }).focus();
+  await page.keyboard.press(`${modifier}+a`);
+  expect(await isEditingPath(page)).toBe(true);
+  expect(await getSelectedNames(page)).toEqual(['a']);
+  // The arrow keys belong to the toolbar while it has the focus.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 3 2 L 7 2 L 7 6 L 3 6 Z');
+});
+
+test('selects every layer with Cmd+A with the canvas editor off, except while typing', async ({
+  page,
+  modifier,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
+  await dispatchClipboardEvent(page, 'paste', SQUARES_SVG);
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(3);
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a', 'b', 'c']);
+
+  // A text field keeps the browser's select all.
+  await click(page, 4, 4);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a']);
+  await page.locator('.spi-property input[name="name"]').focus();
+  const isPrevented = await page.evaluate(
+    key => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'a',
+        keyCode: 65,
+        bubbles: true,
+        cancelable: true,
+        ...key,
+      });
+      document.activeElement?.dispatchEvent(event);
+      return event.defaultPrevented;
+    },
+    modifier === 'Meta' ? { metaKey: true } : { ctrlKey: true },
+  );
+  expect(isPrevented).toBe(false);
+  expect(await getSelectedNames(page)).toEqual(['a']);
+});
+
 function getPathData(page: Page, name: string) {
   return page.evaluate(layerName => {
     const { store } = (window as any).shapeshifter;
@@ -233,6 +377,25 @@ test("edits a path's points after a double-click, until Escape", async ({ page, 
   await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
 });
 
+test("doesn't count a press right after a drag as a double-click", async ({ page }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  // Drags the top right point away and back in one drag, then drags it again right away.
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, 6, 2);
+  const away = await artboardPoint(canvas, 9, 9);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(away.x, away.y, { steps: 5 });
+  await page.mouse.move(start.x, start.y, { steps: 5 });
+  await page.mouse.up();
+  await drag(page, [6, 2], [8.1, 0.9]);
+  // A double-click would have made it a smooth point, with curves on either side.
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 1 L 6 6 L 2 6 Z');
+});
+
 test('adds, deletes, and changes points, with Enter to start and stop', async ({ page }) => {
   await openSquares(page);
   await click(page, 4, 4);
@@ -258,6 +421,87 @@ test('adds, deletes, and changes points, with Enter to start and stop', async ({
   // Without points to edit, Backspace deletes the layer again.
   await page.keyboard.press('Backspace');
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(2);
+});
+
+test('moves a handle on its own, and mirrors the other one with Cmd held', async ({
+  page,
+  modifier,
+}) => {
+  await page.goto('/?editor=1');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  // The point at (8, 12) has mirrored handles, at (6, 8) and (10, 16).
+  await dispatchClipboardEvent(
+    page,
+    'paste',
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path id="curve" d="M 2 12 C 2 8 6 8 8 12 C 10 16 14 16 14 12"/>
+    </svg>`,
+  );
+  await expect
+    .poll(() => getPathData(page, 'curve'))
+    .toBe('M 2 12 C 2 8 6 8 8 12 C 10 16 14 16 14 12');
+  // Inside the curve's first bump, which is filled.
+  await click(page, 5, 10.5);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await click(page, 8, 12);
+  await drag(page, [10, 16], [10, 18]);
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'curve')))
+    .toBe('M 2 12 C 2 8 6 8 8 12 C 10 18 14 16 14 12');
+  // Pressing the key once the drag has started mirrors the other handle from then on. (On a Mac,
+  // Chromium makes a press with Ctrl held a right-click, whatever its user agent says.)
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, 10, 18);
+  const middle = await artboardPoint(canvas, 10.5, 17);
+  const end = await artboardPoint(canvas, 11, 16);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(middle.x, middle.y, { steps: 5 });
+  await page.keyboard.down(modifier);
+  await page.mouse.move(end.x, end.y, { steps: 5 });
+  await page.mouse.up();
+  await page.keyboard.up(modifier);
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'curve')))
+    .toBe('M 2 12 C 2 8 5 8 8 12 C 11 16 14 16 14 12');
+});
+
+test('drags a copy out of a point with Alt held, or drops it back to leave nothing to undo', async ({
+  page,
+  modifier,
+}) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await page.keyboard.down('Alt');
+  await drag(page, [6, 2], [9, 1]);
+  await page.keyboard.up('Alt');
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'a')))
+    .toBe('M 2 2 L 6 2 L 9 1 L 6 6 L 2 6 Z');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  const getUndoSteps = () =>
+    page.evaluate(() => (window as any).shapeshifter.store.getState().past.length as number);
+  const steps = await getUndoSteps();
+  const canvas = page.locator('.app-canvas');
+  // Drags a copy out of another point, and drops it back.
+  const start = await artboardPoint(canvas, 6, 6);
+  const away = await artboardPoint(canvas, 9, 9);
+  await page.keyboard.down('Alt');
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(away.x, away.y, { steps: 10 });
+  expect(
+    await page.evaluate(() => (window as any).shapeshifter.canvasEditor.isEditing() as boolean),
+  ).toBe(true);
+  await page.mouse.move(start.x, start.y, { steps: 10 });
+  await page.mouse.up();
+  await page.keyboard.up('Alt');
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  expect(await getUndoSteps()).toBe(steps);
 });
 
 test('stops editing points on a click on another layer, or on nothing', async ({ page }) => {
@@ -336,6 +580,77 @@ test('draws a path with the pen, one undo step per point', async ({ page, modifi
   await page.keyboard.press('Escape');
   await expect.poll(() => getToolName(page)).toBe('select');
   await expect.poll(() => getPathData(page, 'path_1')).toBe('M 16 2 L 20 2');
+});
+
+/**
+ * Presses at from and drags to to, in viewport coordinates, then moves 1px with the main button
+ * already up and releases there, as a macOS trackpad can. Only Chromium's DevTools protocol sends
+ * mouse events like that.
+ */
+async function pressWithStrayMove(page: Page, from: [number, number], to = from) {
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, ...from);
+  const end = await artboardPoint(canvas, ...to);
+  const cdp = await page.context().newCDPSession(page);
+  type MouseType = 'mouseMoved' | 'mousePressed' | 'mouseReleased';
+  const send = (type: MouseType, { x, y }: { x: number; y: number }, buttons: number) =>
+    cdp.send('Input.dispatchMouseEvent', {
+      type,
+      x,
+      y,
+      button: type === 'mouseMoved' && !buttons ? 'none' : 'left',
+      buttons,
+      clickCount: type === 'mouseMoved' ? 0 : 1,
+    });
+  await send('mouseMoved', start, 0);
+  await send('mousePressed', start, 1);
+  if (to !== from) {
+    for (let i = 1; i <= 10; i++) {
+      const t = i / 10;
+      await send(
+        'mouseMoved',
+        { x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t },
+        1,
+      );
+    }
+  }
+  const stray = { x: end.x + 1, y: end.y + 1 };
+  await send('mouseMoved', stray, 0);
+  await send('mouseReleased', stray, 0);
+  await cdp.detach();
+}
+
+test("keeps the pen's point when the mouse reports its button up before the release", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Needs the Chrome DevTools Protocol');
+  await openSquares(page);
+  await page.keyboard.press('p');
+  await click(page, 16, 16);
+  await click(page, 22, 16);
+  await pressWithStrayMove(page, [22, 22]);
+  await expect.poll(() => getPathData(page, 'path')).toBe('M 16 16 L 22 16 L 22 22');
+  // The pen is still drawing, from the new point.
+  await click(page, 16, 22);
+  await expect.poll(() => getPathData(page, 'path')).toBe('M 16 16 L 22 16 L 22 22 L 16 22');
+});
+
+test('keeps a dragged point when the mouse reports its button up before the release', async ({
+  page,
+  browserName,
+  modifier,
+}) => {
+  test.skip(browserName !== 'chromium', 'Needs the Chrome DevTools Protocol');
+  await openSquares(page);
+  const point = await artboardPoint(page.locator('.app-canvas'), 4, 4);
+  await page.mouse.dblclick(point.x, point.y);
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await pressWithStrayMove(page, [6, 2], [8.1, 0.9]);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 1 L 6 6 L 2 6 Z');
+  // As one undo step.
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
 });
 
 test('draws freehand with the pencil', async ({ page }) => {
@@ -466,22 +781,179 @@ test('edits an animated path at the ends of its morph, and auto fixes it', async
       s.timeline.animation.blocks.find((b: any) => b.propertyName === 'pathData').isAnimatable(),
     ),
   ).toBe(true);
+
+  // The badge also edits the morph in action mode, which starts at the beginning of the block.
+  await page.keyboard.press('Escape');
+  await badge.getByRole('button', { name: 'Edit morph' }).click();
+  await expect(page.locator('.app-canvas')).toHaveCount(3);
+  await expect.poll(() => getState(page, s => s.playback.currentTime)).toBe(0);
+  await expect(badge).toBeHidden();
 });
 
-test("edits a path's points, and reverses and closes subpaths, in the inspector", async ({
+/** The numbers of the selected points of the path being edited, which has one subpath. */
+function getSelectedPointNumbers(page: Page) {
+  return page.evaluate(() => {
+    const { services } = (window as any).shapeshifter;
+    const { pointEdit } = services.canvasEditorBridgeService.getState();
+    const commands: { id: string }[] = pointEdit?.path.getCommands() ?? [];
+    return commands
+      .map((command, i) => (pointEdit.selectedAnchorIds.has(command.id) ? i + 1 : 0))
+      .filter(n => n > 0);
+  });
+}
+
+test('shows and edits the selected point in the inspector while editing points', async ({
   page,
+  modifier,
 }) => {
   await openSquares(page);
   await click(page, 4, 4);
-  const point = page.getByRole('group', { name: 'Point 2' });
-  await point.getByLabel('x').fill('8');
-  await point.getByLabel('x').press('Enter');
+  await page.getByRole('button', { name: 'Edit points' }).click();
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await expect(page.locator('.spi-selection-sub-description')).toHaveText('Editing points');
+
+  // A point clicked on the canvas shows in the inspector, and editing it moves it, as one undo
+  // step.
+  await click(page, 6, 2);
+  const position = page
+    .getByRole('region', { name: 'Point 2', exact: true })
+    .getByRole('group', { name: 'Position' });
+  await expect(position.getByLabel('X')).toHaveValue('6');
+  await expect(position.getByLabel('Y')).toHaveValue('2');
+  await position.getByLabel('X').fill('8');
+  await position.getByLabel('X').press('Enter');
   await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 2 L 6 6 L 2 6 Z');
-  await page.getByRole('button', { name: 'Reverse' }).click();
-  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 2 6 L 6 6 L 8 2 Z');
-  // The text field is under "Advanced".
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  expect(await isEditingPath(page)).toBe(true);
+
+  // Subpaths are collapsed until they're opened, and clicking a point there selects it.
+  const subPath = page.getByRole('region', { name: 'Subpath 1', exact: true });
+  await expect(subPath.getByRole('button', { name: 'Point 3', exact: true })).toHaveCount(0);
+  await subPath.getByRole('button', { name: /^Subpath 1/ }).click();
+  await subPath.getByRole('button', { name: 'Point 3', exact: true }).click();
+  await expect.poll(() => getSelectedPointNumbers(page)).toEqual([3]);
+  await expect(page.getByRole('region', { name: 'Point 3', exact: true })).toBeVisible();
+
+  // Done stops editing, and the path's text is under "Advanced".
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect.poll(() => isEditingPath(page)).toBe(false);
   await page.getByText('Advanced').click();
-  await expect(page.locator('input[name="pathData"]')).toHaveValue('M 2 2 L 2 6 L 6 6 L 8 2 Z');
+  await expect(page.locator('.spi-property input[name="pathData"]')).toHaveValue(
+    'M 2 2 L 6 2 L 6 6 L 2 6 Z',
+  );
+});
+
+test('applies a typed value when the canvas is pressed instead of Enter', async ({ page }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.getByRole('button', { name: 'Edit points' }).click();
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  const pointX = (n: number) =>
+    page
+      .getByRole('region', { name: `Point ${n}`, exact: true })
+      .getByRole('group', { name: 'Position' })
+      .getByLabel('X');
+
+  // Pressing another point selects it, which replaces the field.
+  await click(page, 6, 2);
+  await pointX(2).fill('8');
+  await click(page, 6, 6);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 2 L 6 6 L 2 6 Z');
+
+  // Pressing the empty artboard starts a gesture, which the editor won't edit points during.
+  await pointX(3).fill('7');
+  await click(page, 20, 20);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 2 L 7 6 L 2 6 Z');
+
+  // The same goes for the Layout section when another layer is pressed.
+  if (await isEditingPath(page)) {
+    await page.getByRole('button', { name: 'Done' }).click();
+  }
+  await click(page, 4, 4);
+  await page.getByRole('region', { name: 'Layout' }).getByLabel('Layout X').fill('3');
+  await click(page, 12, 4);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['b']);
+  expect(await getPathData(page, 'a')).toBe('M 3 2 L 9 2 L 8 6 L 3 6 Z');
+});
+
+test('reverses, opens, and closes a subpath in the inspector', async ({ page }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  const subPath = page.getByRole('region', { name: 'Subpath 1', exact: true });
+  await expect(subPath).toContainText('closed · 4 points');
+  await subPath.getByRole('button', { name: 'Reverse', exact: true }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 2 6 L 6 6 L 6 2 Z');
+  await subPath.getByRole('button', { name: 'Open', exact: true }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 2 6 L 6 6 L 6 2 L 2 2');
+  // The new last point is on top of the first one.
+  await expect(subPath).toContainText('open · 5 points');
+  await subPath.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 2 6 L 6 6 L 6 2 Z');
+  await expect(subPath.getByRole('button', { name: 'Open', exact: true })).toBeVisible();
+});
+
+test('sets the first point from the inspector and the context menu', async ({ page }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await click(page, 6, 6);
+  await page.getByRole('button', { name: 'Set as first point' }).click();
+  // The shape stays, and so does the selection, which is the first point now.
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 6 6 L 2 6 L 2 2 L 6 2 Z');
+  await expect(page.getByRole('region', { name: 'Point 1', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Set as first point' })).toBeDisabled();
+
+  // A right-click on another point selects it for the menu.
+  const canvas = page.locator('.app-canvas');
+  const topLeft = await artboardPoint(canvas, 2, 2);
+  await page.mouse.click(topLeft.x, topLeft.y, { button: 'right' });
+  await expect(page.getByRole('menuitem', { name: 'Open subpath' })).toBeVisible();
+  await page.getByRole('menuitem', { name: 'Set as first point' }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  expect(await isEditingPath(page)).toBe(true);
+
+  // An open subpath starts at one of its ends, so the item says why it can't.
+  await page.getByRole('button', { name: 'Open', exact: true }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 L 2 2');
+  const corner = await artboardPoint(canvas, 6, 6);
+  await page.mouse.click(corner.x, corner.y, { button: 'right' });
+  await expect(page.getByRole('menuitem', { name: /Set as first point/ })).toContainText(
+    'An open subpath starts at one of its ends',
+  );
+});
+
+test("edits a keyframe's path in the inspector, where the canvas does", async ({ page }) => {
+  await openSquares(page);
+  // a's path morphs to a bigger square, and the time is at the end of the morph.
+  await page.evaluate(() => {
+    const { services } = (window as any).shapeshifter;
+    const lts = services.layerTimelineService;
+    const a = lts.getVectorLayer().findLayerByName('a');
+    lts.addBlockForProperty(a.id, 'pathData');
+    const block = lts.getAnimation().blocks[0].clone();
+    block.toValue = new a.pathData.constructor('M 1 1 L 9 1 L 9 9 L 1 9 Z');
+    lts.updateBlocks([block]);
+    services.playbackService.setCurrentTime(block.endTime);
+    lts.setSelectedLayers(new Set([a.id]));
+  });
+  await page.getByRole('button', { name: 'Edit points' }).click();
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await click(page, 9, 1);
+  const position = page
+    .getByRole('region', { name: 'Point 2', exact: true })
+    .getByRole('group', { name: 'Position' });
+  await expect(position.getByLabel('X')).toHaveValue('9');
+  await position.getByLabel('X').fill('10');
+  await position.getByLabel('X').press('Enter');
+  const getToValue = () =>
+    getState<string>(page, s => s.timeline.animation.blocks[0].toValue.getPathString());
+  await expect.poll(getToValue).toBe('M 1 1 L 10 1 L 9 9 L 1 9 Z');
+  // The layer's own path is the start of the morph, which stays.
+  expect(await getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
 });
 
 test('joins the ends of a path with Cmd+J', async ({ page, modifier }) => {

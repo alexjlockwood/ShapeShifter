@@ -1,0 +1,56 @@
+// The context menu is in a portal, so these aren't under the workspace's styles. Its secondary
+// text is the text color at 60%, which keeps WCAG AA contrast in both themes.
+.app-contextmenu {
+    .app-contextmenu-list {
+        min-width: 200px;
+        padding: 4px 0;
+    }
+
+    .MuiMenuItem-root {
+        min-height: 32px;
+        gap: 24px;
+    }
+
+    .MuiDivider-root {
+        margin: 4px 0;
+    }
+
+    // MUI fades disabled items to 38%, which is too faint to read why they're disabled.
+    .MuiMenuItem-root.Mui-disabled {
+        opacity: 1;
+
+        .app-contextmenu-label {
+            opacity: 0.6;
+        }
+    }
+
+    .MuiMenuItem-root.is-submenu-open {
+        background-color: rgba(128, 128, 128, 0.16);
+    }
+}
+
+// A submenu is in the menu's modal, above the menu.
+.app-contextmenu-submenu {
+    z-index: 1;
+}
+
+.app-contextmenu-label {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.app-contextmenu-reason {
+    max-width: 280px;
+    font-size: 12px;
+    white-space: normal;
+}
+
+.app-contextmenu-shortcut {
+    opacity: 0.6;
+}
+
+.app-contextmenu-arrow {
+    margin-right: -8px;
+    opacity: 0.6;
+}

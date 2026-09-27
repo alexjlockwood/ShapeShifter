@@ -4,10 +4,13 @@ import { LayerTimeline } from 'app/modules/editor/components/layertimeline';
 import { Playback } from 'app/modules/editor/components/playback';
 import { PropertyInput } from 'app/modules/editor/components/propertyinput';
 import { SplashScreen } from 'app/modules/editor/components/splashscreen/SplashScreen';
+import { ActionBar } from 'app/modules/editor/components/toolbar/ActionBar';
+import { ActionModeStatusStrip } from 'app/modules/editor/components/toolbar/ActionModeStatusStrip';
 import { Toolbar } from 'app/modules/editor/components/toolbar/Toolbar';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { ActionMode, ActionSource } from 'app/modules/editor/model/actionmode';
+import { NEWER_VERSION_WARNING, ProjectFormatError } from 'app/modules/editor/model/projectVersion';
 import { on } from 'app/modules/editor/scripts/dom';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import {
@@ -16,10 +19,12 @@ import {
   isActionMode as getIsActionMode,
 } from 'app/modules/editor/store/actionmode/selectors';
 import { isWorkspaceDirty } from 'app/modules/editor/store/common/selectors';
+import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { createSelector } from 'app/modules/editor/store/selectors';
+import { getSingleSelectedPathBlock } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
-import { type MouseEvent, useEffect, useRef } from 'react';
+import { type CSSProperties, type MouseEvent, useEffect, useRef } from 'react';
 
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import './root.scss';
@@ -35,6 +40,24 @@ const getCursorClassName = createSelector([getActionMode, getActionModeHover], (
   }
   return hover ? 'cursor-pointer' : 'cursor-default';
 });
+
+// The action mode panels are sized by it (root.scss).
+const getViewportAspectRatio = createSelector(getVectorLayer, ({ width, height }) => {
+  const aspectRatio = width / height;
+  return Number.isFinite(aspectRatio) && aspectRatio > 0 ? aspectRatio : 1;
+});
+
+/** Names an action mode panel, with the time it shows. */
+function CanvasPanelLabel({ actionSource }: { actionSource: ActionSource }) {
+  const block = useAppSelector(getSingleSelectedPathBlock);
+  const label =
+    actionSource === ActionSource.From
+      ? `Start${block ? ` · ${block.startTime} ms` : ''}`
+      : actionSource === ActionSource.To
+        ? `End${block ? ` · ${block.endTime} ms` : ''}`
+        : 'Preview';
+  return <div className="canvas-panel-label">{label}</div>;
+}
 
 export function Root() {
   return <div className="app-root">{IS_MOBILE ? <SplashScreen /> : <Workspace />}</div>;
@@ -54,6 +77,7 @@ function Workspace() {
   } = useServices();
   const isActionMode = useAppSelector(getIsActionMode);
   const cursorClassName = useAppSelector(getCursorClassName);
+  const viewportAspectRatio = useAppSelector(getViewportAspectRatio);
 
   useEffect(() => {
     shortcutService.init();
@@ -83,13 +107,18 @@ function Workspace() {
     const controller = new AbortController();
     projectService
       .getProject(projectUrl, controller.signal)
-      .then(({ vectorLayer, animation, hiddenLayerIds, guides }) => {
+      .then(({ vectorLayer, animation, hiddenLayerIds, guides, newerVersion }) => {
         store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds, guides));
+        if (newerVersion) {
+          snackBarService.show(NEWER_VERSION_WARNING, 'Dismiss', Duration.Long);
+        }
       })
-      .catch(() => {
+      .catch(error => {
         if (!controller.signal.aborted) {
           snackBarService.show(
-            `There was a problem loading the Shape Shifter project`,
+            error instanceof ProjectFormatError
+              ? error.message
+              : `There was a problem loading the Shape Shifter project`,
             'Dismiss',
             Duration.Long,
           );
@@ -171,23 +200,45 @@ function Workspace() {
       </div>
       <div className="fx-row fx-flex">
         <div className="display-container ss-theme-transition fx-column fx-flex">
+          {/* Whether the morph works, in action mode. */}
+          {isActionMode && (
+            <PanelErrorBoundary panel="action mode status">
+              <ActionModeStatusStrip />
+            </PanelErrorBoundary>
+          )}
           {/* Canvas. */}
           <div
             className={`canvas-row fx-row fx-flex${
               isActionMode ? ' is-action-mode' : ''
             } ${cursorClassName}`}
+            style={{ '--viewport-aspect-ratio': viewportAspectRatio } as CSSProperties}
           >
             {isActionMode && (
-              <PanelErrorBoundary panel="start canvas">
-                <Canvas className="start" actionSource={ActionSource.From} />
-              </PanelErrorBoundary>
+              <div className="canvas-panel start">
+                <CanvasPanelLabel actionSource={ActionSource.From} />
+                <PanelErrorBoundary panel="start canvas">
+                  <Canvas className="start" actionSource={ActionSource.From} />
+                </PanelErrorBoundary>
+              </div>
             )}
-            <PanelErrorBoundary panel="canvas">
-              <Canvas actionSource={ActionSource.Animated} />
-            </PanelErrorBoundary>
+            {/* The main canvas stays mounted in action mode, so the label goes before it. */}
+            <div className="canvas-panel">
+              {isActionMode && <CanvasPanelLabel actionSource={ActionSource.Animated} />}
+              <PanelErrorBoundary panel="canvas">
+                <Canvas actionSource={ActionSource.Animated} />
+              </PanelErrorBoundary>
+            </div>
             {isActionMode && (
-              <PanelErrorBoundary panel="end canvas">
-                <Canvas className="end" actionSource={ActionSource.To} />
+              <div className="canvas-panel end">
+                <CanvasPanelLabel actionSource={ActionSource.To} />
+                <PanelErrorBoundary panel="end canvas">
+                  <Canvas className="end" actionSource={ActionSource.To} />
+                </PanelErrorBoundary>
+              </div>
+            )}
+            {isActionMode && (
+              <PanelErrorBoundary panel="action bar">
+                <ActionBar />
               </PanelErrorBoundary>
             )}
           </div>

@@ -12,11 +12,6 @@ and editing paths on the canvas. This is a survey only; nothing here has been im
   (`components/canvas/loadCanvasEditor.ts`), so MUI, svgo, jszip, rxjs, and bezier-js all ship in
   one chunk that blocks first paint, even though svgo/jszip and the demo loader are only needed
   for export/import flows. Splitting those behind `import()` is a half-day to a day, low risk.
-- **Playback does a linear scan every frame.** `AnimationRenderer.setCurrentTime`
-  (`scripts/animator/AnimationRenderer.ts`, around line 72) runs `_.find` over the interpolator
-  list for every animated property on every rAF tick; there's already a TODO at line 70
-  admitting this. Resolving the interpolator once per block instead of per frame is 1 to 2
-  hours, low risk.
 - **Import failures fail silently.** In `services/fileimport.service.ts` (lines 74-89, 118-134),
   a multi-file import only shows an error snackbar if every file fails, so one malformed file
   in a batch just vanishes with no feedback, and `FileReader` errors use a blocking `alert()`
@@ -77,11 +72,11 @@ Mostly already well-optimized:
 - MUI icons are already imported per-subpath (`components/icons/Icon.tsx`), not from the
   barrel file, so they are already tree-shakeable.
 
-Besides the bundle splitting and the interpolator lookup above, a performance audit on
-2026-09-27 found these, roughly in order of impact. None has been profiled yet, so measure one on a
-big document before fixing it. The same audit fixed the worst finding: `AnimationRenderer` deep
-cloned the whole document on every pointer move of a canvas editor gesture, and now only copies the
-animated layers (#408).
+Besides the bundle splitting above, a performance audit on 2026-09-27 found these, roughly in order
+of impact. None has been profiled yet, so measure one on a big document before fixing it. The same
+audit fixed the worst finding: `AnimationRenderer` deep cloned the whole document on every pointer
+move of a canvas editor gesture, and now only copies the animated layers (#408). It also looked up
+each block's interpolator on every frame, and now resolves it once per block.
 
 - **Import and spritesheet export block the main thread.** `optimizeSvg`
   (`scripts/svgo/index.ts`, line 75) returns a promise, but runs svgo synchronously inside its
@@ -199,6 +194,19 @@ supported one subpath per layer, and its round trips through paper.js broke morp
 a new editor built on the current canvas and path model, behind a feature flag, with a phased
 roadmap.
 
+- **Outline stroke gaps.** Outline stroke already turns a stroked path into an identical filled one
+  (`outlineStrokes` in `components/canvaseditor/pathOps.ts`, Cmd+Alt+O, and in the context
+  menu). But it needs the canvas editor, so the context menu leaves it out on the live site, refuses
+  animated layers, and turns round caps and joins into many short quadratic curves
+  (`docs/canvas-editor.md`, phase 6). The follow-up is making it work with the editor off and on
+  animated paths, and fitting the rounds as cubics.
+- **Morph into gaps.** "Morph into" (`scripts/common/morphLayers.ts`, in the context menu and the
+  import snackbar) animates the path, the fill and stroke colors, their alphas, and the stroke
+  width. The other path's trim isn't animated, and its caps, joins, miter limit, and fill rule are
+  lost, since they can't animate. It also needs a free 300 ms at the current time or after the
+  last path block, and refuses otherwise, rather than lengthening the animation or picking a
+  shorter morph. Animating the trim, and asking before lengthening, are the obvious follow-ups.
+
 ## Planned features
 
 Export formats the maintainer wants to add, decided while triaging the GitHub issues on
@@ -220,6 +228,29 @@ Export formats the maintainer wants to add, decided while triaging the GitHub is
 ## Feature requests
 
 Ideas under consideration, not yet scoped or scheduled:
+
+- **A pivot relative to the layer's bounds, as a percentage.** New groups and paths pivot at the
+  canvas's center (`getCenterPivot` in `model/layers/LayerUtil.ts`), but pivots are absolute, so
+  the pivot stays put when the layer's contents move or the canvas is resized. Three options were
+  weighed:
+  - edit it as a percentage in the inspector but store it absolute (about 2 days, no format
+    change);
+  - store a fraction of the bounds at the start of the animation (about 1 week, with a version
+    bump and conversions for old files and VectorDrawable imports);
+  - store a fraction of the bounds on every frame, like CSS `transform-origin` (1 to 2 weeks, and
+    animated content needs sampled pivot keyframes in the AVD).
+
+  For reference, Compose's `ImageVector` groups are absolute with a default of 0
+  (`compose/ui/ui/.../graphics/vector/Vector.kt:50-51`), `DrawScope.rotate` and `scale` default
+  to the center, and only `graphicsLayer`'s `TransformOrigin` uses fractions.
+
+- **A batch edit's Layout section.** Selecting several layers shows the sections they share
+  (`components/propertyinput/buildPropertyInputModel.ts`'s batch branches), but not Layout, which
+  isn't made of properties: it's the union of `getLayerBounds` for one layer
+  (`components/propertyinput/layoutValues.ts`). Showing the selection's combined bounds and moving
+  or resizing every layer together through `components/canvas/transformLayers.ts` (as a single
+  layer's Layout already does) is a follow-up once there's a helper for a bounding box's union and
+  for scaling several layers from one anchor.
 
 - **Fix AnimatedVectorDrawable import.** `scripts/import/VectorDrawableLoader.ts` doesn't
   special-case the `animated-vector` root tag, so an AVD's

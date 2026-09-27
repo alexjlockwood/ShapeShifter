@@ -199,7 +199,6 @@ These are still bugs, and the entry named here covers them.
 | #305  | IMP-5 (fractional viewBox sizes are truncated)                                              |
 | #308  | `BUGS.md` stroke width entry and CANVAS-4 (trim length in scaled groups)                    |
 | #316  | MODEL-4, which the AVD hold animator entry above fixes                                      |
-| #332  | UI-5 ("Convert to clip path" disappears)                                                    |
 
 ## Fixed, close after the next deploy
 
@@ -212,6 +211,7 @@ These are still bugs, and the entry named here covers them.
 | #125       | `Point` is a plain interface, and `MathUtil.arePointsEqual` handles missing points          |
 | #127       | Clicking empty canvas in a split or add points mode returns to selection mode               |
 | #129       | Auto fix has unit tests and a playground (`src/playground/autofix/`)                        |
+| #147       | Blocks can have custom easing curves, exported as a `pathInterpolator`                      |
 | #185       | Group bounds transform all four corners (MODEL-9)                                           |
 | #188       | Flattening transforms both the from and to values of path blocks                            |
 | #249       | The rulers are laid out from the canvas's camera, in viewport units (CANVAS-5)              |
@@ -229,7 +229,9 @@ These are still bugs, and the entry named here covers them.
 | #291       | The theme switch is an MUI `Switch` now, and clicking it works in Chrome                    |
 | #293       | Rewritten auto fix. The attached paths weren't identical, and the result keeps both shapes. |
 | #301       | The preview draws the animated layer at t=0 (`BUGS.md`, "Fixed during the migration")       |
+| #304       | Paths have their own rotation, scale, pivot, and translation, and the exports wrap them     |
 | #320       | Ids are kept, so paths with ids stay separate layers. Paths without ids still merge.        |
+| #332       | "Convert to clip path" only checks the layer's own blocks (`buildContextMenu.ts`)           |
 | #339       | `fc991051`. The reporter's file exports in all four formats.                                |
 | #357       | Renders the same as the browser now. The fixing commit wasn't pinned down.                  |
 
@@ -315,7 +317,6 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #143  | Copy and paste blocks and layers         | Blocks work. Layers are #245.                                             |
 | #144  | Gradients                                | In `IMPROVEMENTS.md`                                                      |
 | #146  | Motion along a path                      | Not implemented                                                           |
-| #147  | Custom path interpolators                | Not implemented                                                           |
 | #148  | Keyboard shortcuts list                  | In `IMPROVEMENTS.md` (quick wins)                                         |
 | #149  | Marquee select in the timeline (#309)    | Not implemented                                                           |
 | #150  | Zoom and pan the canvas                  | Planned                                                                   |
@@ -344,9 +345,8 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #279  | Offer to reload after an update          | Updates apply on the next load. No snackbar.                              |
 | #289  | Show that Backspace deletes layers       | Not done                                                                  |
 | #290  | Show the exported XML in the page        | Not implemented                                                           |
-| #298  | Red toolbar for incompatible paths       | Flagged in the subtitle, canvas, and timeline, but the toolbar isn't red  |
+| #298  | Red toolbar for incompatible paths       | A red status strip under the app bar says why the paths don't morph       |
 | #302  | Optimize imported VectorDrawables        | Not implemented (redundant moves are kept)                                |
-| #304  | Animate transforms on paths              | Works by grouping the path                                                |
 | #307  | Bulk import                              | Several files import at once (see the mixed drop entry above)             |
 | #315  | Export one animated SVG                  | Not implemented (see CSS keyframes in `IMPROVEMENTS.md`)                  |
 | #318  | Flutter export                           | Not implemented. Lottie would cover it.                                   |

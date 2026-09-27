@@ -21,6 +21,32 @@ test('shows an error when the project fails to load', async ({ page, consoleErro
   consoleErrors.length = 0;
 });
 
+test('loads a project from a newer version, with a warning', async ({ page }) => {
+  // Match the path, since the page's own URL ends in the project's name too.
+  await page.route(
+    url => url.pathname === '/demos/newer.shapeshifter',
+    async route => {
+      const response = await route.fetch({
+        url: route.request().url().replace('newer', 'playtopause'),
+      });
+      const json = await response.json();
+      await route.fulfill({ json: { ...json, version: 999 } });
+    },
+  );
+  await page.goto('/?project=demos/newer.shapeshifter');
+  await expect(page.getByText('saved by a newer version of Shape Shifter')).toBeVisible();
+  await expect(page.locator('.slt-layer').first()).toHaveText('playtopause');
+});
+
+test("says why a file that isn't a project can't be loaded", async ({ page }) => {
+  await page.route(
+    url => url.pathname === '/demos/garbage.shapeshifter',
+    route => route.fulfill({ json: { hello: 1 } }),
+  );
+  await page.goto('/?project=demos/garbage.shapeshifter');
+  await expect(page.getByText("This doesn't look like a Shape Shifter project.")).toBeVisible();
+});
+
 // Reading localStorage throws when cookies are blocked, which used to leave the page blank.
 test('loads when localStorage is blocked', async ({ page }) => {
   await page.addInitScript(() => {

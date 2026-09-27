@@ -4,6 +4,7 @@
 @mixin ss-playback-theme($theme) {
     $foreground: map.get($theme, ss-foreground);
     $background: map.get($theme, ss-background);
+    $accent-fill: map.get($theme, accent-fill);
     .playback {
         button {
             margin: 0px 3px;
@@ -14,13 +15,23 @@
                     color: mat-color($foreground, secondary-text);
                 }
                 .ss-icon.activated {
-                    color: mat-color(mat-palette($mat-orange, A700));
+                    // Orange 900, darkened from A700 (2.82:1) so the icon reaches 3:1 on white.
+                    color: mat-color(mat-palette($mat-orange, 900));
                 }
             }
             &.MuiIconButton-root.Mui-disabled {
                 .ss-icon {
                     color: mat-color($foreground, disabled-text);
                 }
+            }
+        }
+        // The play/pause button's background comes from the MUI theme's secondary color, which
+        // is accent-text (tuned for text on the theme's own background, not a white icon on a
+        // fill), so it's overridden here to accent-fill, which passes with white in both themes.
+        .MuiFab-root {
+            background-color: $accent-fill;
+            &:hover {
+                background-color: $accent-fill;
             }
         }
     }

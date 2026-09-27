@@ -51,17 +51,23 @@ export class CanvasGestureRouter {
   }
 
   /**
-   * Returns whether the move shows that the gesture missed its release, since the mouse's main
-   * button is up. A context menu can take the release, for example.
+   * Returns whether a move before the release ends the gesture as the release would, since the
+   * mouse's main button is already up. A macOS trackpad can send a move like that right before the
+   * release, and a release can also go missing. The release that follows is ignored. The gesture
+   * is over by the time the move is handled.
    */
-  isReleaseMissed({ pointerId, pointerType, buttons }: MoveInfo) {
-    return (
-      this.isActive() &&
-      pointerId === this.gesturePointerId &&
-      pointerType === 'mouse' &&
-      buttons !== undefined &&
-      (buttons & 1) === 0
-    );
+  upWithoutRelease({ pointerId, pointerType, buttons }: MoveInfo) {
+    if (
+      !this.isActive() ||
+      pointerId !== this.gesturePointerId ||
+      pointerType !== 'mouse' ||
+      buttons === undefined ||
+      (buttons & 1) !== 0
+    ) {
+      return false;
+    }
+    this.gesturePointerId = undefined;
+    return true;
   }
 
   /** Returns whether the release ends the gesture, which is over by the time it's handled. */

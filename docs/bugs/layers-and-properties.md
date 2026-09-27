@@ -1,16 +1,5 @@
 # Layers and properties bugs found by the 2026-09-25 sweep
 
-- **Flattening a group mis-decomposes mirrored or rotated nested groups.** Flattening a group
-  whose child group is mirrored, rotated by more than 90 degrees, or rotated with a non-uniform
-  scale moves or flips that group's content. `getScaling` and `getRotation` are only right for
-  uniform positive scales. Use `atan2(b, a)` for the rotation and `hypot(a, b)` and the
-  determinant for the scales, and refuse to flatten skews (`scripts/common/Matrix.ts`, used by
-  `flattenGroupLayer`). (MODEL-1, medium, confirmed by a test)
-- **Merging viewports of different sizes misplaces the content.** Importing a 24x12 SVG into a
-  non-empty 48x48 project puts it at the bottom instead of the middle, and content in rotated or
-  scaled groups moves sideways. The offsets are in scaled units but applied before scaling, and to
-  every path. Apply them once, after scaling, at the top level (`model/layers/LayerUtil.ts`,
-  `adjustViewports`). (MODEL-2, medium, confirmed by a test)
 - **Importing a larger SVG into an animated project breaks the existing animation.** Importing a
   48x48 SVG into a 24x24 project rescales the existing layers but not their blocks, so during
   playback animated paths and translations jump back to the old scale. `adjustViewports` could

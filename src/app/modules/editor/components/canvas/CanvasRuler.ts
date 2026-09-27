@@ -10,6 +10,10 @@ const EXTRA_RULER_PADDING = 12;
 const MIN_TICK_SPACING = 40;
 const LABEL_OFFSET = 12;
 const TICK_SIZE = 6;
+// About how far a label reaches from its tick: half of a 4 digit label's width across, and its
+// height down.
+const MOUSE_LABEL_WIDTH = 24;
+const MOUSE_LABEL_HEIGHT = 12;
 
 // Tick intervals in viewport units. The small ones suit icons, which are often 24 units wide.
 const RULER_INTERVALS: ReadonlyArray<number> = [1, 2, 4, 8, 16, 24, 48, 100, 250, 500];
@@ -148,6 +152,15 @@ export class CanvasRuler {
     const ctx = getContext2d(this.canvas);
     ctx.scale(pixelRatio, pixelRatio);
 
+    // Where the mouse's label goes, in CSS pixels from the start of the ruler. The tick labels
+    // near it are left out, so that the two don't overlap.
+    const mousePoint = this.vpMousePoint && camera.viewportToPanel(this.vpMousePoint);
+    const mouseOffset =
+      mousePoint && (isHorizontal ? mousePoint.x - rect.x : mousePoint.y - rect.y);
+    const isNearMouse = (offset: number) =>
+      mouseOffset !== undefined &&
+      Math.abs(offset - mouseOffset) < (isHorizontal ? MOUSE_LABEL_WIDTH : MOUSE_LABEL_HEIGHT);
+
     // Text labels.
     ctx.fillStyle = this.themeService.getDisabledTextColor();
     ctx.font = '10px Roboto, Helvetica Neue, sans-serif';
@@ -155,26 +168,29 @@ export class CanvasRuler {
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'center';
       for (const { offset, label } of ticks) {
-        ctx.fillText(label, offset, rect.h - LABEL_OFFSET);
+        if (!isNearMouse(offset)) {
+          ctx.fillText(label, offset, rect.h - LABEL_OFFSET);
+        }
         ctx.fillRect(offset - 0.5, rect.h - TICK_SIZE, 1, TICK_SIZE);
       }
     } else {
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'right';
       for (const { offset, label } of ticks) {
-        ctx.fillText(label, rect.w - LABEL_OFFSET, offset);
+        if (!isNearMouse(offset)) {
+          ctx.fillText(label, rect.w - LABEL_OFFSET, offset);
+        }
         ctx.fillRect(rect.w - TICK_SIZE, offset - 0.5, TICK_SIZE, 1);
       }
     }
 
-    if (this.vpMousePoint) {
+    if (this.vpMousePoint && mouseOffset !== undefined) {
       const { x, y } = this.vpMousePoint;
-      const point = camera.viewportToPanel(this.vpMousePoint);
       ctx.fillStyle = this.themeService.getSecondaryTextColor();
       if (isHorizontal) {
-        ctx.fillText(x.toString(), point.x - rect.x, rect.h - LABEL_OFFSET);
+        ctx.fillText(x.toString(), mouseOffset, rect.h - LABEL_OFFSET);
       } else {
-        ctx.fillText(y.toString(), rect.w - LABEL_OFFSET, point.y - rect.y);
+        ctx.fillText(y.toString(), rect.w - LABEL_OFFSET, mouseOffset);
       }
     }
   }

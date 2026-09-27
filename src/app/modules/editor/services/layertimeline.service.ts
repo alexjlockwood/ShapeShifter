@@ -1,15 +1,20 @@
 import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 import {
   ClipPathLayer,
+  getTransformMatrix,
   GroupLayer,
   Layer,
   LayerUtil,
   PathLayer,
+  TRANSFORM_DEFAULTS,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
+import type { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
+import { breakApartLayers, combineLayers } from 'app/modules/editor/scripts/common/combineLayers';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
+import type { LayerDocument } from 'app/modules/editor/scripts/common/pathOpLayers';
 import { Action, State, Store } from 'app/modules/editor/store';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import {
@@ -24,6 +29,7 @@ import {
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/modules/editor/store/layers/selectors';
+import { getCurrentTime } from 'app/modules/editor/store/playback/selectors';
 import {
   SelectAnimation,
   SetAnimation,
@@ -34,7 +40,15 @@ import {
   getSelectedBlockIds,
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
-import { IsolateUndoStep } from 'app/modules/editor/store/undoredo/actions';
+import {
+  EndPreview,
+  IsolateUndoStep,
+  SkipUndoStep,
+} from 'app/modules/editor/store/undoredo/actions';
+import {
+  getLastRecordedState,
+  isPreviewPending,
+} from 'app/modules/editor/store/undoredo/metareducer';
 import { difference, find, findIndex, isEqual, uniqueId } from 'lodash-es';
 
 /**
@@ -92,6 +106,18 @@ export class LayerTimelineService {
 
   setSelectedLayers(layerIds: Set<string>) {
     this.updateSelections(false, new Set(), new Set(layerIds));
+  }
+
+  /**
+   * Selects every visible layer at the top of the tree, like Cmd+A in Figma: groups as a whole,
+   * so that grouping, deleting, and moving apply to everything.
+   */
+  selectAllLayers() {
+    const hiddenLayerIds = this.getHiddenLayerIds();
+    const layerIds = this.getVectorLayer()
+      .children.map(layer => layer.id)
+      .filter(id => !hiddenLayerIds.has(id));
+    this.setSelectedLayers(new Set(layerIds));
   }
 
   /**
@@ -175,11 +201,12 @@ export class LayerTimelineService {
   }
 
   /**
-   * Imports a list of vector layers into the workspace.
+   * Imports a list of vector layers into the workspace, e.g. one for each imported file. Returns
+   * the ids of the top-level layers that each one added, in the same order.
    */
-  importLayers(vls: ReadonlyArray<VectorLayer>) {
+  importLayers(vls: ReadonlyArray<VectorLayer>): ReadonlyArray<ReadonlyArray<string>> {
     if (!vls.length) {
-      return;
+      return [];
     }
     const importedVls = [...vls];
     const vectorLayer = this.getVectorLayer();
@@ -199,29 +226,43 @@ export class LayerTimelineService {
     this.store.dispatch(
       new BatchAction(...this.getClearSelectionsActions(), new SetVectorLayer(newVl)),
     );
+    // Merging keeps the layers' ids.
+    return importedVls.map(vl =>
+      vl.children.map(l => l.id).filter(id => !!newVl.findLayerById(id)),
+    );
   }
 
   /**
-   * Adds a layer to the vector tree.
+   * Adds a layer to the vector tree, in the parent that getParentIdForNewLayer returns.
    */
   addLayer(layer: Layer) {
     const vl = this.getVectorLayer();
-    const selectedLayers = this.getSelectedLayers();
-    if (selectedLayers.length === 1) {
-      const selectedLayer = selectedLayers[0];
-      if (!(selectedLayer instanceof VectorLayer)) {
-        // Add the new layer as a sibling to the currently selected layer.
-        const parent = LayerUtil.findParent(vl, selectedLayer.id)?.clone();
-        if (parent) {
-          parent.children = [...parent.children, layer];
-          this.updateLayer(parent);
-          return;
-        }
-      }
+    const parentId = this.getParentIdForNewLayer();
+    const parent = parentId === vl.id ? undefined : vl.findLayerById(parentId)?.clone();
+    if (parent) {
+      parent.children = [...parent.children, layer];
+      this.updateLayer(parent);
+      return;
     }
     const vectorLayer = vl.clone();
     vectorLayer.children = [...vectorLayer.children, layer];
     this.updateLayer(vectorLayer);
+  }
+
+  /**
+   * Returns the id of the layer that addLayer adds a layer to: the parent of the selected layer,
+   * so that the new layer is its sibling, or else the vector layer.
+   */
+  getParentIdForNewLayer() {
+    const vl = this.getVectorLayer();
+    const selectedLayers = this.getSelectedLayers();
+    if (selectedLayers.length === 1 && !(selectedLayers[0] instanceof VectorLayer)) {
+      const parent = LayerUtil.findParent(vl, selectedLayers[0].id);
+      if (parent) {
+        return parent.id;
+      }
+    }
+    return vl.id;
   }
 
   /**
@@ -266,49 +307,202 @@ export class LayerTimelineService {
   }
 
   /**
-   * Replaces an existing layer in the tree with a new layer. Note that
-   * this method assumes that both layers still have the same children layers.
+   * Updates several existing layers in the tree as one undo step, e.g. a batch edit applied to
+   * every selected layer at once.
    */
-  swapLayers(layerId: string, newLayer: Layer) {
-    if (layerId === newLayer.id) {
-      this.updateLayer(newLayer);
+  updateLayers(layers: ReadonlyArray<Layer>) {
+    if (!layers.length) {
+      return;
+    }
+    this.store.dispatch(new SetVectorLayer(this.getVectorLayerWithLayers(layers)));
+  }
+
+  /**
+   * Shows an edit to an existing layer without an undo step, e.g. on every move of a drag. Call
+   * commitPreview when it ends, or cancelPreview to go back.
+   */
+  previewLayer(layer: Layer) {
+    const vl = LayerUtil.updateLayer(this.getVectorLayer(), layer);
+    this.store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(vl)));
+  }
+
+  /**
+   * Shows edits to several existing layers without an undo step, like previewLayer, e.g. a batch
+   * color drag applied to every selected layer at once.
+   */
+  previewLayers(layers: ReadonlyArray<Layer>) {
+    if (!layers.length) {
+      return;
+    }
+    const vl = this.getVectorLayerWithLayers(layers);
+    this.store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(vl)));
+  }
+
+  private getVectorLayerWithLayers(layers: ReadonlyArray<Layer>) {
+    let vl = this.getVectorLayer();
+    // Replace ancestors before their descendants. A group's replacement holds its old children, so
+    // replacing it after one of its children would undo that child's edit.
+    const order = new Map(LayerUtil.runPreorderTraversal(vl).map((l, i) => [l.id, i]));
+    const sorted = [...layers].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+    for (const layer of sorted) {
+      vl = LayerUtil.updateLayer(vl, layer);
+    }
+    return vl;
+  }
+
+  /**
+   * Shows edits to existing blocks without an undo step, like previewLayer.
+   */
+  previewBlocks(blocks: ReadonlyArray<AnimationBlock>) {
+    if (!blocks.length) {
+      return;
+    }
+    const animation = this.getAnimationWithBlocks(blocks);
+    this.store.dispatch(new BatchAction(new SkipUndoStep(), new SetAnimation(animation)));
+  }
+
+  /**
+   * Saves the previewed layers and blocks as one undo step, however long the previews took and
+   * however soon they came after another edit. It does nothing without a pending preview, e.g. if
+   * a recorded action during the previews already saved them in its undo step (see
+   * isPreviewPending). If the previewed values save the same as the recorded ones, e.g. a color
+   * dragged back to where it started, it ends the preview like cancelPreview instead.
+   */
+  commitPreview() {
+    const state = this.store.getState();
+    if (!isPreviewPending(state)) {
       return;
     }
     const vl = this.getVectorLayer();
-    const parent = LayerUtil.findParent(vl, layerId)?.clone();
-    if (!parent) {
+    const animation = this.getAnimation();
+    const recorded = getLastRecordedState(state);
+    // LayerUtil.updateLayer always returns a new tree, so compare what a project file saves.
+    // Serializing once at the end of a drag is cheap next to the previews.
+    const isUnchanged =
+      isEqual(recorded.layers.vectorLayer.toJSON(), vl.toJSON()) &&
+      isEqual(recorded.timeline.animation.toJSON(), animation.toJSON());
+    if (isUnchanged) {
+      this.cancelPreview();
       return;
     }
-    const layerIndex = findIndex(parent.children, l => l.id === layerId);
-    const children = [...parent.children];
-    children.splice(layerIndex, 1, newLayer);
-    parent.children = children;
-    const actions: Action[] = [
-      new SetVectorLayer(LayerUtil.updateLayer(vl, parent)),
-      ...this.buildCleanupLayerIdActions(layerId),
-    ];
+    this.store.dispatch(
+      new BatchAction(new IsolateUndoStep(), new SetVectorLayer(vl), new SetAnimation(animation)),
+    );
+  }
+
+  /**
+   * Shows the layers and blocks from before the previews again, without an undo step. Like
+   * commitPreview, it does nothing without a pending preview. Once a recorded action has saved
+   * the previewed values, only undo takes them back.
+   */
+  cancelPreview() {
+    const state = this.store.getState();
+    if (!isPreviewPending(state)) {
+      return;
+    }
+    const recorded = getLastRecordedState(state);
+    this.store.dispatch(
+      new BatchAction(
+        new EndPreview(),
+        new SetVectorLayer(recorded.layers.vectorLayer),
+        new SetAnimation(recorded.timeline.animation),
+      ),
+    );
+  }
+
+  /**
+   * Turns a path into a clip path, or a clip path into a path. It keeps the layer's id, so that
+   * it stays selected, hidden, and animated. Blocks that the new type can't animate are dropped,
+   * which the context menu avoids by only offering it without them (getConvertRefusal). Clip paths
+   * have no transform, so a path's transform goes into its path and its path blocks.
+   */
+  convertLayer(layerId: string) {
+    const vl = this.getVectorLayer();
+    const layer = vl.findLayerById(layerId);
+    let converted: Layer;
+    // The path's transform, which the clip path's path data takes.
+    let pathTransform = Matrix.identity();
+    if (layer instanceof PathLayer) {
+      pathTransform = getTransformMatrix(layer);
+      const clipPath = new ClipPathLayer(layer);
+      clipPath.pathData = clipPath.pathData && transformPath(clipPath.pathData, pathTransform);
+      converted = clipPath;
+    } else if (layer instanceof ClipPathLayer) {
+      converted = new PathLayer(layer);
+    } else {
+      return;
+    }
+    const actions: Action[] = [new SetVectorLayer(LayerUtil.replaceLayer(vl, layerId, converted))];
     const animation = this.getAnimation();
-    const oldLayerBlocks = animation.blocks.filter(b => b.layerId === layerId);
-    const newAnimatableProperties = new Set(newLayer.animatableProperties.keys());
-    // Preserve any blocks that are still animatable with the new layer.
-    const newLayerBlocks = oldLayerBlocks
-      .filter(b => newAnimatableProperties.has(b.propertyName))
-      .map(b => {
-        b = b.clone();
-        b.layerId = newLayer.id;
-        return b;
-      });
-    const newAnimation = animation.clone();
-    newAnimation.blocks = [
-      ...animation.blocks.filter(b => b.layerId !== layerId),
-      ...newLayerBlocks,
-    ];
-    actions.push(new SetAnimation(newAnimation));
+    const blocks = animation.blocks
+      .filter(b => b.layerId !== layerId || converted.animatableProperties.has(b.propertyName))
+      .map(b => (b.layerId === layerId ? transformPathBlock(b, pathTransform) : b));
+    if (
+      blocks.length !== animation.blocks.length ||
+      blocks.some((b, i) => b !== animation.blocks[i])
+    ) {
+      const newAnimation = animation.clone();
+      newAnimation.blocks = blocks;
+      actions.push(new SetAnimation(newAnimation));
+    }
     this.store.dispatch(new BatchAction(...actions));
   }
 
   /**
-   * Merges the specified group layer into its children layers.
+   * Combines the selected paths into the bottom one, and selects it (scripts/common/combineLayers.ts).
+   * Returns why it can't, if it can't.
+   */
+  combineSelectedLayers() {
+    const combined = combineLayers(this.getDocument(), this.getSelectedLayerIds());
+    if (!('layerId' in combined)) {
+      return combined.reason;
+    }
+    const { vectorLayer, animation } = combined.document;
+    const removedIds = LayerUtil.runPreorderTraversal(this.getVectorLayer())
+      .map(l => l.id)
+      .filter(id => !vectorLayer.findLayerById(id));
+    this.store.dispatch(
+      new BatchAction(
+        new SetVectorLayer(vectorLayer),
+        new SetAnimation(animation),
+        ...this.buildCleanupLayerIdActions(...removedIds),
+        new SetSelectedLayers(new Set([combined.layerId])),
+      ),
+    );
+    return undefined;
+  }
+
+  /**
+   * Splits each of the selected paths into a path for each of its subpaths, and selects them
+   * (scripts/common/combineLayers.ts). Returns why it can't, if it can't.
+   */
+  breakApartSelectedLayers() {
+    const brokenApart = breakApartLayers(
+      this.getDocument(),
+      this.getSelectedLayerIds(),
+      this.queryStore(getHiddenLayerIds),
+    );
+    if (!('layerIds' in brokenApart)) {
+      return brokenApart.reason;
+    }
+    const { vectorLayer, animation } = brokenApart.document;
+    const actions: Action[] = [
+      new SetVectorLayer(vectorLayer),
+      new SetAnimation(animation),
+      new SetSelectedLayers(new Set(brokenApart.layerIds)),
+    ];
+    if (brokenApart.hiddenLayerIds !== this.queryStore(getHiddenLayerIds)) {
+      actions.push(new SetHiddenLayers(brokenApart.hiddenLayerIds));
+    }
+    this.store.dispatch(new BatchAction(...actions));
+    return undefined;
+  }
+
+  /**
+   * Merges the specified group layer into its children layers. Child groups, and paths that use
+   * their transform, take the group's transform into theirs, unless that would skew a path, whose
+   * transform is then baked into its path. Other paths are transformed, along with their path
+   * blocks. getFlattenRefusal says when it can't be done.
    * TODO: make it possible to merge groups that contain animation blocks?
    */
   flattenGroupLayer(layerId: string) {
@@ -317,42 +511,42 @@ export class LayerTimelineService {
     if (!layer.children.length) {
       return;
     }
-    const layerTransform = Matrix.flatten(LayerUtil.getCanvasTransformsForGroupLayer(layer));
+    const animation = this.getAnimation();
+    const layerTransform = getTransformMatrix(layer);
+    // The paths whose path data and path blocks change, and how.
+    const pathTransforms = new Map<string, Matrix>();
+    // The paths whose stroke widths and their blocks are scaled, and by how much.
+    const strokeScales = new Map<string, number>();
     // A group's children are groups, paths, and clip paths.
     const groupChildren = layer.children as ReadonlyArray<GroupLayer | PathLayer | ClipPathLayer>;
     const layerChildren = groupChildren.map((l): Layer => {
-      if (l instanceof GroupLayer) {
-        const flattenedTransform = Matrix.flatten([
-          layerTransform,
-          ...LayerUtil.getCanvasTransformsForGroupLayer(l),
-        ]);
-        const { sx, sy } = flattenedTransform.getScaling();
-        const degrees = flattenedTransform.getRotation();
-        const { tx, ty } = flattenedTransform.getTranslation();
-        l = l.clone();
-        l.pivotX = 0;
-        l.pivotY = 0;
-        l.translateX = tx;
-        l.translateY = ty;
-        l.rotation = degrees;
-        l.scaleX = sx;
-        l.scaleY = sy;
-        return l;
-      }
       l = l.clone();
-      if (l instanceof PathLayer && l.strokeWidth) {
-        // Group transforms scale strokes too (as they do on Android), so scale the width by the
-        // same amount as the path.
-        l.strokeWidth = MathUtil.round(l.strokeWidth * layerTransform.getScaleFactor());
-      }
-      const path = l.pathData;
-      if (!path || !path.getPathString()) {
+      if (l instanceof ClipPathLayer) {
+        pathTransforms.set(l.id, layerTransform);
+        l.pathData = l.pathData && transformPath(l.pathData, layerTransform);
         return l;
       }
-      l.pathData = path.mutate().transform(layerTransform).build();
+      const flattened = layerTransform.dot(getTransformMatrix(l));
+      // The pivot stays where it was on the canvas, so the layer still turns and scales around
+      // the same point when its transform is edited later.
+      const pivot = MathUtil.transformPoint({ x: l.pivotX, y: l.pivotY }, layerTransform);
+      if (
+        l instanceof GroupLayer ||
+        (LayerUtil.pathUsesTransform(l, animation) && !LayerUtil.isSkewed(flattened))
+      ) {
+        Object.assign(l, LayerUtil.toTransform(flattened, pivot));
+        return l;
+      }
+      // The path's own transform goes into its path along with the group's.
+      pathTransforms.set(l.id, flattened);
+      Object.assign(l, TRANSFORM_DEFAULTS, { pivotX: pivot.x, pivotY: pivot.y });
+      // Group transforms scale strokes too (as they do on Android), so scale the width, and its
+      // blocks, by the same amount as the path.
+      strokeScales.set(l.id, flattened.getScaleFactor());
+      l.strokeWidth = MathUtil.round(l.strokeWidth * flattened.getScaleFactor());
+      l.pathData = l.pathData && transformPath(l.pathData, flattened);
       return l;
     });
-    const layerChildrenIds = new Set(layerChildren.map(l => l.id));
     const parent = LayerUtil.findParent(vl, layerId)?.clone();
     if (!parent) {
       return;
@@ -368,28 +562,32 @@ export class LayerTimelineService {
       new SetVectorLayer(LayerUtil.updateLayer(vl, parent)),
       ...this.buildCleanupLayerIdActions(layerId),
     ];
-    const newAnimation = this.getAnimation().clone();
+    const newAnimation = animation.clone();
     // TODO: show a dialog if the user is about to unknowingly delete any blocks?
     newAnimation.blocks = newAnimation.blocks.filter(b => b.layerId !== layerId);
     // TODO: also attempt to merge children group animation blocks?
     newAnimation.blocks = newAnimation.blocks.map(b => {
-      if (!(b instanceof PathAnimationBlock) || !layerChildrenIds.has(b.layerId)) {
-        return b;
+      const pathTransform = pathTransforms.get(b.layerId);
+      const strokeScale = strokeScales.get(b.layerId);
+      if (b.propertyName === 'strokeWidth' && strokeScale !== undefined && strokeScale !== 1) {
+        const block = b.clone();
+        const scale = (value: AnimationBlock['fromValue']) =>
+          typeof value === 'number' ? MathUtil.round(value * strokeScale) : value;
+        block.fromValue = scale(block.fromValue);
+        block.toValue = scale(block.toValue);
+        return block;
       }
-      const block = b.clone();
-      if (block.fromValue) {
-        block.fromValue = block.fromValue.mutate().transform(layerTransform).build();
-      }
-      if (block.toValue) {
-        block.toValue = block.toValue.mutate().transform(layerTransform).build();
-      }
-      return block;
+      return pathTransform ? transformPathBlock(b, pathTransform) : b;
     });
     actions.push(new SetAnimation(newAnimation));
     this.store.dispatch(new BatchAction(...actions));
   }
 
-  private buildCleanupLayerIdActions(...deletedLayerIds: string[]) {
+  /**
+   * Returns the actions that take the deleted layers out of the collapsed, hidden, and selected
+   * layers, for a change that deletes them.
+   */
+  buildCleanupLayerIdActions(...deletedLayerIds: string[]) {
     const collapsedLayerIds = this.getCollapsedLayerIds();
     const hiddenLayerIds = this.getHiddenLayerIds();
     const selectedLayerIds = this.getSelectedLayerIds();
@@ -470,6 +668,7 @@ export class LayerTimelineService {
       const newGroup = new GroupLayer({
         name: LayerUtil.getUniqueLayerName([vl], 'group'),
         children: tempSelLayers,
+        ...LayerUtil.getCenterPivot(vl, firstSelectedLayerParent.id),
       });
       vl = LayerUtil.removeLayers(vl, ...tempSelLayers.map(l => l.id));
       const parent = vl.findLayerById(firstSelectedLayerParent.id)?.clone();
@@ -562,18 +761,68 @@ export class LayerTimelineService {
     ];
   }
 
+  /** Deletes the blocks, e.g. the ones the canvas's keyframe badge is about, and deselects them. */
+  deleteBlocks(blockIds: Iterable<string>) {
+    const ids = new Set(blockIds);
+    const animation = this.getAnimation();
+    const blocks = animation.blocks.filter(b => !ids.has(b.id));
+    if (blocks.length === animation.blocks.length) {
+      return;
+    }
+    const newAnimation = animation.clone();
+    newAnimation.blocks = blocks;
+    const selectedBlockIds = this.getSelectedBlockIds();
+    const actions: Action[] = [new SetAnimation(newAnimation)];
+    if (Array.from(ids).some(id => selectedBlockIds.has(id))) {
+      actions.push(
+        new SetSelectedBlocks(new Set(difference(Array.from(selectedBlockIds), [...ids]))),
+      );
+    }
+    this.store.dispatch(new BatchAction(...actions));
+  }
+
   updateBlocks(blocks: ReadonlyArray<AnimationBlock>) {
     if (!blocks.length) {
       return;
     }
+    this.store.dispatch(new SetAnimation(this.getAnimationWithBlocks(blocks)));
+  }
+
+  private getAnimationWithBlocks(blocks: ReadonlyArray<AnimationBlock>) {
     const animation = this.getAnimation().clone();
     animation.blocks = animation.blocks.map(block => {
       const newBlock = find(blocks, b => block.id === b.id);
       return newBlock ? newBlock : block;
     });
-    this.store.dispatch(new SetAnimation(animation));
+    return animation;
   }
 
+  /**
+   * Adds a block for the property that starts and ends at the layer's current value, in the gap
+   * closest to the current time, and selects it.
+   */
+  addBlockForProperty(layerId: string, propertyName: string) {
+    const layer = this.getVectorLayer().findLayerById(layerId);
+    const property = layer?.inspectableProperties.get(propertyName);
+    if (!layer || !property) {
+      return;
+    }
+    const value = property.cloneValue((layer as unknown as Record<string, unknown>)[propertyName]);
+    this.addBlocks([
+      {
+        layerId,
+        propertyName,
+        fromValue: value,
+        toValue: value,
+        currentTime: this.queryStore(getCurrentTime),
+      },
+    ]);
+  }
+
+  /**
+   * Adds blocks in the gaps closest to their current times. With autoSelectBlocks, the added
+   * blocks become the selection. Otherwise the selection stays as it is.
+   */
   addBlocks(
     blocks: Array<{
       id?: string;
@@ -595,6 +844,10 @@ export class LayerTimelineService {
         animation = anim;
         addedBlocks.push(block);
       }
+    }
+    if (!autoSelectBlocks) {
+      this.store.dispatch(new SetAnimation(animation));
+      return;
     }
     this.store.dispatch(
       new BatchAction(
@@ -735,6 +988,11 @@ export class LayerTimelineService {
     return this.queryStore(getAnimation);
   }
 
+  /** The layers and the animation, as they're saved. */
+  getDocument(): LayerDocument {
+    return { vectorLayer: this.getVectorLayer(), animation: this.getAnimation() };
+  }
+
   isAnimationSelected() {
     return this.queryStore(isAnimationSelected);
   }
@@ -742,4 +1000,22 @@ export class LayerTimelineService {
   private queryStore<T>(selector: (state: State) => T) {
     return selector(this.store.getState());
   }
+}
+
+/** Returns the path transformed by the matrix, or the path itself if it's empty or the identity. */
+function transformPath(path: Path, matrix: Matrix) {
+  return !path.getPathString() || matrix.equals(Matrix.identity())
+    ? path
+    : path.mutate().transform(matrix).build();
+}
+
+/** Returns a path block with its paths transformed, or any other block as it is. */
+function transformPathBlock(b: AnimationBlock, matrix: Matrix) {
+  if (!(b instanceof PathAnimationBlock) || matrix.equals(Matrix.identity())) {
+    return b;
+  }
+  const block = b.clone();
+  block.fromValue = block.fromValue && transformPath(block.fromValue, matrix);
+  block.toValue = block.toValue && transformPath(block.toValue, matrix);
+  return block;
 }

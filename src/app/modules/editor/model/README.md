@@ -53,9 +53,9 @@ A `GroupLayer` defines a group of 0 or more children `Layer`s. It has several pr
 
 - `scaleY` (float, animatable) - A float value describing the amount to scale in the y-direction. Default value is `1`.
 
-- `pivotX` (float, animatable) - A float value (defined in viewport space) describing the x-coordinate of the pivot used to scale/rotate the group. Default value is `0`.
+- `pivotX` (float, animatable) - A float value (defined in viewport space) describing the x-coordinate of the pivot used to scale/rotate the group. Default value is `0`, but groups added in the app start at the center of the canvas (`LayerUtil.getCenterPivot`).
 
-- `pivotY` (float, animatable) - A float value (defined in viewport space) describing the y-coordinate of the pivot used to scale/rotate the group. Default value is `0`.
+- `pivotY` (float, animatable) - A float value (defined in viewport space) describing the y-coordinate of the pivot used to scale/rotate the group. Default value is `0`, but groups added in the app start at the center of the canvas.
 
 - `translateX` (float, animatable) - A float value (defined in viewport space) describing the amount to translate in the x-direction. Default value is `0`.
 
@@ -95,9 +95,11 @@ A `PathLayer` allows us to draw filled and/or stroked shapes to the canvas. Simi
 
 - `fillType` - (string enum) - An enum value of either `nonZero` or `evenOdd` describing the path's fill type. Similar to the `fill-rule` attribute of an SVG and/or the `android:fillType` attribute in a `VectorDrawable`. Default value is `nonZero`.
 
+- `rotation`, `scaleX`, `scaleY`, `pivotX`, `pivotY`, `translateX`, and `translateY` (float, animatable) - The same transform as a `GroupLayer`'s, with the same names, defaults, and matrix, so a path can be rotated, scaled, and moved without being wrapped in a group. It maps the path's coordinates to its parent's, and scales its stroke too, exactly as a group around it would. Paths added in the app pivot at the center of the canvas, like new groups, and imported ones at `0`. A path "uses its transform" when its rotation, scale, or translation isn't the default, or it has a transform block (`LayerUtil.pathUsesTransform`); a pivot alone doesn't count. `VectorDrawable` and SVG paths can't be transformed, so the exports replace such a path with a group named `${name}_transform` that has its transform and its transform blocks, around the path without one ([`wrapPathTransforms.ts`](../scripts/export/wrapPathTransforms.ts)). Importing that file back gives the group, not the path's transform. Transforms on paths need version 3 (see below).
+
 ### `ClipPathLayer`
 
-A `ClipPathLayer` defines an area in which subsequent `Layer`s can be drawn. Note that the clip path only affects its subsequent sibling `Layer`s (i.e. if the `ClipPathLayer` is the 3rd child `Layer` in a `GroupLayer` with 5 total children, then the `ClipPathLayer` will only affect the 4th and 5th child `Layer`s in that group. Similar to the `<clipPath>` node of a `VectorDrawable`.
+A `ClipPathLayer` defines an area in which subsequent `Layer`s can be drawn. Note that the clip path only affects its subsequent sibling `Layer`s (i.e. if the `ClipPathLayer` is the 3rd child `Layer` in a `GroupLayer` with 5 total children, then the `ClipPathLayer` will only affect the 4th and 5th child `Layer`s in that group. Similar to the `<clipPath>` node of a `VectorDrawable`. Unlike a path, a clip path has no transform of its own (a `VectorDrawable` clip path can't be transformed, and a group around it would clip nothing), so a transformed clip path still needs a group, and converting a path to a clip path bakes its transform into its path.
 
 #### Properties
 
@@ -133,13 +135,52 @@ An `AnimationBlock` describes a property animation for a particular `Layer`. The
 
 - `endTime` (integer) - An integer greater than the block's `startTime` representing the block's ending time in milliseconds. Default value is `100`.
 
-- `interpolator` (enum string) - Describes the interpolator to use for the property animation. It will be one of the `value`s listed in this [`Interpolator.ts`](interpolators/Interpolator.ts) file.
+- `interpolator` (string) - The easing of the property animation. It's either a preset, one of the `value`s in `INTERPOLATORS` ([`Interpolator.ts`](interpolators/Interpolator.ts)), or a custom curve written as canonical Android `pathInterpolator` path data, e.g. `"M 0 0 C 0.4 0 0.2 1 1 1"`: absolute cubics from (0, 0) to (1, 1), with numbers rounded to 3 decimals. A curve's anchor x values strictly increase, and each control point's x is within its segment, so x only increases along it (y may leave [0, 1] to anticipate or overshoot). It has at most 32 segments. [`CustomInterpolator.ts`](interpolators/CustomInterpolator.ts) parses and validates curves, and [`InterpolatorProperty.ts`](properties/InterpolatorProperty.ts) replaces anything that's neither with the default preset, `FAST_OUT_SLOW_IN`. The AVD export writes a preset as an `android:interpolator` reference, and a curve as an inline `<pathInterpolator>` (its control points for one cubic, and its `android:pathData` for more). Custom curves need version 2 (see below).
 
 - `type` (enum string) - Describes the value type of the associated `Layer` property: `path`, `color`, or `number`.
 
 - `fromValue` (the value type of the associated `Layer` property) - The start value of the property animation.
 
 - `toValue` (the value type of the associated `Layer` property) - The end value of the property animation.
+
+## Project file versions
+
+A saved `.shapeshifter` file has a top-level `version` integer, alongside `layers` (holding
+`vectorLayer` and `hiddenLayerIds`) and `timeline` (holding `animation`). There's no migrations
+framework: every version's shape still loads directly, so version only decides whether
+`FileExportService.fromJSON` returns `newerVersion: true`, which callers use to warn that some
+things may not show and saving may drop them.
+
+[`projectVersion.ts`](projectVersion.ts) holds `getRequiredVersion(json)`, an ordered list of
+`ProjectVersionRule`s (`{ version, test }`), and `CURRENT_PROJECT_VERSION`, derived as the highest
+version any registered rule can produce. `FileExportService.exportJSON` writes whatever
+`getRequiredVersion` returns for the project being saved, so an ordinary file with none of the
+rules' features stays at version 1.
+
+The versions so far:
+
+- 1: every project without the features below.
+- 2: a block's `interpolator` is a custom curve rather than a preset's name. React builds before
+  it replace a curve with the default preset.
+- 3: a path uses its transform: its `rotation`, `scaleX`, `scaleY`, `translateX`, or `translateY`
+  isn't the default, or it has a block for one of the transform properties. A pivot alone
+  doesn't count, since it moves nothing, so a path added in the app stays at version 1. React
+  builds before it ignore the transform and drop the blocks, so the path is drawn where its path
+  data is.
+
+### Format-change rules
+
+Add a rule to `projectVersion.ts` when a format change means an older React build would silently
+lose something, following these guidelines:
+
+- Prefer an optional field whose absence means the old behavior, so old files and old code both
+  keep working without a version bump.
+- Raise the required version (add a rule) only for a change an older React build would otherwise
+  silently drop or misinterpret, not for every new optional field.
+- The live site (shapeshifter.design) is still the Angular 1.0.15 build, which ignores the
+  `version` field entirely and crashes on formats it doesn't understand (e.g. an unknown
+  interpolator string or a transform block on a path). Only the next deploy replaces it, so a rule
+  documents the risk rather than working around 1.0.15.
 
 ## Useful links
 
@@ -148,6 +189,7 @@ The source code for each of these model objects is located here:
 - [`layers/Layer.ts`](layers/Layer.ts)
 - [`timeline/Animation.ts`](timeline/Animation.ts)
 - [`timeline/AnimationBlock.ts`](timeline/AnimationBlock.ts)
+- [`projectVersion.ts`](projectVersion.ts)
 
 You may also find the documentation for `VectorDrawable` and `AnimatedVectorDrawable` useful, as Shape Shifter was closely modeled after the structure of these two Android classes:
 

@@ -1,11 +1,15 @@
+import { PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import { Path } from 'app/modules/editor/model/paths';
+import { Animation } from 'app/modules/editor/model/timeline';
 import { createEditorStore } from 'app/modules/editor/store';
 import { getIsPlaying } from 'app/modules/editor/store/playback/selectors';
+import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { NO_FEATURES } from 'environments/features';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ZoomCommand } from './canvasviewport.service';
 import { createEditorServices, type EditorServices } from './createEditorServices';
-import { getZoomShortcut, ShortcutService } from './shortcut.service';
+import { getZoomShortcut, isSelectAllShortcut, ShortcutService } from './shortcut.service';
 
 const NO_KEYS = {
   key: '',
@@ -15,6 +19,34 @@ const NO_KEYS = {
   shiftKey: false,
   altKey: false,
 };
+
+describe('isSelectAllShortcut', () => {
+  const cmdA = { ...NO_KEYS, metaKey: true, key: 'a', code: 'KeyA' };
+  const ctrlA = { ...NO_KEYS, ctrlKey: true, key: 'a', code: 'KeyA' };
+
+  it('is Cmd+A on Macs, and Ctrl+A elsewhere', () => {
+    expect(isSelectAllShortcut(cmdA, true)).toBe(true);
+    expect(isSelectAllShortcut(ctrlA, false)).toBe(true);
+    expect(isSelectAllShortcut(ctrlA, true)).toBe(false);
+    expect(isSelectAllShortcut(cmdA, false)).toBe(false);
+    expect(isSelectAllShortcut({ ...cmdA, metaKey: false }, true)).toBe(false);
+  });
+
+  it('rejects any other modifier, including the other platform command key', () => {
+    expect(isSelectAllShortcut({ ...cmdA, ctrlKey: true }, true)).toBe(false);
+    expect(isSelectAllShortcut({ ...ctrlA, metaKey: true }, false)).toBe(false);
+    expect(isSelectAllShortcut({ ...cmdA, shiftKey: true, key: 'A' }, true)).toBe(false);
+    expect(isSelectAllShortcut({ ...cmdA, altKey: true, key: 'å' }, true)).toBe(false);
+  });
+
+  it("goes by the key's position on layouts without Latin letters", () => {
+    expect(isSelectAllShortcut({ ...cmdA, key: 'ф' }, true)).toBe(true);
+    expect(isSelectAllShortcut({ ...cmdA, key: 'A' }, true)).toBe(true);
+    // Dvorak, where the key at A's position still types A, and the one at S types O.
+    expect(isSelectAllShortcut({ ...cmdA, key: 'o', code: 'KeyS' }, true)).toBe(false);
+    expect(isSelectAllShortcut({ ...cmdA, key: 'a', code: 'KeyQ' }, true)).toBe(true);
+  });
+});
 
 describe('getZoomShortcut', () => {
   it('zooms in and out with Cmd on Macs, and Ctrl elsewhere', () => {
@@ -63,7 +95,7 @@ describe('ShortcutService', () => {
     services = createEditorServices(store, { features: { ...NO_FEATURES, canvasEditor } });
     services.shortcutService.init();
     const isPlaying = () => getIsPlaying(store.getState());
-    return { services, isPlaying };
+    return { services, store, isPlaying };
   }
 
   function press(type: 'keydown' | 'keyup', init: KeyboardEventInit) {
@@ -164,6 +196,34 @@ describe('ShortcutService', () => {
     press('keyup', { key: 'Meta', metaKey: false });
     expect(services.canvasViewportService.isSpaceHeld()).toBe(false);
     vi.restoreAllMocks();
+  });
+
+  it('selects every layer with Cmd+A, except in a text field', () => {
+    const { services, store } = setUp(false);
+    const { layerTimelineService } = services;
+    const children = ['a', 'b'].map(
+      name => new PathLayer({ name, children: [], pathData: new Path('M 1 1 L 5 1') }),
+    );
+    store.dispatch(
+      new ResetWorkspace(new VectorLayer({ name: 'vector', children }), new Animation()),
+    );
+    const isMac = ShortcutService.isMac();
+    const command = isMac ? { metaKey: true } : { ctrlKey: true };
+    const other = isMac ? { ctrlKey: true } : { metaKey: true };
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    input.focus();
+    expect(press('keydown', { ...command, key: 'a', keyCode: 65 }).defaultPrevented).toBe(false);
+    expect(layerTimelineService.getSelectedLayers()).toEqual([]);
+    input.remove();
+
+    // Not with the other command key held too, like in the canvas editor.
+    const withOther = press('keydown', { ...command, ...other, key: 'a', keyCode: 65 });
+    expect(withOther.defaultPrevented).toBe(false);
+    expect(layerTimelineService.getSelectedLayers()).toEqual([]);
+
+    expect(press('keydown', { ...command, key: 'a', keyCode: 65 }).defaultPrevented).toBe(true);
+    expect(layerTimelineService.getSelectedLayers().map(l => l.name)).toEqual(['a', 'b']);
   });
 
   it("doesn't zoom without the canvas editor", () => {

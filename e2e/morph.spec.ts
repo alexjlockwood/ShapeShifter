@@ -145,21 +145,32 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
   await clickCanvas(page, 'start', 12, 12);
   await expect(page.locator('.toolbar')).toContainText('1 subpath selected');
   await page.getByRole('button', { name: 'Split subpaths (S)' }).click();
-  await expect(page.locator('.toolbar')).toContainText('Draw a line across a subpath');
+  await expect(page.locator('.action-mode-status')).toContainText('Draw a line across a subpath');
   await dragCanvas(page, 'start', [8, 12], [19, 12]);
   expect((await getMorphPaths(page)).from).toEqual([
     'M 8, 5 L 8, 12 L 19, 12 L 8, 5',
     'M 8, 12 L 8, 19 L 19, 12 L 8, 12',
   ]);
   await page.keyboard.press('Escape');
-  await expect(page.locator('.toolbar-subtitle')).toHaveText(
-    'Add 2 points to the highlighted subpath on the left',
+  await expect(page.locator('.action-mode-status-summary')).toHaveText(
+    "Doesn't morph: subpath 1 has 4 points at the start and 6 at the end",
+  );
+  await expect(page.locator('.action-mode-status-hint')).toHaveText(
+    'Add 2 points to the highlighted subpath at the start',
   );
 
   // Add two points along the diagonal edge of each half of the triangle.
   await clickCanvas(page, 'start', 12, 12);
   await page.getByRole('button', { name: 'Add points (A)' }).click();
-  await expect(page.locator('.toolbar')).toContainText('Click along the edge of a subpath');
+  await expect(page.locator('.action-mode-status')).toContainText(
+    'Click along the edge of a subpath',
+  );
+  // The activated mode's button is a white pill behind a blue icon (a bit see-through on hover).
+  const addPoints = page.getByRole('button', { name: 'Add points (A)' });
+  await expect(addPoints).toHaveClass(/activated/);
+  await page.mouse.move(1, 1);
+  await expect(addPoints).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(addPoints.locator('.ss-icon')).toHaveCSS('color', 'rgb(41, 98, 255)');
   for (const [x, y] of [
     [15.33, 9.67],
     [11.67, 7.33],
@@ -183,9 +194,8 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
   }
   expect(await getMorphPaths(page)).toEqual(pathsAfterAddingPoints);
   await page.keyboard.press('Escape');
-  await expect(page.locator('.toolbar-subtitle')).toHaveText(
-    'Select something below to edit its properties',
-  );
+  await expect(page.locator('.action-mode-status-summary')).toHaveText('Morphs');
+  await expect(page.locator('.action-mode-status-hint')).toHaveText('Click a subpath to edit it');
 
   // Shift the left bar's first point forward.
   const pathsBeforeShift = await getMorphPaths(page);
@@ -199,8 +209,8 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
 
   // Pair the left bar with the bottom half of the triangle.
   await page.getByRole('button', { name: 'Pair subpaths (D)' }).click();
-  await expect(page.locator('.toolbar-subtitle')).toHaveText(
-    'Pair the selected subpath with a corresponding subpath on the left',
+  await expect(page.locator('.action-mode-status-hint')).toHaveText(
+    'Now select the subpath at the start to pair it with',
   );
   const pathsBeforePair = await getMorphPaths(page);
   await clickCanvas(page, 'start', 10, 16);
@@ -220,13 +230,13 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
   await expect(page.locator('.app-canvas')).toHaveCount(1);
   await expect(page.locator('.paths-incompatible-text')).toHaveCount(0);
 
-  // Group the path and rotate the group by 90 degrees about the center.
+  // Group the path and rotate the group by 90 degrees about the center, where new groups pivot.
   await page.locator('.slt-layer', { hasText: 'play' }).click();
   await page.keyboard.press(`${modifier}+g`);
   await expect(page.locator('.slt-layer')).toHaveText(['vector', 'group', 'play']);
   await page.locator('.slt-layer', { hasText: 'group' }).click();
-  await setProperty(page, 'pivotX', '12');
-  await setProperty(page, 'pivotY', '12');
+  await expect(page.locator('.spi-property input[name="pivotX"]')).toHaveValue('12');
+  await expect(page.locator('.spi-property input[name="pivotY"]')).toHaveValue('12');
   await animateSelectedLayer(page, 'rotation');
   await expect(page.locator('.slt-timeline-block')).toHaveCount(2);
   // The new block is selected.
@@ -349,7 +359,7 @@ test('adds and deletes points, and splits stroked subpaths', async ({ page }) =>
   await clickCanvas(page, 'start', 6, 12);
   await expect(page.locator('.toolbar-title')).toHaveText('1 subpath selected');
   await page.getByRole('button', { name: 'Split subpaths (S)' }).click();
-  await expect(page.locator('.toolbar-subtitle')).toHaveText(
+  await expect(page.locator('.action-mode-status-hint')).toHaveText(
     'Click along the edge of a subpath to split it into 2',
   );
   await clickCanvas(page, 'start', 10, 12);
@@ -357,8 +367,8 @@ test('adds and deletes points, and splits stroked subpaths', async ({ page }) =>
     .poll(async () => (await getMorphPaths(page)).from)
     .toEqual(['M 4, 12 L 10, 12', 'M 10, 12 L 16, 12 L 20, 12']);
   await page.keyboard.press('Escape');
-  await expect(page.locator('.toolbar-subtitle')).toHaveText(
-    'Add 1 point to the highlighted subpath on the right',
+  await expect(page.locator('.action-mode-status-hint')).toHaveText(
+    'Add 1 point to the highlighted subpath at the end',
   );
 
   // Add the missing point to the bottom line on the right.
@@ -370,9 +380,7 @@ test('adds and deletes points, and splits stroked subpaths', async ({ page }) =>
     .poll(async () => (await getMorphPaths(page)).to)
     .toEqual(['M 4, 6 L 20, 6', 'M 4, 18 L 12, 18 L 20, 18']);
   await page.keyboard.press('Escape');
-  await expect(page.locator('.toolbar-subtitle')).toHaveText(
-    'Select something below to edit its properties',
-  );
+  await expect(page.locator('.action-mode-status-hint')).toHaveText('Click a subpath to edit it');
 });
 
 test('keeps dragging a point outside of the canvas, and cancels a drag with Escape', async ({
@@ -423,4 +431,70 @@ test('auto fixes incompatible paths', async ({ page }) => {
   await expect.poll(() => getState(page, s => s.playback.isPlaying)).toBe(false);
   await expect.poll(() => isPixelDrawn(page, 12, 12)).toBe(false);
   expect(await isPixelDrawn(page, 8, 12)).toBe(true);
+});
+
+test('edits a morph from the timeline, in labeled panels that say whether it morphs', async ({
+  page,
+}) => {
+  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
+  await page.evaluate(() =>
+    (window as any).shapeshifter.services.playbackService.setCurrentTime(150),
+  );
+  // The path's block is under the group's rotation block.
+  const blocks = page.locator('.slt-timeline-block');
+  await blocks.last().dblclick();
+  await expect(page.locator('.app-canvas')).toHaveCount(3);
+  await expect.poll(() => getState(page, s => s.playback.currentTime)).toBe(0);
+  await expect(page.locator('.canvas-panel-label')).toHaveText([
+    'Start · 0 ms',
+    'Preview',
+    'End · 300 ms',
+  ]);
+  await expect(page.locator('.action-mode-status-summary')).toHaveText('Morphs');
+  // The rest of the timeline is dimmed, and says how to leave.
+  await expect(blocks.first()).toHaveAttribute('title', 'Press Esc to leave the morph editor');
+  await expect(blocks.first()).toHaveCSS('opacity', '0.3');
+
+  // The action bar's buttons have labels, and their shortcuts in their names.
+  await clickCanvas(page, 'start', 14, 10);
+  await expect(page.locator('.toolbar-title')).toHaveText('1 subpath selected');
+  const actionBar = page.getByRole('toolbar', { name: 'Morph editor' });
+  await expect(actionBar.getByRole('button', { name: 'Reverse points (R)' })).toHaveText('Reverse');
+
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page.locator('.app-canvas')).toHaveCount(1);
+  await expect(blocks.first()).not.toHaveAttribute('title');
+});
+
+test('auto fixes a morph from the status strip', async ({ page }) => {
+  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
+  // Adds a point to the start of the morph, and edits it.
+  await page.evaluate(() => {
+    const { services } = (window as any).shapeshifter;
+    const block = services.layerTimelineService
+      .getAnimation()
+      .blocks.find((b: { propertyName: string }) => b.propertyName === 'pathData');
+    const clone = block.clone();
+    clone.fromValue = block.fromValue.mutate().splitCommandInHalf(0, 1).build();
+    services.layerTimelineService.updateBlocks([clone]);
+    services.actionModeService.editMorph(block.id);
+  });
+  await expect(page.locator('.app-canvas')).toHaveCount(3);
+  const status = page.locator('.action-mode-status');
+  await expect(status.locator('.action-mode-status-summary')).toHaveText(
+    /^Doesn't morph: subpath 1 has \d+ points at the start and \d+ at the end$/,
+  );
+  await expect(status.locator('.action-mode-status-hint')).toHaveText(
+    'Add 1 point to the highlighted subpath at the end',
+  );
+  // The action bar leaves auto fix to the strip.
+  await expect(page.getByRole('button', { name: 'Auto fix' })).toHaveCount(1);
+  await status.getByRole('button', { name: 'Auto fix' }).click();
+  await expect(status.locator('.action-mode-status-summary')).toHaveText('Morphs');
+  // Then it's in the action bar, since auto fix can still improve how a morph looks.
+  await expect(
+    page.getByRole('toolbar', { name: 'Morph editor' }).getByRole('button', { name: 'Auto fix' }),
+  ).toBeVisible();
 });

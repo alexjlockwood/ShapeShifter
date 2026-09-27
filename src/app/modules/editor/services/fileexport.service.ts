@@ -1,5 +1,11 @@
+import type { Guide } from 'app/modules/editor/model/guides';
 import { guidesToJSON, parseGuides } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
+import {
+  CURRENT_PROJECT_VERSION,
+  getRequiredVersion,
+  ProjectFormatError,
+} from 'app/modules/editor/model/projectVersion';
 import { Animation } from 'app/modules/editor/model/timeline';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { AvdSerializer, SpriteSerializer, SvgSerializer } from 'app/modules/editor/scripts/export';
@@ -9,24 +15,52 @@ import { getHiddenLayerIds, getVectorLayer } from 'app/modules/editor/store/laye
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import JSZip from 'jszip';
 import { padStart } from 'lodash-es';
-// Store a version number just in case we ever change the export format...
-const IMPORT_EXPORT_VERSION = 1;
+
+// Re-exported so that code saving projects can read the version from the service that saves them.
+export { CURRENT_PROJECT_VERSION } from 'app/modules/editor/model/projectVersion';
 
 const EXPORTED_FPS = [30, 60];
+
+export interface ParsedProject {
+  readonly vectorLayer: VectorLayer;
+  readonly hiddenLayerIds: ReadonlySet<string>;
+  readonly animation: Animation;
+  readonly guides: ReadonlyArray<Guide>;
+  /**
+   * True when the project's version is higher than this build's `CURRENT_PROJECT_VERSION`, or
+   * isn't a positive integer at all. The project still loads; callers show a warning that some
+   * things may not show, and saving may drop them.
+   */
+  readonly newerVersion: boolean;
+}
 
 /**
  * A simple service that exports vectors and animations.
  */
 export class FileExportService {
-  static fromJSON(jsonObj: any) {
-    const { layers, timeline } = jsonObj;
+  static fromJSON(jsonObj: any): ParsedProject {
+    const layers = jsonObj?.layers;
+    const timeline = jsonObj?.timeline;
+    if (!layers?.vectorLayer || !timeline?.animation) {
+      if (jsonObj?.vectorLayer || jsonObj?.animations) {
+        // Shape Shifter before 1.0 (the Angular app) saved the vector layer and the animations
+        // at the top level, with no version field at all.
+        throw new ProjectFormatError(
+          "This project was saved by a version of Shape Shifter older than 1.0, whose format isn't supported anymore.",
+        );
+      }
+      throw new ProjectFormatError("This doesn't look like a Shape Shifter project.");
+    }
+    const { version } = jsonObj;
+    const newerVersion =
+      !Number.isInteger(version) || version < 1 || version > CURRENT_PROJECT_VERSION;
     const vectorLayer = new VectorLayer(layers.vectorLayer);
     const hiddenLayerIds = new Set<string>(layers.hiddenLayerIds);
     const animation = new Animation(timeline.animation);
     animation.blocks = animation.blocks.filter(b => ModelUtil.canAnimate(vectorLayer, b));
     // Only projects saved with the canvas editor's guides have them.
     const guides = parseGuides(jsonObj.guides);
-    return { vectorLayer, hiddenLayerIds, animation, guides };
+    return { vectorLayer, hiddenLayerIds, animation, guides, newerVersion };
   }
 
   constructor(private readonly store: Store<State>) {}
@@ -35,16 +69,16 @@ export class FileExportService {
     const vl = this.getVectorLayer();
     const anim = this.getAnimation();
     const guides = getGuides(this.store.getState());
+    const layers = {
+      vectorLayer: vl.toJSON(),
+      hiddenLayerIds: Array.from(this.getHiddenLayerIds()),
+    };
+    const timeline = { animation: anim.toJSON() };
     const jsonStr = JSON.stringify(
       {
-        version: IMPORT_EXPORT_VERSION,
-        layers: {
-          vectorLayer: vl.toJSON(),
-          hiddenLayerIds: Array.from(this.getHiddenLayerIds()),
-        },
-        timeline: {
-          animation: anim.toJSON(),
-        },
+        version: getRequiredVersion({ layers, timeline }),
+        layers,
+        timeline,
         // Left out without any, so that projects that don't use them stay the same.
         ...(guides.length ? { guides: guidesToJSON(guides) } : {}),
       },

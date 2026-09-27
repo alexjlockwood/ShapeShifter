@@ -15,7 +15,8 @@ import { isBeingReset } from './reset/selectors';
 import { SetTheme } from './theme/actions';
 import { getThemeType } from './theme/selectors';
 import { getAnimation } from './timeline/selectors';
-import { IsolateUndoStep } from './undoredo/actions';
+import { EndPreview, IsolateUndoStep, SkipUndoStep } from './undoredo/actions';
+import { getLastRecordedState, isPreviewPending } from './undoredo/metareducer';
 
 describe('createEditorStore', () => {
   beforeEach(() => {
@@ -146,6 +147,71 @@ describe('createEditorStore', () => {
     store.dispatch(ActionCreators.undo());
     expect(getVectorLayer(store.getState())).not.toBe(editedVl);
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
+  });
+
+  it('keeps a batch with SkipUndoStep out of the undo history', () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    const numPastStates = store.getState().past.length;
+    vi.advanceTimersByTime(2000);
+    // E.g. a color being dragged.
+    const previewedVl = new VectorLayer();
+    store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(previewedVl)));
+    expect(getVectorLayer(store.getState())).toBe(previewedVl);
+    expect(store.getState().past.length).toBe(numPastStates);
+    expect(getLastRecordedState(store.getState()).layers.vectorLayer).not.toBe(previewedVl);
+
+    // The previews don't count as a recent edit, so this one gets an undo step of its own, and
+    // undoing it goes back to the state from before the previews.
+    store.dispatch(new SetSelectedLayers(new Set(['b'])));
+    store.dispatch(ActionCreators.undo());
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
+    expect(getVectorLayer(store.getState())).not.toBe(previewedVl);
+  });
+
+  it('gives a recorded action during a preview a new undo step, apart from the edit before', () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    const editedVl = new VectorLayer();
+    store.dispatch(new SetVectorLayer(editedVl));
+    vi.advanceTimersByTime(200);
+    const previewedVl = new VectorLayer();
+    store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(previewedVl)));
+    expect(isPreviewPending(store.getState())).toBe(true);
+    vi.advanceTimersByTime(300);
+    // E.g. a keyboard shortcut in the middle of a drag, less than a second after the edit.
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    expect(isPreviewPending(store.getState())).toBe(false);
+    expect(getLastRecordedState(store.getState()).layers.vectorLayer).toBe(previewedVl);
+
+    // Undo takes back the preview and the selection, but not the edit before them.
+    store.dispatch(ActionCreators.undo());
+    expect(getVectorLayer(store.getState())).toBe(editedVl);
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set());
+  });
+
+  it('ends a preview without an undo step', () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    const numPastStates = store.getState().past.length;
+    const vl = getVectorLayer(store.getState());
+    store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(new VectorLayer())));
+    store.dispatch(new BatchAction(new EndPreview(), new SetVectorLayer(vl)));
+    expect(isPreviewPending(store.getState())).toBe(false);
+    expect(getVectorLayer(store.getState())).toBe(vl);
+    expect(store.getState().past.length).toBe(numPastStates);
+  });
+
+  it('ends a preview on undo', () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(new VectorLayer())));
+    store.dispatch(ActionCreators.undo());
+    expect(isPreviewPending(store.getState())).toBe(false);
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set());
   });
 
   it("doesn't count an undo or redo that does nothing as an edit", () => {

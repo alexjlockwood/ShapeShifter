@@ -7,7 +7,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=24",
+    "node": ">=24.15",
     "npm": ">=11.10.0"
   },
   "scripts": {
@@ -42,6 +42,7 @@
     "pathkit-wasm": "^1.0.0",
     "polylabel": "^2.1.0",
     "react": "^19.3.0",
+    "react-colorful": "^5.8.1",
     "react-dom": "^19.3.0",
     "react-redux": "^9.3.0",
     "redux": "^5.0.1",

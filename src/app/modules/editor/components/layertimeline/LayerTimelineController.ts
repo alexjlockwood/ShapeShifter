@@ -1,3 +1,4 @@
+import { getContextMenuSelection } from 'app/modules/editor/components/contextmenu/contextMenuSelection';
 import { ActionMode } from 'app/modules/editor/model/actionmode';
 import {
   ClipPathLayer,
@@ -7,7 +8,8 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
-import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
+import { NEWER_VERSION_WARNING, ProjectFormatError } from 'app/modules/editor/model/projectVersion';
+import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { getContentSize, getPosition } from 'app/modules/editor/scripts/dom';
@@ -25,7 +27,7 @@ import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
-import { clamp, find, findIndex, findLastIndex, flatMap, uniqueId } from 'lodash-es';
+import { clamp, find, findIndex, findLastIndex, flatMap } from 'lodash-es';
 import type { RefObject } from 'react';
 
 import * as TimelineConsts from './constants';
@@ -204,15 +206,22 @@ export class LayerTimelineController extends DestroyableMixin() {
       }
       trackEvent('select_demo', { demo_title: selectedDemoInfo.title });
       this.services.projectService.getProject(`demos/${selectedDemoInfo.id}.shapeshifter`).then(
-        ({ vectorLayer, animation, hiddenLayerIds, guides }) => {
+        ({ vectorLayer, animation, hiddenLayerIds, guides, newerVersion }) => {
           this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds, guides));
+          if (newerVersion) {
+            this.services.snackBarService.show(NEWER_VERSION_WARNING, 'Dismiss', Duration.Long);
+          }
         },
-        // Only fetch failures are handled here, so that errors from opening the demo are still
-        // reported. navigator.serviceWorker is undefined in some embedded browsers.
-        () => {
-          const msg = navigator.serviceWorker?.controller
-            ? 'Demo not available offline'
-            : `Couldn't fetch demo`;
+        // Only failures to fetch and parse the demo are handled here, so that errors from
+        // opening it are still reported. navigator.serviceWorker is undefined in some embedded
+        // browsers.
+        error => {
+          const msg =
+            error instanceof ProjectFormatError
+              ? error.message
+              : navigator.serviceWorker?.controller
+                ? 'Demo not available offline'
+                : `Couldn't fetch demo`;
           this.services.snackBarService.show(msg, 'Dismiss', Duration.Long);
         },
       );
@@ -262,10 +271,12 @@ export class LayerTimelineController extends DestroyableMixin() {
 
   onAddPathLayerClick() {
     const vl = getVectorLayer(this.store.getState());
+    const parentId = this.services.layerTimelineService.getParentIdForNewLayer();
     const layer = new PathLayer({
       name: LayerUtil.getUniqueLayerName([vl], 'path'),
       children: [],
       pathData: undefined,
+      ...LayerUtil.getCenterPivot(vl, parentId),
     });
     this.services.layerTimelineService.addLayer(layer);
   }
@@ -283,11 +294,15 @@ export class LayerTimelineController extends DestroyableMixin() {
   onAddGroupLayerClick() {
     const vl = getVectorLayer(this.store.getState());
     const name = LayerUtil.getUniqueLayerName([vl], 'group');
-    const layer = new GroupLayer({ name, children: [] });
+    const parentId = this.services.layerTimelineService.getParentIdForNewLayer();
+    const layer = new GroupLayer({ name, children: [], ...LayerUtil.getCenterPivot(vl, parentId) });
     this.services.layerTimelineService.addLayer(layer);
   }
 
   onTimelineBlockMouseDown(mouseDownEvent: MouseEvent, dragBlock: AnimationBlock) {
+    if (!isMainButtonPress(mouseDownEvent)) {
+      return;
+    }
     const animation = this.animation;
     const target = mouseDownEvent.target as Element;
 
@@ -678,41 +693,18 @@ export class LayerTimelineController extends DestroyableMixin() {
     this.services.layerTimelineService.selectBlock(block.id, clearExisting);
   }
 
+  /** Edits a path block's morph in action mode, and otherwise goes to the block's start. */
   onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
-    this.services.playbackService.setCurrentTime(block.startTime);
+    if (
+      !(block instanceof PathAnimationBlock) ||
+      !this.services.actionModeService.editMorph(block.id)
+    ) {
+      this.services.playbackService.setCurrentTime(block.startTime);
+    }
   }
 
   onAddTimelineBlockClick(layer: Layer, propertyName: string) {
-    const property = layer.inspectableProperties.get(propertyName);
-    if (!property) {
-      return;
-    }
-    const clonedValue = property.cloneValue((layer as any)[propertyName]);
-    this.services.layerTimelineService.addBlocks([
-      {
-        layerId: layer.id,
-        propertyName,
-        fromValue: clonedValue,
-        toValue: clonedValue,
-        currentTime: this.currentTime,
-      },
-    ]);
-  }
-
-  onConvertToClipPathClick(layer: Layer) {
-    const clipPathLayer = new ClipPathLayer(layer as PathLayer);
-    clipPathLayer.id = uniqueId();
-    this.services.layerTimelineService.swapLayers(layer.id, clipPathLayer);
-  }
-
-  onConvertToPathClick(layer: Layer) {
-    const pathLayer = new PathLayer(layer as ClipPathLayer);
-    pathLayer.id = uniqueId();
-    this.services.layerTimelineService.swapLayers(layer.id, pathLayer);
-  }
-
-  onFlattenGroupClick(layer: Layer) {
-    this.services.layerTimelineService.flattenGroupLayer(layer.id);
+    this.services.layerTimelineService.addBlockForProperty(layer.id, propertyName);
   }
 
   onLayerClick(event: MouseEvent, clickedLayer: Layer) {
@@ -776,6 +768,39 @@ export class LayerTimelineController extends DestroyableMixin() {
     this.services.layerTimelineService.setSelectedLayers(selectedLayerIds);
   }
 
+  /**
+   * Opens the context menu for a right-click on the layer, or its "more" button, selecting the
+   * layer first if it isn't selected.
+   */
+  onLayerContextMenu(layer: Layer, position: { readonly x: number; readonly y: number }) {
+    const { layerTimelineService, contextMenuService } = this.services;
+    const selection = getContextMenuSelection(
+      this.vectorLayer,
+      layer.id,
+      layerTimelineService.getSelectedLayerIds(),
+      { inGroups: false },
+    );
+    if (selection) {
+      layerTimelineService.setSelectedLayers(new Set(selection));
+    }
+    contextMenuService.open(position, 'layerList');
+  }
+
+  /**
+   * Opens the context menu for a right-click on the block, selecting it first if it isn't
+   * selected, so that the menu acts on all of the selected blocks otherwise.
+   */
+  onTimelineBlockContextMenu(
+    block: AnimationBlock,
+    position: { readonly x: number; readonly y: number },
+  ) {
+    const { layerTimelineService, contextMenuService } = this.services;
+    if (!layerTimelineService.getSelectedBlocks().some(b => b.id === block.id)) {
+      layerTimelineService.selectBlock(block.id, true);
+    }
+    contextMenuService.open(position, 'timelineBlock');
+  }
+
   onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
     const recursive = ShortcutService.isOsDependentModifierKey(event) || event.shiftKey;
     this.services.layerTimelineService.toggleExpandedLayer(layer.id, recursive);
@@ -786,6 +811,10 @@ export class LayerTimelineController extends DestroyableMixin() {
   }
 
   onLayerMouseDown(mouseDownEvent: MouseEvent, mouseDownDragLayer: Layer) {
+    if (!isMainButtonPress(mouseDownEvent)) {
+      // E.g. a right-click, which opens the context menu instead.
+      return;
+    }
     const layersList = (mouseDownEvent.target as Element).closest('.slt-layers-list');
     const scroller = (mouseDownEvent.target as Element).closest('.slt-layers-list-scroller');
     if (!layersList || !scroller) {
@@ -1092,4 +1121,12 @@ export interface DragIndicatorInfo {
   left?: number;
   top?: number;
   isVisible?: boolean;
+}
+
+/**
+ * Whether the press is with the main button, which drags. On a Mac, a click with Ctrl held is a
+ * right-click.
+ */
+function isMainButtonPress(event: MouseEvent) {
+  return event.button === 0 && !(ShortcutService.isMac() && event.ctrlKey);
 }

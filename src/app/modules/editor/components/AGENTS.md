@@ -9,6 +9,16 @@ Paths are relative to `src/app/modules/editor/`.
   the canvas (three of them in action mode: current, start, and end), playback controls, the
   property inspector (hidden in action mode), and the layer list and timeline. Mobile user agents
   get `components/splashscreen/` instead.
+- Action mode (the morph editor) is entered with `actionModeService.editMorph(blockId)`, from the
+  inspector, a double-click on a path block, the canvas editor's keyframe badge, or the context
+  menu, and it leaves on its own once undo takes the block away. `actionModeService.morphInto`
+  starts a morph from two paths ("Morph into" in the context menu, and the snackbar after an
+  import or paste), with its rules in `scripts/common/morphLayers.ts`. Its three panels are labeled and bordered, under a
+  status strip that says whether the paths morph (`components/toolbar/ActionModeStatusStrip.tsx`,
+  with its message from `components/toolbar/actionModeStatus.ts`), and its commands are in a
+  floating bar over the bottom of the panels (`components/toolbar/ActionBar.tsx`). The app bar
+  keeps the title and a Done button. `components/toolbar/ToolbarData.ts` decides which commands
+  apply to the selection.
 
 ## State and actions
 
@@ -29,8 +39,13 @@ The canvas and the timeline grid are drawn imperatively. The component renders t
 creates a controller in a layout effect, and the controller subscribes to the store and redraws,
 so playback never re-renders React. `components/canvas/CanvasInput.ts` turns the canvas's pointer
 events into gestures, capturing the pointer so that drags keep going outside of the canvas, and
-canceling them on blur and Escape. The gestures go to `components/canvas/CanvasOverlay.ts`, which
-calls `actionModeService` in action mode and `layerTimelineService` otherwise.
+canceling them on pointercancel, context menus, blur, and Escape. A mouse move that shows the
+button is already up ends the gesture like its release, where it last was, since a macOS trackpad
+can send one right before the release. So does losing the capture, which Chrome does first for
+that move. Safari's lostpointercapture never reports buttons, so it can't tell whether the button
+is still down, and a mouse gesture is kept in every case. The gestures go to
+`components/canvas/CanvasOverlay.ts`, which calls `actionModeService` in action mode and
+`layerTimelineService` otherwise.
 
 Each canvas covers its whole panel. `components/canvas/CanvasCamera.ts` maps between its three
 coordinate spaces: viewport coordinates (the vector layer's units), panel coordinates (CSS pixels
@@ -57,10 +72,11 @@ dispatching on every pointer move. A gesture sets a working copy of the whole do
 and the animation), and commits it once, as its own undo step. Anything else that changes the
 document or the time cancels it. Moving layers moves their animation blocks with them, and scaling
 or rotating them transforms every path in them, in its own coordinates, since group transforms can't
-express every matrix (`components/canvaseditor/transformLayers.ts`). A path that an animation block
-sets at the current time is reshaped where its keyframe is saved, and not at all while it's
-morphing (`components/canvas/pathKeyframes.ts`, and `canEditPath` and `getBasePath` in the
-preview). `components/canvaseditor/KeyframeBadge.ts` says whether the morph still works.
+express every matrix (`components/canvas/transformLayers.ts`, outside the editor so the rest of the
+app can use it too). A path that an animation block sets at the current time is reshaped where its
+keyframe is saved, and not at all while it's morphing (`components/canvas/pathKeyframes.ts`, and
+`canEditPath` and `getBasePath` in the preview). `components/canvaseditor/KeyframeBadge.ts` says
+whether the morph still works.
 
 With the editor loaded, the main canvas takes the pointer anywhere in its panel and gives it to the
 editor (`components/canvaseditor/CanvasEditor.ts`), except in action mode, and the panel's clicks
@@ -83,11 +99,58 @@ tool, go to `components/canvaseditor/GuideTool.ts` first. The guides are part of
 the store (`store/guides/`, saved with the project), and the editor's settings (the rulers, the
 pixel grid, and snapping to it) are preferences in `services/canvassettings.service.ts`. Alt
 measures distances (`components/canvaseditor/measuring.ts`). Boolean operations and outline
-stroke are in `components/canvaseditor/pathOps.ts`, which loads Skia's PathKit (`pathkit-wasm`)
+stroke are in `components/canvaseditor/pathOps.ts` (which layers they apply to is in
+`scripts/common/pathOpLayers.ts`, for the context menu), which loads Skia's PathKit (`pathkit-wasm`)
 the first time it's used; `vite.config.ts` puts it with the editor's assets. The editor also
-exports `components/canvaseditor/PathInspector.tsx`, which the property inspector shows for paths
-once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are in
-`components/propertyinput/propertyinput.scss`, since the editor's code can't import CSS.
+exports `components/canvaseditor/PathInspector.tsx`, which the property inspector shows while a
+path's points are edited, once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its
+styles are in `components/propertyinput/propertyinput.scss`, since the editor's code can't import
+CSS.
+
+## Property inspector
+
+`components/propertyinput/PropertyInput.tsx` shows the selection's properties in sections of
+compact rows, like Figma's design panel. `components/propertyinput/buildPropertyInputModel.ts`
+wraps each property in an `InspectedProperty`, and
+`components/propertyinput/inspectorSections.ts` groups them with a static map from property name
+to section, row, and field label, so a property with a known name lands in the same place
+whatever model has it (the transform properties go in Transform for groups and paths alike). A
+new property needs an entry there, or it shows in an "Other" section, and its spec fails. The
+Layout section isn't made of properties: it's the layer's bounds on the canvas at the current
+time, and typing a value moves or scales the layer through `components/canvas/transformLayers.ts`
+as one undo step (`components/propertyinput/layoutValues.ts`), with the editor on or off. Rows of
+properties that can be animated end with a keyframe button, which is filled once they are.
+
+While a path's points are edited, the editor reports the path it edits and its selected points
+to `services/canvaseditorbridge.service.ts`, which the inspector subscribes to with
+`useSyncExternalStore`, and the editor's `PathInspector` takes the place of Layout and the path's
+row. Its edits go back through the bridge (`editPoints`, `runPointCommand`), so they're saved where
+the canvas saves its own, e.g. in a path block's value at a keyframe.
+
+## Context menus
+
+Right-clicking the main canvas (outside of action mode) or a layer row, or clicking a row's "more"
+button, selects the layer under the pointer if it isn't selected, and opens
+`components/contextmenu/ContextMenuHost.tsx` through `components/contextmenu/contextmenu.service.ts`
+(`components/contextmenu/contextMenuSelection.ts` has the rule). Right-clicking a timeline block
+selects it the same way, and right-clicking the canvas editor's keyframe badge opens a menu for
+the badge's blocks without selecting them, since that would deselect the path the badge is about
+(the request carries their ids). Its items come from
+`components/contextmenu/buildContextMenu.ts`, a plain function of the saved document, the
+selection, the blocks, the current time, and what the canvas editor reports, built as a list of
+sections. A new kind of item goes in a section builder of its own, added to
+`CONTEXT_MENU_SECTIONS`, or `BLOCK_CONTEXT_MENU_SECTIONS` for blocks. Items that can't run say
+why, rather than being left out, and those that only the canvas editor runs (Duplicate, the
+boolean operations, and Outline stroke) are left out while it isn't loaded, as on the live site.
+They reach it through `services/canvaseditorbridge.service.ts`, which `CanvasController` attaches
+the editor to once it's loaded, since the editor's code is in the lazy chunk. While a path's
+points are edited, a right-click selects the point under the pointer, and the menu starts with the
+selected points' commands (`buildPointSection`), from what the editor reports in `getMenuState`.
+Combine and Break apart (`scripts/common/combineLayers.ts`) and the rules for which layers the path
+operations apply to (`scripts/common/pathOpLayers.ts`) are outside of it, so they work with the
+editor off. MUI has
+no submenus, so the host opens one in a `Popper` inside the menu's modal: hovering, ArrowRight,
+Enter, or Space opens it, and ArrowLeft or Escape goes back.
 
 ## Styling
 
@@ -98,6 +161,9 @@ once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are 
   included in `styles/theme.scss`, which applies them for the light theme and under
   `.ss-dark-theme` (set on `body`, so portals get it too). A new themed component needs its partial
   added there.
+- For accent colors, use the theme's `accent-fill` behind white text and icons, and `accent-text`
+  for text and icons on the theme's background. Both pass WCAG AA in both themes, unlike the older
+  `accent` palette.
 - Class prefixes: `app-<component>` on component roots, `slt-` for the layer timeline, `spi-` for
   the property inspector, `splt-` for the splitter, and `ss-` for globals.
 
@@ -112,10 +178,17 @@ once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are 
   are created without side effects and started in a layout effect.
 - React's wheel listeners are passive, so the timeline adds a native listener to prevent
   scrolling.
+- `services/shortcut.service.ts` listens on the window, so Delete and Backspace delete the
+  selected layers or blocks unless a text field has the focus. A focusable widget that takes those
+  keys stops their propagation, like the easing curve editor
+  (`components/propertyinput/InterpolatorEditor.tsx`, whose editing rules are in
+  `components/propertyinput/curveEditing.ts`). The canvas editor listens in the capture phase and
+  sees keys first, but it only takes those two while the pen draws or a path's points are edited.
 - Each panel is wrapped in `components/root/PanelErrorBoundary.tsx`, so a render error only
   replaces that panel (with a "Try again" button) and is reported to Bugsnag.
 - Dialogs (`components/dialogs/dialog.service.ts`) and the snackbar (`services/snackbar.service.ts`)
-  have small stores of their own, outside Redux. Dialog methods return promises.
+  have small stores of their own, outside Redux. Dialog methods return promises, and the
+  snackbar's button calls the `onAction` passed to `snackBarService.show`.
 
 ## Tests
 

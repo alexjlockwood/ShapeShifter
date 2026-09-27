@@ -182,7 +182,18 @@ describe('drawing tools', () => {
       expect([scaledToZero.parentId, scaledToZero.index]).toEqual([document().vectorLayer.id, 1]);
     });
 
-    it("makes strokes a unit wide on a 24 unit icon, in the place's coordinates", () => {
+    it('makes strokes a viewport unit wide, whatever the size of the artboard', () => {
+      // The morphinganimals demo's artboard, which used to get strokes 409 / 24 = 17.042 wide.
+      const vl = new VectorLayer({ name: 'vector', children: [], width: 409, height: 300 });
+      const top = { parentId: vl.id, index: 0, toLocal: Matrix.identity() };
+      const path = new Path('M 0 0 L 1 1');
+      expect(createPathLayer(vl, 'a', path, 'stroked', top).strokeWidth).toBe(1);
+      // In a group scaled by 3, rounded to 3 decimals.
+      const inGroup = { ...top, toLocal: Matrix.scaling(1 / 3, 1 / 3) };
+      expect(createPathLayer(vl, 'a', path, 'stroked', inGroup).strokeWidth).toBe(0.333);
+    });
+
+    it("makes strokes a unit wide in the place's coordinates", () => {
       const { store, context, idOf } = setUp();
       const state = store.getState().present;
       const document = {
@@ -199,6 +210,15 @@ describe('drawing tools', () => {
       expect(createPathLayer(document.vectorLayer, 'a', path, 'stroked', inGroup).strokeWidth).toBe(
         0.5,
       );
+    });
+
+    it("pivots new paths at the canvas's center, like new groups", () => {
+      const vl = new VectorLayer({ name: 'vector', children: [], width: 409, height: 300 });
+      const top = { parentId: vl.id, index: 0, toLocal: Matrix.identity() };
+      const layer = createPathLayer(vl, 'a', new Path('M 0 0 L 1 1'), 'filled', top);
+      expect([layer.pivotX, layer.pivotY]).toEqual([204.5, 150]);
+      // A pivot alone doesn't make it a transformed path.
+      expect([layer.rotation, layer.scaleX, layer.translateX]).toEqual([0, 1, 0]);
     });
   });
 

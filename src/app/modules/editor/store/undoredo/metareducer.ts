@@ -37,6 +37,9 @@ let groupCounter = 1;
 export interface StateWithHistoryAndTimestamp extends StateWithHistory<EditorState> {
   // The time of the most recent action that was recorded in the undo history.
   timestamp: number;
+  // Whether a preview (a batch with SkipUndoStep) is showing values that aren't recorded yet. See
+  // isPreviewPending.
+  isPreviewPending: boolean;
 }
 
 type StateReducer = ActionReducer<StateWithHistoryAndTimestamp>;
@@ -54,13 +57,47 @@ function unbatch(action: Action) {
   return action.type === BatchActionTypes.BatchAction ? (action as BatchAction).payload : [action];
 }
 
-/** Batches are recorded unless every action in them is excluded. */
+function isPreview(action: Action) {
+  return unbatch(action).some(a => a.type === UndoRedoActionTypes.SkipUndoStep);
+}
+
+function isPreviewEnd(action: Action) {
+  return unbatch(action).some(a => a.type === UndoRedoActionTypes.EndPreview);
+}
+
+/**
+ * Batches are recorded unless every action in them is excluded, or one of them is SkipUndoStep or
+ * EndPreview. redux-undo keeps the last recorded state while it skips actions, so the next
+ * recorded one starts its undo step from there.
+ */
 function isRecorded(action: Action) {
-  return unbatch(action).some(a => !UNDO_EXCLUDED_ACTIONS.has(a.type));
+  return (
+    !isPreview(action) &&
+    !isPreviewEnd(action) &&
+    unbatch(action).some(a => !UNDO_EXCLUDED_ACTIONS.has(a.type))
+  );
 }
 
 function isIsolated(action: Action) {
   return unbatch(action).some(a => UNDO_ISOLATED_ACTIONS.has(a.type));
+}
+
+/**
+ * Returns the state as of the last recorded action, which is where undo goes back to. It's the
+ * present state unless actions have been skipped since, e.g. previews and playback.
+ */
+export function getLastRecordedState(state: StateWithHistoryAndTimestamp): EditorState {
+  return state._latestUnfiltered ?? state.present;
+}
+
+/**
+ * Returns whether a preview is showing values that no undo step has recorded yet, i.e. whether
+ * LayerTimelineService.commitPreview and cancelPreview have anything to do. A preview sets it, and
+ * EndPreview, undo, redo, and any recorded action clear it. A recorded action that comes during a
+ * preview (e.g. a keyboard shortcut) saves the previewed values in its own undo step.
+ */
+export function isPreviewPending(state: StateWithHistoryAndTimestamp) {
+  return state.isPreviewPending;
 }
 
 export function metaReducer(reducer: EditorStateReducer): StateReducer {
@@ -71,8 +108,15 @@ export function metaReducer(reducer: EditorStateReducer): StateReducer {
       // An action more than a second after the last recorded one starts a new group, and the
       // actions that follow it are merged into its undo step. (Returning undefined instead would
       // give the first action a step of its own.)
-      const { timestamp } = prevState as StateWithHistoryAndTimestamp;
-      if (isIsolated(action) || Date.now() - timestamp >= UNDO_DEBOUNCE_MILLIS) {
+      // An action during a preview starts one too. redux-undo applies it to the previewed state,
+      // so merging it into the last step would put the preview in that step, where undoing it
+      // would also undo the edit from before the preview.
+      const history = prevState as StateWithHistoryAndTimestamp;
+      if (
+        isIsolated(action) ||
+        isPreviewPending(history) ||
+        Date.now() - history.timestamp >= UNDO_DEBOUNCE_MILLIS
+      ) {
         groupCounter++;
       }
       return groupCounter;
@@ -98,6 +142,13 @@ export function metaReducer(reducer: EditorStateReducer): StateReducer {
     } else if (!state || isRecorded(action)) {
       timestamp = Date.now();
     }
-    return { ...history, present, timestamp };
+    let previewPending = state ? state.isPreviewPending : false;
+    if (isPreview(action)) {
+      previewPending = true;
+    } else if (isPreviewEnd(action) || isRecorded(action) || UNDO_REDO_ACTIONS.has(action.type)) {
+      // Undo and redo go to recorded states, and a recorded action saves the previewed values.
+      previewPending = false;
+    }
+    return { ...history, present, timestamp, isPreviewPending: previewPending };
   };
 }

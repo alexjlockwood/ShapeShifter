@@ -5,6 +5,7 @@
     $foreground: map.get($theme, ss-foreground);
     $background: map.get($theme, ss-background);
     $accent: map.get($theme, accent);
+    $accent-fill: map.get($theme, accent-fill);
     .studio-layer-timeline {
         $headerHeight: 40px;
         background-color: mat-color($background, base100);
@@ -12,8 +13,13 @@
             .slt-header {
                 .slt-layers-menu-group-button {
                     color: mat-color($foreground, secondary-text);
-                    &:focus {
+                    // The open state, not :focus, so the background doesn't stick around after
+                    // MUI returns focus to the button when its menu closes.
+                    &[aria-expanded='true'] {
                         background-color: mat-color($foreground, divider);
+                    }
+                    &:focus-visible {
+                        box-shadow: 0 0 0 2px $accent-fill inset;
                     }
                     &.is-disabled {
                         color: mat-color($foreground, disabled-text);
@@ -55,7 +61,9 @@
                 .slt-timeline-animation-meta {
                     &.is-selected,
                     &.is-selected .slt-timeline-animation-name {
-                        background-color: mat-color($accent, darker);
+                        // accent-fill passes WCAG AA with white text in both themes; accent's
+                        // darker hue was only 3.55:1 in the dark theme.
+                        background-color: $accent-fill;
                         color: #fff;
                     }
                     &.is-disabled {

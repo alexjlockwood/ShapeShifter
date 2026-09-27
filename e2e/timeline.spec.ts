@@ -38,6 +38,10 @@ test('adds layers from the add layer menu', async ({ page }) => {
   await page.getByRole('button', { name: 'Add layer' }).click();
   await page.getByRole('menuitem', { name: 'New group layer' }).click();
   await expect(page.locator('.slt-layer')).toHaveText(['vector', 'group']);
+  // New groups pivot at the canvas's center.
+  await page.locator('.slt-layer', { hasText: 'group' }).click();
+  await expect(page.locator('.spi-property input[name="pivotX"]')).toHaveValue('12');
+  await expect(page.locator('.spi-property input[name="pivotY"]')).toHaveValue('12');
 });
 
 test('loads a demo from the file menu', async ({ page }) => {
@@ -75,6 +79,58 @@ test('selects and moves animation blocks', async ({ page }) => {
   const moved = await getSelectedBlockTimes();
   expect(moved.startTime).toBeGreaterThan(initial.startTime);
   expect(moved.endTime - moved.startTime).toBe(initial.endTime - initial.startTime);
+});
+
+test("edits a block's easing curve", async ({ page, modifier }) => {
+  await loadDemo(page);
+  await page.locator('.slt-timeline-block').first().click();
+  const getInterpolator = () =>
+    getState(page, s => {
+      const [id] = Array.from(s.timeline.selectedBlockIds as Set<string>);
+      return s.timeline.animation.blocks.find((b: { id: string }) => b.id === id)
+        .interpolator as string;
+    });
+  const numBlocks = () => getState(page, s => s.timeline.animation.blocks.length as number);
+  const editor = page.locator('.spi-interpolator-editor');
+  const menuValue = editor.locator('.spi-property-value-menu-current-value');
+  await expect(menuValue).toHaveText('Fast out, slow in');
+  // Presets show their curve, with handles.
+  await expect(editor.locator('.spi-curve-control')).toHaveCount(2);
+
+  // Dragging a handle turns the preset into a custom curve. The inspector scrolls, and in a short
+  // window the curve is below its fold.
+  await editor.locator('.spi-curve-graph').scrollIntoViewIfNeeded();
+  const box = await boundingBox(editor.locator('.spi-curve-control').first());
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 10, y - 40, { steps: 5 });
+  await page.mouse.move(x + 20, y - 60, { steps: 5 });
+  await page.mouse.up();
+  await expect(menuValue).toHaveText('Custom');
+  expect(await getInterpolator()).toMatch(/^M 0 0 C [\d.]+ [\d.]+ 0\.2 1 1 1$/);
+
+  // The drag, however many moves it had, is a single undo step.
+  await page.keyboard.press(`${modifier}+z`);
+  await expect(menuValue).toHaveText('Fast out, slow in');
+  expect(await getInterpolator()).toBe('FAST_OUT_SLOW_IN');
+  await page.keyboard.press(`${modifier}+Shift+z`);
+  await expect(menuValue).toHaveText('Custom');
+
+  // Double-clicking the curve adds a point, and Delete or Backspace removes it, not the block.
+  const point = await editor.locator('.spi-curve-path').evaluate((el: SVGPathElement) => {
+    const p = el.getPointAtLength(el.getTotalLength() / 2);
+    const q = new DOMPoint(p.x, p.y).matrixTransform(el.getScreenCTM() ?? undefined);
+    return { x: q.x, y: q.y };
+  });
+  for (const key of ['Delete', 'Backspace']) {
+    await page.mouse.dblclick(point.x, point.y);
+    await expect(editor.locator('.spi-curve-anchor')).toHaveCount(1);
+    await page.keyboard.press(key);
+    await expect(editor.locator('.spi-curve-anchor')).toHaveCount(0);
+    expect(await numBlocks()).toBe(2);
+  }
 });
 
 test('scrubs through the animation from the timeline header', async ({ page }) => {
@@ -195,7 +251,7 @@ test('groups, flattens, and converts layers', async ({ page, modifier }) => {
   await dispatchClipboardEvent(
     page,
     'paste',
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path id="line" d="M2 6h8" fill="none" stroke="#000" stroke-width="1"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path id="line" d="M8 12h8" fill="none" stroke="#000" stroke-width="1"/></svg>',
   );
   const layers = page.locator('.slt-layer');
   await expect(layers).toHaveText(['vector', 'line']);
@@ -217,7 +273,8 @@ test('groups, flattens, and converts layers', async ({ page, modifier }) => {
   await page.keyboard.press(`${modifier}+Shift+g`);
   await expect(layers).toHaveText(['vector', 'line']);
 
-  // Scale a group up, and then flatten it. The line and its stroke get twice as big.
+  // Scale a group up, and then flatten it. The line and its stroke get twice as big, around the
+  // canvas's center, where new groups pivot.
   await page.keyboard.press(`${modifier}+g`);
   await layers.filter({ hasText: 'group' }).click();
   for (const name of ['scaleX', 'scaleY']) {

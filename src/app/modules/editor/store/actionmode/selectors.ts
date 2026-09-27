@@ -92,8 +92,9 @@ function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
       // First interpolate the entire vector layer.
       const renderedVl = renderer.setCurrentTime(timeMillis);
       // TODO: this is hacky! the real solution is to not clear path state after interpolations
-      // Replace the interpolated value with the block's to/from value.
-      const blockLayer = vl.findLayerById(block.layerId);
+      // Replace the interpolated value with the block's to/from value. The layer's other animated
+      // properties, like its colors, keep their values at the time.
+      const blockLayer = renderedVl.findLayerById(block.layerId);
       if (!blockLayer) {
         return undefined;
       }

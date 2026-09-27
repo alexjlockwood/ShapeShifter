@@ -21,7 +21,7 @@ import {
   LayerTimelineController,
 } from './LayerTimelineController';
 import './layertimeline.scss';
-import { TimelineAnimationRow } from './TimelineAnimationRow';
+import { LEAVE_ACTION_MODE_HINT, TimelineAnimationRow } from './TimelineAnimationRow';
 import { TimelineGrid } from './TimelineGrid';
 
 export function LayerTimeline() {
@@ -110,6 +110,8 @@ export function LayerTimeline() {
           <div className="slt-header mat-elevation-z2 fx-row fx-align-start-center">
             <button
               className="slt-layers-menu-group-button"
+              aria-haspopup="menu"
+              aria-expanded={fileMenu.open}
               onClick={onMenuButtonClick(fileMenu.openMenu)}
             >
               File
@@ -130,6 +132,8 @@ export function LayerTimeline() {
             <button
               className={`slt-layers-menu-group-button${isActionMode ? ' is-disabled' : ''}`}
               disabled={isActionMode}
+              aria-haspopup="menu"
+              aria-expanded={importMenu.open}
               onClick={onMenuButtonClick(importMenu.openMenu)}
             >
               Import
@@ -148,6 +152,8 @@ export function LayerTimeline() {
             <button
               className={`slt-layers-menu-group-button${isActionMode ? ' is-disabled' : ''}`}
               disabled={isActionMode}
+              aria-haspopup="menu"
+              aria-expanded={exportMenu.open}
               onClick={onMenuButtonClick(exportMenu.openMenu)}
             >
               Export
@@ -184,6 +190,8 @@ export function LayerTimeline() {
             <Tip title="Add layer" disabled={isActionMode}>
               <IconButton
                 aria-label="Add layer"
+                aria-haspopup="menu"
+                aria-expanded={addLayerMenu.open}
                 disabled={isActionMode}
                 onClick={onMenuButtonClick(addLayerMenu.openMenu)}
               >
@@ -215,7 +223,10 @@ export function LayerTimeline() {
 
           <div ref={layersScrollerRef} className="slt-layers-list-scroller fx-flex">
             {/* Layer list. */}
-            <div className="slt-layers-list">
+            <div
+              className="slt-layers-list"
+              title={isActionMode ? LEAVE_ACTION_MODE_HINT : undefined}
+            >
               {/* Keyed by the layer's id so that the tree is recreated when the workspace is
                   reset. The root layer doesn't set a data-layer-id. */}
               <div className="slt-layer-container fx-column" key={vectorLayer.id}>

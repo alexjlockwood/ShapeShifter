@@ -175,26 +175,22 @@
         &[hidden] {
             display: none;
         }
+        // Colored by theme, since a badge sits on the themed panel background: see
+        // components/canvas/_canvas-theme.scss.
         .is-morphable,
         .is-broken {
             font-weight: 500;
-        }
-        .is-morphable {
-            color: #14ae5c;
-        }
-        .is-broken {
-            color: #f24822;
         }
         button {
             padding: 2px 8px;
             border: none;
             border-radius: 4px;
-            background-color: #0d99ff;
+            background-color: #0a73bf;
             color: #fff;
             font: inherit;
             cursor: pointer;
             &:focus-visible {
-                outline: 2px solid #0d99ff;
+                outline: 2px solid #0a73bf;
                 outline-offset: 2px;
             }
         }
@@ -218,7 +214,7 @@
         }
         &:focus-visible {
             // Outside of the button, so that it shows on the pressed one, which is the same blue.
-            outline: 2px solid #0d99ff;
+            outline: 2px solid #0a73bf;
             outline-offset: 2px;
         }
     }
@@ -228,5 +224,14 @@
     }
     &.is-panning {
         cursor: grabbing;
+    }
+}
+
+// Zoomed in, rulers in action mode would cover the top and left of each panel, along with its
+// label and the points there, and the side panels' rulers would repeat the preview's.
+.canvas-row.is-action-mode .app-canvas {
+    .canvas-ruler.is-pinned,
+    .canvas-ruler-corner {
+        display: none;
     }
 }

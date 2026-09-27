@@ -4,10 +4,14 @@ import { createRequire } from 'node:module';
 import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
+import {
+  getBooleanLayerIds,
+  getOutlineLayerIds,
+} from 'app/modules/editor/scripts/common/pathOpLayers';
 import init, { type PathKit } from 'pathkit-wasm/bin/pathkit.js';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { combinePaths, getBooleanLayerIds, getOutlineLayerIds, outlineStrokes } from './pathOps';
+import { combinePaths, outlineStrokes } from './pathOps';
 
 let pk: PathKit;
 
@@ -78,6 +82,24 @@ describe('combinePaths', () => {
     ]);
   });
 
+  it('combines paths into a transformed one inside of its transform, which it keeps', () => {
+    // a is drawn twice as big, from (4, 4) to (20, 20), and b 4 units to the right, from (6, 2)
+    // to (14, 10).
+    const scaled = square('a', 2, 2, 8, { scaleX: 2, scaleY: 2 });
+    const moved = square('b', 2, 2, 8, { translateX: 4 });
+    const doc = document(scaled, moved);
+    const result = combinePaths(pk, doc, [scaled.id, moved.id], 'union');
+    const combined = result?.document.vectorLayer.findLayerById(scaled.id) as PathLayer;
+    expect([combined.scaleX, combined.scaleY]).toEqual([2, 2]);
+    // Half the size in a's coordinates.
+    expect(bounds(combined)).toEqual([2, 1, 10, 10]);
+    // From (6, 4) to (14, 10) on the canvas, and 4 units to the left in b's coordinates.
+    const other = combinePaths(pk, doc, [moved.id, scaled.id], 'intersect');
+    expect(bounds(other?.document.vectorLayer.findLayerById(moved.id) as PathLayer)).toEqual([
+      2, 4, 10, 10,
+    ]);
+  });
+
   it("only combines two or more paths that aren't animated", () => {
     const doc = document(a, b);
     expect(getBooleanLayerIds(doc, [a.id])).toBeUndefined();
@@ -95,6 +117,27 @@ describe('combinePaths', () => {
       }),
     ];
     expect(getBooleanLayerIds({ ...doc, animation }, [a.id, b.id])).toBeUndefined();
+  });
+
+  it("doesn't combine paths whose other animations would be lost", () => {
+    const doc = document(a, b);
+    const colorBlock = (layerId: string) =>
+      AnimationBlock.from({
+        layerId,
+        propertyName: 'fillColor',
+        startTime: 0,
+        endTime: 100,
+        type: 'color',
+        fromValue: '#000000',
+        toValue: '#ffffff',
+      });
+    // The bottom path keeps its own.
+    const bottom = new Animation();
+    bottom.blocks = [colorBlock(a.id)];
+    expect(getBooleanLayerIds({ ...doc, animation: bottom }, [a.id, b.id])).toEqual([a.id, b.id]);
+    const other = new Animation();
+    other.blocks = [colorBlock(b.id)];
+    expect(getBooleanLayerIds({ ...doc, animation: other }, [a.id, b.id])).toBeUndefined();
   });
 });
 

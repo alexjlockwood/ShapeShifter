@@ -1,42 +1,29 @@
+import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Switch from '@mui/material/Switch';
-import Tooltip from '@mui/material/Tooltip';
 import { Tip } from 'app/modules/editor/components/common/Tip';
 import { Icon, type IconName } from 'app/modules/editor/components/icons/Icon';
 import { useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useMenu } from 'app/modules/editor/hooks/useMenu';
+import { ActionMode } from 'app/modules/editor/model/actionmode';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
-import { getToolbarState } from 'app/modules/editor/store/actionmode/selectors';
 import { getThemeType } from 'app/modules/editor/store/theme/selectors';
-import { type MouseEvent, useMemo } from 'react';
+import { type MouseEvent } from 'react';
 
 import './toolbar.scss';
-import { ToolbarData } from './ToolbarData';
+import { useToolbarData } from './useToolbarData';
 
 export function Toolbar() {
   const { actionModeService, themeService } = useServices();
-  const toolbarState = useAppSelector(getToolbarState);
+  const { toolbarData } = useToolbarData();
   const isDarkTheme = useAppSelector(state => getThemeType(state).themeType === 'dark');
   const overflowMenu = useMenu();
-
-  const toolbarData = useMemo(() => {
-    const { mode, fromMl, toMl, selections, unpairedSubPath, block } = toolbarState;
-    return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
-  }, [toolbarState]);
-
-  const numSubPaths = toolbarData.getNumSubPaths();
-  const numSegments = toolbarData.getNumSegments();
-  const numPoints = toolbarData.getNumPoints();
   const showActionMode = toolbarData.shouldShowActionMode();
-  const toolbarSubtitle = toolbarData.getToolbarSubtitle();
-  const showAddPoints = numSubPaths > 0 || numSegments > 0 || !toolbarData.isSelectionMode();
-  const showSplitSubPaths = showAddPoints;
-  const showShiftSubPath = toolbarData.shouldShowShiftSubPath();
 
   // Wraps a click handler so that the click isn't also handled by the workspace.
   const onClick = (fn: () => void) => (event: MouseEvent) => {
@@ -59,131 +46,28 @@ export function Toolbar() {
       {showActionMode && (
         <IconButton
           className="action-mode-close-icon"
+          aria-label={toolbarData.isSelectionMode() ? 'Back' : 'Close mode'}
           onClick={onClick(() => actionModeService.closeActionMode())}
         >
           <Icon name={toolbarData.isSelectionMode() ? 'arrow_back' : 'close'} />
         </IconButton>
       )}
 
-      {/* Toolbar text. */}
-      <div className="fx-column">
-        <span className="toolbar-title">{toolbarData.getToolbarTitle()}</span>
-        {toolbarSubtitle && <span className="toolbar-subtitle">{toolbarSubtitle}</span>}
-      </div>
+      {/* Toolbar text. The status strip under it says what to do next in action mode. */}
+      <span className="toolbar-title">{toolbarData.getToolbarTitle()}</span>
 
       <span className="fx-flex-auto" />
 
-      {toolbarData.shouldShowAutoFix() && (
-        <ActionButton
-          title="Auto fix"
-          icon="autofix"
-          onClick={onClick(() => {
-            trackEvent('action_mode_auto_fix');
-            actionModeService.autoFix();
-          })}
-        />
-      )}
-
-      {/* SubPath mode. */}
-      {showAddPoints && (
-        <ActionButton
-          title="Add points (A)"
-          icon="add_circle_outline"
-          isActivated={toolbarData.isAddPointsMode()}
-          onClick={onClick(() => {
-            trackEvent('action_mode_add_points');
-            actionModeService.toggleSplitCommandsMode();
-          })}
-        />
-      )}
-      {showSplitSubPaths && (
-        <ActionButton
-          title="Split subpaths (S)"
-          icon="content_cut"
-          isActivated={toolbarData.isSplitSubPathsMode()}
-          onClick={onClick(() => {
-            trackEvent('action_mode_split_subpaths');
-            actionModeService.toggleSplitSubPathsMode();
-          })}
-        />
-      )}
-      {toolbarData.shouldShowPairSubPaths() && (
-        <ActionButton
-          title="Pair subpaths (D)"
-          icon="compare_arrows"
-          isActivated={toolbarData.isPairSubPathsMode()}
-          onClick={onClick(() => {
-            trackEvent('action_mode_pair_subpaths');
-            actionModeService.togglePairSubPathsMode();
-          })}
-        />
-      )}
-      {numSubPaths === 1 && (
-        <ActionButton
-          title="Reverse points (R)"
-          icon="reverse"
-          isDisabled={!toolbarData.isSelectionMode()}
-          onClick={onClick(() => actionModeService.reverseSelectedSubPaths())}
-        />
-      )}
-      {showShiftSubPath && (
-        <ActionButton
-          title="Shift back points (B)"
-          icon="skip_previous"
-          isDisabled={!toolbarData.isSelectionMode()}
-          onClick={onClick(() => actionModeService.shiftBackSelectedSubPaths())}
-        />
-      )}
-      {showShiftSubPath && (
-        <ActionButton
-          title="Shift forward points (F)"
-          icon="skip_next"
-          isDisabled={!toolbarData.isSelectionMode()}
-          onClick={onClick(() => actionModeService.shiftForwardSelectedSubPaths())}
-        />
-      )}
-      {toolbarData.getNumSplitSubPaths() > 0 && (
-        <ActionButton
-          title={`Delete subpath${numSubPaths === 1 ? '' : 's'}`}
-          icon="delete"
-          onClick={onClick(() => actionModeService.deleteSelectedActionModeModels())}
-        />
-      )}
-
-      {/* Segment mode. */}
-      {numSegments > 0 && (
-        <ActionButton
-          title={`Delete segment${numSegments === 1 ? '' : 's'}`}
-          icon="delete"
-          onClick={onClick(() => actionModeService.deleteSelectedActionModeModels())}
-        />
-      )}
-
-      {/* Point mode. */}
-      {toolbarData.shouldShowSplitInHalf() && (
-        <Tooltip title="Add point (A)">
-          <IconButton
-            onMouseEnter={() => actionModeService.splitInHalfHover()}
-            onMouseLeave={() => actionModeService.clearHover()}
-            onClick={onClick(() => actionModeService.splitSelectedPointInHalf())}
+      {showActionMode && (
+        <Tip title="Leave the morph editor" describeChild>
+          <Button
+            className="toolbar-done-button"
+            color="inherit"
+            onClick={onClick(() => actionModeService.setActionMode(ActionMode.None))}
           >
-            <Icon name="add_circle_outline" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {toolbarData.shouldShowSetFirstPosition() && (
-        <ActionButton
-          title="Set first point (F)"
-          icon="looks_one"
-          onClick={onClick(() => actionModeService.shiftPointToFront())}
-        />
-      )}
-      {toolbarData.getNumSplitPoints() > 0 && (
-        <ActionButton
-          title={`Delete point${numPoints === 1 ? '' : 's'}`}
-          icon="delete"
-          onClick={onClick(() => actionModeService.deleteSelectedActionModeModels())}
-        />
+            Done
+          </Button>
+        </Tip>
       )}
 
       {/* Overflow menu. */}
@@ -248,32 +132,6 @@ export function Toolbar() {
         />
       </Menu>
     </div>
-  );
-}
-
-interface ActionButtonProps {
-  readonly title: string;
-  readonly icon: IconName;
-  readonly onClick: (event: MouseEvent) => void;
-  readonly isActivated?: boolean;
-  readonly isDisabled?: boolean;
-}
-
-function ActionButton({ title, icon, onClick, isActivated, isDisabled }: ActionButtonProps) {
-  const button = (
-    <IconButton
-      className={`toolbar-action-button${isActivated ? ' activated' : ''}`}
-      aria-label={title}
-      disabled={isDisabled}
-      onClick={onClick}
-    >
-      <Icon name={icon} />
-    </IconButton>
-  );
-  return (
-    <Tip title={title} disabled={isDisabled}>
-      {button}
-    </Tip>
   );
 }
 

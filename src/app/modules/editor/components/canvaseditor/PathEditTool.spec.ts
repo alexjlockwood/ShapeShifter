@@ -48,6 +48,17 @@ describe('PathEditTool', () => {
       pathLayer('diagonal', 'M 30 0 L 50 20'),
       // A square with a square hole, far from the others, so that they don't snap to it.
       pathLayer('holes', 'M 60 60 L 80 60 L 80 80 L 60 80 Z M 64 64 L 64 76 L 76 76 L 76 64 Z'),
+      // Turned a quarter turn clockwise around its start by its own transform, so it's drawn from
+      // (200, 200) down to (200, 210).
+      new PathLayer({
+        name: 'turned',
+        children: [],
+        pathData: new Path('M 200 200 L 210 200'),
+        strokeColor: '#000',
+        rotation: 90,
+        pivotX: 200,
+        pivotY: 200,
+      }),
       new GroupLayer({
         name: 'group',
         children: [pathLayer('scaled', 'M 1 1 L 5 1')],
@@ -213,6 +224,15 @@ describe('PathEditTool', () => {
       expect(pathData()).toBe('M 1 1 L 6 1');
     });
 
+    it("finds and moves points through the path's own transform", () => {
+      const { click, drag, pathData, selected } = setUp('turned');
+      click(200, 210);
+      expect(selected()).toEqual([1]);
+      // Right on the screen is up in the path's coordinates.
+      drag([200, 210], [202, 210], CTRL);
+      expect(pathData()).toBe('M 200 200 L 210 198');
+    });
+
     it('stops when the edit is canceled', () => {
       const { tool, preview, pathData } = setUp();
       const before = pathData();
@@ -238,18 +258,75 @@ describe('PathEditTool', () => {
   });
 
   describe('moving handles', () => {
-    it("mirrors a mirrored point's other handle", () => {
-      const { click, drag, pathData } = setUp('curve');
+    it("moves a handle on its own, even a mirrored point's", () => {
+      const { click, drag, pathData, undo } = setUp('curve');
+      const before = pathData();
       click(8, 16);
       drag([11, 19], [11, 20], CTRL);
+      expect(pathData()).toBe('M 2 16 C 2 13 5 13 8 16 C 11 20 14 19 14 16');
+      undo();
+      expect(pathData()).toBe(before);
+    });
+
+    it('mirrors the other handle with Cmd', () => {
+      const { click, drag, pathData } = setUp('curve');
+      click(8, 16);
+      drag([11, 19], [11, 20], { ...COMMAND, ctrl: true });
       expect(pathData()).toBe('M 2 16 C 2 13 5 12 8 16 C 11 20 14 19 14 16');
     });
 
-    it('breaks the mirroring with Alt', () => {
+    it('mirrors a handle that was on its own, making the point mirrored', () => {
+      const { click, drag, path } = setUp('curve');
+      click(8, 16);
+      drag([11, 19], [12, 19], CTRL);
+      expect(PathEdit.getAnchors(path())[1].type).toBe('disconnected');
+      vi.advanceTimersByTime(2000);
+      drag([12, 19], [12, 20], { ...COMMAND, ctrl: true });
+      const anchor = PathEdit.getAnchors(path())[1];
+      expect(anchor.type).toBe('mirrored');
+      expect(anchor.in).toEqual({ x: 4, y: 12 });
+    });
+
+    it('does nothing different with Alt', () => {
       const { click, drag, pathData } = setUp('curve');
       click(8, 16);
       drag([11, 19], [11, 20], { ...ALT, ctrl: true });
       expect(pathData()).toBe('M 2 16 C 2 13 5 13 8 16 C 11 20 14 19 14 16');
+    });
+
+    it('mirrors while Cmd is held, starting or stopping in the middle of the drag', () => {
+      const { tool, click, pathData } = setUp('curve');
+      click(8, 16);
+      tool.onPress({ x: 11, y: 19 }, CTRL);
+      tool.onMove({ x: 11, y: 20 }, CTRL);
+      expect(pathData()).toBe('M 2 16 C 2 13 5 13 8 16 C 11 19 14 19 14 16');
+      tool.onModifiersChange({ ...COMMAND, ctrl: true });
+      tool.onRelease({ x: 11, y: 20 });
+      expect(pathData()).toBe('M 2 16 C 2 13 5 12 8 16 C 11 20 14 19 14 16');
+      vi.advanceTimersByTime(2000);
+      tool.onPress({ x: 11, y: 20 }, { ...COMMAND, ctrl: true });
+      tool.onMove({ x: 11, y: 21 }, { ...COMMAND, ctrl: true });
+      tool.onModifiersChange(CTRL);
+      tool.onRelease({ x: 11, y: 21 });
+      expect(pathData()).toBe('M 2 16 C 2 13 5 12 8 16 C 11 21 14 19 14 16');
+    });
+
+    it('snaps unless Ctrl is held without Cmd', () => {
+      // Off of a Mac, Ctrl is Cmd too, so it mirrors and snaps.
+      for (const [modifiers, x] of [
+        [NONE, 14],
+        [CTRL, 13.7],
+        [COMMAND, 14],
+        [{ ...COMMAND, ctrl: true }, 14],
+      ] as const) {
+        const { click, drag, path } = setUp('curve');
+        click(8, 16);
+        // The other end of the curve is at x = 14, and 0.3 away is close enough.
+        drag([11, 19], [13.7, 19], modifiers);
+        expect(PathEdit.getAnchors(path())[1].out?.x).toBeCloseTo(x);
+        dispose();
+        dispose = () => {};
+      }
     });
 
     it('turns in steps of 45 degrees with Shift', () => {
@@ -258,7 +335,11 @@ describe('PathEditTool', () => {
       drag([11, 19], [12, 16.2], SHIFT);
       const anchor = PathEdit.getAnchors(path())[1];
       expect(anchor.out?.y).toBeCloseTo(16);
-      expect(anchor.in?.y).toBeCloseTo(16);
+      expect(anchor.in).toEqual({ x: 5, y: 13 });
+      vi.advanceTimersByTime(2000);
+      // And the other one mirrors it with Cmd.
+      drag([12, 16], [13, 16.6], { ...SHIFT, command: true });
+      expect(PathEdit.getAnchors(path())[1].in?.y).toBeCloseTo(16);
     });
 
     it("shows the handles across the selected point's segments", () => {
@@ -319,6 +400,77 @@ describe('PathEditTool', () => {
     });
   });
 
+  describe('copying points', () => {
+    const ALT_CTRL: Modifiers = { ...ALT, ctrl: true };
+
+    it('drags a copy out of a point with Alt, as one undo step', () => {
+      const { drag, pathData, anchorIds, selected, undo } = setUp();
+      const before = pathData();
+      const ids = anchorIds();
+      drag([12, 2], [15, 4], ALT_CTRL);
+      expect(pathData()).toBe('M 2 2 L 12 2 L 15 4 L 12 12 L 2 12 Z');
+      // The other points keep their ids, and only the copy is selected.
+      expect(anchorIds()).toEqual([ids[0], ids[1], anchorIds()[2], ids[2], ids[3]]);
+      expect(selected()).toEqual([2]);
+      undo();
+      expect(pathData()).toBe(before);
+    });
+
+    it('copies only the point that is dragged', () => {
+      const { tool, drag, pathData, selected } = setUp();
+      tool.selectAll();
+      drag([2, 12], [0, 14], ALT_CTRL);
+      expect(pathData()).toBe('M 2 2 L 12 2 L 12 12 L 2 12 L 0 14 Z');
+      expect(selected()).toEqual([4]);
+    });
+
+    it('takes the out handle with the copy', () => {
+      const { drag, pathData } = setUp('curve');
+      drag([8, 16], [8, 18], ALT_CTRL);
+      expect(pathData()).toBe('M 2 16 C 2 13 5 13 8 16 L 8 18 C 11 21 14 19 14 16');
+    });
+
+    it('extends either end of an open subpath', () => {
+      const { drag, pathData, anchorIds } = setUp('diagonal');
+      const ids = anchorIds();
+      drag([50, 20], [52, 24], ALT_CTRL);
+      expect(pathData()).toBe('M 30 0 L 50 20 L 52 24');
+      vi.advanceTimersByTime(2000);
+      drag([30, 0], [28, 2], ALT_CTRL);
+      expect(pathData()).toBe('M 28 2 L 30 0 L 50 20 L 52 24');
+      expect(anchorIds().slice(1, 3)).toEqual(ids);
+    });
+
+    it("doesn't snap the copy to the point it came from", () => {
+      const { drag, pathData } = setUp('diagonal');
+      // Snapping to (50, 20) would keep x at 50.
+      drag([50, 20], [50.5, 23.2], ALT);
+      expect(pathData()).toBe('M 30 0 L 50 20 L 50.5 23');
+    });
+
+    it('leaves nothing to undo when the copy is dropped back onto the point', () => {
+      const { tool, store, pathData, selected } = setUp();
+      const before = pathData();
+      const steps = store.getState().past.length;
+      tool.onPress({ x: 12, y: 2 }, ALT_CTRL);
+      tool.onMove({ x: 15, y: 4 }, ALT_CTRL);
+      expect(tool.getDrawing()?.anchors).toHaveLength(5);
+      tool.onMove({ x: 12.3, y: 2.3 }, ALT_CTRL);
+      tool.onRelease({ x: 12.3, y: 2.3 });
+      expect(pathData()).toBe(before);
+      expect(store.getState().past.length).toBe(steps);
+      expect(selected()).toEqual([1]);
+    });
+
+    it('selects the point with a click, without copying it', () => {
+      const { click, pathData, selected } = setUp();
+      const before = pathData();
+      click(12, 2, ALT);
+      expect(pathData()).toBe(before);
+      expect(selected()).toEqual([1]);
+    });
+  });
+
   describe('changing points', () => {
     it('makes a double-clicked point smooth, and straight again', () => {
       const { tool, path } = setUp();
@@ -353,15 +505,14 @@ describe('PathEditTool', () => {
       expect(PathEdit.getAnchors(path())[1].type).toBe('straight');
     });
 
-    it("drags a mirrored point's handle on its own once it's made disconnected", () => {
-      const { tool, click, drag, pathData, undo } = setUp('curve');
+    it("leaves the path alone when a mirrored point's made disconnected", () => {
+      const { tool, click, pathData, undo } = setUp('curve');
       const before = pathData();
       click(8, 16);
       tool.setPointType('disconnected');
       // Nothing about the path changed, so there's nothing to undo.
       expect(pathData()).toBe(before);
-      drag([11, 19], [11, 20], CTRL);
-      expect(pathData()).toBe('M 2 16 C 2 13 5 13 8 16 C 11 20 14 19 14 16');
+      tool.setPointType('straight');
       undo();
       expect(pathData()).toBe(before);
     });

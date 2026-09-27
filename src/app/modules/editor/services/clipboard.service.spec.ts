@@ -67,6 +67,42 @@ describe('ClipboardService', () => {
     });
   });
 
+  describe('pasting a VectorDrawable', () => {
+    const VECTOR_DRAWABLE = `<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="24dp" android:height="24dp"
+        android:viewportWidth="24" android:viewportHeight="24">
+      <path android:name="triangle" android:fillColor="#000000"
+          android:pathData="M 14 14 L 22 14 L 18 22 Z"/>
+    </vector>`;
+
+    it('offers to morph the path that was there into it', () => {
+      const { layerTimelineService, snackBarService, actionModeService } = services;
+      const square = new PathLayer({
+        name: 'square',
+        children: [],
+        pathData: new Path('M 2 2 L 10 2 L 10 10 L 2 10 Z'),
+        fillColor: '#000000',
+      });
+      layerTimelineService.addLayer(square);
+      paste(VECTOR_DRAWABLE);
+      expect(layerTimelineService.getVectorLayer().children.map(l => l.name)).toEqual([
+        'square',
+        'triangle',
+      ]);
+      const snackBar = snackBarService.getSnackBar();
+      expect(snackBar?.message).toBe("Morph 'square' into the imported shape?");
+      snackBarService.clickAction(snackBar!);
+      expect(layerTimelineService.getVectorLayer().children.map(l => l.name)).toEqual(['square']);
+      expect(actionModeService.isActionMode()).toBe(true);
+    });
+
+    it("doesn't offer it into an empty document", () => {
+      paste(VECTOR_DRAWABLE);
+      expect(services.layerTimelineService.getVectorLayer().children).toHaveLength(1);
+      expect(services.snackBarService.getSnackBar()).toBeUndefined();
+    });
+  });
+
   describe('pasting blocks', () => {
     function addLayer(name: string) {
       const layer = new PathLayer({ name, children: [], pathData: new Path('M 4 4 L 20 20') });
@@ -117,6 +153,35 @@ describe('ClipboardService', () => {
       const blocks = getBlocks();
       expect(blocks).toHaveLength(2);
       expect(blocks[1].layerId).toBe(blocks[0].layerId);
+    });
+
+    it('selects the pasted blocks', () => {
+      paste(copyStrokeWidthBlock('path'));
+      const blocks = getBlocks();
+      expect(blocks).toHaveLength(2);
+      expect(services.layerTimelineService.getSelectedBlocks()).toEqual([blocks[1]]);
+    });
+
+    it('keeps a custom interpolator', () => {
+      const layer = addLayer('path');
+      const curve = 'M 0 0 C 0.2 0 0 1.4 0.5 1.2 C 0.8 1 0.9 1 1 1';
+      services.layerTimelineService.addBlocks([
+        {
+          layerId: layer.id,
+          propertyName: 'strokeWidth',
+          fromValue: 1,
+          toValue: 2,
+          currentTime: 0,
+        },
+      ]);
+      const block = getBlocks()[0].clone();
+      block.interpolator = curve;
+      services.layerTimelineService.updateBlocks([block]);
+      services.layerTimelineService.selectBlock(block.id, true);
+      paste(copy());
+      const blocks = getBlocks();
+      expect(blocks).toHaveLength(2);
+      expect(blocks[1].interpolator).toBe(curve);
     });
 
     it("doesn't paste onto a layer that only has the same id in another tab", () => {

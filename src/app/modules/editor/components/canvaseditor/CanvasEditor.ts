@@ -2,7 +2,11 @@ import type { CanvasCamera } from 'app/modules/editor/components/canvas/CanvasCa
 import type { CanvasDocument } from 'app/modules/editor/components/canvas/CanvasPreview';
 import type {
   CanvasEditor,
+  CanvasEditorCommand,
+  CanvasEditorCommands,
   CanvasEditorContext,
+  CanvasEditorMenuState,
+  PointCommand,
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
 import type { CanvasPreview } from 'app/modules/editor/components/canvas/CanvasPreview';
 import { getRulerLayout } from 'app/modules/editor/components/canvas/CanvasRuler';
@@ -11,6 +15,11 @@ import {
   getPathKeyframe,
 } from 'app/modules/editor/components/canvas/pathKeyframes';
 import { getLayersBounds, hitTestLayer } from 'app/modules/editor/components/canvas/LayerGeometry';
+import {
+  duplicateLayers,
+  getTopmostLayerIds,
+  translateLayers,
+} from 'app/modules/editor/components/canvas/transformLayers';
 import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
@@ -18,9 +27,17 @@ import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
+import {
+  getBooleanLayerIds,
+  getOutlineLayerIds,
+} from 'app/modules/editor/scripts/common/pathOpLayers';
 import { on } from 'app/modules/editor/scripts/dom';
 import type { CanvasSettings } from 'app/modules/editor/services/canvassettings.service';
-import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
+import {
+  isSelectAllShortcut,
+  ShortcutService,
+  TEXT_FIELD_SELECTOR,
+} from 'app/modules/editor/services/shortcut.service';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
 import { getGuides } from 'app/modules/editor/store/guides/selectors';
@@ -40,13 +57,7 @@ import { EditorToolbar, ToolName } from './EditorToolbar';
 import { GuideTool } from './GuideTool';
 import { getKeyframeStatus, KeyframeBadge } from './KeyframeBadge';
 import { getMeasurements } from './measuring';
-import {
-  combinePaths,
-  getBooleanLayerIds,
-  getOutlineLayerIds,
-  loadPathKit,
-  outlineStrokes,
-} from './pathOps';
+import { combinePaths, loadPathKit, outlineStrokes } from './pathOps';
 import {
   AvailablePathOps,
   getPathOpShortcut,
@@ -56,11 +67,11 @@ import {
 } from './PathOpsBar';
 import { getLayerPath, PathEditTool } from './PathEditTool';
 import { PencilTool } from './PencilTool';
+import { applyPointCommand, getPointMenuState } from './pointCommands';
 import { PenTool } from './PenTool';
 import { ShapeTool } from './ShapeTool';
 import { Modifiers, SelectTool } from './SelectTool';
 import type { SnapThresholds } from './snapping';
-import { duplicateLayers, getTopmostLayerIds, translateLayers } from './transformLayers';
 
 // The property inspector shows it for paths when the editor is on (CanvasEditorApi.ts).
 export { PathInspector } from './PathInspector';
@@ -270,10 +281,15 @@ class Editor implements CanvasEditor {
     });
     this.toolbar.setHidden(this.isActionMode);
     this.toolbar.setSettings(this.settings);
-    const { playbackService } = this.context.services;
+    const { actionModeService, contextMenuService, playbackService } = this.context.services;
     this.keyframeBadge = new KeyframeBadge(this.context.root, {
       onAutoFix: blockIds => this.autoFix(blockIds),
+      onEditMorph: blockId => actionModeService.editMorph(blockId),
       onSeek: time => playbackService.setCurrentTime(time),
+      onContextMenu: (blockIds, point) => {
+        this.endNudge();
+        contextMenuService.open(point, 'keyframeBadge', blockIds);
+      },
     });
     this.pathOpsBar = new PathOpsBar(this.context.root, op => void this.runPathOp(op));
     this.removeTestHooks = environment.production ? undefined : addTestHooks(preview, this);
@@ -339,6 +355,15 @@ class Editor implements CanvasEditor {
     }
     this.hoverPoint = point;
     this.setAltHeld(event.altKey);
+    const { lastPress } = this;
+    if (
+      this.isPressing &&
+      lastPress &&
+      MathUtil.distance(lastPress.point, point) > this.toViewportLength(DOUBLE_CLICK_DISTANCE)
+    ) {
+      // A press that became a drag isn't a click, so the next press starts counting again.
+      this.lastPress = undefined;
+    }
     if (this.guideTool.isDragging()) {
       this.guideTool.onMove(point, getModifiers(event));
       return;
@@ -483,6 +508,7 @@ class Editor implements CanvasEditor {
     this.removeKeyListeners?.();
     this.nudge = undefined;
     this.pathEdit = undefined;
+    this.reportPointEdit();
     this.drawTool = undefined;
     this.toolbar?.dispose();
     this.keyframeBadge?.dispose();
@@ -649,7 +675,19 @@ class Editor implements CanvasEditor {
       // E.g. Escape, which the canvas took to cancel a drag.
       event.defaultPrevented ||
       this.isActionMode ||
-      target?.closest('.MuiModal-root') ||
+      target?.closest('.MuiModal-root')
+    ) {
+      return undefined;
+    }
+    if (isSelectAllShortcut(event, ShortcutService.isMac())) {
+      // Even with the focus on a toolbar button or a checkbox, since the shortcut service would
+      // select every layer instead, with the pen still drawing or the path edit stopped by the new
+      // selection. Text fields keep the browser's select all.
+      return document.activeElement?.matches(TEXT_FIELD_SELECTOR)
+        ? undefined
+        : this.selectAll(event);
+    }
+    if (
       // The toolbar's buttons handle their own keys.
       target?.closest('.canvas-editor-toolbar') ||
       document.activeElement?.matches('input, textarea, [contenteditable]')
@@ -737,8 +775,13 @@ class Editor implements CanvasEditor {
       this.nudgeBy(arrow[0] * distance, arrow[1] * distance);
       return false;
     }
-    // Duplicates in place, and selects the copies. It keeps the browser from bookmarking the page
-    // too.
+    // It keeps the browser from bookmarking the page too.
+    this.duplicateSelection();
+    return false;
+  }
+
+  /** Duplicates the selected layers in place, and selects the copies. */
+  private duplicateSelection() {
     this.endNudge();
     const { preview } = this.context;
     preview.begin();
@@ -755,6 +798,155 @@ class Editor implements CanvasEditor {
       });
     }
     preview.commit();
+  }
+
+  getLayerAt(point: Point) {
+    if (this.isActionMode || this.getMenuState().busyReason) {
+      return undefined;
+    }
+    return hitTestLayer(this.vectorLayer, point, {
+      hiddenLayerIds: this.hiddenLayerIds,
+      tolerance: this.toViewportLength(LAYER_HIT_TOLERANCE),
+    })?.id;
+  }
+
+  getMenuState(): CanvasEditorMenuState {
+    const { drawTool } = this;
+    // E.g. the pen drawing a path, which a new selection or edit would throw away. The right-click
+    // has already canceled drags.
+    const isBusy = this.isPressing || (this.context.preview.isEditing() && !this.nudge);
+    const busyReason = !isBusy
+      ? undefined
+      : drawTool instanceof PenTool
+        ? "Finish the path you're drawing first"
+        : 'Finish editing first';
+    const { pathEdit } = this;
+    const path = pathEdit?.getDrawnPath();
+    return {
+      busyReason,
+      editingLayerId: pathEdit?.layerId,
+      points:
+        pathEdit && path && !busyReason
+          ? getPointMenuState(path, pathEdit.getSelectedAnchorIds())
+          : undefined,
+    };
+  }
+
+  startPointEdit(layerId: string) {
+    if (this.isDisposed || this.getMenuState().busyReason) {
+      return false;
+    }
+    if (this.pathEdit?.layerId === layerId) {
+      return true;
+    }
+    if (this.drawTool) {
+      // As if V was pressed first, which also finishes the pen's path.
+      this.setTool('select');
+    }
+    return this.startPathEdit(layerId);
+  }
+
+  stopPointEdit() {
+    this.endNudge();
+    this.stopPathEdit();
+  }
+
+  setSelectedAnchorIds(layerId: string, anchorIds: ReadonlySet<string>) {
+    if (this.pathEdit?.layerId === layerId && !this.isPressing) {
+      this.pathEdit.setSelectedAnchorIds(anchorIds);
+    }
+  }
+
+  editPoints(layerId: string, edit: Parameters<CanvasEditorCommands['editPoints']>[1]) {
+    const { pathEdit } = this;
+    if (pathEdit?.layerId !== layerId || this.getMenuState().busyReason) {
+      return;
+    }
+    this.endNudge();
+    pathEdit.edit(edit);
+  }
+
+  runPointCommand(command: PointCommand) {
+    const { pathEdit } = this;
+    if (!pathEdit || this.getMenuState().busyReason) {
+      return;
+    }
+    this.endNudge();
+    if (command.type === 'delete') {
+      this.deleteSelectedPoints(pathEdit);
+      return;
+    }
+    pathEdit.edit(
+      base => applyPointCommand(base, pathEdit.getSelectedAnchorIds(), command) ?? { path: base },
+    );
+  }
+
+  selectPointAt(point: Point) {
+    if (this.pathEdit && !this.getMenuState().busyReason) {
+      this.pathEdit.selectAnchorAt(point);
+    }
+  }
+
+  /** Deletes the selected points, or the layer if that would leave nothing, like Figma. */
+  private deleteSelectedPoints(pathEdit: PathEditTool) {
+    if (pathEdit.deleteSelected() === 'empty') {
+      this.stopPathEdit();
+      this.context.services.layerTimelineService.deleteSelectedModels();
+    }
+  }
+
+  /**
+   * Tells the property inspector which path's points are edited, and which are selected
+   * (services/canvaseditorbridge.service.ts). It's called on every draw, which follows every
+   * change to either, and the bridge ignores reports that change nothing.
+   */
+  private reportPointEdit() {
+    const { pathEdit } = this;
+    const path = pathEdit?.getDrawnPath();
+    this.context.services.canvasEditorBridgeService.reportPointEdit(
+      this,
+      pathEdit && path && !this.isActionMode
+        ? { layerId: pathEdit.layerId, path, selectedAnchorIds: pathEdit.getSelectedAnchorIds() }
+        : undefined,
+    );
+  }
+
+  runCommand(command: CanvasEditorCommand) {
+    if (this.isDisposed || this.isActionMode || this.getMenuState().busyReason) {
+      return;
+    }
+    this.endNudge();
+    // As if Enter or V was pressed first.
+    this.stopPathEdit();
+    if (this.drawTool) {
+      this.setTool('select');
+    }
+    if (command === 'duplicate') {
+      this.duplicateSelection();
+    } else {
+      void this.runPathOp(command);
+    }
+  }
+
+  /**
+   * Selects every point of the path being edited, or else every visible layer, like Figma, rather
+   * than the page's text. Not in the middle of a gesture, which the new selection would cancel, or
+   * on key repeat.
+   */
+  private selectAll(event: KeyboardEvent) {
+    if (event.repeat || this.isPressing || (this.context.preview.isEditing() && !this.nudge)) {
+      return false;
+    }
+    this.endNudge();
+    if (this.pathEdit) {
+      this.pathEdit.selectAll();
+      return false;
+    }
+    if (this.drawTool) {
+      // As if V was pressed first, which also finishes the pen's path.
+      this.setTool('select');
+    }
+    this.context.services.layerTimelineService.selectAllLayers();
     return false;
   }
 
@@ -792,7 +984,7 @@ class Editor implements CanvasEditor {
       key === 'Delete' ||
       (key === 'Tab' && !isCommand && !event.altKey && !isControlFocused()) ||
       (!!arrow && !event.altKey && !isCommand && !event.ctrlKey) ||
-      (isCommand && ['a', 'd', 'j'].includes(key.toLowerCase()));
+      (isCommand && ['d', 'j'].includes(key.toLowerCase()));
     if (!isHandled) {
       return undefined;
     }
@@ -818,17 +1010,11 @@ class Editor implements CanvasEditor {
     if (key === 'Escape' || key === 'Enter') {
       this.stopPathEdit();
     } else if (key === 'Backspace' || key === 'Delete') {
-      if (pathEdit.deleteSelected() === 'empty') {
-        // Deleting the points that would leave nothing deletes the layer, like Figma.
-        this.stopPathEdit();
-        this.context.services.layerTimelineService.deleteSelectedModels();
-      }
+      this.deleteSelectedPoints(pathEdit);
     } else if (key === 'Tab') {
       pathEdit.selectAdjacent(event.shiftKey ? -1 : 1);
     } else if (pointType) {
       pathEdit.setPointType(pointType);
-    } else if (key.toLowerCase() === 'a') {
-      pathEdit.selectAll();
     } else if (key.toLowerCase() === 'j') {
       // Rather than opening the browser's downloads.
       pathEdit.joinSelected();
@@ -897,6 +1083,7 @@ class Editor implements CanvasEditor {
   }
 
   private draw() {
+    this.reportPointEdit();
     const { camera } = this;
     if (!camera) {
       return;

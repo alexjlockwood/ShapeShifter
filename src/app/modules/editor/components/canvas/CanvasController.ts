@@ -1,3 +1,4 @@
+import { getContextMenuSelection } from 'app/modules/editor/components/contextmenu/contextMenuSelection';
 import { ActionSource } from 'app/modules/editor/model/actionmode';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { getCanvasPixelRatio, on, watchDevicePixelRatio } from 'app/modules/editor/scripts/dom';
@@ -7,10 +8,16 @@ import type {
   CanvasViewportService,
 } from 'app/modules/editor/services/canvasviewport.service';
 import type { EditorServices } from 'app/modules/editor/services/createEditorServices';
+import { TEXT_FIELD_SELECTOR } from 'app/modules/editor/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/modules/editor/services/snackbar.service';
 import { State, Store } from 'app/modules/editor/store';
 import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
-import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
+import {
+  getHiddenLayerIds,
+  getSelectedLayerIds,
+  getVectorLayer,
+} from 'app/modules/editor/store/layers/selectors';
+import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
 import type { Features } from 'environments/features';
 import { isEqual, round } from 'lodash-es';
 import { combineLatest } from 'rxjs';
@@ -24,7 +31,15 @@ import { CanvasNavigation } from './CanvasNavigation';
 import { CanvasOverlay } from './CanvasOverlay';
 import { CanvasPreview } from './CanvasPreview';
 import { CanvasRuler, getRulerCorner } from './CanvasRuler';
+import { hitTestLayer } from './LayerGeometry';
 import { loadCanvasEditor } from './loadCanvasEditor';
+
+// How close to a layer's outline a right-click hits it, in CSS pixels, as in the select tool.
+const LAYER_HIT_TOLERANCE = 6;
+// The canvas editor's toolbars, which a right-click on doesn't open the layers' context menu for.
+// The keyframe badge opens one for its blocks instead (KeyframeBadge.ts).
+const EDITOR_CONTROLS_SELECTOR =
+  '.canvas-editor-toolbar, .canvas-editor-pathops, .canvas-editor-keyframe';
 
 export interface CanvasElements {
   /** The panel, which the canvases cover. */
@@ -64,6 +79,7 @@ export class CanvasController extends DestroyableMixin() {
   // Who gets the pointer events of the gesture in progress.
   private gestureTarget: 'editor' | 'overlay' | undefined;
   private removeClickListener: (() => void) | undefined;
+  private removeContextMenuListener: (() => void) | undefined;
 
   constructor(
     private readonly elements: CanvasElements,
@@ -168,7 +184,7 @@ export class CanvasController extends DestroyableMixin() {
     return this.canvasEditor && !this.isActionMode ? 'editor' : 'overlay';
   }
 
-  private toViewport(event: PointerEvent) {
+  private toViewport(event: MouseEvent) {
     const { left, top } = this.elements.root.getBoundingClientRect();
     const point = { x: event.clientX - left, y: event.clientY - top };
     return this.camera ? this.camera.panelToViewport(point) : point;
@@ -200,6 +216,11 @@ export class CanvasController extends DestroyableMixin() {
         }),
       );
     }
+    if (this.actionSource === ActionSource.Animated) {
+      this.removeContextMenuListener = on(this.elements.root, 'contextmenu', event =>
+        this.onContextMenu(event),
+      );
+    }
     if (this.canvasPreview) {
       // Touch drags anywhere on the panel are the editor's, e.g. a marquee off of the artboard.
       this.elements.root.classList.add('has-canvas-editor');
@@ -221,11 +242,6 @@ export class CanvasController extends DestroyableMixin() {
         )
         .subscribe(viewport => {
           this.viewport = viewport;
-          // Root's styles size the canvases in action mode by it.
-          const aspectRatio = viewport.w / viewport.h;
-          if (Number.isFinite(aspectRatio) && aspectRatio > 0) {
-            this.elements.root.style.setProperty('--viewport-aspect-ratio', `${aspectRatio}`);
-          }
           this.layout();
         }),
     );
@@ -275,12 +291,16 @@ export class CanvasController extends DestroyableMixin() {
     this.isDisposed = true;
     this.canvasInput.dispose();
     this.removeClickListener?.();
+    this.removeContextMenuListener?.();
     this.canvasNavigation?.dispose();
     this.resizeObserver?.disconnect();
     this.stopWatchingPixelRatio?.();
     // Canceling an edit in progress tells the editor's gesture, so the editor goes after.
     this.canvasPreview?.dispose();
-    this.canvasEditor?.dispose();
+    if (this.canvasEditor) {
+      this.services.canvasEditorBridgeService.detach(this.canvasEditor);
+      this.canvasEditor.dispose();
+    }
     this.setEditorState(undefined);
     this.canvasLayers.dispose();
     this.canvasOverlay.dispose();
@@ -324,6 +344,7 @@ export class CanvasController extends DestroyableMixin() {
       return;
     }
     this.canvasEditor = editor;
+    this.services.canvasEditorBridgeService.attach(editor);
     this.canvasOverlay.setShowsLayerSelections(false);
     this.setEditorState('ready');
   }
@@ -340,6 +361,46 @@ export class CanvasController extends DestroyableMixin() {
       Duration.Long,
     );
     this.setEditorState('failed');
+  }
+
+  /**
+   * Opens the context menu instead of the browser's, for the layer under the pointer, which it
+   * selects first if it isn't selected already. With the editor loaded, it finds the layer the way
+   * the select tool does, and while a path's points are edited, it selects the point under the
+   * pointer the same way. In action mode, the browser's menu still opens, and so it does over text
+   * fields. On a Mac, a click with Ctrl held arrives as a context menu too.
+   */
+  private onContextMenu(event: MouseEvent) {
+    const target = event.target instanceof Element ? event.target : undefined;
+    if (this.isActionMode || target?.closest(TEXT_FIELD_SELECTOR)) {
+      return;
+    }
+    event.preventDefault();
+    if (target?.closest(EDITOR_CONTROLS_SELECTOR)) {
+      // The editor's toolbars aren't part of the canvas.
+      return;
+    }
+    const { store, services } = this;
+    const { layerTimelineService, contextMenuService } = services;
+    const point = this.toViewport(event);
+    // While points are edited, the menu acts on the point under the pointer.
+    this.canvasEditor?.selectPointAt(point);
+    const state = store.getState();
+    const hitLayerId = this.canvasEditor
+      ? this.canvasEditor.getLayerAt(point)
+      : hitTestLayer(getAnimatedVectorLayer(state).vl, point, {
+          hiddenLayerIds: getHiddenLayerIds(state),
+          tolerance: this.camera?.toViewportLength(LAYER_HIT_TOLERANCE) ?? LAYER_HIT_TOLERANCE,
+        })?.id;
+    const selection = getContextMenuSelection(
+      getVectorLayer(state),
+      hitLayerId,
+      getSelectedLayerIds(state),
+    );
+    if (selection) {
+      layerTimelineService.setSelectedLayers(new Set(selection));
+    }
+    contextMenuService.open({ x: event.clientX, y: event.clientY }, 'canvas');
   }
 
   /**

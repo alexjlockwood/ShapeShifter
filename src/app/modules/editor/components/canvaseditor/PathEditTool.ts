@@ -99,6 +99,8 @@ type State =
       readonly targets: SnapTargets;
       // The segments that stay put, which the point snaps onto, in viewport coordinates.
       readonly curves: ReadonlyArray<ReadonlyArray<Point>>;
+      // For a copy of a point that's dragged out of it with Alt held.
+      readonly copy: PointCopy | undefined;
     }
   | {
       readonly type: 'handle';
@@ -106,7 +108,6 @@ type State =
       readonly base: Path;
       readonly anchorId: string;
       readonly side: HandleSide;
-      readonly pointType: PointType;
       // The anchor and the handle, in viewport coordinates.
       readonly anchor: Point;
       readonly handle: Point;
@@ -128,6 +129,13 @@ type State =
       readonly initialSelection: ReadonlySet<string>;
     };
 
+/** A point that Alt-drag copied, which is moved while the point it's a copy of stays. */
+interface PointCopy {
+  readonly originalId: string;
+  // The selection before the drag, to go back to if the copy is dropped back onto the original.
+  readonly selection: ReadonlySet<string>;
+}
+
 // How far a press has to move to become a drag, and how close to a point or a segment hits it, in
 // CSS pixels.
 const DRAG_SLOP = 4;
@@ -148,9 +156,12 @@ const HANDLE_ANGLE_SNAP = 45;
  * - Dragging a point moves the selected points, with their handles. Shift keeps the move
  *   horizontal or vertical. Points snap to the other points, the artboard, the other paths'
  *   bounds, and the pixel grid, or else onto the closest curve, unless Ctrl is held.
+ * - Dragging a point with Alt held moves a copy of just that point, joined to it by a new segment
+ *   (see PathEdit.duplicateAnchor). Dropping the copy back onto the point undoes it.
  * - The selected points' handles, and the handles across the segments next to them, can be
- *   dragged. The handle across from the dragged one follows it, as the point's type says, unless
- *   Alt is held. Shift turns the handle in steps of 45 degrees.
+ *   dragged. A handle moves on its own, and with Cmd held (Ctrl on Windows and Linux), the one
+ *   across from it mirrors it. Shift turns the handle in steps of 45 degrees. Handles snap like
+ *   points, unless Ctrl is held without Cmd, which only happens on a Mac.
  * - Clicking a segment adds a point there, or in its middle with Shift held, and dragging it moves
  *   the new point. Dragging a segment with Cmd held bends it instead.
  * - Double-clicking a point makes it smooth, or straight if it was smooth.
@@ -158,9 +169,6 @@ const HANDLE_ANGLE_SNAP = 45;
 export class PathEditTool {
   private state: State = { type: 'idle' };
   private selectedAnchorIds: ReadonlySet<string> = new Set();
-  // The types picked for points, which their handles can't always tell apart, e.g. disconnected
-  // handles that happen to mirror each other (see getPointType).
-  private readonly pointTypes = new Map<string, PointType>();
   private hovered: Hit | undefined;
   private modifiers: Modifiers | undefined;
   // Where the pointer last moved, to redo the gesture when a modifier key changes.
@@ -242,7 +250,6 @@ export class PathEditTool {
     const selection = this.getSelectedAnchorIds();
     if (selection.size) {
       this.commitEdit(base => PathEdit.setPointType(base, selection, type));
-      selection.forEach(anchorId => this.pointTypes.set(anchorId, type));
     }
   }
 
@@ -260,9 +267,39 @@ export class PathEditTool {
       return 'empty';
     }
     this.commitEdit(base => PathEdit.deleteAnchors(base, selection) ?? base);
-    this.selectedAnchorIds = new Set();
-    this.context.redraw();
+    this.setSelectedAnchorIds(new Set());
     return 'deleted';
+  }
+
+  /**
+   * Changes the path, as one undo step, from the path as it's saved, and selects the points the
+   * edit picks, e.g. for the property inspector.
+   */
+  edit(
+    edit: (base: Path) => { readonly path: Path; readonly selectedAnchorIds?: ReadonlySet<string> },
+  ) {
+    let selection: ReadonlySet<string> | undefined;
+    this.commitEdit(base => {
+      const result = edit(base);
+      selection = result.selectedAnchorIds;
+      return result.path;
+    });
+    if (selection) {
+      this.setSelectedAnchorIds(selection);
+    }
+  }
+
+  /** Selects just the point at the point, if there's one there that isn't selected already. */
+  selectAnchorAt(point: Point) {
+    const hit = this.hitTest(point);
+    if (hit?.type === 'anchor' && !this.selectedAnchorIds.has(hit.anchorId)) {
+      this.setSelectedAnchorIds(new Set([hit.anchorId]));
+    }
+  }
+
+  /** The path as it's drawn, which is what the edits change. */
+  getDrawnPath() {
+    return this.getPath();
   }
 
   /**
@@ -432,7 +469,8 @@ export class PathEditTool {
             HANDLE_ANGLE_SNAP,
           );
           target = { x: state.anchor.x + delta.x, y: state.anchor.y + delta.y };
-        } else if (!modifiers.ctrl) {
+        } else if (!modifiers.ctrl || modifiers.command) {
+          // Off of a Mac, Ctrl is the key that mirrors, so it can't turn snapping off too.
           const snap = snapPoint(target, state.targets, this.getSnapThresholds());
           target = { x: target.x + snap.dx, y: target.y + snap.dy };
           this.guides = snap.guides;
@@ -444,7 +482,7 @@ export class PathEditTool {
             state.anchorId,
             state.side,
             transform(target, state.toLocal),
-            modifiers.alt ? 'disconnected' : state.pointType,
+            modifiers.command,
           ),
         );
         return;
@@ -485,6 +523,10 @@ export class PathEditTool {
       } else if (!hit && !modifiers.shift) {
         this.setSelectedAnchorIds(new Set());
       }
+    } else if (state.type === 'moving' && state.copy && this.isOnOriginal(state)) {
+      // Nothing to copy, so the gesture leaves no undo step.
+      this.context.preview.cancel();
+      this.setSelectedAnchorIds(state.copy.selection);
     } else if (state.type === 'moving' || state.type === 'handle' || state.type === 'bending') {
       this.context.preview.commit();
     }
@@ -571,12 +613,15 @@ export class PathEditTool {
         base,
         anchorId: anchor.id,
         side: hit.side,
-        pointType: this.getPointType(anchor),
         anchor: transform(anchor.point, toViewport),
         handle: transform(handle, toViewport),
         toLocal,
         targets: this.getSnapTargets(base, new Set()),
       };
+      return;
+    }
+    if (modifiers.alt) {
+      this.startCopy(start, base, anchor.id, transform(anchor.point, toViewport));
       return;
     }
     if (!this.selectedAnchorIds.has(anchor.id)) {
@@ -586,7 +631,15 @@ export class PathEditTool {
     this.startMove(start, base, this.getSelectedAnchorIds(), transform(anchor.point, toViewport));
   }
 
-  private startMove(start: Point, base: Path, anchorIds: ReadonlySet<string>, origin: Point) {
+  private startMove(
+    start: Point,
+    base: Path,
+    anchorIds: ReadonlySet<string>,
+    origin: Point,
+    copy?: PointCopy,
+  ) {
+    // A copy doesn't snap to the point it came from, which it starts on top of.
+    const excludedIds = copy ? new Set([...anchorIds, copy.originalId]) : anchorIds;
     this.state = {
       type: 'moving',
       start,
@@ -594,9 +647,33 @@ export class PathEditTool {
       anchorIds,
       origin,
       toLocal: this.getToLocal(),
-      targets: this.getSnapTargets(base, anchorIds),
+      targets: this.getSnapTargets(base, excludedIds),
       curves: this.getSnapCurves(base, anchorIds),
+      copy,
     };
+  }
+
+  /**
+   * Adds a copy of the point, joined to it, selects just the copy, and moves it. Only the pressed
+   * point is copied, whatever else is selected.
+   */
+  private startCopy(start: Point, base: Path, anchorId: string, origin: Point) {
+    const copy = { originalId: anchorId, selection: this.selectedAnchorIds };
+    const { path, anchorId: copyId } = PathEdit.duplicateAnchor(base, anchorId);
+    this.context.preview.setPath(this.layerId, path);
+    this.setSelectedAnchorIds(new Set([copyId]));
+    this.startMove(start, path, new Set([copyId]), origin, copy);
+  }
+
+  /** Whether the copy that's moving is back on top of the point it came from. */
+  private isOnOriginal(state: Extract<State, { type: 'moving' }>) {
+    const path = this.getPath();
+    const anchor = path && PathEdit.getAnchors(path).find(a => state.anchorIds.has(a.id));
+    return (
+      !!anchor &&
+      MathUtil.distance(transform(anchor.point, this.getToViewport()), state.origin) <=
+        this.context.toViewportLength(POINT_HIT_RADIUS)
+    );
   }
 
   /**
@@ -653,22 +730,7 @@ export class PathEditTool {
     }
     const type = anchor.type === 'straight' ? 'mirrored' : 'straight';
     this.commitEdit(base => PathEdit.setPointType(base, new Set([anchorId]), type));
-    this.pointTypes.set(anchorId, type);
     this.setSelectedAnchorIds(new Set([anchorId]));
-  }
-
-  /**
-   * Returns the point's type: the one picked for it, as long as its handles still fit it, or else
-   * the one its handles have. Mirrored handles fit any type but straight, and lined up ones fit
-   * asymmetric and disconnected.
-   */
-  private getPointType(anchor: Anchor): PointType {
-    const picked = this.pointTypes.get(anchor.id);
-    const fits =
-      picked === anchor.type ||
-      picked === 'disconnected' ||
-      (picked === 'asymmetric' && anchor.type === 'mirrored');
-    return picked && fits ? picked : anchor.type;
   }
 
   /** Starts an edit, and returns the path it starts from. */
@@ -799,10 +861,10 @@ export class PathEditTool {
   }
 
   /**
-   * What points snap to: the artboard, the other paths' bounds, and the points of this path that
-   * aren't moving.
+   * What points snap to: the artboard, the other paths' bounds, and the points of this path, except
+   * for the excluded ones (the points that move, and the point a copy came from).
    */
-  private getSnapTargets(base: Path, movingAnchorIds: ReadonlySet<string>): SnapTargets {
+  private getSnapTargets(base: Path, excludedAnchorIds: ReadonlySet<string>): SnapTargets {
     const vl = this.context.getVectorLayer();
     const targets = getSnapTargets(
       vl,
@@ -814,7 +876,7 @@ export class PathEditTool {
     const x: SnapLine[] = [...targets.x];
     const y: SnapLine[] = [...targets.y];
     for (const anchor of PathEdit.getAnchors(base)) {
-      if (!movingAnchorIds.has(anchor.id)) {
+      if (!excludedAnchorIds.has(anchor.id)) {
         const p = transform(anchor.point, toViewport);
         x.push({ value: p.x, from: p.y, to: p.y });
         y.push({ value: p.y, from: p.x, to: p.x });
@@ -839,7 +901,7 @@ export class PathEditTool {
       }
     }
     if (!isEqual(selection, this.selectedAnchorIds)) {
-      this.selectedAnchorIds = selection;
+      this.setSelectedAnchorIds(selection);
     }
   }
 }

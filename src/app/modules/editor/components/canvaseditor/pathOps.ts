@@ -7,8 +7,6 @@ import { uniqueId } from 'lodash-es';
 import type { PathKit, SkPath } from 'pathkit-wasm/bin/pathkit.js';
 import wasmUrl from 'pathkit-wasm/bin/pathkit.wasm?url';
 
-import { getTopmostLayerIds } from './transformLayers';
-
 // Boolean operations and outlining strokes use Skia's PathOps, through PathKit, which is loaded the
 // first time one of them is used (docs/canvas-editor.md, phase 6).
 
@@ -25,36 +23,6 @@ export function loadPathKit() {
       throw error;
     });
   return pathKit;
-}
-
-/**
- * Returns the layers a boolean operation combines, bottom first, or undefined if it can't: it
- * takes two or more paths (not clip paths) whose paths aren't animated, since the result replaces
- * them with one path.
- */
-export function getBooleanLayerIds(document: CanvasDocument, selectedLayerIds: Iterable<string>) {
-  const layerIds = getTopmostLayerIds(document.vectorLayer, selectedLayerIds);
-  const isCombinable = (id: string) => {
-    const layer = document.vectorLayer.findLayerById(id);
-    return layer instanceof PathLayer && !!layer.pathData && !isPathAnimated(document, id);
-  };
-  return layerIds.length > 1 && layerIds.every(isCombinable) ? layerIds : undefined;
-}
-
-/** Returns the stroked paths that outlining their strokes changes, if there are any. */
-export function getOutlineLayerIds(document: CanvasDocument, selectedLayerIds: Iterable<string>) {
-  const layerIds = getTopmostLayerIds(document.vectorLayer, selectedLayerIds).filter(id => {
-    const layer = document.vectorLayer.findLayerById(id);
-    return (
-      layer instanceof PathLayer &&
-      !!layer.pathData &&
-      !!layer.strokeColor &&
-      layer.strokeWidth > 0 &&
-      // Its stroke's width and trim, as well as its path, would stop animating.
-      !document.animation.blocks.some(block => block.layerId === id)
-    );
-  });
-  return layerIds.length ? layerIds : undefined;
 }
 
 /**
@@ -275,10 +243,4 @@ function toLocalPathData(skPath: SkPath, vl: VectorLayer, layerId: string) {
 
 function applyMatrix(skPath: SkPath, { a, b, c, d, e, f }: Matrix) {
   skPath.transform(a, c, e, b, d, f, 0, 0, 1);
-}
-
-function isPathAnimated(document: CanvasDocument, layerId: string) {
-  return document.animation.blocks.some(
-    block => block.layerId === layerId && block.propertyName === 'pathData',
-  );
 }
