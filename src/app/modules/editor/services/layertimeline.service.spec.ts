@@ -9,6 +9,7 @@ import { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { createEditorStore, type State, type Store } from 'app/modules/editor/store';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
+import { ActionCreators } from 'redux-undo';
 
 import { createEditorServices, type EditorServices } from './createEditorServices';
 
@@ -71,6 +72,84 @@ describe('LayerTimelineService', () => {
   function getBlocks() {
     return services.layerTimelineService.getAnimation().blocks;
   }
+
+  describe('importLayers', () => {
+    function newFile(...children: Layer[]) {
+      return new VectorLayer({ name: 'file', children, width: 12, height: 12 });
+    }
+
+    it('returns the ids of the layers each file added', () => {
+      load([newPath('existing')]);
+      const a = newPath('a');
+      const b = newPath('b');
+      const c = newGroup('c', [newPath('d')]);
+      const ids = services.layerTimelineService.importLayers([newFile(a, b), newFile(c)]);
+
+      expect(ids).toEqual([[a.id, b.id], [c.id]]);
+      expect(getTree()).toEqual({ vector: ['existing', 'a', 'b', { c: ['d'] }] });
+    });
+
+    it('returns the ids when the first file replaces an empty document', () => {
+      load([]);
+      const a = newPath('a');
+      const b = newPath('b');
+      const ids = services.layerTimelineService.importLayers([newFile(a), newFile(b)]);
+
+      expect(ids).toEqual([[a.id], [b.id]]);
+      expect(getTree()).toEqual({ vector: ['a', 'b'] });
+    });
+
+    it('returns nothing without any files', () => {
+      expect(services.layerTimelineService.importLayers([])).toEqual([]);
+    });
+  });
+
+  describe('addLayer', () => {
+    it('adds a layer next to the selected one, in the parent getParentIdForNewLayer returns', () => {
+      load([newPath('a'), newGroup('g', [newPath('b')])]);
+      const lts = services.layerTimelineService;
+      expect(lts.getParentIdForNewLayer()).toBe(lts.getVectorLayer().id);
+
+      lts.setSelectedLayers(new Set([getLayer('b').id]));
+      expect(lts.getParentIdForNewLayer()).toBe(getLayer('g').id);
+      lts.addLayer(newPath('c'));
+      expect(getTree()).toEqual({ vector: ['a', { g: ['b', 'c'] }] });
+
+      lts.setSelectedLayers(new Set([getLayer('g').id]));
+      lts.addLayer(newPath('d'));
+      expect(getTree()).toEqual({ vector: ['a', { g: ['b', 'c'] }, 'd'] });
+    });
+  });
+
+  describe('addBlocks', () => {
+    function addStrokeWidthBlock(layerId: string, autoSelectBlocks?: boolean) {
+      services.layerTimelineService.addBlocks(
+        [{ layerId, propertyName: 'strokeWidth', fromValue: 1, toValue: 2, currentTime: 0 }],
+        autoSelectBlocks,
+      );
+    }
+
+    it('selects the added blocks', () => {
+      const path = newPath('path', undefined, 1);
+      load([path]);
+      services.layerTimelineService.setSelectedLayers(new Set([path.id]));
+      addStrokeWidthBlock(path.id);
+
+      expect(services.layerTimelineService.getSelectedBlocks()).toEqual(getBlocks());
+      expect(services.layerTimelineService.getSelectedLayerIds()).toEqual(new Set());
+    });
+
+    it('keeps the selection without autoSelectBlocks', () => {
+      const path = newPath('path', undefined, 1);
+      load([path]);
+      services.layerTimelineService.setSelectedLayers(new Set([path.id]));
+      addStrokeWidthBlock(path.id, false);
+
+      expect(getBlocks()).toHaveLength(1);
+      expect(services.layerTimelineService.getSelectedBlocks()).toEqual([]);
+      expect(services.layerTimelineService.getSelectedLayerIds()).toEqual(new Set([path.id]));
+    });
+  });
 
   describe('flattenGroupLayer', () => {
     it('keeps the stroke width of paths in groups that are only rotated', () => {
@@ -164,6 +243,20 @@ describe('LayerTimelineService', () => {
       expect(getSelectedNames()).toEqual(['group']);
     });
 
+    it("pivots new groups at the canvas's center, in their parent's coordinates", () => {
+      load([newPath('a'), newGroup('g', [newPath('b')], { translateX: 2, translateY: -3 })]);
+      select('a');
+      services.layerTimelineService.groupOrUngroupSelectedLayers(true);
+      const group = getLayer<GroupLayer>('group');
+      expect([group.pivotX, group.pivotY]).toEqual([12, 12]);
+
+      select('b');
+      services.layerTimelineService.groupOrUngroupSelectedLayers(true);
+      const nested = getLayer<GroupLayer>('group_1');
+      expect(getTree()).toEqual({ vector: [{ group: ['a'] }, { g: [{ group_1: ['b'] }] }] });
+      expect([nested.pivotX, nested.pivotY]).toEqual([10, 15]);
+    });
+
     it('moves layers out of their other parents when grouping them', () => {
       load([newPath('a'), newGroup('g', [newPath('b'), newPath('c')])]);
       select('a', 'b');
@@ -252,6 +345,101 @@ describe('LayerTimelineService', () => {
       services.layerTimelineService.swapLayers('clip', convertedPath);
       expect(getLayer('path')).toBeInstanceOf(PathLayer);
       expect(getBlocks().map(b => [b.layerId, b.propertyName])).toEqual([['path', 'pathData']]);
+    });
+  });
+
+  describe('previews', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function previewFillColor(color: string) {
+      const path = getLayer<PathLayer>('path').clone();
+      path.fillColor = color;
+      services.layerTimelineService.previewLayer(path);
+    }
+
+    function newColorBlock(layerId: string) {
+      return AnimationBlock.from({
+        type: 'color',
+        layerId,
+        propertyName: 'fillColor',
+        fromValue: '#000000',
+        toValue: '#ff0000',
+      });
+    }
+
+    it('saves previews that took more than a second as one undo step', () => {
+      load([newPath('path')]);
+      vi.advanceTimersByTime(2000);
+      const numPastStates = store.getState().past.length;
+      for (let i = 0; i < 30; i++) {
+        vi.advanceTimersByTime(100);
+        previewFillColor(`#0000${(i + 10).toString(16).padStart(2, '0')}`);
+      }
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#000027');
+      expect(store.getState().past.length).toBe(numPastStates);
+
+      services.layerTimelineService.commitPreview();
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#000027');
+      expect(store.getState().past.length).toBe(numPastStates + 1);
+
+      store.dispatch(ActionCreators.undo());
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#000000');
+      store.dispatch(ActionCreators.redo());
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#000027');
+    });
+
+    it("doesn't merge a quick preview into the edit right before it", () => {
+      load([newPath('path'), newPath('other')]);
+      vi.advanceTimersByTime(2000);
+      services.layerTimelineService.setSelectedLayers(new Set([getLayer('other').id]));
+      vi.advanceTimersByTime(100);
+      previewFillColor('#ff0000');
+      services.layerTimelineService.commitPreview();
+
+      store.dispatch(ActionCreators.undo());
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#000000');
+      expect(services.layerTimelineService.getSelectedLayers().map(l => l.name)).toEqual(['other']);
+    });
+
+    it('previews blocks', () => {
+      const path = newPath('path');
+      load([path], [newColorBlock(path.id)]);
+      vi.advanceTimersByTime(2000);
+      const block = getBlocks()[0].clone();
+      block.toValue = '#00ff00';
+      services.layerTimelineService.previewBlocks([block]);
+      vi.advanceTimersByTime(1500);
+      services.layerTimelineService.commitPreview();
+      expect(getBlocks()[0].toValue).toBe('#00ff00');
+
+      store.dispatch(ActionCreators.undo());
+      expect(getBlocks()[0].toValue).toBe('#ff0000');
+    });
+
+    it('goes back to the values from before the previews when canceled', () => {
+      load([newPath('path')]);
+      const vl = services.layerTimelineService.getVectorLayer();
+      vi.advanceTimersByTime(2000);
+      const numPastStates = store.getState().past.length;
+      previewFillColor('#ff0000');
+      previewFillColor('#00ff00');
+      services.layerTimelineService.cancelPreview();
+      expect(services.layerTimelineService.getVectorLayer()).toBe(vl);
+      expect(store.getState().past.length).toBe(numPastStates);
+    });
+
+    it("doesn't save an undo step without a preview", () => {
+      load([newPath('path')]);
+      vi.advanceTimersByTime(2000);
+      const numPastStates = store.getState().past.length;
+      services.layerTimelineService.commitPreview();
+      expect(store.getState().past.length).toBe(numPastStates);
     });
   });
 });

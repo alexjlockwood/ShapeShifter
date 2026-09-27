@@ -2,6 +2,7 @@ import { Action } from 'app/modules/editor/store';
 
 export enum UndoRedoActionTypes {
   IsolateUndoStep = '__undoredo__ISOLATE_UNDO_STEP',
+  SkipUndoStep = '__undoredo__SKIP_UNDO_STEP',
 }
 
 /**
@@ -12,4 +13,13 @@ export class IsolateUndoStep implements Action {
   readonly type = UndoRedoActionTypes.IsolateUndoStep;
 }
 
-export type UndoRedoActions = IsolateUndoStep;
+/**
+ * Keeps the batch it's in out of the undo history, e.g. to preview a value while it's dragged.
+ * Undo still goes back to the state before the previews, and the edit that saves them should be
+ * isolated (see LayerTimelineService.commitPreview). It doesn't change the state.
+ */
+export class SkipUndoStep implements Action {
+  readonly type = UndoRedoActionTypes.SkipUndoStep;
+}
+
+export type UndoRedoActions = IsolateUndoStep | SkipUndoStep;

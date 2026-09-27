@@ -14,7 +14,7 @@ import type { State, Store } from 'app/modules/editor/store';
 import type { getPropertyInputState } from 'app/modules/editor/store/common/selectors';
 import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
 import { find } from 'lodash-es';
-import { InspectedProperty } from './InspectedProperty';
+import { InspectedProperty, type ValuePreview } from './InspectedProperty';
 
 export interface PropertyInputModel {
   readonly model?: any;
@@ -152,6 +152,11 @@ function buildInspectedLayerProperties(
         },
         // TODO: copy AIA conditions to determine whether this should be editable
         undefined,
+        buildValuePreview(deps, value => {
+          const clonedLayer: any = layer.clone();
+          clonedLayer[propertyName] = value;
+          deps.layerTimelineService.previewLayer(clonedLayer);
+        }),
       ),
     );
   });
@@ -202,12 +207,26 @@ function buildInspectedBlockProperties(
   const inspectedProperties: InspectedProperty<any>[] = [];
   block.inspectableProperties.forEach((property, propertyName) => {
     inspectedProperties.push(
-      new InspectedProperty<any>(block, property, propertyName, enteredValueMap, value => {
-        // TODO: avoid dispatching the action if the properties are equal
-        const clonedBlock: any = block.clone();
-        clonedBlock[propertyName] = value;
-        deps.layerTimelineService.updateBlocks([clonedBlock]);
-      }),
+      new InspectedProperty<any>(
+        block,
+        property,
+        propertyName,
+        enteredValueMap,
+        value => {
+          // TODO: avoid dispatching the action if the properties are equal
+          const clonedBlock: any = block.clone();
+          clonedBlock[propertyName] = value;
+          deps.layerTimelineService.updateBlocks([clonedBlock]);
+        },
+        undefined,
+        undefined,
+        undefined,
+        buildValuePreview(deps, value => {
+          const clonedBlock: any = block.clone();
+          clonedBlock[propertyName] = value;
+          deps.layerTimelineService.previewBlocks([clonedBlock]);
+        }),
+      ),
     );
   });
   return {
@@ -219,6 +238,14 @@ function buildInspectedBlockProperties(
     subDescription,
     availablePropertyNames: [],
   } as PropertyInputModel;
+}
+
+function buildValuePreview(deps: Dependencies, preview: (value: any) => void): ValuePreview<any> {
+  return {
+    preview,
+    commit: () => deps.layerTimelineService.commitPreview(),
+    cancel: () => deps.layerTimelineService.cancelPreview(),
+  };
 }
 
 function buildInspectedAnimationProperties(deps: Dependencies, animation: Animation) {

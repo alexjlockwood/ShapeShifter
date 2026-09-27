@@ -1,7 +1,7 @@
 import { Path } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { environment } from 'environments/environment';
-import { findIndex, flatMap } from 'lodash-es';
+import { findIndex, flatMap, round } from 'lodash-es';
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from './Layer';
 
 const IS_DEV_BUILD = !environment.production;
@@ -53,6 +53,25 @@ export function getCanvasTransformsForGroupLayer(l: GroupLayer) {
     Matrix.scaling(l.scaleX, l.scaleY),
     Matrix.translation(-l.pivotX, -l.pivotY),
   ];
+}
+
+/**
+ * Returns a pivot at the center of the vector layer's viewport, for a new layer added to the
+ * parent, so that it rotates and scales around the middle of the canvas. It's in the coordinates
+ * of the parent's children, so a transformed parent still puts it at the canvas's center. Pivots
+ * are absolute, so it stays where it is if the layer or the viewport changes later.
+ */
+export function getCenterPivot(vl: VectorLayer, parentId: string) {
+  const parent = vl.findLayerById(parentId);
+  const transform = Matrix.flatten([
+    getCanvasTransformForLayer(vl, parentId),
+    ...(parent instanceof GroupLayer ? getCanvasTransformsForGroupLayer(parent) : []),
+  ]);
+  const center = { x: vl.width / 2, y: vl.height / 2 };
+  // A parent scaled to 0 can't be inverted, and hides the layer anyway.
+  const inverse = transform.invert();
+  const { x, y } = inverse ? MathUtil.transformPoint(center, inverse) : center;
+  return { pivotX: round(x, 3), pivotY: round(y, 3) };
 }
 
 /**

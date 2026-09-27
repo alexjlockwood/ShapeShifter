@@ -25,7 +25,11 @@ export function SnackbarHost() {
       message={shownSnackBar.message}
       action={
         shownSnackBar.action && (
-          <Button color="secondary" size="small" onClick={() => snackBarService.dismiss()}>
+          <Button
+            color="secondary"
+            size="small"
+            onClick={() => snackBarService.clickAction(shownSnackBar)}
+          >
             {shownSnackBar.action}
           </Button>
         )

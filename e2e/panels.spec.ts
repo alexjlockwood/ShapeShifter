@@ -84,8 +84,8 @@ test('enters action mode from the property inspector', async ({ page }) => {
   await page.getByRole('button', { name: 'Edit path morphing animation' }).click();
   await expect(page.locator('.app-canvas')).toHaveCount(3);
   await expect(page.locator('.toolbar')).toContainText('Edit path morphing animation');
-  // The toolbar switches to the accent color in action mode.
-  await expect(page.locator('.toolbar')).toHaveCSS('background-color', 'rgb(41, 121, 255)');
+  // The toolbar switches to the accent fill color (blue A700) in action mode.
+  await expect(page.locator('.toolbar')).toHaveCSS('background-color', 'rgb(41, 98, 255)');
   await page.screenshot({ path: 'test-results/toolbar-action-mode.png' });
 
   await page.getByRole('button', { name: 'Split subpaths (S)' }).waitFor({ state: 'detached' });

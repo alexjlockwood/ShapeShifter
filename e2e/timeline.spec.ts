@@ -38,6 +38,10 @@ test('adds layers from the add layer menu', async ({ page }) => {
   await page.getByRole('button', { name: 'Add layer' }).click();
   await page.getByRole('menuitem', { name: 'New group layer' }).click();
   await expect(page.locator('.slt-layer')).toHaveText(['vector', 'group']);
+  // New groups pivot at the canvas's center.
+  await page.locator('.slt-layer', { hasText: 'group' }).click();
+  await expect(page.locator('.spi-property input[name="pivotX"]')).toHaveValue('12');
+  await expect(page.locator('.spi-property input[name="pivotY"]')).toHaveValue('12');
 });
 
 test('loads a demo from the file menu', async ({ page }) => {
@@ -195,7 +199,7 @@ test('groups, flattens, and converts layers', async ({ page, modifier }) => {
   await dispatchClipboardEvent(
     page,
     'paste',
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path id="line" d="M2 6h8" fill="none" stroke="#000" stroke-width="1"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path id="line" d="M8 12h8" fill="none" stroke="#000" stroke-width="1"/></svg>',
   );
   const layers = page.locator('.slt-layer');
   await expect(layers).toHaveText(['vector', 'line']);
@@ -217,7 +221,8 @@ test('groups, flattens, and converts layers', async ({ page, modifier }) => {
   await page.keyboard.press(`${modifier}+Shift+g`);
   await expect(layers).toHaveText(['vector', 'line']);
 
-  // Scale a group up, and then flatten it. The line and its stroke get twice as big.
+  // Scale a group up, and then flatten it. The line and its stroke get twice as big, around the
+  // canvas's center, where new groups pivot.
   await page.keyboard.press(`${modifier}+g`);
   await layers.filter({ hasText: 'group' }).click();
   for (const name of ['scaleX', 'scaleY']) {

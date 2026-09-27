@@ -58,10 +58,11 @@ dispatching on every pointer move. A gesture sets a working copy of the whole do
 and the animation), and commits it once, as its own undo step. Anything else that changes the
 document or the time cancels it. Moving layers moves their animation blocks with them, and scaling
 or rotating them transforms every path in them, in its own coordinates, since group transforms can't
-express every matrix (`components/canvaseditor/transformLayers.ts`). A path that an animation block
-sets at the current time is reshaped where its keyframe is saved, and not at all while it's
-morphing (`components/canvas/pathKeyframes.ts`, and `canEditPath` and `getBasePath` in the
-preview). `components/canvaseditor/KeyframeBadge.ts` says whether the morph still works.
+express every matrix (`components/canvas/transformLayers.ts`, outside the editor so the rest of the
+app can use it too). A path that an animation block sets at the current time is reshaped where its
+keyframe is saved, and not at all while it's morphing (`components/canvas/pathKeyframes.ts`, and
+`canEditPath` and `getBasePath` in the preview). `components/canvaseditor/KeyframeBadge.ts` says
+whether the morph still works.
 
 With the editor loaded, the main canvas takes the pointer anywhere in its panel and gives it to the
 editor (`components/canvaseditor/CanvasEditor.ts`), except in action mode, and the panel's clicks
@@ -99,6 +100,9 @@ once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are 
   included in `styles/theme.scss`, which applies them for the light theme and under
   `.ss-dark-theme` (set on `body`, so portals get it too). A new themed component needs its partial
   added there.
+- For accent colors, use the theme's `accent-fill` behind white text and icons, and `accent-text`
+  for text and icons on the theme's background. Both pass WCAG AA in both themes, unlike the older
+  `accent` palette.
 - Class prefixes: `app-<component>` on component roots, `slt-` for the layer timeline, `spi-` for
   the property inspector, `splt-` for the splitter, and `ss-` for globals.
 
@@ -116,7 +120,8 @@ once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are 
 - Each panel is wrapped in `components/root/PanelErrorBoundary.tsx`, so a render error only
   replaces that panel (with a "Try again" button) and is reported to Bugsnag.
 - Dialogs (`components/dialogs/dialog.service.ts`) and the snackbar (`services/snackbar.service.ts`)
-  have small stores of their own, outside Redux. Dialog methods return promises.
+  have small stores of their own, outside Redux. Dialog methods return promises, and the
+  snackbar's button calls the `onAction` passed to `snackBarService.show`.
 
 ## Tests
 

@@ -4,13 +4,13 @@
 @mixin ss-toolbar-theme($theme) {
     $primary: map.get($theme, primary);
     $foreground: map.get($theme, ss-foreground);
-    $accent-inverse: map.get($theme, accent-inverse);
+    $accent-fill: map.get($theme, accent-fill);
     $is-dark: map.get($theme, is-dark);
     .toolbar {
         background-color: mat-color($primary);
         color: mat-color($primary, default-contrast);
         &.is-action-mode {
-            background-color: mat-color(map.get($theme, accent));
+            background-color: $accent-fill;
         }
         button {
             &.MuiIconButton-root.Mui-disabled {
@@ -22,9 +22,15 @@
                 }
             }
         }
+        // An activated mode shows as a white pill behind a blue icon, rather than as an icon of
+        // another color, which couldn't contrast with both the blue and the white icons around it.
         button.activated {
+            background-color: white;
+            &:hover {
+                background-color: rgba(white, 0.85);
+            }
             .ss-icon {
-                color: mat-color($accent-inverse);
+                color: $accent-fill;
             }
         }
     }

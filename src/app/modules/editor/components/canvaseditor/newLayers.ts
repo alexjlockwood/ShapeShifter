@@ -10,10 +10,10 @@ import { Path } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
 import { round } from 'lodash-es';
 
-// Filled black, like most icons, and lines and drawn paths stroked, a unit wide on a 24 unit icon.
+// Filled black, like most icons, and lines and drawn paths stroked, a viewport unit wide.
 const FILL_COLOR = '#000000';
 const STROKE_COLOR = '#000000';
-const STROKE_WIDTH_PER_24_UNITS = 1;
+const STROKE_WIDTH = 1;
 // How far a circle's control points are from its points, as a fraction of its radius.
 const KAPPA = (4 * (Math.SQRT2 - 1)) / 3;
 
@@ -110,9 +110,9 @@ function getToLocal(
 }
 
 /**
- * Returns a new path layer, filled or stroked, with a name that no other layer has. A stroke is as
- * wide as a unit is on a 24 unit icon, in the place's coordinates, so it looks the same whatever
- * the artboard's size or the group's scale.
+ * Returns a new path layer, filled or stroked, with a name that no other layer has. A stroke is a
+ * viewport unit wide, whatever the artboard's size, so a line on a big artboard isn't drawn with a
+ * thick stroke. It's in the place's coordinates, so it still looks a unit wide in a scaled group.
  */
 export function createPathLayer(
   vl: VectorLayer,
@@ -121,17 +121,14 @@ export function createPathLayer(
   style: 'filled' | 'stroked',
   place: NewLayerPlace,
 ) {
-  const width =
-    (Math.max(vl.width, vl.height) / 24) *
-    STROKE_WIDTH_PER_24_UNITS *
-    place.toLocal.getScaleFactor();
+  const width = STROKE_WIDTH * place.toLocal.getScaleFactor();
   return new PathLayer({
     name: LayerUtil.getUniqueLayerName([vl], name),
     children: [],
     pathData,
     ...(style === 'filled'
       ? { fillColor: FILL_COLOR }
-      : { strokeColor: STROKE_COLOR, strokeWidth: round(width, 3) || STROKE_WIDTH_PER_24_UNITS }),
+      : { strokeColor: STROKE_COLOR, strokeWidth: round(width, 3) || STROKE_WIDTH }),
   });
 }
 

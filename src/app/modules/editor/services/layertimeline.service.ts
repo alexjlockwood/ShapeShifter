@@ -34,7 +34,8 @@ import {
   getSelectedBlockIds,
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
-import { IsolateUndoStep } from 'app/modules/editor/store/undoredo/actions';
+import { IsolateUndoStep, SkipUndoStep } from 'app/modules/editor/store/undoredo/actions';
+import { getLastRecordedState } from 'app/modules/editor/store/undoredo/metareducer';
 import { difference, find, findIndex, isEqual, uniqueId } from 'lodash-es';
 
 /**
@@ -187,11 +188,12 @@ export class LayerTimelineService {
   }
 
   /**
-   * Imports a list of vector layers into the workspace.
+   * Imports a list of vector layers into the workspace, e.g. one for each imported file. Returns
+   * the ids of the top-level layers that each one added, in the same order.
    */
-  importLayers(vls: ReadonlyArray<VectorLayer>) {
+  importLayers(vls: ReadonlyArray<VectorLayer>): ReadonlyArray<ReadonlyArray<string>> {
     if (!vls.length) {
-      return;
+      return [];
     }
     const importedVls = [...vls];
     const vectorLayer = this.getVectorLayer();
@@ -211,29 +213,43 @@ export class LayerTimelineService {
     this.store.dispatch(
       new BatchAction(...this.getClearSelectionsActions(), new SetVectorLayer(newVl)),
     );
+    // Merging keeps the layers' ids.
+    return importedVls.map(vl =>
+      vl.children.map(l => l.id).filter(id => !!newVl.findLayerById(id)),
+    );
   }
 
   /**
-   * Adds a layer to the vector tree.
+   * Adds a layer to the vector tree, in the parent that getParentIdForNewLayer returns.
    */
   addLayer(layer: Layer) {
     const vl = this.getVectorLayer();
-    const selectedLayers = this.getSelectedLayers();
-    if (selectedLayers.length === 1) {
-      const selectedLayer = selectedLayers[0];
-      if (!(selectedLayer instanceof VectorLayer)) {
-        // Add the new layer as a sibling to the currently selected layer.
-        const parent = LayerUtil.findParent(vl, selectedLayer.id)?.clone();
-        if (parent) {
-          parent.children = [...parent.children, layer];
-          this.updateLayer(parent);
-          return;
-        }
-      }
+    const parentId = this.getParentIdForNewLayer();
+    const parent = parentId === vl.id ? undefined : vl.findLayerById(parentId)?.clone();
+    if (parent) {
+      parent.children = [...parent.children, layer];
+      this.updateLayer(parent);
+      return;
     }
     const vectorLayer = vl.clone();
     vectorLayer.children = [...vectorLayer.children, layer];
     this.updateLayer(vectorLayer);
+  }
+
+  /**
+   * Returns the id of the layer that addLayer adds a layer to: the parent of the selected layer,
+   * so that the new layer is its sibling, or else the vector layer.
+   */
+  getParentIdForNewLayer() {
+    const vl = this.getVectorLayer();
+    const selectedLayers = this.getSelectedLayers();
+    if (selectedLayers.length === 1 && !(selectedLayers[0] instanceof VectorLayer)) {
+      const parent = LayerUtil.findParent(vl, selectedLayers[0].id);
+      if (parent) {
+        return parent.id;
+      }
+    }
+    return vl.id;
   }
 
   /**
@@ -275,6 +291,61 @@ export class LayerTimelineService {
    */
   updateLayer(layer: Layer) {
     this.store.dispatch(new SetVectorLayer(LayerUtil.updateLayer(this.getVectorLayer(), layer)));
+  }
+
+  /**
+   * Shows an edit to an existing layer without an undo step, e.g. on every move of a drag. Call
+   * commitPreview when it ends, or cancelPreview to go back.
+   */
+  previewLayer(layer: Layer) {
+    const vl = LayerUtil.updateLayer(this.getVectorLayer(), layer);
+    this.store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(vl)));
+  }
+
+  /**
+   * Shows edits to existing blocks without an undo step, like previewLayer.
+   */
+  previewBlocks(blocks: ReadonlyArray<AnimationBlock>) {
+    if (!blocks.length) {
+      return;
+    }
+    const animation = this.getAnimationWithBlocks(blocks);
+    this.store.dispatch(new BatchAction(new SkipUndoStep(), new SetAnimation(animation)));
+  }
+
+  /**
+   * Saves the previewed layers and blocks as one undo step, however long the previews took and
+   * however soon they came after another edit. It does nothing if nothing was previewed.
+   */
+  commitPreview() {
+    const vl = this.getVectorLayer();
+    const animation = this.getAnimation();
+    const recorded = getLastRecordedState(this.store.getState());
+    if (recorded.layers.vectorLayer === vl && recorded.timeline.animation === animation) {
+      return;
+    }
+    this.store.dispatch(
+      new BatchAction(new IsolateUndoStep(), new SetVectorLayer(vl), new SetAnimation(animation)),
+    );
+  }
+
+  /**
+   * Shows the layers and blocks from before the previews again, without an undo step.
+   */
+  cancelPreview() {
+    const recorded = getLastRecordedState(this.store.getState());
+    const { vectorLayer } = recorded.layers;
+    const { animation } = recorded.timeline;
+    if (vectorLayer === this.getVectorLayer() && animation === this.getAnimation()) {
+      return;
+    }
+    this.store.dispatch(
+      new BatchAction(
+        new SkipUndoStep(),
+        new SetVectorLayer(vectorLayer),
+        new SetAnimation(animation),
+      ),
+    );
   }
 
   /**
@@ -482,6 +553,7 @@ export class LayerTimelineService {
       const newGroup = new GroupLayer({
         name: LayerUtil.getUniqueLayerName([vl], 'group'),
         children: tempSelLayers,
+        ...LayerUtil.getCenterPivot(vl, firstSelectedLayerParent.id),
       });
       vl = LayerUtil.removeLayers(vl, ...tempSelLayers.map(l => l.id));
       const parent = vl.findLayerById(firstSelectedLayerParent.id)?.clone();
@@ -578,14 +650,22 @@ export class LayerTimelineService {
     if (!blocks.length) {
       return;
     }
+    this.store.dispatch(new SetAnimation(this.getAnimationWithBlocks(blocks)));
+  }
+
+  private getAnimationWithBlocks(blocks: ReadonlyArray<AnimationBlock>) {
     const animation = this.getAnimation().clone();
     animation.blocks = animation.blocks.map(block => {
       const newBlock = find(blocks, b => block.id === b.id);
       return newBlock ? newBlock : block;
     });
-    this.store.dispatch(new SetAnimation(animation));
+    return animation;
   }
 
+  /**
+   * Adds blocks in the gaps closest to their current times. With autoSelectBlocks, the added
+   * blocks become the selection. Otherwise the selection stays as it is.
+   */
   addBlocks(
     blocks: Array<{
       id?: string;
@@ -607,6 +687,10 @@ export class LayerTimelineService {
         animation = anim;
         addedBlocks.push(block);
       }
+    }
+    if (!autoSelectBlocks) {
+      this.store.dispatch(new SetAnimation(animation));
+      return;
     }
     this.store.dispatch(
       new BatchAction(

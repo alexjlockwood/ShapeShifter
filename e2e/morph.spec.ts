@@ -160,6 +160,12 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
   await clickCanvas(page, 'start', 12, 12);
   await page.getByRole('button', { name: 'Add points (A)' }).click();
   await expect(page.locator('.toolbar')).toContainText('Click along the edge of a subpath');
+  // The activated mode's button is a white pill behind a blue icon (a bit see-through on hover).
+  const addPoints = page.getByRole('button', { name: 'Add points (A)' });
+  await expect(addPoints).toHaveClass(/activated/);
+  await page.mouse.move(1, 1);
+  await expect(addPoints).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(addPoints.locator('.ss-icon')).toHaveCSS('color', 'rgb(41, 98, 255)');
   for (const [x, y] of [
     [15.33, 9.67],
     [11.67, 7.33],
@@ -220,13 +226,13 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
   await expect(page.locator('.app-canvas')).toHaveCount(1);
   await expect(page.locator('.paths-incompatible-text')).toHaveCount(0);
 
-  // Group the path and rotate the group by 90 degrees about the center.
+  // Group the path and rotate the group by 90 degrees about the center, where new groups pivot.
   await page.locator('.slt-layer', { hasText: 'play' }).click();
   await page.keyboard.press(`${modifier}+g`);
   await expect(page.locator('.slt-layer')).toHaveText(['vector', 'group', 'play']);
   await page.locator('.slt-layer', { hasText: 'group' }).click();
-  await setProperty(page, 'pivotX', '12');
-  await setProperty(page, 'pivotY', '12');
+  await expect(page.locator('.spi-property input[name="pivotX"]')).toHaveValue('12');
+  await expect(page.locator('.spi-property input[name="pivotY"]')).toHaveValue('12');
   await animateSelectedLayer(page, 'rotation');
   await expect(page.locator('.slt-timeline-block')).toHaveCount(2);
   // The new block is selected.
