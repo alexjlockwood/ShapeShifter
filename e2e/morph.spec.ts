@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import type { Download, Page } from '@playwright/test';
 
-import { boundingBox, expect, getState, test } from './fixtures';
+import { artboardPoint, expect, getState, test } from './fixtures';
 
 // The Material Design play and pause icons.
 const PLAY_SVG =
@@ -28,9 +28,8 @@ async function importSvg(page: Page, name: string, svg: string) {
 }
 
 /** Converts a point in the 24x24 viewport to page coordinates in an action mode canvas. */
-async function toPageCoords(page: Page, canvas: Canvas, x: number, y: number) {
-  const box = await boundingBox(page.locator(`.app-canvas.${canvas} canvas.overlay-canvas`));
-  return { x: box.x + (box.width * x) / 24, y: box.y + (box.height * y) / 24 };
+function toPageCoords(page: Page, canvas: Canvas, x: number, y: number) {
+  return artboardPoint(page.locator(`.app-canvas.${canvas}`), x, y);
 }
 
 async function clickCanvas(page: Page, canvas: Canvas, x: number, y: number) {
@@ -78,10 +77,15 @@ function getMorphPaths(page: Page) {
 
 /** Returns true if the pixel at the given viewport point is drawn in the animated canvas. */
 function isPixelDrawn(page: Page, x: number, y: number) {
-  return page.locator('.app-canvas canvas.rendering-canvas').evaluate(
-    (canvas: HTMLCanvasElement, [vx, vy]) => {
-      const px = Math.floor((canvas.width * vx) / 24);
-      const py = Math.floor((canvas.height * vy) / 24);
+  return page.locator('.app-canvas').evaluate(
+    (root, [vx, vy]) => {
+      // The canvas covers the panel, and the artboard under it shows the viewport.
+      const canvas = root.querySelector<HTMLCanvasElement>('canvas.rendering-canvas')!;
+      const artboard = root.querySelector('.canvas-artboard')!.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
+      const scale = canvas.width / rect.width;
+      const px = Math.floor((artboard.left - rect.left + (artboard.width * vx) / 24) * scale);
+      const py = Math.floor((artboard.top - rect.top + (artboard.height * vy) / 24) * scale);
       return canvas.getContext('2d')!.getImageData(px, py, 1, 1).data[3] > 0;
     },
     [x, y],

@@ -1,6 +1,13 @@
 import type { Page } from '@playwright/test';
 
-import { boundingBox, dispatchClipboardEvent, expect, getState, test } from './fixtures';
+import {
+  artboardPoint,
+  boundingBox,
+  dispatchClipboardEvent,
+  expect,
+  getState,
+  test,
+} from './fixtures';
 
 async function loadDemo(page: Page, id = 'playtopause') {
   await page.goto(`/?project=demos/${id}.shapeshifter`);
@@ -139,8 +146,8 @@ test('reverses subpaths in action mode', async ({ page }) => {
   const initialFromValue = await getFromValue();
   await page.locator('.slt-timeline-block').last().click();
   await page.getByRole('button', { name: 'Edit path morphing animation' }).click();
-  const box = await boundingBox(page.locator('.app-canvas.start canvas.overlay-canvas'));
-  await page.mouse.click(box.x + (box.width * 10) / 24, box.y + (box.height * 9) / 24);
+  const point = await artboardPoint(page.locator('.app-canvas.start'), 10, 9);
+  await page.mouse.click(point.x, point.y);
   await expect(page.locator('.toolbar')).toContainText('1 subpath selected');
   await page.getByRole('button', { name: 'Reverse points (R)' }).click();
   await expect.poll(getFromValue).not.toBe(initialFromValue);

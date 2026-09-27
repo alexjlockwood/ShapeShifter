@@ -28,11 +28,6 @@
   on the ruler zoom and the mouse position (not the ones on the canvas size), and fix the ruler's
   loop condition, which never ends at small zooms without them (`components/canvas/CanvasRuler.ts`,
   `components/canvas/CanvasController.ts`). (CANVAS-5, GitHub #249, medium, confirmed by a test)
-- **Canvases ignore devicePixelRatio changes.** Moving the window between a Retina and a 1x
-  display doesn't resize the canvases, so they draw at half or double scale and clicks don't line
-  up until something else resizes them. Listen for ratio changes with `matchMedia` and rerun
-  `onDimensionsChanged` (`components/canvas/CanvasLayoutMixin.ts`). (CANVAS-6, low, confirmed by
-  a test)
 - **The trim path preview doesn't follow Android's rules for fills and later subpaths.** The
   preview only dashes the stroke, so trims never affect the fill, and every subpath is dashed.
   Android trims the path itself, uses it for the fill too, and only draws the first subpath. Build

@@ -2,7 +2,7 @@ import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { getCanvasPixelRatio, getContext2d } from 'app/modules/editor/scripts/dom';
 import { ThemeService } from 'app/modules/editor/services';
 
-import { CanvasLayoutMixin } from './CanvasLayoutMixin';
+import { CanvasCamera } from './CanvasCamera';
 
 // All dimensions are in CSS pixels.
 const RULER_SIZE = 32;
@@ -12,9 +12,10 @@ const LABEL_OFFSET = 12;
 const TICK_SIZE = 6;
 
 /**
- * Draws a ruler along one of the canvas' edges.
+ * Draws a ruler along one of the artboard's edges.
  */
-export class CanvasRuler extends CanvasLayoutMixin() {
+export class CanvasRuler {
+  private camera: CanvasCamera | undefined;
   // The current mouse point in viewport coordinates.
   private vpMousePoint: Point | undefined;
 
@@ -22,17 +23,10 @@ export class CanvasRuler extends CanvasLayoutMixin() {
     private readonly canvas: HTMLCanvasElement,
     private readonly orientation: Orientation,
     private readonly themeService: ThemeService,
-  ) {
-    super();
-  }
+  ) {}
 
-  // @Override
-  protected onDimensionsChanged() {
-    this.draw();
-  }
-
-  // @Override
-  protected onZoomPanChanged() {
+  setCamera(camera: CanvasCamera) {
+    this.camera = camera;
     this.draw();
   }
 
@@ -52,17 +46,15 @@ export class CanvasRuler extends CanvasLayoutMixin() {
   }
 
   private draw() {
+    const { camera } = this;
+    if (!camera) {
+      return;
+    }
     const isHorizontal = this.orientation === 'horizontal';
 
-    const viewport = this.getViewport();
-    const zoom = this.getZoom();
-    const { cssScale } = this;
-    const width = isHorizontal
-      ? viewport.w * cssScale * zoom + EXTRA_RULER_PADDING * 2
-      : RULER_SIZE;
-    const height = isHorizontal
-      ? RULER_SIZE
-      : viewport.h * cssScale * zoom + EXTRA_RULER_PADDING * 2;
+    const { viewport, scale } = camera;
+    const width = isHorizontal ? viewport.w * scale + EXTRA_RULER_PADDING * 2 : RULER_SIZE;
+    const height = isHorizontal ? RULER_SIZE : viewport.h * scale + EXTRA_RULER_PADDING * 2;
     this.canvas.style.width = `${width}px`;
     this.canvas.style.height = `${height}px`;
     const pixelRatio = getCanvasPixelRatio(width, height);
@@ -71,11 +63,7 @@ export class CanvasRuler extends CanvasLayoutMixin() {
 
     const ctx = getContext2d(this.canvas);
     ctx.scale(pixelRatio, pixelRatio);
-    const { tx, ty } = this.getTranslation();
-    ctx.translate(
-      isHorizontal ? tx + EXTRA_RULER_PADDING : 0,
-      isHorizontal ? 0 : ty + EXTRA_RULER_PADDING,
-    );
+    ctx.translate(isHorizontal ? EXTRA_RULER_PADDING : 0, isHorizontal ? 0 : EXTRA_RULER_PADDING);
 
     const widthMinusPadding = width - EXTRA_RULER_PADDING * 2;
     const heightMinusPadding = height - EXTRA_RULER_PADDING * 2;
@@ -101,14 +89,12 @@ export class CanvasRuler extends CanvasLayoutMixin() {
     if (isHorizontal) {
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'center';
-      const minX = -tx;
-      const maxX = minX + widthMinusPadding / zoom;
       for (
         let x = 0, t = 0;
         MathUtil.round(x) <= MathUtil.round(width - EXTRA_RULER_PADDING * 2);
         x += spacingRulerPx, t += spacingViewportPx
       ) {
-        if (minX <= x && x <= maxX) {
+        if (x <= widthMinusPadding) {
           ctx.fillText(t.toString(), x, height - LABEL_OFFSET);
           ctx.fillRect(x - 0.5, height - TICK_SIZE, 1, TICK_SIZE);
         }
@@ -116,14 +102,12 @@ export class CanvasRuler extends CanvasLayoutMixin() {
     } else {
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'right';
-      const minY = -ty;
-      const maxY = minY + heightMinusPadding / zoom;
       for (
         let y = 0, t = 0;
         MathUtil.round(y) <= MathUtil.round(height - EXTRA_RULER_PADDING * 2);
         y += spacingRulerPx, t += spacingViewportPx
       ) {
-        if (minY <= y && y <= maxY) {
+        if (y <= heightMinusPadding) {
           ctx.fillText(t.toString(), width - LABEL_OFFSET, y);
           ctx.fillRect(width - TICK_SIZE, y - 0.5, TICK_SIZE, 1);
         }

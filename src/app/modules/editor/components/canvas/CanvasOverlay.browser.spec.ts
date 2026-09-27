@@ -10,6 +10,7 @@ import { createEditorStore, type State, type Store } from 'app/modules/editor/st
 import { ActionCreators } from 'redux-undo';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CanvasCamera } from './CanvasCamera';
 import { CanvasOverlay } from './CanvasOverlay';
 
 // An open, stroked square, which action mode splits by segment.
@@ -52,8 +53,15 @@ describe('CanvasOverlay', () => {
     );
     overlay.init();
     // Ten CSS pixels per viewport unit, so that hits snap like they do in the app. The detached
-    // canvas is at (0, 0).
-    overlay.setDimensions({ w: 240, h: 240 }, { w: 24, h: 24 });
+    // canvas is at (0, 0), and so is the artboard.
+    overlay.setCamera(
+      CanvasCamera.fit({
+        panel: { w: 240, h: 240 },
+        viewport: { w: 24, h: 24 },
+        pixelRatio: 1,
+        margin: 0,
+      }),
+    );
     vi.advanceTimersByTime(2000);
   });
 

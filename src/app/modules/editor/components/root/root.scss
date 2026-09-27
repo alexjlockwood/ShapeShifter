@@ -8,12 +8,15 @@
     user-select: none;
 }
 
-.app-canvas.start {
-    margin-right: 48px;
-}
-
-.app-canvas.end {
-    margin-left: 48px;
+// Each canvas fills its panel. In action mode, the three panels are only as wide as their
+// artboards and the margins around them (FIT_MARGIN in components/canvas/CanvasCamera.ts), so the
+// artboards stay next to each other in a wide window. CanvasController sets the aspect ratio.
+.canvas-row {
+    justify-content: center;
+    container-type: size;
+    &.is-action-mode .app-canvas {
+        max-width: calc((100cqh - 72px) * var(--viewport-aspect-ratio, 1) + 72px);
+    }
 }
 
 div.toolbar-container {

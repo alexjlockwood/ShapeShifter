@@ -7,7 +7,6 @@ import { SplashScreen } from 'app/modules/editor/components/splashscreen/SplashS
 import { Toolbar } from 'app/modules/editor/components/toolbar/Toolbar';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
-import { useElementSize } from 'app/modules/editor/hooks/useElementSize';
 import { ActionMode, ActionSource } from 'app/modules/editor/model/actionmode';
 import { CursorType } from 'app/modules/editor/model/paper';
 import { on } from 'app/modules/editor/scripts/dom';
@@ -22,7 +21,7 @@ import { getCursorType } from 'app/modules/editor/store/paper/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { createSelector } from 'app/modules/editor/store/selectors';
 import { environment } from 'environments/environment';
-import { type MouseEvent, useEffect, useMemo, useRef } from 'react';
+import { type MouseEvent, useEffect } from 'react';
 
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import './root.scss';
@@ -61,13 +60,6 @@ function Workspace() {
   } = useServices();
   const isActionMode = useAppSelector(getIsActionMode);
   const cursorClassName = useAppSelector(getCursorClassName);
-
-  const displayContainerRef = useRef<HTMLDivElement>(null);
-  const displaySize = useElementSize(displayContainerRef);
-  const canvasBounds = useMemo(
-    () => ({ w: displaySize.w / (isActionMode ? 3 : 1), h: displaySize.h }),
-    [displaySize, isActionMode],
-  );
 
   useEffect(() => {
     shortcutService.init();
@@ -176,28 +168,21 @@ function Workspace() {
         <div className="display-container ss-theme-transition fx-column fx-flex">
           {/* Canvas. */}
           <div
-            ref={displayContainerRef}
-            className={`fx-row fx-align-center fx-flex ${cursorClassName}`}
+            className={`canvas-row fx-row fx-flex${
+              isActionMode ? ' is-action-mode' : ''
+            } ${cursorClassName}`}
           >
             {isActionMode && (
               <PanelErrorBoundary panel="start canvas">
-                <Canvas
-                  className="start"
-                  actionSource={ActionSource.From}
-                  canvasBounds={canvasBounds}
-                />
+                <Canvas className="start" actionSource={ActionSource.From} />
               </PanelErrorBoundary>
             )}
             <PanelErrorBoundary panel="canvas">
-              <Canvas actionSource={ActionSource.Animated} canvasBounds={canvasBounds} />
+              <Canvas actionSource={ActionSource.Animated} />
             </PanelErrorBoundary>
             {isActionMode && (
               <PanelErrorBoundary panel="end canvas">
-                <Canvas
-                  className="end"
-                  actionSource={ActionSource.To}
-                  canvasBounds={canvasBounds}
-                />
+                <Canvas className="end" actionSource={ActionSource.To} />
               </PanelErrorBoundary>
             )}
           </div>

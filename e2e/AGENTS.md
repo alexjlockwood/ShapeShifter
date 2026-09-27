@@ -26,6 +26,9 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
 - `getState(page, s => ...)` runs a function against the store's present state in the page. The
   function is serialized, so it can't use variables from the test. It relies on
   `window.shapeshifter`, which only dev builds have, so preview tests can't use it.
+- Each canvas covers its panel, and its `.canvas-artboard` shows the vector layer's viewport.
+  `artboardPoint(page.locator('.app-canvas.start'), x, y)` converts viewport coordinates to page
+  coordinates for the mouse.
 - `dispatchClipboardEvent(page, 'paste', text)` simulates cut, copy, and paste (Firefox ignores
   `clipboardData` in the event constructor).
 - To load a demo, go to `/?project=demos/playtopause.shapeshifter` and poll until

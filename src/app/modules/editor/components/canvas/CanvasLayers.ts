@@ -19,7 +19,7 @@ import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/select
 import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
+import { CanvasCamera } from './CanvasCamera';
 import * as CanvasUtil from './CanvasUtil';
 
 type Context = CanvasRenderingContext2D;
@@ -27,8 +27,9 @@ type Context = CanvasRenderingContext2D;
 /**
  * Draws the current vector layer to the canvas.
  */
-export class CanvasLayers extends CanvasLayoutMixin(DestroyableMixin()) {
+export class CanvasLayers extends DestroyableMixin() {
   private readonly offscreenCanvas = document.createElement('canvas');
+  private camera: CanvasCamera | undefined;
   private vectorLayer: VectorLayer | undefined;
   private hiddenLayerIds: ReadonlySet<string> = new Set<string>();
 
@@ -75,31 +76,33 @@ export class CanvasLayers extends CanvasLayoutMixin(DestroyableMixin()) {
     return getContext2d(this.offscreenCanvas);
   }
 
-  // @Override
-  protected onDimensionsChanged(bounds: Size, viewport: Size) {
-    const { w, h } = this.getViewport();
-    [this.renderingCanvas, this.offscreenCanvas].forEach(canvas => {
-      canvas.setAttribute('width', `${w * this.attrScale}`);
-      canvas.setAttribute('height', `${h * this.attrScale}`);
-      canvas.style.width = `${w * this.cssScale}px`;
-      canvas.style.height = `${h * this.cssScale}px`;
-    });
+  setCamera(camera: CanvasCamera) {
+    this.camera = camera;
+    CanvasUtil.setCanvasSize(this.renderingCanvas, camera);
+    CanvasUtil.setCanvasSize(this.offscreenCanvas, camera);
     this.draw();
   }
 
   private draw() {
-    // A canvas side shorter than a pixel rounds down to 0 (e.g. a wide viewport in a small canvas
-    // area). There's nothing to see then, and compositing a canvas with no width or height throws.
-    if (!this.vectorLayer || !this.renderingCanvas.width || !this.renderingCanvas.height) {
+    const { camera } = this;
+    // A canvas side shorter than a pixel rounds down to 0 (e.g. a collapsed panel). There's
+    // nothing to see then, and compositing a canvas with no width or height throws.
+    if (
+      !this.vectorLayer ||
+      !camera ||
+      !this.renderingCanvas.width ||
+      !this.renderingCanvas.height
+    ) {
       return;
     }
 
-    // Scale the canvas so that everything from this point forward is drawn
-    // in terms of the SVG's viewport coordinates.
+    // Only the artboard is drawn, and everything from this point forward is drawn in terms of
+    // the SVG's viewport coordinates.
     const setupCtxWithViewportCoordsFn = (ctx: Context) => {
-      ctx.scale(this.attrScale, this.attrScale);
-      const { w, h } = this.getViewport();
-      ctx.clearRect(0, 0, w, h);
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      CanvasUtil.clipToArtboard(ctx, camera);
+      const { a, b, c, d, e, f } = camera.getDeviceTransform();
+      ctx.setTransform(a, b, c, d, e, f);
     };
 
     this.renderingCtx.save();
@@ -124,9 +127,9 @@ export class CanvasLayers extends CanvasLayoutMixin(DestroyableMixin()) {
     if (currentAlpha < 1) {
       this.renderingCtx.save();
       this.renderingCtx.globalAlpha = currentAlpha;
-      // Bring the canvas back to its original coordinates before
+      // Bring the canvas back to device coordinates before
       // drawing the offscreen canvas contents.
-      this.renderingCtx.scale(1 / this.attrScale, 1 / this.attrScale);
+      this.renderingCtx.resetTransform();
       this.renderingCtx.drawImage(this.offscreenCtx.canvas, 0, 0);
       this.renderingCtx.restore();
       this.offscreenCtx.restore();

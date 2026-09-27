@@ -239,8 +239,7 @@ Phase 0 is the foundation, and it's split into small pull requests:
 4. Remove the old `environment.beta` flag and the paper-era behavior it guards.
 5. Size the canvases to their panel and draw through a camera that only fits for now. This is the
    one change users with the flag off could notice, so it's checked against the old drawing code.
-6. Camera state, and ruler ticks that follow the zoom (CANVAS-5 and CANVAS-6 in
-   `docs/bugs/canvas.md`).
+6. Camera state, and ruler ticks that follow the zoom (CANVAS-5 in `docs/bugs/canvas.md`).
 7. Pointer input (CANVAS-10, part of CANVAS-11, and UI-1 in `docs/bugs/timeline-and-ui.md`).
 8. Zoom and pan, with the flag on.
 9. Previewing edits during a gesture, committed as one undo step.
@@ -264,8 +263,9 @@ in phase 2, and the cursors and icons as each tool lands. That's after phase 2, 
 whole roadmap, and it stops agents from reading notes about code to leave alone. Removing it
 means:
 
-- Deleting `components/canvas/canvaspaper.directive.ts`, `components/toolpanel/`,
-  `scripts/paper/`, `services/paper.service.ts`, and `src/typings/paper/`.
+- Deleting `components/canvas/canvaspaper.directive.ts` (which still imports the canvas layout
+  mixin that the camera replaced), `components/toolpanel/`, `scripts/paper/`,
+  `services/paper.service.ts`, and `src/typings/paper/`.
 - Removing their exclusions from `tsconfig.json`, `.oxlintrc.json`, and `.prettierignore`, and
   deleting `src/test/paperExclusions.spec.ts`, which only keeps those lists in step.
 - Removing "Code to leave alone" from the root `AGENTS.md`, and the notes about the old editor in

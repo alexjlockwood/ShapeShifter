@@ -21,7 +21,7 @@ Paths are relative to `src/app/modules/editor/`.
   component.
 - `useEditorStore()` returns the store, e.g. to hand to an imperative controller.
 - `useServices()` and `useEditorStore()` are in `context/EditorContext.tsx`. The other hooks are in
-  `hooks/`, which also has `requireRef`, `useElementSize`, `useMenu`, and `useScrollGroup`.
+  `hooks/`, which also has `requireRef`, `useMenu`, and `useScrollGroup`.
 
 ## Canvas and timeline drawing
 
@@ -30,6 +30,14 @@ creates a controller in a layout effect, and the controller subscribes to the st
 so playback never re-renders React. Mouse gestures on the canvas go to
 `components/canvas/CanvasOverlay.ts`, which calls `actionModeService` in action mode and
 `layerTimelineService` otherwise.
+
+Each canvas covers its whole panel. `components/canvas/CanvasCamera.ts` maps between its three
+coordinate spaces: viewport coordinates (the vector layer's units), panel coordinates (CSS pixels
+from the panel's top left), and device coordinates (pixels in the backing store). Draw and hit
+test through it rather than scaling by hand, and convert pixel sizes like tolerances with
+`toViewportLength`. For now it only fits the artboard to the panel. The white artboard is a div
+under the canvases, which ignore the mouse, so mouse events go to it and clicks around it reach
+the workspace.
 
 The new canvas editor is in `components/canvaseditor/`, and it's only downloaded when its feature
 is on (`src/environments/features.ts`). `components/canvas/CanvasController.ts` loads it through
