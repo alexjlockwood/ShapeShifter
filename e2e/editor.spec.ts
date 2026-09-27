@@ -72,3 +72,78 @@ test('selects layers with a marquee, starting off of the artboard', async ({ pag
   // The click at the end of the drag doesn't clear the selection.
   await expect.poll(() => getSelectedNames(page)).toEqual(['a', 'b']);
 });
+
+function getPathData(page: Page, name: string) {
+  return page.evaluate(layerName => {
+    const { store } = (window as any).shapeshifter;
+    const layer = store.getState().present.layers.vectorLayer.findLayerByName(layerName);
+    return layer?.pathData.getPathString() as string | undefined;
+  }, name);
+}
+
+async function drag(page: Page, from: [number, number], to: [number, number]) {
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, ...from);
+  const end = await artboardPoint(canvas, ...to);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(end.x, end.y, { steps: 10 });
+  await page.mouse.up();
+}
+
+/** Rounds a path's numbers, since drags don't land on exact coordinates. */
+function rounded(pathData: string | undefined) {
+  return pathData?.replace(/-?\d*\.\d+/g, n => `${Math.round(Number(n))}`);
+}
+
+test('moves a layer by dragging it, as one undo step', async ({ page, modifier }) => {
+  await openSquares(page);
+  await drag(page, [4, 4], [8, 10]);
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'a')))
+    .toBe('M 6 8 L 10 8 L 10 12 L 6 12 Z');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+});
+
+test('duplicates layers by dragging them with Alt held, or with Cmd+D', async ({
+  page,
+  modifier,
+}) => {
+  await openSquares(page);
+  await page.keyboard.down('Alt');
+  await drag(page, [4, 4], [4, 18]);
+  await page.keyboard.up('Alt');
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a_1']);
+  expect(await getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  expect(rounded(await getPathData(page, 'a_1'))).toBe('M 2 16 L 6 16 L 6 20 L 2 20 Z');
+
+  const duplicate = await page.evaluate(
+    key => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'd',
+        bubbles: true,
+        cancelable: true,
+        ...key,
+      });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    },
+    modifier === 'Meta' ? { metaKey: true } : { ctrlKey: true },
+  );
+  // It keeps the browser from bookmarking the page too.
+  expect(duplicate).toBe(true);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a_2']);
+  expect(await getPathData(page, 'a_2')).toBe(await getPathData(page, 'a_1'));
+});
+
+test('nudges the selection with the arrow keys', async ({ page }) => {
+  await openSquares(page);
+  // Without a selection, they rewind and fast forward.
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => getState(page, s => s.playback.currentTime)).toBeGreaterThan(0);
+  await click(page, 4, 4);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Shift+ArrowDown');
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 3 12 L 7 12 L 7 16 L 3 16 Z');
+});

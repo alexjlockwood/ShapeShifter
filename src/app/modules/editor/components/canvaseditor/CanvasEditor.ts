@@ -1,4 +1,5 @@
 import type { CanvasCamera } from 'app/modules/editor/components/canvas/CanvasCamera';
+import type { CanvasDocument } from 'app/modules/editor/components/canvas/CanvasPreview';
 import type {
   CanvasEditor,
   CanvasEditorContext,
@@ -6,17 +7,33 @@ import type {
 import type { CanvasPreview } from 'app/modules/editor/components/canvas/CanvasPreview';
 import { VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
+import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import { Point } from 'app/modules/editor/scripts/common';
+import { on } from 'app/modules/editor/scripts/dom';
 import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
 import { getHiddenLayerIds, getSelectedLayerIds } from 'app/modules/editor/store/layers/selectors';
-import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
+import {
+  getAnimatedVectorLayer,
+  getCurrentTime,
+} from 'app/modules/editor/store/playback/selectors';
 import { environment } from 'environments/environment';
 import { combineLatest, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
 import { EditorRenderer } from './EditorRenderer';
 import { Modifiers, SelectTool } from './SelectTool';
+import { duplicateLayers, getTopmostLayerIds, translateLayers } from './transformLayers';
+
+// How far the arrow keys move the selection, in viewport units, and with Shift held.
+const NUDGE = 1;
+const BIG_NUDGE = 10;
+const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+};
 
 // The entry point of the canvas editor's lazily loaded code (see docs/canvas-editor.md). Dev builds
 // also let the end-to-end tests drive its preview, as window.shapeshifter.canvasEditor.
@@ -42,10 +59,11 @@ class Editor implements CanvasEditor {
   private readonly renderer: EditorRenderer;
   private readonly selectTool: SelectTool;
   private subscription: Subscription | undefined;
+  private removeKeyListener: (() => void) | undefined;
   private removeTestHooks: (() => void) | undefined;
 
   constructor(private readonly context: CanvasEditorContext) {
-    const { store, services } = context;
+    const { store, services, preview } = context;
     this.renderer = new EditorRenderer(context.canvas);
     this.vectorLayer = getAnimatedVectorLayer(store.getState()).vl;
     this.selectTool = new SelectTool({
@@ -55,6 +73,8 @@ class Editor implements CanvasEditor {
       setSelectedLayerIds: layerIds =>
         services.layerTimelineService.setSelectedLayers(new Set(layerIds)),
       toViewportLength: length => this.camera?.toViewportLength(length) ?? length,
+      render: document => this.render(document),
+      preview,
       redraw: () => this.draw(),
     });
   }
@@ -77,6 +97,10 @@ class Editor implements CanvasEditor {
       this.isActionMode = actionMode;
       this.draw();
     });
+    // Before the keyboard shortcuts, so that the arrow keys nudge instead of rewinding.
+    this.removeKeyListener = on(window, 'keydown', event => this.onKeyDown(event), {
+      capture: true,
+    });
     this.removeTestHooks = environment.production ? undefined : addTestHooks(preview);
   }
 
@@ -90,8 +114,8 @@ class Editor implements CanvasEditor {
     this.selectTool.onPress(point, getModifiers(event));
   }
 
-  onMove(_: PointerEvent, point: Point) {
-    this.selectTool.onMove(point);
+  onMove(event: PointerEvent, point: Point) {
+    this.selectTool.onMove(point, getModifiers(event));
   }
 
   onRelease(_: PointerEvent, point: Point) {
@@ -104,8 +128,76 @@ class Editor implements CanvasEditor {
 
   dispose() {
     this.subscription?.unsubscribe();
+    this.removeKeyListener?.();
     this.removeTestHooks?.();
     this.renderer.clear();
+  }
+
+  /** Returns the document's vector layer as it's drawn at the current time. */
+  private render(document: CanvasDocument) {
+    const currentTime = getCurrentTime(this.context.store.getState());
+    return new AnimationRenderer(document.vectorLayer, document.animation).setCurrentTime(
+      currentTime,
+    );
+  }
+
+  private onKeyDown(event: KeyboardEvent) {
+    const target = event.target instanceof Element ? event.target : undefined;
+    if (
+      this.isActionMode ||
+      !this.selectedLayerIds.size ||
+      target?.closest('.MuiModal-root') ||
+      document.activeElement?.matches('input, textarea, [contenteditable]')
+    ) {
+      return undefined;
+    }
+    const arrow = ARROWS[event.key];
+    if (arrow && !event.altKey && !event.metaKey && !event.ctrlKey) {
+      const distance = event.shiftKey ? BIG_NUDGE : NUDGE;
+      this.edit(base =>
+        translateLayers(
+          base,
+          this.render(base),
+          this.selectedLayerIds,
+          arrow[0] * distance,
+          arrow[1] * distance,
+        ),
+      );
+      return false;
+    }
+    if (event.key.toLowerCase() === 'd' && ShortcutService.isOsDependentModifierKey(event)) {
+      // Duplicates in place, and selects the copies. It keeps the browser from bookmarking the
+      // page too.
+      let copyIds: ReadonlySet<string> = new Set();
+      this.edit(
+        base => {
+          const duplicated = duplicateLayers(
+            base,
+            getTopmostLayerIds(base.vectorLayer, this.selectedLayerIds),
+          );
+          copyIds = new Set(duplicated.layerIds);
+          return duplicated.document;
+        },
+        () => copyIds,
+      );
+      return false;
+    }
+    return undefined;
+  }
+
+  /** Makes an edit from the document as it is, as one undo step. */
+  private edit(
+    fn: (base: CanvasDocument) => CanvasDocument,
+    getSelectedLayerIds: () => ReadonlySet<string> | undefined = () => undefined,
+  ) {
+    const { preview } = this.context;
+    preview.begin();
+    const base = preview.getBase();
+    if (base) {
+      const document = fn(base);
+      preview.setDocument(document, getSelectedLayerIds());
+    }
+    preview.commit();
   }
 
   private draw() {
@@ -129,8 +221,9 @@ class Editor implements CanvasEditor {
 
 function getModifiers(event: PointerEvent): Modifiers {
   return {
-    isAdding: event.shiftKey || ShortcutService.isOsDependentModifierKey(event),
-    isContaining: event.altKey,
+    shift: event.shiftKey,
+    alt: event.altKey,
+    command: ShortcutService.isOsDependentModifierKey(event),
   };
 }
 

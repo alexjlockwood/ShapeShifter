@@ -175,7 +175,7 @@ function Workspace() {
           <Toolbar />
         </PanelErrorBoundary>
       </div>
-      <div className="fx-row fx-flex">
+      <div className="workspace-row fx-row fx-flex">
         <div className="display-container ss-theme-transition fx-column fx-flex">
           {/* Canvas. */}
           <div

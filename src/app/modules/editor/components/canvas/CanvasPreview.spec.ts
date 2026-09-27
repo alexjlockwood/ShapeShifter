@@ -1,11 +1,13 @@
 import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
+import { AnimationBlock } from 'app/modules/editor/model/timeline';
 import {
   createEditorServices,
   type EditorServices,
 } from 'app/modules/editor/services/createEditorServices';
 import { createEditorStore } from 'app/modules/editor/store';
-import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
+import { getSelectedLayerIds, getVectorLayer } from 'app/modules/editor/store/layers/selectors';
+import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { SetCurrentTime, SetIsPlaying } from 'app/modules/editor/store/playback/actions';
 import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
 import { ActionCreators } from 'redux-undo';
@@ -54,8 +56,8 @@ describe('CanvasPreview', () => {
     return { store, services, preview, path, other, group, rendered, pathDataOf };
   }
 
-  it('shows the working copies, and nothing else changes', () => {
-    const { store, preview, path, other, group, rendered, pathDataOf } = setUp();
+  it('shows the working copy, without changing the document', () => {
+    const { store, preview, path, other, rendered, pathDataOf } = setUp();
     const { vl, currentTime } = rendered();
     expect(preview.apply(vl, currentTime)).toBe(vl);
 
@@ -63,18 +65,52 @@ describe('CanvasPreview', () => {
     preview.setPath(path.id, new Path(TRIANGLE));
     const previewed = preview.apply(vl, currentTime);
     expect(pathDataOf(previewed, path.id)).toBe(TRIANGLE);
-    // The layer, its ancestors, and nothing else are copied.
-    expect(previewed.findLayerById(other.id)).toBe(vl.findLayerById(other.id));
-    expect(previewed.findLayerById(group.id)).not.toBe(vl.findLayerById(group.id));
+    expect(pathDataOf(previewed, other.id)).toBe(SQUARE);
     expect(pathDataOf(vl, path.id)).toBe(SQUARE);
     expect(pathDataOf(getVectorLayer(store.getState()), path.id)).toBe(SQUARE);
-
-    // It's remembered until the paths or the time change, since the rendered layer changes in
-    // place.
-    expect(preview.apply(vl, currentTime)).toBe(previewed);
-    expect(preview.apply(vl, currentTime + 10)).not.toBe(previewed);
+    // A later change replaces it.
     preview.setPath(path.id, new Path(SQUARE));
     expect(pathDataOf(preview.apply(vl, currentTime), path.id)).toBe(SQUARE);
+  });
+
+  it('draws a working document at the current time, animation and all', () => {
+    const { store, preview, other, rendered } = setUp();
+    preview.begin();
+    const base = preview.getBase()!;
+    const animation = base.animation.clone();
+    animation.blocks = [
+      AnimationBlock.from({
+        type: 'number',
+        layerId: other.id,
+        propertyName: 'fillAlpha',
+        startTime: 0,
+        endTime: 100,
+        fromValue: 0.5,
+        toValue: 0.5,
+      }),
+    ];
+    preview.setDocument({ vectorLayer: base.vectorLayer, animation });
+    const { vl, currentTime } = rendered();
+    const drawn = preview.apply(vl, currentTime).findLayerById(other.id) as PathLayer;
+    expect(drawn.fillAlpha).toBe(0.5);
+    expect(getAnimation(store.getState())).toBe(base.animation);
+  });
+
+  it("commits a working document's animation and selection in the same undo step", () => {
+    const { store, preview, other } = setUp();
+    preview.begin();
+    const base = preview.getBase()!;
+    const copy = other.clone();
+    copy.id = 'copy';
+    copy.name = 'copy';
+    const vectorLayer = base.vectorLayer.clone();
+    vectorLayer.children = [...vectorLayer.children, copy];
+    preview.setDocument({ vectorLayer, animation: base.animation }, new Set(['copy']));
+    preview.commit();
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['copy']));
+    store.dispatch(ActionCreators.undo());
+    expect(getVectorLayer(store.getState()).findLayerById('copy')).toBeUndefined();
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set());
   });
 
   it('tells the canvas to redraw', () => {

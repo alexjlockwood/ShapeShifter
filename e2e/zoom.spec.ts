@@ -51,17 +51,19 @@ test('pans by scrolling, and by dragging with the space bar held', async ({ page
   // Start on the panel around the artboard, where a click would clear the selection.
   const scrolled = await artboard(page);
   const panel = await boundingBox(page.locator('.app-canvas'));
-  const press = { x: panel.x + 10, y: panel.y + panel.height - 10 };
+  const press = { x: panel.x + 10, y: panel.y + panel.height - 40 };
   await page.keyboard.down('Space');
   await expect(page.locator('.app-canvas.is-space-held')).toHaveCount(1);
   await page.mouse.move(press.x, press.y);
   await page.mouse.down();
-  await page.mouse.move(press.x + 50, press.y - 30, { steps: 5 });
+  // Back down, since the scroll above moved the artboard up, and panning can't take the middle
+  // of the panel off of the artboard.
+  await page.mouse.move(press.x + 50, press.y + 30, { steps: 5 });
   await page.mouse.up();
   await page.keyboard.up('Space');
   const dragged = await artboard(page);
   expect(dragged.x).toBeCloseTo(scrolled.x + 50, 0);
-  expect(dragged.y).toBeCloseTo(scrolled.y - 30, 0);
+  expect(dragged.y).toBeCloseTo(scrolled.y + 30, 0);
 
   // Releasing the space bar after panning doesn't play the animation, and the click at the end
   // of the drag doesn't clear the selection.

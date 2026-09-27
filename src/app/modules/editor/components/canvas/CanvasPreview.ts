@@ -1,12 +1,7 @@
-import {
-  ClipPathLayer,
-  Layer,
-  LayerUtil,
-  PathLayer,
-  VectorLayer,
-} from 'app/modules/editor/model/layers';
+import { ClipPathLayer, LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation } from 'app/modules/editor/model/timeline';
+import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import { LayerTimelineService } from 'app/modules/editor/services';
 import { State, Store } from 'app/modules/editor/store';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
@@ -14,33 +9,44 @@ import { getCurrentTime, getIsPlaying } from 'app/modules/editor/store/playback/
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { combineLatest, Subject, Subscription } from 'rxjs';
 
-interface Edit {
-  // The document the edit started from, which it's saved to.
+/** The layers and their animation, which an edit changes together. */
+export interface CanvasDocument {
   readonly vectorLayer: VectorLayer;
   readonly animation: Animation;
+}
+
+interface Edit {
+  // The document the edit started from.
+  readonly base: CanvasDocument;
   readonly currentTime: number;
   readonly onCancel: (() => void) | undefined;
+}
+
+interface WorkingCopy {
+  readonly document: CanvasDocument;
+  readonly renderer: AnimationRenderer;
+  // What to select when the edit is committed, e.g. the layers it duplicated.
+  readonly selectedLayerIds: ReadonlySet<string> | undefined;
 }
 
 /**
  * Shows an edit on the canvas while a gesture makes it, without changing the store on every
  * pointer move, which would rebuild the animation renderer each time and record many undo steps.
- * The gesture keeps working copies of the paths it changes, and commits them when it ends, as one
- * undo step. Anything else that changes the document or the time cancels it, since the copies were
- * made from a document that's gone: e.g. undo, deleting the layer, or playback.
+ * The gesture keeps a working copy of the document, which the main canvas draws at the current
+ * time, and commits it when it ends, as one undo step. Anything else that changes the document or
+ * the time cancels it, since the copy was made from a document that's gone: e.g. undo, deleting the
+ * layer, or playback.
  *
- * Edits change the layers' own paths, so a path that an animation block sets at the current time
- * can't be edited: the change wouldn't show. Editing the block's value comes later
- * (docs/canvas-editor.md, phase 5).
+ * Changing a path that an animation block sets at the current time wouldn't show, so setPath
+ * refuses to. Editing the block's value comes later (docs/canvas-editor.md, phase 5).
  */
 export class CanvasPreview {
   private edit: Edit | undefined;
-  private readonly paths = new Map<string, Path>();
-  // Changes with the paths. The canvas redraws when it does.
+  private working: WorkingCopy | undefined;
+  // Changes with the working copy. The canvas redraws when it does.
   private version = 0;
   private readonly changes = new Subject<void>();
-  private memo:
-    { vl: VectorLayer; currentTime: number; version: number; result: VectorLayer } | undefined;
+  private memo: { currentTime: number; version: number; result: VectorLayer } | undefined;
   private subscription: Subscription | undefined;
 
   constructor(
@@ -58,8 +64,8 @@ export class CanvasPreview {
       const { edit } = this;
       if (
         edit &&
-        (vectorLayer !== edit.vectorLayer ||
-          animation !== edit.animation ||
+        (vectorLayer !== edit.base.vectorLayer ||
+          animation !== edit.base.animation ||
           currentTime !== edit.currentTime ||
           isPlaying)
       ) {
@@ -85,11 +91,31 @@ export class CanvasPreview {
     this.cancel();
     const state = this.store.getState();
     this.edit = {
-      vectorLayer: getVectorLayer(state),
-      animation: getAnimation(state),
+      base: { vectorLayer: getVectorLayer(state), animation: getAnimation(state) },
       currentTime: getCurrentTime(state),
       onCancel,
     };
+  }
+
+  /** The document the edit started from, which gestures change from scratch on every move. */
+  getBase() {
+    return this.edit?.base;
+  }
+
+  /**
+   * Shows the document as the edit's working copy. When it's committed, the selection changes to
+   * selectedLayerIds, if they're given.
+   */
+  setDocument(document: CanvasDocument, selectedLayerIds?: ReadonlySet<string>) {
+    if (!this.edit) {
+      throw new Error('Begin an edit before changing the document');
+    }
+    this.working = {
+      document,
+      renderer: new AnimationRenderer(document.vectorLayer, document.animation),
+      selectedLayerIds,
+    };
+    this.changed();
   }
 
   /**
@@ -110,39 +136,48 @@ export class CanvasPreview {
 
   /** Shows the layer with a working copy of its path. */
   setPath(layerId: string, path: Path) {
-    if (!this.edit) {
+    const { edit } = this;
+    if (!edit) {
       throw new Error('Begin an edit before changing paths');
     }
     if (!this.canEditPath(layerId)) {
       throw new Error("The layer's path can't be edited at this time");
     }
-    this.paths.set(layerId, path);
-    this.changed();
+    const { vectorLayer, animation } = this.working?.document ?? edit.base;
+    const layer = vectorLayer.findLayerById(layerId) as PathLayer | ClipPathLayer;
+    const clone = layer.clone();
+    clone.pathData = path;
+    this.setDocument({
+      vectorLayer: LayerUtil.replaceLayer(vectorLayer, layerId, clone),
+      animation,
+    });
   }
 
-  /** Saves the working copies as one undo step, and ends the edit. */
+  /** Saves the working copy as one undo step, and ends the edit. */
   commit() {
-    const { edit } = this;
+    const { edit, working } = this;
     if (!edit) {
       return;
     }
-    let vl = edit.vectorLayer;
-    for (const [layerId, path] of this.paths) {
-      const layer = vl.findLayerById(layerId);
-      if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
-        const clone = layer.clone();
-        clone.pathData = path;
-        vl = LayerUtil.replaceLayer(vl, layerId, clone);
-      }
-    }
     // Before saving, so that the new document doesn't cancel the edit.
     this.end();
-    if (vl !== edit.vectorLayer) {
-      this.layerTimelineService.commitCanvasEdit(vl);
+    if (!working) {
+      return;
+    }
+    const { document, selectedLayerIds } = working;
+    if (
+      document.vectorLayer !== edit.base.vectorLayer ||
+      document.animation !== edit.base.animation
+    ) {
+      this.layerTimelineService.commitCanvasEdit(
+        document.vectorLayer,
+        document.animation,
+        selectedLayerIds,
+      );
     }
   }
 
-  /** Throws the working copies away, and ends the edit. */
+  /** Throws the working copy away, and ends the edit. */
   cancel() {
     const { edit } = this;
     if (!edit) {
@@ -154,14 +189,15 @@ export class CanvasPreview {
 
   private end() {
     this.edit = undefined;
-    if (this.paths.size) {
-      this.paths.clear();
+    if (this.working) {
+      this.working = undefined;
       this.changed();
     }
   }
 
   private changed() {
     this.version++;
+    this.memo = undefined;
     this.changes.next();
   }
 
@@ -170,35 +206,19 @@ export class CanvasPreview {
   }
 
   /**
-   * Returns the rendered vector layer with the working copies of its paths, or the layer itself if
-   * there are none. The animation renderer changes the rendered layer in place as the time
-   * changes, so the result is remembered by the time as well as by the layer.
+   * Returns the working copy as it's drawn at the time, or the rendered vector layer if there's no
+   * working copy.
    */
   apply(vl: VectorLayer, currentTime: number) {
-    if (!this.paths.size) {
+    const { working, memo, version } = this;
+    if (!working) {
       return vl;
     }
-    const { memo, version } = this;
-    if (memo && memo.vl === vl && memo.currentTime === currentTime && memo.version === version) {
+    if (memo && memo.currentTime === currentTime && memo.version === version) {
       return memo.result;
     }
-    const { paths } = this;
-    // Clones the layers with new paths and their ancestors, in one pass over the tree.
-    const recurseFn = (layer: Layer): Layer => {
-      const path = paths.get(layer.id);
-      const children = layer.children.map(recurseFn);
-      if (!path && children.every((child, i) => child === layer.children[i])) {
-        return layer;
-      }
-      const clone = layer.clone();
-      clone.children = children;
-      if (path && (clone instanceof PathLayer || clone instanceof ClipPathLayer)) {
-        clone.pathData = path;
-      }
-      return clone;
-    };
-    const result = recurseFn(vl) as VectorLayer;
-    this.memo = { vl, currentTime, version, result };
+    const result = working.renderer.setCurrentTime(currentTime);
+    this.memo = { currentTime, version, result };
     return result;
   }
 }
