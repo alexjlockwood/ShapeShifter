@@ -8,6 +8,18 @@
         background-color: #fff;
     }
     // Like the panel, for rulers that run over the artboard when it's zoomed in.
+    $foreground: map.get($theme, ss-foreground);
+    .app-canvas .canvas-editor-toolbar {
+        background-color: mat-color($background, base100);
+        color: mat-color($foreground, secondary-text);
+    }
+    .app-canvas .canvas-editor-tool:hover {
+        background-color: mat-color($foreground, divider);
+    }
+    .app-canvas .canvas-editor-tool[aria-pressed='true'] {
+        background-color: #0d99ff;
+        color: #fff;
+    }
     .app-canvas .canvas-ruler.is-pinned,
     .app-canvas .canvas-ruler-corner {
         background-color: mat-color($background, base300);

@@ -3,16 +3,22 @@ import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
 import { Point } from 'app/modules/editor/scripts/common';
 
 const {
+  addSubPath,
+  appendAnchor,
   bendSegment,
+  closeSubPath,
   deleteAnchors,
   getAdjacentAnchorId,
+  getAnchorCount,
   getAnchors,
   getPointOnSegment,
+  getSubPathEnds,
   getSegments,
   insertAnchor,
   moveAnchors,
   moveHandle,
   projectOntoSegments,
+  reverseSubPath,
   setPointType,
 } = PathEdit;
 
@@ -462,6 +468,54 @@ describe('PathEdit', () => {
       expect(getAdjacentAnchorId(path, d, -1)).toBe(c);
       expect(getAdjacentAnchorId(path, e, 1)).toBe(a);
       expect(getAdjacentAnchorId(path, a, -1)).toBe(e);
+    });
+  });
+
+  describe('drawing', () => {
+    it('starts a path with one point, and adds lines and curves to it', () => {
+      const start = addSubPath(undefined, { x: 1, y: 2 });
+      expect(start.path.getPathString()).toBe('M 1 2');
+      expect(ids(start.path)).toEqual([start.anchorId]);
+      const line = appendAnchor(start.path, 0, { x: 5, y: 2 });
+      expect(line.path.getPathString()).toBe('M 1 2 L 5 2');
+      const curve = appendAnchor(line.path, 0, { x: 5, y: 6 }, { c2: { x: 7, y: 6 } });
+      expect(curve.path.getPathString()).toBe('M 1 2 L 5 2 C 5 2 7 6 5 6');
+      expect(ids(curve.path)).toEqual([start.anchorId, line.anchorId, curve.anchorId]);
+      expect(getAnchorCount(curve.path, 0)).toBe(3);
+    });
+
+    it('adds a subpath to an existing path', () => {
+      const { path, subIdx } = addSubPath(new Path('M 0 0 L 10 0 Z'), { x: 20, y: 20 });
+      expect(subIdx).toBe(1);
+      expect(appendAnchor(path, subIdx, { x: 30, y: 20 }).path.getPathString()).toBe(
+        'M 0 0 L 10 0 Z M 20 20 L 30 20',
+      );
+    });
+
+    it('closes a subpath with a line or a curve', () => {
+      const path = new Path('M 0 0 L 10 0 L 10 10');
+      expect(closeSubPath(path, 0).getPathString()).toBe('M 0 0 L 10 0 L 10 10 Z');
+      const curved = closeSubPath(path, 0, { c2: { x: -2, y: 4 } });
+      expect(curved.getPathString()).toBe('M 0 0 L 10 0 L 10 10 C 10 10 -2 4 0 0 Z');
+      expect(getAnchors(curved)).toHaveLength(3);
+      expect(() => closeSubPath(curved, 0)).toThrow();
+    });
+
+    it('reverses an open subpath, keeping the ids of its anchors', () => {
+      const path = new Path('M 0 0 L 10 0 C 12 2 12 8 10 10');
+      const reversed = reverseSubPath(path, 0);
+      expect(reversed.getPathString()).toBe('M 10 10 C 12 8 12 2 10 0 L 0 0');
+      expect(ids(reversed)).toEqual([...ids(path)].reverse());
+    });
+
+    it('finds the ends of the open subpaths', () => {
+      const path = new Path('M 0 0 L 10 0 Z M 20 0 L 30 0 M 40 40');
+      const [, , c, d, e] = ids(path);
+      expect(getSubPathEnds(path).map(end => [end.anchorId, end.isStart])).toEqual([
+        [c, true],
+        [d, false],
+        [e, false],
+      ]);
     });
   });
 });

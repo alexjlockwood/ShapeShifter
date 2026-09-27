@@ -234,10 +234,13 @@ while held and plays or pauses when tapped. Repeat and slow motion keep their to
 ## Roadmap
 
 Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395), phase 1 (#396 to #399),
-and phase 2 (#400). Phase 1's snapping only covers the artboard, other paths' bounds, and the
-pixel grid; guides come in phase 4. In phase 2, points snap to those, to the path's other points,
+phase 2 (#400), and phase 3. Phase 1's snapping only covers the artboard, other paths' bounds,
+and the pixel grid; guides come in phase 4. In phase 2, points snap to those, to the path's other points,
 and onto the closest curve. Editing a path has no cursors of its own yet, so hovering a segment or
-holding Cmd over one looks the same as anywhere else.
+holding Cmd over one looks the same as anywhere else. Phase 3 put the tools in a toolbar over the
+canvas panel's top left, with Figma's shortcuts. The pen commits each point as its own undo step,
+and the rectangle, ellipse, and line tools go back to the select tool once they've drawn, while the
+pencil stays on.
 
 Phase 0 is the foundation, and it's split into small pull requests:
 

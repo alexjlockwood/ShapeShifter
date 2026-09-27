@@ -23,8 +23,13 @@ import { environment } from 'environments/environment';
 import { combineLatest, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
+import type { DrawToolContext } from './drawTools';
 import { EditorRenderer } from './EditorRenderer';
+import { EditorToolbar, ToolName } from './EditorToolbar';
 import { getLayerPath, PathEditTool } from './PathEditTool';
+import { PencilTool } from './PencilTool';
+import { PenTool } from './PenTool';
+import { ShapeTool } from './ShapeTool';
 import { Modifiers, SelectTool } from './SelectTool';
 import { duplicateLayers, getTopmostLayerIds, translateLayers } from './transformLayers';
 
@@ -41,8 +46,11 @@ const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
 // Pressing or releasing these during a drag changes what it does, e.g. Shift keeps a move straight.
 const MODIFIER_KEYS: ReadonlySet<string> = new Set(['Shift', 'Alt', 'Meta', 'Control']);
 
-// How close to a layer's outline a press hits it, in CSS pixels, as in SelectTool.
+// How close to a layer's outline a press hits it, and how close things snap, in CSS pixels, as in
+// SelectTool.
 const LAYER_HIT_TOLERANCE = 6;
+const SNAP_THRESHOLD = 8;
+const GRID_SNAP_THRESHOLD = 4;
 // Presses closer together than this, in milliseconds and CSS pixels, are a double-click.
 const DOUBLE_CLICK_TIME = 500;
 const DOUBLE_CLICK_DISTANCE = 4;
@@ -80,6 +88,10 @@ class Editor implements CanvasEditor {
   private readonly selectTool: SelectTool;
   // The path whose points are being edited, if any. The select tool is used otherwise.
   private pathEdit: PathEditTool | undefined;
+  // The drawing tool picked in the toolbar, which gets the pointer before the others.
+  private drawTool: PenTool | PencilTool | ShapeTool | undefined;
+  private toolName: ToolName = 'select';
+  private toolbar: EditorToolbar | undefined;
   private lastPress: { readonly time: number; readonly point: Point; count: number } | undefined;
   private subscription: Subscription | undefined;
   private removeKeyListeners: (() => void) | undefined;
@@ -118,9 +130,11 @@ class Editor implements CanvasEditor {
       this.hiddenLayerIds = hiddenLayerIds;
       this.selectedLayerIds = selectedLayerIds;
       if (actionMode && !this.isActionMode) {
+        this.setTool('select');
         this.selectTool.onLeave();
       }
       this.isActionMode = actionMode;
+      this.toolbar?.setHidden(actionMode);
       const { pathEdit } = this;
       if (
         pathEdit &&
@@ -144,12 +158,19 @@ class Editor implements CanvasEditor {
       on(window, 'blur', () => this.endNudge()),
     ];
     this.removeKeyListeners = () => removeListeners.forEach(remove => remove());
+    this.toolbar = new EditorToolbar(this.context.root, tool => this.setTool(tool));
+    this.toolbar.setHidden(this.isActionMode);
     this.removeTestHooks = environment.production ? undefined : addTestHooks(preview, this);
   }
 
   /** Whether a path's points are being edited, for the end-to-end tests. */
   isEditingPath() {
     return !!this.pathEdit;
+  }
+
+  /** The tool picked in the toolbar, for the end-to-end tests. */
+  getToolName() {
+    return this.toolName;
   }
 
   setCamera(camera: CanvasCamera) {
@@ -162,7 +183,7 @@ class Editor implements CanvasEditor {
     this.endNudge();
     const clickCount = this.countClicks(event, point);
     const { pathEdit } = this;
-    if (pathEdit && !pathEdit.isOverPath(point)) {
+    if (pathEdit && !this.drawTool && !pathEdit.isOverPath(point)) {
       const hitLayerId = hitTestLayer(this.vectorLayer, point, {
         hiddenLayerIds: this.hiddenLayerIds,
         tolerance: this.camera?.toViewportLength(LAYER_HIT_TOLERANCE) ?? 0,
@@ -196,6 +217,8 @@ class Editor implements CanvasEditor {
     this.removeKeyListeners?.();
     this.nudge = undefined;
     this.pathEdit = undefined;
+    this.drawTool = undefined;
+    this.toolbar?.dispose();
     this.removeTestHooks?.();
     this.renderer.clear();
     delete this.context.root.dataset.editorCursor;
@@ -210,7 +233,62 @@ class Editor implements CanvasEditor {
   }
 
   private getTool() {
-    return this.pathEdit ?? this.selectTool;
+    return this.drawTool ?? this.pathEdit ?? this.selectTool;
+  }
+
+  /**
+   * Switches tools, finishing the path the pen was drawing. The shapes and the pencil draw new
+   * layers, so they stop editing points, but the pen adds subpaths to the path being edited.
+   */
+  private setTool(name: ToolName) {
+    if (this.isActionMode && name !== 'select') {
+      return;
+    }
+    const { drawTool } = this;
+    this.drawTool = undefined;
+    drawTool?.onLeave();
+    if (drawTool instanceof PenTool) {
+      drawTool.finish();
+    }
+    this.endNudge();
+    this.selectTool.onLeave();
+    this.pathEdit?.onLeave();
+    if (name !== 'select' && name !== 'pen') {
+      this.stopPathEdit();
+    }
+    this.toolName = name;
+    this.drawTool = this.createDrawTool(name);
+    this.toolbar?.setActiveTool(name);
+    this.draw();
+  }
+
+  private createDrawTool(name: ToolName) {
+    const toViewportLength = (length: number) => this.camera?.toViewportLength(length) ?? length;
+    const context: DrawToolContext = {
+      getVectorLayer: () => this.vectorLayer,
+      getHiddenLayerIds: () => this.hiddenLayerIds,
+      getSelectedLayerIds: () => this.selectedLayerIds,
+      toViewportLength,
+      getSnapThresholds: () => ({
+        lines: toViewportLength(SNAP_THRESHOLD),
+        grid: toViewportLength(GRID_SNAP_THRESHOLD),
+      }),
+      render: document => this.render(document),
+      preview: this.context.preview,
+      redraw: () => this.draw(),
+      // Back to the select tool, or to editing points if the pen was adding to a path.
+      finish: () => this.setTool('select'),
+    };
+    switch (name) {
+      case 'select':
+        return undefined;
+      case 'pen':
+        return new PenTool({ ...context, targetLayerId: this.pathEdit?.layerId });
+      case 'pencil':
+        return new PencilTool(context);
+      default:
+        return new ShapeTool(name, context);
+    }
   }
 
   /** Returns 2 for the second press of a double-click, and so on. */
@@ -277,6 +355,10 @@ class Editor implements CanvasEditor {
       this.endNudge();
       this.pathEdit = undefined;
       pathEdit.onLeave();
+      if (this.drawTool instanceof PenTool && this.drawTool.targetLayerId) {
+        // It was adding to the path.
+        this.setTool('select');
+      }
       this.draw();
     }
   }
@@ -291,14 +373,37 @@ class Editor implements CanvasEditor {
       // E.g. Escape, which the canvas took to cancel a drag.
       event.defaultPrevented ||
       this.isActionMode ||
-      !this.selectedLayerIds.size ||
       target?.closest('.MuiModal-root') ||
       document.activeElement?.matches('input, textarea, [contenteditable]')
     ) {
       return undefined;
     }
+    const tool = getToolShortcut(event);
+    if (tool) {
+      if (!event.repeat) {
+        this.setTool(tool);
+      }
+      return false;
+    }
+    if (
+      this.drawTool &&
+      !hasModifiers(event) &&
+      (event.key === 'Escape' || (event.key === 'Enter' && !isControlFocused()))
+    ) {
+      if (this.context.preview.isEditing() && !this.nudge) {
+        // A drag is in progress.
+        return false;
+      }
+      // Finishes the pen's path, and goes back to the select tool.
+      this.setTool('select');
+      return false;
+    }
     if (this.pathEdit) {
       return this.onPathEditKeyDown(event, this.pathEdit);
+    }
+    if (!this.selectedLayerIds.size) {
+      // The rest act on the selection.
+      return undefined;
     }
     if (event.key === 'Enter' && !hasModifiers(event) && !isControlFocused()) {
       if (this.context.preview.isEditing() && !this.nudge) {
@@ -472,24 +577,63 @@ class Editor implements CanvasEditor {
       delete this.context.root.dataset.editorCursor;
       return;
     }
+    const { drawTool } = this;
     const pathEdit = this.pathEdit?.getDrawing();
+    const overlay = drawTool?.getOverlay();
+    const isSelecting = !pathEdit && !drawTool;
     this.renderer.draw(camera, {
       vectorLayer: this.vectorLayer,
-      hoveredLayerId: pathEdit ? undefined : this.selectTool.getHoveredLayerId(),
+      hoveredLayerId: isSelecting ? this.selectTool.getHoveredLayerId() : undefined,
       selectedLayerIds: this.selectedLayerIds,
-      isShowingHandles: this.selectTool.isShowingHandles(),
-      marquee: pathEdit ? pathEdit.marquee : this.selectTool.getMarquee(),
-      guides: pathEdit ? pathEdit.guides : this.selectTool.getGuides(),
+      // The handles are in the way of drawing.
+      isShowingHandles: !drawTool && this.selectTool.isShowingHandles(),
+      marquee: pathEdit ? pathEdit.marquee : isSelecting ? this.selectTool.getMarquee() : undefined,
+      guides: overlay?.guides ?? pathEdit?.guides ?? this.selectTool.getGuides(),
       pathEdit,
+      overlay,
     });
     // The panel's styles turn this into a cursor (components/canvas/canvas.scss).
-    const cursor = this.pathEdit ? undefined : this.selectTool.getCursor();
+    const cursor =
+      drawTool instanceof PenTool
+        ? drawTool.getCursor()
+        : drawTool instanceof PencilTool
+          ? 'pencil'
+          : drawTool
+            ? 'crosshair'
+            : this.pathEdit
+              ? undefined
+              : this.selectTool.getCursor();
     if (cursor) {
       this.context.root.dataset.editorCursor = cursor;
     } else {
       delete this.context.root.dataset.editorCursor;
     }
   }
+}
+
+/**
+ * Returns the tool that the key picks, as in Figma: V, P, Shift+P, R, O, and L. They only work with
+ * the canvas editor on, and outside of action mode, so R still toggles repeating otherwise.
+ */
+function getToolShortcut(event: KeyboardEvent): ToolName | undefined {
+  if (event.altKey || event.metaKey || event.ctrlKey) {
+    return undefined;
+  }
+  const key = event.key.toLowerCase();
+  if (key === 'p') {
+    return event.shiftKey ? 'pencil' : 'pen';
+  }
+  if (event.shiftKey) {
+    // E.g. Shift+R, which is for the rulers (docs/canvas-editor.md, phase 4).
+    return undefined;
+  }
+  const tools: Record<string, ToolName> = {
+    v: 'select',
+    r: 'rectangle',
+    o: 'ellipse',
+    l: 'line',
+  };
+  return tools[key];
 }
 
 /** Whether a control that Enter and Tab work in has the focus, e.g. a button. */
@@ -512,7 +656,10 @@ function getModifiers(event: MouseEvent | KeyboardEvent): Modifiers {
   };
 }
 
-function addTestHooks(preview: CanvasPreview, editor: { isEditingPath(): boolean }) {
+function addTestHooks(
+  preview: CanvasPreview,
+  editor: { isEditingPath(): boolean; getToolName(): ToolName },
+) {
   const devGlobal = (window as { shapeshifter?: { canvasEditor?: unknown } }).shapeshifter;
   if (!devGlobal) {
     return undefined;
@@ -529,6 +676,7 @@ function addTestHooks(preview: CanvasPreview, editor: { isEditingPath(): boolean
     cancel: () => preview.cancel(),
     isEditing: () => preview.isEditing(),
     isEditingPath: () => editor.isEditingPath(),
+    getToolName: () => editor.getToolName(),
   };
   return () => {
     delete devGlobal.canvasEditor;
