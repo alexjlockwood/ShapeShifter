@@ -26,7 +26,7 @@ test("is off by default, and its code isn't downloaded", async ({ page, context 
   await loadDemo(page);
   // The service worker has finished precaching by the time it says so.
   await expect(page.getByText('Ready to work offline')).toBeVisible();
-  await expect(page.locator('.app-canvas')).not.toHaveAttribute('data-canvas-editor');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
   expect(requests).toEqual([]);
 });
 
@@ -41,6 +41,8 @@ test('is turned on and off with ?editor', async ({ page, context }) => {
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
 
   await loadDemo(page, '&editor=0');
-  expect(await page.evaluate(() => localStorage.getItem('storage_key_canvas_editor'))).toBe('0');
-  await expect(page.locator('.app-canvas')).not.toHaveAttribute('data-canvas-editor');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
+  // And stays off.
+  await loadDemo(page);
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
 });

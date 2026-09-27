@@ -37,7 +37,9 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
 - Find elements by role and name, e.g. `page.getByRole('button', { name: 'Play (Spacebar)' })`.
 - Unfinished features are off in every test, as they are for users (`playwright.config.ts` turns
   them off on the dev server too). Turn one on with its URL parameter, e.g. `?editor=1` for the
-  canvas editor, whose canvas gets `data-canvas-editor="ready"` once the editor has loaded.
+  canvas editor. The canvas's `data-canvas-editor` attribute says whether the editor is `off`,
+  `loading`, `ready`, or `failed`, so wait for the value you expect rather than for it to be
+  missing.
 
 ## Browser quirks
 

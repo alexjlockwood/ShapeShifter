@@ -3,15 +3,11 @@ import type { CanvasEditorModule } from './CanvasEditorApi';
 let editorModule: Promise<CanvasEditorModule> | undefined;
 
 /**
- * Downloads the canvas editor's code the first time it's called. If that fails (e.g. offline, or
- * after a deploy removed the old file), the next call tries again.
+ * Downloads the canvas editor's code the first time it's called. A failed download isn't tried
+ * again: browsers can remember a module that failed to load for the rest of the page's life, so
+ * trying again takes a reload.
  */
 export function loadCanvasEditor(): Promise<CanvasEditorModule> {
-  editorModule ??= import('app/modules/editor/components/canvaseditor/CanvasEditor').catch(
-    (error: unknown) => {
-      editorModule = undefined;
-      throw error;
-    },
-  );
+  editorModule ??= import('app/modules/editor/components/canvaseditor/CanvasEditor');
   return editorModule;
 }

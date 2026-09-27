@@ -38,8 +38,7 @@ test('loads the canvas editor with ?editor=1', async ({ page }) => {
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
   // It's off by default in tests (playwright.config.ts).
   await page.goto('/?project=demos/playtopause.shapeshifter&editor=default');
-  await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
-  await expect(page.locator('.app-canvas')).not.toHaveAttribute('data-canvas-editor');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
 });
 
 test('plays and rewinds with keyboard shortcuts', async ({ page }) => {

@@ -62,7 +62,8 @@ export default defineConfig({
         ],
         // The canvas editor is only downloaded when it's turned on (src/environments/features.ts),
         // so it's cached the first time instead of being precached for everyone. Its files have
-        // content hashes in their names, so a cached file never goes stale.
+        // content hashes in their names, so a cached file never goes stale. The catch is that it
+        // only works offline once it has been loaded online since the last deploy.
         runtimeCaching: [
           {
             urlPattern: new RegExp(`/${EDITOR_ASSETS_DIR}/`),
@@ -91,7 +92,9 @@ export default defineConfig({
     rolldownOptions: {
       output: {
         // The canvas editor's lazily loaded code goes in its own directory, so that the service
-        // worker can tell it apart.
+        // worker can tell it apart. Only its entry point is routed here, so the editor mustn't
+        // import CSS, and code it loads lazily in turn needs routing here too, or it would be
+        // precached for everyone.
         chunkFileNames: chunk =>
           chunk.facadeModuleId?.includes('/components/canvaseditor/')
             ? `${EDITOR_ASSETS_DIR}/[name]-[hash].js`

@@ -13,7 +13,7 @@ import { ReplaySubject, combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { CanvasContainer } from './CanvasContainer';
-import type { CanvasEditor } from './CanvasEditorApi';
+import type { CanvasEditor, CanvasEditorModule } from './CanvasEditorApi';
 import { CanvasLayers } from './CanvasLayers';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { CanvasOverlay } from './CanvasOverlay';
@@ -98,8 +98,12 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
     );
     // Only the canvas that shows the current time is editable. In action mode, the start and end
     // canvases next to it are for morphing.
-    if (this.features.canvasEditor && this.actionSource === ActionSource.Animated) {
-      this.loadEditor();
+    if (this.actionSource === ActionSource.Animated) {
+      if (this.features.canvasEditor) {
+        void this.loadEditor();
+      } else {
+        this.setEditorState('off');
+      }
     }
   }
 
@@ -108,33 +112,60 @@ export class CanvasController extends CanvasLayoutMixin(DestroyableMixin()) {
     super.dispose();
     this.isDisposed = true;
     this.canvasEditor?.dispose();
-    delete this.elements.root.dataset.canvasEditor;
+    this.setEditorState(undefined);
     this.canvasLayers.dispose();
     this.canvasOverlay.dispose();
   }
 
-  private loadEditor() {
-    loadCanvasEditor().then(
-      editorModule => {
-        // The canvas can be removed while the editor loads (StrictMode removes it right away in
-        // development).
-        if (this.isDisposed) {
-          return;
-        }
-        this.canvasEditor = editorModule.createCanvasEditor();
-        // Lets the end-to-end tests wait for the editor.
-        this.elements.root.dataset.canvasEditor = 'ready';
-      },
-      (error: unknown) => {
-        if (this.isDisposed) {
-          return;
-        }
-        // The canvas still works without the editor. Loading fails offline if the editor was
-        // never cached, and after a deploy that removed the file an old page asks for.
-        bugsnagClient.notify(error instanceof Error ? error : String(error), { severity: 'info' });
-        this.snackBarService.show("Couldn't load the canvas editor", 'Dismiss', Duration.Long);
-      },
+  private async loadEditor() {
+    this.setEditorState('loading');
+    let editorModule: CanvasEditorModule;
+    try {
+      editorModule = await loadCanvasEditor();
+    } catch (error) {
+      // Loading fails offline if the editor was never cached, and after a deploy that removed the
+      // file an old page asks for, so it's expected now and then.
+      this.onEditorFailed(error, 'info');
+      return;
+    }
+    // The canvas can be removed while the editor loads (StrictMode removes it right away in
+    // development).
+    if (this.isDisposed) {
+      return;
+    }
+    try {
+      this.canvasEditor = editorModule.createCanvasEditor();
+    } catch (error) {
+      this.onEditorFailed(error, 'error');
+      return;
+    }
+    this.setEditorState('ready');
+  }
+
+  /** The canvas still works without the editor, so it carries on without it. */
+  private onEditorFailed(error: unknown, severity: 'info' | 'error') {
+    if (this.isDisposed) {
+      return;
+    }
+    bugsnagClient.notify(error instanceof Error ? error : String(error), { severity });
+    this.snackBarService.show(
+      "Couldn't load the canvas editor. Reload the page to try again.",
+      'Dismiss',
+      Duration.Long,
     );
+    this.setEditorState('failed');
+  }
+
+  /**
+   * Shows whether the editor is on, loading, ready, or failed to load on the canvas element, so
+   * that the end-to-end tests can wait for it.
+   */
+  private setEditorState(state: 'off' | 'loading' | 'ready' | 'failed' | undefined) {
+    if (state) {
+      this.elements.root.dataset.canvasEditor = state;
+    } else {
+      delete this.elements.root.dataset.canvasEditor;
+    }
   }
 
   setCanvasBounds(bounds: Size) {
