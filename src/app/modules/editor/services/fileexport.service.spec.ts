@@ -30,6 +30,27 @@ describe('FileExportService.fromJSON', () => {
     expect(FileExportService.fromJSON(toJSON()).newerVersion).toBe(false);
   });
 
+  it('loads a version 2 project with a custom interpolator without flagging it as newer', () => {
+    const vectorLayer = new VectorLayer({ name: 'vector', children: [] });
+    const block = {
+      layerId: vectorLayer.id,
+      propertyName: 'alpha',
+      type: 'number',
+      fromValue: 0,
+      toValue: 1,
+      interpolator: 'M 0 0 C 0.3 0 0.2 1.3 1 1',
+    };
+    const parsed = FileExportService.fromJSON(
+      toJSON({
+        version: 2,
+        layers: { vectorLayer: vectorLayer.toJSON(), hiddenLayerIds: [] },
+        timeline: { animation: { ...new Animation().toJSON(), blocks: [block] } },
+      }),
+    );
+    expect(parsed.newerVersion).toBe(false);
+    expect(parsed.animation.blocks[0].interpolator).toBe('M 0 0 C 0.3 0 0.2 1.3 1 1');
+  });
+
   it('flags a version above CURRENT_PROJECT_VERSION as newer', () => {
     const parsed = FileExportService.fromJSON(toJSON({ version: CURRENT_PROJECT_VERSION + 1 }));
     expect(parsed.newerVersion).toBe(true);

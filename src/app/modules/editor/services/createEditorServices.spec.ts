@@ -74,7 +74,9 @@ describe('createEditorServices', () => {
 
         services.fileExportService.exportJSON();
         const rawExported = JSON.parse(await downloads[0].text());
-        expect(rawExported.version).toBe(CURRENT_PROJECT_VERSION);
+        // The demos only use features that every version has.
+        expect(rawExported.version).toBe(1);
+        expect(rawExported.version).toBeLessThanOrEqual(CURRENT_PROJECT_VERSION);
         const exported = FileExportService.fromJSON(rawExported);
         expect(exported.vectorLayer.toJSON()).toEqual(vectorLayer.toJSON());
         expect(exported.animation.toJSON()).toEqual(animation.toJSON());
@@ -95,6 +97,21 @@ describe('createEditorServices', () => {
       });
     });
   }
+
+  it('saves a project with a custom interpolator as version 2, and loads it back', async () => {
+    const { animation } = loadDemo(demos['/public/demos/playtopause.shapeshifter']);
+    const curve = 'M 0 0 C 0.2 0 0 1.4 0.5 1.2 C 0.8 1 0.9 1 1 1';
+    const block = animation.blocks[0].clone();
+    block.interpolator = curve;
+    services.layerTimelineService.updateBlocks([block]);
+
+    services.fileExportService.exportJSON();
+    const rawExported = JSON.parse(await downloads[0].text());
+    expect(rawExported.version).toBe(2);
+    const exported = FileExportService.fromJSON(rawExported);
+    expect(exported.newerVersion).toBe(false);
+    expect(exported.animation.blocks.find(b => b.id === block.id)?.interpolator).toBe(curve);
+  });
 
   it('can undo setting the paths of the selected block in action mode', () => {
     vi.useFakeTimers();

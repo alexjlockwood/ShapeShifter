@@ -2,8 +2,8 @@ import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 import { Path } from 'app/modules/editor/model/paths';
 import {
   ColorProperty,
-  EnumProperty,
   Inspectable,
+  InterpolatorProperty,
   NumberProperty,
   PathProperty,
   Property,
@@ -70,7 +70,7 @@ export abstract class AnimationBlock {
 Property.register(
   new NumberProperty('startTime', { min: 0, isInteger: true }),
   new NumberProperty('endTime', { min: 0, isInteger: true }),
-  new EnumProperty('interpolator', INTERPOLATORS),
+  new InterpolatorProperty('interpolator'),
 )(AnimationBlock);
 
 /**
@@ -127,7 +127,8 @@ interface AnimationBlockArgs {
   propertyName: string;
   startTime?: number;
   endTime?: number;
-  interpolator?: string; // Stores the 'value' key of the Interpolator object.
+  // A preset's 'value' key (see INTERPOLATORS), or a curve as pathInterpolator path data.
+  interpolator?: string;
   fromValue: any;
   toValue: any;
   type: AnimationBlockType;

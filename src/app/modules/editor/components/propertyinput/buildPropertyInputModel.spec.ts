@@ -102,6 +102,29 @@ describe('buildPropertyInputModel', () => {
       expect(store.getState().past.length).toBe(numPastStates);
     });
 
+    it("previews a block's interpolator and saves it as one undo step", () => {
+      loadSelectedPath();
+      const [path] = services.layerTimelineService.getVectorLayer().children;
+      services.layerTimelineService.addBlocks([
+        { layerId: path.id, propertyName: 'fillAlpha', fromValue: 1, toValue: 0, currentTime: 0 },
+      ]);
+      const [block] = services.layerTimelineService.getAnimation().blocks;
+      store.dispatch(new SetSelectedBlocks(new Set([block.id])));
+      vi.advanceTimersByTime(2000);
+      const before = getProperty('interpolator').value;
+
+      expect(getProperty('interpolator').canPreview).toBe(true);
+      getProperty('interpolator').previewValue('M 0 0 C 0.3 0 0.2 1 1 1');
+      vi.advanceTimersByTime(1500);
+      getProperty('interpolator').previewValue('M 0 0 C 0.4 0.2 0.2 1 1 1');
+      expect(getProperty('interpolator').getDisplayValue()).toBe('Custom');
+      getProperty('interpolator').commitPreview();
+      expect(getProperty('interpolator').value).toBe('M 0 0 C 0.4 0.2 0.2 1 1 1');
+
+      store.dispatch(ActionCreators.undo());
+      expect(getProperty('interpolator').value).toBe(before);
+    });
+
     it("doesn't preview a layer's name", () => {
       loadSelectedPath();
       // A preview would skip the name's sanitizing and uniqueness checks.

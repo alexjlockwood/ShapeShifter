@@ -1,3 +1,5 @@
+import { findPreset } from 'app/modules/editor/model/interpolators';
+
 /**
  * The parsed (but not yet reconstructed into model objects) JSON shape that
  * `FileExportService.exportJSON` writes and `FileExportService.fromJSON` reads.
@@ -33,7 +35,19 @@ export interface ProjectVersionRule {
  *   scale, or translate isn't the default, or it has a transform block. A pivot alone doesn't
  *   count.
  */
-const VERSION_RULES: readonly ProjectVersionRule[] = [];
+const VERSION_RULES: readonly ProjectVersionRule[] = [
+  {
+    // Builds before custom interpolators replace a curve with the default preset.
+    version: 2,
+    test: json => {
+      const blocks = json.timeline.animation?.blocks;
+      return (
+        Array.isArray(blocks) &&
+        blocks.some(b => typeof b?.interpolator === 'string' && !findPreset(b.interpolator))
+      );
+    },
+  },
+];
 
 /**
  * The version this build saves ordinary projects as: the highest version any registered rule can

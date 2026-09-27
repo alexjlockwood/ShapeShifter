@@ -121,6 +121,12 @@ once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are 
   are created without side effects and started in a layout effect.
 - React's wheel listeners are passive, so the timeline adds a native listener to prevent
   scrolling.
+- `services/shortcut.service.ts` listens on the window, so Delete and Backspace delete the
+  selected layers or blocks unless a text field has the focus. A focusable widget that takes those
+  keys stops their propagation, like the easing curve editor
+  (`components/propertyinput/InterpolatorEditor.tsx`, whose editing rules are in
+  `components/propertyinput/curveEditing.ts`). The canvas editor listens in the capture phase and
+  sees keys first, but it only takes those two while the pen draws or a path's points are edited.
 - Each panel is wrapped in `components/root/PanelErrorBoundary.tsx`, so a render error only
   replaces that panel (with a "Try again" button) and is reported to Bugsnag.
 - Dialogs (`components/dialogs/dialog.service.ts`) and the snackbar (`services/snackbar.service.ts`)

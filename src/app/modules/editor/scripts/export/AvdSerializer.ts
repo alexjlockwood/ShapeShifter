@@ -1,4 +1,4 @@
-import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
+import { formatCurveNumber, resolveInterpolator } from 'app/modules/editor/model/interpolators';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -7,7 +7,7 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
-import { find, isNil } from 'lodash-es';
+import { isNil } from 'lodash-es';
 import * as XmlSerializer from './XmlSerializer';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
@@ -91,13 +91,39 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
         conditionalAttrFn(blockNode, 'android:valueTo', block.toValue);
       }
       conditionalAttrFn(blockNode, 'android:valueType', property.getAnimatorValueType());
-      const interpolator =
-        find(INTERPOLATORS, i => i.value === block.interpolator) ?? INTERPOLATORS[0];
-      conditionalAttrFn(blockNode, 'android:interpolator', interpolator.androidRef);
+      appendInterpolator(blockNode, block.interpolator, xmlDoc);
       blockContainerNode.appendChild(blockNode);
     });
   });
   return serializeXmlNode(rootNode);
+}
+
+/**
+ * Sets an objectAnimator's interpolator: a preset's android:interpolator reference, or an inline
+ * pathInterpolator for a curve, with its control points for a single cubic and its path data for
+ * more. It never writes both, since aapt rejects an attribute that's set twice.
+ */
+function appendInterpolator(blockNode: Element, interpolator: string, xmlDoc: XMLDocument) {
+  const resolved = resolveInterpolator(interpolator);
+  if (resolved.type === 'preset') {
+    conditionalAttrFn(blockNode, 'android:interpolator', resolved.preset.androidRef);
+    return;
+  }
+  const attrNode = xmlDoc.createElementNS(AAPT_NS, 'aapt:attr');
+  attrNode.setAttribute('name', 'android:interpolator');
+  const pathInterpolatorNode = xmlDoc.createElement('pathInterpolator');
+  const { curve } = resolved;
+  if (curve.length === 1) {
+    const { cp1, cp2 } = curve[0];
+    conditionalAttrFn(pathInterpolatorNode, 'android:controlX1', formatCurveNumber(cp1.x));
+    conditionalAttrFn(pathInterpolatorNode, 'android:controlY1', formatCurveNumber(cp1.y));
+    conditionalAttrFn(pathInterpolatorNode, 'android:controlX2', formatCurveNumber(cp2.x));
+    conditionalAttrFn(pathInterpolatorNode, 'android:controlY2', formatCurveNumber(cp2.y));
+  } else {
+    conditionalAttrFn(pathInterpolatorNode, 'android:pathData', resolved.value);
+  }
+  attrNode.appendChild(pathInterpolatorNode);
+  blockNode.appendChild(attrNode);
 }
 
 /**

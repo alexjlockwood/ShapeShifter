@@ -12,11 +12,6 @@ and editing paths on the canvas. This is a survey only; nothing here has been im
   (`components/canvas/loadCanvasEditor.ts`), so MUI, svgo, jszip, rxjs, and bezier-js all ship in
   one chunk that blocks first paint, even though svgo/jszip and the demo loader are only needed
   for export/import flows. Splitting those behind `import()` is a half-day to a day, low risk.
-- **Playback does a linear scan every frame.** `AnimationRenderer.setCurrentTime`
-  (`scripts/animator/AnimationRenderer.ts`, around line 72) runs `_.find` over the interpolator
-  list for every animated property on every rAF tick; there's already a TODO at line 70
-  admitting this. Resolving the interpolator once per block instead of per frame is 1 to 2
-  hours, low risk.
 - **Import failures fail silently.** In `services/fileimport.service.ts` (lines 74-89, 118-134),
   a multi-file import only shows an error snackbar if every file fails, so one malformed file
   in a batch just vanishes with no feedback, and `FileReader` errors use a blocking `alert()`
@@ -77,11 +72,11 @@ Mostly already well-optimized:
 - MUI icons are already imported per-subpath (`components/icons/Icon.tsx`), not from the
   barrel file, so they are already tree-shakeable.
 
-Besides the bundle splitting and the interpolator lookup above, a performance audit on
-2026-09-27 found these, roughly in order of impact. None has been profiled yet, so measure one on a
-big document before fixing it. The same audit fixed the worst finding: `AnimationRenderer` deep
-cloned the whole document on every pointer move of a canvas editor gesture, and now only copies the
-animated layers (#408).
+Besides the bundle splitting above, a performance audit on 2026-09-27 found these, roughly in order
+of impact. None has been profiled yet, so measure one on a big document before fixing it. The same
+audit fixed the worst finding: `AnimationRenderer` deep cloned the whole document on every pointer
+move of a canvas editor gesture, and now only copies the animated layers (#408). It also looked up
+each block's interpolator on every frame, and now resolves it once per block.
 
 - **Import and spritesheet export block the main thread.** `optimizeSvg`
   (`scripts/svgo/index.ts`, line 75) returns a promise, but runs svgo synchronously inside its

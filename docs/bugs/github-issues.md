@@ -212,6 +212,7 @@ These are still bugs, and the entry named here covers them.
 | #125       | `Point` is a plain interface, and `MathUtil.arePointsEqual` handles missing points          |
 | #127       | Clicking empty canvas in a split or add points mode returns to selection mode               |
 | #129       | Auto fix has unit tests and a playground (`src/playground/autofix/`)                        |
+| #147       | Blocks can have custom easing curves, exported as a `pathInterpolator`                      |
 | #185       | Group bounds transform all four corners (MODEL-9)                                           |
 | #188       | Flattening transforms both the from and to values of path blocks                            |
 | #249       | The rulers are laid out from the canvas's camera, in viewport units (CANVAS-5)              |
@@ -315,7 +316,6 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #143  | Copy and paste blocks and layers         | Blocks work. Layers are #245.                                             |
 | #144  | Gradients                                | In `IMPROVEMENTS.md`                                                      |
 | #146  | Motion along a path                      | Not implemented                                                           |
-| #147  | Custom path interpolators                | Not implemented                                                           |
 | #148  | Keyboard shortcuts list                  | In `IMPROVEMENTS.md` (quick wins)                                         |
 | #149  | Marquee select in the timeline (#309)    | Not implemented                                                           |
 | #150  | Zoom and pan the canvas                  | Planned                                                                   |
