@@ -201,3 +201,13 @@ test('scales and rotates the selection with its handles', async ({ page, modifie
     .poll(async () => rounded(await getPathData(page, 'a')))
     .toBe('M 6 2 L 6 6 L 2 6 L 2 2 Z');
 });
+
+test('snaps moves to other layers and the pixel grid', async ({ page }) => {
+  await openSquares(page);
+  // a's right edge ends up a fraction of a unit from b's left edge, and snaps to it.
+  await drag(page, [4, 4], [7.7, 4.1]);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 6 2 L 10 2 L 10 6 L 6 6 Z');
+  // Away from everything, it snaps to whole units.
+  await drag(page, [8, 4], [16.4, 16.3]);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 14 14 L 18 14 L 18 18 L 14 18 Z');
+});

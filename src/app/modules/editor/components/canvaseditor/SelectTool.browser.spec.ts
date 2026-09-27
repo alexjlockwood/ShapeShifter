@@ -18,7 +18,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Modifiers, SelectTool } from './SelectTool';
 
-const NONE: Modifiers = { shift: false, alt: false, command: false };
+const NONE: Modifiers = { shift: false, alt: false, command: false, ctrl: false };
 const SHIFT: Modifiers = { ...NONE, shift: true };
 const ALT: Modifiers = { ...NONE, alt: true };
 
@@ -378,6 +378,68 @@ describe('SelectTool', () => {
       expect(tool.getCursor()).toBe('rotate-ne');
       tool.onMove({ x: 4, y: 4 }, NONE);
       expect(tool.getCursor()).toBeUndefined();
+    });
+  });
+
+  describe('snapping', () => {
+    it("snaps a move to another path's edge, and shows a guide", () => {
+      const { tool, a, pathDataOf } = setUp();
+      // a's right edge lands at 9.6, less than 8 pixels from b's left edge at 10.
+      tool.onPress({ x: 4, y: 4 }, NONE);
+      tool.onMove({ x: 7.6, y: 4 }, NONE);
+      expect(tool.getGuides()).toContainEqual({ axis: 'x', value: 10, from: 2, to: 6 });
+      tool.onRelease({ x: 7.6, y: 4 });
+      expect(pathDataOf(a.id)).toBe('M 6 2 L 10 2 L 10 6 L 6 6 Z');
+      expect(tool.getGuides()).toEqual([]);
+    });
+
+    it('snaps a move to the pixel grid away from other paths', () => {
+      const { a, drag, pathDataOf } = setUp();
+      drag([4, 4], [18.3, 18.2]);
+      expect(pathDataOf(a.id)).toBe('M 16 16 L 20 16 L 20 20 L 16 20 Z');
+    });
+
+    it("doesn't snap with Ctrl held", () => {
+      const { a, drag, pathDataOf } = setUp();
+      // Without Ctrl, this small move would snap back to c's left edge and b's top one.
+      drag([4, 4], [4.5, 4.2]);
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+      drag([4, 4], [4.5, 4.2], { ...NONE, ctrl: true });
+      expect(pathDataOf(a.id)).toBe('M 2.5 2.2 L 6.5 2.2 L 6.5 6.2 L 2.5 6.2 Z');
+    });
+
+    it('snaps a scale handle, and shows a guide', () => {
+      const { tool, a, click, pathDataOf } = setUp();
+      click(4, 4);
+      // The right edge stops at b's left edge.
+      tool.onPress({ x: 6, y: 4 }, NONE);
+      tool.onMove({ x: 9.5, y: 4 }, NONE);
+      expect(tool.getGuides()).toContainEqual({ axis: 'x', value: 10, from: 2, to: 6 });
+      tool.onRelease({ x: 9.5, y: 4 });
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 10 2 L 10 6 L 2 6 Z');
+    });
+
+    it('snaps where the handle is dragged to, rather than the pointer', () => {
+      const { a, click, drag, pathDataOf } = setUp();
+      click(4, 4);
+      // Half a unit to the right of the handle, so the handle lands at 9.6, in range of b.
+      drag([6.5, 4], [10.1, 4]);
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 10 2 L 10 6 L 2 6 Z');
+    });
+
+    it('only snaps the side that sets the scale when Shift keeps the proportions', () => {
+      const { tool, a, click, pathDataOf } = setUp();
+      click(4, 4);
+      // Wider more than taller, so the width sets the scale. The bottom is near b's, at 6, but it
+      // ends up at 10.
+      tool.onPress({ x: 6, y: 6 }, NONE);
+      tool.onMove({ x: 9.7, y: 6.3 }, SHIFT);
+      expect(tool.getGuides().map(guide => [guide.axis, guide.value])).toEqual([
+        ['x', 10],
+        ['x', 10],
+      ]);
+      tool.onRelease({ x: 9.7, y: 6.3 });
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 10 2 L 10 10 L 2 10 Z');
     });
   });
 });

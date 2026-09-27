@@ -271,6 +271,7 @@ class Editor implements CanvasEditor {
       selectedLayerIds: this.selectedLayerIds,
       isShowingHandles: this.selectTool.isShowingHandles(),
       marquee: this.selectTool.getMarquee(),
+      guides: this.selectTool.getGuides(),
     });
     // The panel's styles turn this into a cursor (components/canvas/canvas.scss).
     const cursor = this.selectTool.getCursor();
@@ -287,6 +288,7 @@ function getModifiers(event: MouseEvent | KeyboardEvent): Modifiers {
     shift: event.shiftKey,
     alt: event.altKey,
     command: ShortcutService.isOsDependentModifierKey(event),
+    ctrl: event.ctrlKey,
   };
 }
 
