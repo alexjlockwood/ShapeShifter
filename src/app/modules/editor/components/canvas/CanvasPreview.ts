@@ -15,6 +15,12 @@ export interface CanvasDocument {
   readonly animation: Animation;
 }
 
+/** The layer states that a committed edit changes too, e.g. to select the layers it duplicated. */
+export interface CanvasEditLayerIds {
+  readonly selectedLayerIds?: ReadonlySet<string>;
+  readonly hiddenLayerIds?: ReadonlySet<string>;
+}
+
 interface Edit {
   // The document the edit started from.
   readonly base: CanvasDocument;
@@ -25,8 +31,7 @@ interface Edit {
 interface WorkingCopy {
   readonly document: CanvasDocument;
   readonly renderer: AnimationRenderer;
-  // What to select when the edit is committed, e.g. the layers it duplicated.
-  readonly selectedLayerIds: ReadonlySet<string> | undefined;
+  readonly layerIds: CanvasEditLayerIds | undefined;
 }
 
 /**
@@ -103,17 +108,17 @@ export class CanvasPreview {
   }
 
   /**
-   * Shows the document as the edit's working copy. When it's committed, the selection changes to
-   * selectedLayerIds, if they're given.
+   * Shows the document as the edit's working copy. When it's committed, the selected and hidden
+   * layers change to layerIds' sets, if they're given.
    */
-  setDocument(document: CanvasDocument, selectedLayerIds?: ReadonlySet<string>) {
+  setDocument(document: CanvasDocument, layerIds?: CanvasEditLayerIds) {
     if (!this.edit) {
       throw new Error('Begin an edit before changing the document');
     }
     this.working = {
       document,
       renderer: new AnimationRenderer(document.vectorLayer, document.animation),
-      selectedLayerIds,
+      layerIds,
     };
     this.changed();
   }
@@ -164,7 +169,7 @@ export class CanvasPreview {
     if (!working) {
       return;
     }
-    const { document, selectedLayerIds } = working;
+    const { document, layerIds } = working;
     if (
       document.vectorLayer !== edit.base.vectorLayer ||
       document.animation !== edit.base.animation
@@ -172,7 +177,7 @@ export class CanvasPreview {
       this.layerTimelineService.commitCanvasEdit(
         document.vectorLayer,
         document.animation,
-        selectedLayerIds,
+        layerIds,
       );
     }
   }

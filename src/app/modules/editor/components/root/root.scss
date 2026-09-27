@@ -19,12 +19,6 @@
     }
 }
 
-// The canvas and the property inspector. The inspector scrolls, rather than making the row taller
-// than its share of the window, which would resize the canvas when a selection fills it.
-.workspace-row {
-    min-height: 0;
-}
-
 div.toolbar-container {
     position: relative;
     z-index: 1;

@@ -25,7 +25,14 @@ describe('getTopmostLayerIds', () => {
     const b = path('b', 'M 0 0 L 1 1');
     const group = new GroupLayer({ name: 'group', children: [a] });
     const vl = new VectorLayer({ name: 'vector', children: [group, b] });
-    expect(getTopmostLayerIds(vl, [b.id, a.id, group.id, vl.id])).toEqual([group.id, b.id]);
+    expect(getTopmostLayerIds(vl, [b.id, a.id, group.id])).toEqual([group.id, b.id]);
+  });
+
+  it("gives the layers in the vector layer for the vector layer, which can't move", () => {
+    const a = path('a', 'M 0 0 L 1 1');
+    const group = new GroupLayer({ name: 'group', children: [path('b', 'M 0 0 L 1 1')] });
+    const vl = new VectorLayer({ name: 'vector', children: [a, group] });
+    expect(getTopmostLayerIds(vl, [vl.id, a.id])).toEqual([a.id, group.id]);
   });
 });
 
@@ -88,6 +95,32 @@ describe('translateLayers', () => {
     expect(pathDataOf(moved.vectorLayer, square.id)).toBe('M 0 -2 L 4 -2 L 4 2 Z');
   });
 
+  it('converts the distance with the transform as drawn, which animations change', () => {
+    const square = path('square', 'M 0 0 L 4 0 L 4 4 Z');
+    const group = new GroupLayer({ name: 'group', children: [square] });
+    const vl = new VectorLayer({ name: 'vector', children: [group] });
+    // As drawn at a time when a block has scaled the group by 2.
+    const rendered = vl.clone();
+    const scaled = group.clone();
+    scaled.scaleX = 2;
+    scaled.scaleY = 2;
+    rendered.children = [scaled];
+    const document = { vectorLayer: vl, animation: new Animation() };
+    const moved = translateLayers(document, rendered, [square.id], 4, 0);
+    expect(pathDataOf(moved.vectorLayer, square.id)).toBe('M 2 0 L 6 0 L 6 4 Z');
+  });
+
+  it('rounds the translations of groups', () => {
+    const group = new GroupLayer({ name: 'group', children: [], rotation: 30 });
+    const outer = new GroupLayer({ name: 'outer', children: [group], rotation: 45 });
+    const vl = new VectorLayer({ name: 'vector', children: [outer] });
+    const document = { vectorLayer: vl, animation: new Animation() };
+    const moved = translateLayers(document, vl, [group.id], 1, 0);
+    const movedGroup = moved.vectorLayer.findLayerById(group.id) as GroupLayer;
+    // cos(45°) and -sin(45°), to 3 decimals.
+    expect([movedGroup.translateX, movedGroup.translateY]).toEqual([0.707, -0.707]);
+  });
+
   it("doesn't change anything for no distance", () => {
     const vl = new VectorLayer({ name: 'vector', children: [path('a', 'M 0 0 L 1 1')] });
     const document = { vectorLayer: vl, animation: new Animation() };
@@ -96,7 +129,7 @@ describe('translateLayers', () => {
 });
 
 describe('duplicateLayers', () => {
-  it('copies layers above the originals, with new ids, unique names, and blocks', () => {
+  it('copies layers with new ids, unique names, and blocks', () => {
     const a = path('a', 'M 0 0 L 1 1');
     const child = path('group', 'M 0 0 L 2 2');
     const group = new GroupLayer({ name: 'group_1', children: [child] });
@@ -115,18 +148,17 @@ describe('duplicateLayers', () => {
       group.id,
       a.id,
     ]);
-    const names = (layer: Layer): string[] => [layer.name, ...layer.children.flatMap(names)];
     expect(names(document.vectorLayer)).toEqual([
       'vector',
       'a',
-      'a_1',
       'group_1',
       'group',
+      'a_1',
       'group_2',
       'group_3',
     ]);
     expect(layerIds).toEqual([
-      document.vectorLayer.children[1].id,
+      document.vectorLayer.children[2].id,
       document.vectorLayer.children[3].id,
     ]);
     const copiedChild = document.vectorLayer.children[3].children[0];
@@ -135,4 +167,42 @@ describe('duplicateLayers', () => {
     expect(document.animation.blocks[1].layerId).toBe(copiedChild.id);
     expect(document.animation.blocks[1].id).not.toBe(block.id);
   });
+
+  it('puts the copies above the topmost original in each group, in the same order', () => {
+    const [a, b, c, d] = ['a', 'b', 'c', 'd'].map(name => path(name, 'M 0 0 L 1 1'));
+    const e = path('e', 'M 0 0 L 1 1');
+    const group = new GroupLayer({ name: 'group', children: [e] });
+    const vl = new VectorLayer({ name: 'vector', children: [a, b, c, group, d] });
+    const document = { vectorLayer: vl, animation: new Animation() };
+    const duplicated = duplicateLayers(document, [c.id, e.id, a.id]);
+    expect(names(duplicated.document.vectorLayer)).toEqual([
+      'vector',
+      'a',
+      'b',
+      'c',
+      'a_1',
+      'c_1',
+      'group',
+      'e',
+      'e_1',
+      'd',
+    ]);
+  });
+
+  it('hides the copies of hidden layers', () => {
+    const a = path('a', 'M 0 0 L 1 1');
+    const hiddenChild = path('hiddenChild', 'M 0 0 L 1 1');
+    const group = new GroupLayer({ name: 'group', children: [hiddenChild] });
+    const vl = new VectorLayer({ name: 'vector', children: [a, group] });
+    const document = { vectorLayer: vl, animation: new Animation() };
+    const hidden = new Set([hiddenChild.id]);
+    expect(duplicateLayers(document, [a.id], hidden).hiddenLayerIds).toBe(hidden);
+    const duplicated = duplicateLayers(document, [group.id], hidden);
+    const copiedChild = duplicated.document.vectorLayer.children[2].children[0];
+    expect(duplicated.hiddenLayerIds).toEqual(new Set([hiddenChild.id, copiedChild.id]));
+  });
 });
+
+function names(layer: Layer): string[] {
+  return [layer.name, ...layer.children.flatMap(names)];
+}

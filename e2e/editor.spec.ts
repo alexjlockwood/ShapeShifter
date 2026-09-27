@@ -137,7 +137,27 @@ test('duplicates layers by dragging them with Alt held, or with Cmd+D', async ({
   expect(await getPathData(page, 'a_2')).toBe(await getPathData(page, 'a_1'));
 });
 
-test('nudges the selection with the arrow keys', async ({ page }) => {
+test('moves an animated layer with its animation', async ({ page }) => {
+  await page.goto('/?project=demos/playtopause.shapeshifter&editor=1');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
+  // The play icon, as its path block draws it at the start.
+  await drag(page, [10, 12], [10, 16]);
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'path')))
+    .toBe('M 8 9 L 8 23 L 19 16 Z');
+  const blockPaths = await getState<string[][]>(page, s =>
+    s.timeline.animation.blocks
+      .filter((b: any) => b.propertyName === 'pathData')
+      .map((b: any) => [b.fromValue.getPathString(), b.toValue.getPathString()]),
+  );
+  expect(blockPaths.flat().map(p => rounded(p)?.split(' L ')[0])).toEqual(['M 8 9', 'M 5 10']);
+});
+
+test('nudges the selection with the arrow keys, one undo step per key press', async ({
+  page,
+  modifier,
+}) => {
   await openSquares(page);
   // Without a selection, they rewind and fast forward.
   await page.keyboard.press('ArrowRight');
@@ -146,4 +166,14 @@ test('nudges the selection with the arrow keys', async ({ page }) => {
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Shift+ArrowDown');
   await expect.poll(() => getPathData(page, 'a')).toBe('M 3 12 L 7 12 L 7 16 L 3 16 Z');
+  // Held down, so that the key repeats.
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.down('ArrowLeft');
+  }
+  await page.keyboard.up('ArrowLeft');
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 0 12 L 4 12 L 4 16 L 0 16 Z');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 3 12 L 7 12 L 7 16 L 3 16 Z');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 3 2 L 7 2 L 7 6 L 3 6 Z');
 });

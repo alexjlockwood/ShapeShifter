@@ -223,6 +223,18 @@ describe('SelectTool', () => {
       services.dispose();
     });
 
+    it('selects and moves what is under the pointer with the vector layer selected', () => {
+      const { store, a, drag, selected, pathDataOf } = setUp();
+      const services = createEditorServices(store);
+      services.layerTimelineService.setSelectedLayers(
+        new Set([getVectorLayer(store.getState()).id]),
+      );
+      drag([4, 4], [4, 6]);
+      expect(selected()).toEqual([a.id]);
+      expect(pathDataOf(a.id)).toBe('M 2 4 L 6 4 L 6 8 L 2 8 Z');
+      services.dispose();
+    });
+
     it('moves copies with Alt held, and selects them', () => {
       const { store, a, drag, selected, pathDataOf } = setUp();
       drag([4, 4], [4, 7], ALT);

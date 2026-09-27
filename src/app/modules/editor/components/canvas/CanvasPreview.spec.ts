@@ -6,7 +6,11 @@ import {
   type EditorServices,
 } from 'app/modules/editor/services/createEditorServices';
 import { createEditorStore } from 'app/modules/editor/store';
-import { getSelectedLayerIds, getVectorLayer } from 'app/modules/editor/store/layers/selectors';
+import {
+  getHiddenLayerIds,
+  getSelectedLayerIds,
+  getVectorLayer,
+} from 'app/modules/editor/store/layers/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { SetCurrentTime, SetIsPlaying } from 'app/modules/editor/store/playback/actions';
 import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
@@ -96,7 +100,7 @@ describe('CanvasPreview', () => {
     expect(getAnimation(store.getState())).toBe(base.animation);
   });
 
-  it("commits a working document's animation and selection in the same undo step", () => {
+  it("commits a working document's animation and layer states in the same undo step", () => {
     const { store, preview, other } = setUp();
     preview.begin();
     const base = preview.getBase()!;
@@ -105,12 +109,31 @@ describe('CanvasPreview', () => {
     copy.name = 'copy';
     const vectorLayer = base.vectorLayer.clone();
     vectorLayer.children = [...vectorLayer.children, copy];
-    preview.setDocument({ vectorLayer, animation: base.animation }, new Set(['copy']));
+    const animation = base.animation.clone();
+    animation.blocks = [
+      AnimationBlock.from({
+        type: 'number',
+        layerId: copy.id,
+        propertyName: 'fillAlpha',
+        startTime: 0,
+        endTime: 100,
+        fromValue: 0,
+        toValue: 1,
+      }),
+    ];
+    preview.setDocument(
+      { vectorLayer, animation },
+      { selectedLayerIds: new Set(['copy']), hiddenLayerIds: new Set(['copy']) },
+    );
     preview.commit();
+    expect(getAnimation(store.getState()).blocks.map(b => b.layerId)).toEqual(['copy']);
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['copy']));
+    expect(getHiddenLayerIds(store.getState())).toEqual(new Set(['copy']));
     store.dispatch(ActionCreators.undo());
     expect(getVectorLayer(store.getState()).findLayerById('copy')).toBeUndefined();
+    expect(getAnimation(store.getState())).toBe(base.animation);
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set());
+    expect(getHiddenLayerIds(store.getState())).toEqual(new Set());
   });
 
   it('tells the canvas to redraw', () => {

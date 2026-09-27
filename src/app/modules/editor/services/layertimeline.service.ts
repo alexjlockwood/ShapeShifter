@@ -233,13 +233,24 @@ export class LayerTimelineService {
 
   /**
    * Saves an edit made on the canvas as its own undo step, even if another edit came right before
-   * it, since a gesture is one thing to undo. The selection changes with it, if it's given, e.g. to
-   * the layers the edit duplicated.
+   * it, since a gesture is one thing to undo. The selected and hidden layers change with it, if
+   * they're given, e.g. to select and hide the copies of hidden layers that the edit duplicated.
    */
-  commitCanvasEdit(vl: VectorLayer, animation?: Animation, selectedLayerIds?: ReadonlySet<string>) {
+  commitCanvasEdit(
+    vl: VectorLayer,
+    animation?: Animation,
+    layerIds: {
+      readonly selectedLayerIds?: ReadonlySet<string>;
+      readonly hiddenLayerIds?: ReadonlySet<string>;
+    } = {},
+  ) {
+    const { selectedLayerIds, hiddenLayerIds } = layerIds;
     const actions: Action[] = [new IsolateUndoStep(), new SetVectorLayer(vl)];
     if (animation && animation !== this.getAnimation()) {
       actions.push(new SetAnimation(animation));
+    }
+    if (hiddenLayerIds && hiddenLayerIds !== this.getHiddenLayerIds()) {
+      actions.push(new SetHiddenLayers(hiddenLayerIds));
     }
     if (selectedLayerIds) {
       actions.push(...this.getUpdateSelectionsActions(false, new Set(), new Set(selectedLayerIds)));

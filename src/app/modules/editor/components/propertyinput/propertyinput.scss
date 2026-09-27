@@ -1,5 +1,18 @@
 @use 'sass:math';
 
+// The inspector is as tall as the canvas and the playback controls next to it, and its body
+// scrolls. Its properties don't count toward the row's height, or selecting something with many of
+// them would make the workspace taller than the window and resize the canvas.
+.app-propertyinput {
+    height: 0;
+    min-height: 100%;
+}
+
+.property-input,
+.spi-content {
+    min-height: 0;
+}
+
 .property-input {
     width: 320px;
     user-select: none;

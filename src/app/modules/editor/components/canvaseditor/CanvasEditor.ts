@@ -35,6 +35,15 @@ const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
   ArrowDown: [0, 1],
 };
 
+interface Nudge {
+  readonly base: CanvasDocument;
+  readonly rendered: VectorLayer;
+  readonly layerIds: ReadonlyArray<string>;
+  // How far it's moved the selection so far.
+  x: number;
+  y: number;
+}
+
 // The entry point of the canvas editor's lazily loaded code (see docs/canvas-editor.md). Dev builds
 // also let the end-to-end tests drive its preview, as window.shapeshifter.canvasEditor.
 
@@ -59,7 +68,9 @@ class Editor implements CanvasEditor {
   private readonly renderer: EditorRenderer;
   private readonly selectTool: SelectTool;
   private subscription: Subscription | undefined;
-  private removeKeyListener: (() => void) | undefined;
+  private removeKeyListeners: (() => void) | undefined;
+  // An arrow key nudge in progress, which is one undo step however long the key is held.
+  private nudge: Nudge | undefined;
   private removeTestHooks: (() => void) | undefined;
 
   constructor(private readonly context: CanvasEditorContext) {
@@ -98,9 +109,12 @@ class Editor implements CanvasEditor {
       this.draw();
     });
     // Before the keyboard shortcuts, so that the arrow keys nudge instead of rewinding.
-    this.removeKeyListener = on(window, 'keydown', event => this.onKeyDown(event), {
-      capture: true,
-    });
+    const removeListeners = [
+      on(window, 'keydown', event => this.onKeyDown(event), { capture: true }),
+      on(window, 'keyup', event => this.onKeyUp(event), { capture: true }),
+      on(window, 'blur', () => this.endNudge()),
+    ];
+    this.removeKeyListeners = () => removeListeners.forEach(remove => remove());
     this.removeTestHooks = environment.production ? undefined : addTestHooks(preview);
   }
 
@@ -111,6 +125,7 @@ class Editor implements CanvasEditor {
   }
 
   onPress(event: PointerEvent, point: Point) {
+    this.endNudge();
     this.selectTool.onPress(point, getModifiers(event));
   }
 
@@ -128,7 +143,8 @@ class Editor implements CanvasEditor {
 
   dispose() {
     this.subscription?.unsubscribe();
-    this.removeKeyListener?.();
+    this.removeKeyListeners?.();
+    this.nudge = undefined;
     this.removeTestHooks?.();
     this.renderer.clear();
   }
@@ -152,52 +168,79 @@ class Editor implements CanvasEditor {
       return undefined;
     }
     const arrow = ARROWS[event.key];
-    if (arrow && !event.altKey && !event.metaKey && !event.ctrlKey) {
+    const isNudge = !!arrow && !event.altKey && !event.metaKey && !event.ctrlKey;
+    const isDuplicate =
+      event.key.toLowerCase() === 'd' && ShortcutService.isOsDependentModifierKey(event);
+    if (!isNudge && !isDuplicate) {
+      return undefined;
+    }
+    if (this.context.preview.isEditing() && !this.nudge) {
+      // A drag is in progress. The keys are swallowed, since rewinding would cancel it.
+      return false;
+    }
+    if (isNudge) {
       const distance = event.shiftKey ? BIG_NUDGE : NUDGE;
-      this.edit(base =>
-        translateLayers(
-          base,
-          this.render(base),
-          this.selectedLayerIds,
-          arrow[0] * distance,
-          arrow[1] * distance,
-        ),
-      );
+      this.nudgeBy(arrow[0] * distance, arrow[1] * distance);
       return false;
     }
-    if (event.key.toLowerCase() === 'd' && ShortcutService.isOsDependentModifierKey(event)) {
-      // Duplicates in place, and selects the copies. It keeps the browser from bookmarking the
-      // page too.
-      let copyIds: ReadonlySet<string> = new Set();
-      this.edit(
-        base => {
-          const duplicated = duplicateLayers(
-            base,
-            getTopmostLayerIds(base.vectorLayer, this.selectedLayerIds),
-          );
-          copyIds = new Set(duplicated.layerIds);
-          return duplicated.document;
-        },
-        () => copyIds,
-      );
-      return false;
-    }
-    return undefined;
-  }
-
-  /** Makes an edit from the document as it is, as one undo step. */
-  private edit(
-    fn: (base: CanvasDocument) => CanvasDocument,
-    getSelectedLayerIds: () => ReadonlySet<string> | undefined = () => undefined,
-  ) {
+    // Duplicates in place, and selects the copies. It keeps the browser from bookmarking the page
+    // too.
+    this.endNudge();
     const { preview } = this.context;
     preview.begin();
     const base = preview.getBase();
     if (base) {
-      const document = fn(base);
-      preview.setDocument(document, getSelectedLayerIds());
+      const duplicated = duplicateLayers(
+        base,
+        getTopmostLayerIds(base.vectorLayer, this.selectedLayerIds),
+        this.hiddenLayerIds,
+      );
+      preview.setDocument(duplicated.document, {
+        selectedLayerIds: new Set(duplicated.layerIds),
+        hiddenLayerIds: duplicated.hiddenLayerIds,
+      });
     }
     preview.commit();
+    return false;
+  }
+
+  private onKeyUp(event: KeyboardEvent) {
+    if (ARROWS[event.key]) {
+      this.endNudge();
+    }
+  }
+
+  /** Moves the selection, adding to the nudge in progress or starting one. */
+  private nudgeBy(dx: number, dy: number) {
+    const { preview } = this.context;
+    if (!this.nudge) {
+      preview.begin(() => {
+        // E.g. playback starting while the key is held.
+        this.nudge = undefined;
+      });
+      const base = preview.getBase();
+      const layerIds = base ? getTopmostLayerIds(base.vectorLayer, this.selectedLayerIds) : [];
+      if (!base || !layerIds.length) {
+        // E.g. an empty vector layer is selected.
+        preview.cancel();
+        return;
+      }
+      this.nudge = { base, rendered: this.render(base), layerIds, x: 0, y: 0 };
+    }
+    const nudge = this.nudge;
+    nudge.x += dx;
+    nudge.y += dy;
+    preview.setDocument(
+      translateLayers(nudge.base, nudge.rendered, nudge.layerIds, nudge.x, nudge.y),
+    );
+  }
+
+  /** Commits the nudge in progress, e.g. when the arrow key is released. */
+  private endNudge() {
+    if (this.nudge) {
+      this.nudge = undefined;
+      this.context.preview.commit();
+    }
   }
 
   private draw() {

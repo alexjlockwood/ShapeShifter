@@ -1,4 +1,7 @@
-import type { CanvasDocument } from 'app/modules/editor/components/canvas/CanvasPreview';
+import type {
+  CanvasDocument,
+  CanvasEditLayerIds,
+} from 'app/modules/editor/components/canvas/CanvasPreview';
 import {
   getPathLayerBounds,
   hitTestLayer,
@@ -24,7 +27,7 @@ export interface SelectToolContext {
   readonly preview: {
     begin(onCancel: () => void): void;
     getBase(): CanvasDocument | undefined;
-    setDocument(document: CanvasDocument, selectedLayerIds?: ReadonlySet<string>): void;
+    setDocument(document: CanvasDocument, layerIds?: CanvasEditLayerIds): void;
     commit(): void;
     cancel(): void;
   };
@@ -70,7 +73,8 @@ type State =
       readonly document: CanvasDocument;
       readonly rendered: VectorLayer;
       readonly layerIds: ReadonlyArray<string>;
-      readonly duplicateIds: ReadonlySet<string> | undefined;
+      // The copies to select, and the hidden layers with the copies of hidden ones.
+      readonly layerStates: CanvasEditLayerIds | undefined;
     };
 
 /**
@@ -150,7 +154,7 @@ export class SelectTool {
         }
         this.context.preview.setDocument(
           translateLayers(state.document, state.rendered, state.layerIds, dx, dy),
-          state.duplicateIds,
+          state.layerStates,
         );
         return;
       }
@@ -220,12 +224,15 @@ export class SelectTool {
     }
     let document = base;
     let layerIds = getTopmostLayerIds(base.vectorLayer, this.context.getSelectedLayerIds());
-    let duplicateIds: ReadonlySet<string> | undefined;
+    let layerStates: CanvasEditLayerIds | undefined;
     if (modifiers.alt) {
-      const duplicated = duplicateLayers(base, layerIds);
+      const duplicated = duplicateLayers(base, layerIds, this.context.getHiddenLayerIds());
       document = duplicated.document;
       layerIds = duplicated.layerIds;
-      duplicateIds = new Set(duplicated.layerIds);
+      layerStates = {
+        selectedLayerIds: new Set(duplicated.layerIds),
+        hiddenLayerIds: duplicated.hiddenLayerIds,
+      };
     }
     this.state = {
       type: 'moving',
@@ -233,18 +240,26 @@ export class SelectTool {
       document,
       rendered: this.context.render(document),
       layerIds,
-      duplicateIds,
+      layerStates,
     };
   }
 
-  /** Whether the layer or a group that it's in is selected. */
+  /**
+   * Whether the layer or a group that it's in is selected. Not the vector layer, which is in the
+   * way of selecting what's in it.
+   */
   private isInSelection(layerId: string) {
     const selection = this.context.getSelectedLayerIds();
     const vl = this.context.getVectorLayer();
-    for (let id: string | undefined = layerId; id; id = LayerUtil.findParent(vl, id)?.id) {
+    for (let id = layerId; id !== vl.id;) {
       if (selection.has(id)) {
         return true;
       }
+      const parent = LayerUtil.findParent(vl, id);
+      if (!parent) {
+        return false;
+      }
+      id = parent.id;
     }
     return false;
   }
