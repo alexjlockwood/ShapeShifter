@@ -69,8 +69,7 @@ export class SegmentSplitter {
     this.component.draw();
   }
 
-  onMouseLeave(mouseLeave: Point) {
-    this.lastKnownMouseLocation = mouseLeave;
+  onMouseLeave() {
     this.currProjInfo = undefined;
     this.component.draw();
   }

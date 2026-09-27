@@ -2,6 +2,7 @@ import { ActionMode, ActionSource, SelectionType } from 'app/modules/editor/mode
 import { PathLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { getContext2d } from 'app/modules/editor/scripts/dom';
 import {
   createEditorServices,
   type EditorServices,
@@ -13,8 +14,53 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CanvasCamera } from './CanvasCamera';
 import { CanvasOverlay } from './CanvasOverlay';
 
-// An open, stroked square, which action mode splits by segment.
+// An open square, which action mode splits by segment when it's stroked and by shape when it's
+// filled.
 const PATH = 'M 4 4 L 20 4 L 20 20 L 4 20';
+
+/** Shows the path in the start canvas of action mode, with the layer's colors. */
+function createOverlay(colors: { strokeColor?: string; fillColor?: string }) {
+  const store = createEditorStore({ logActions: false });
+  const services = createEditorServices(store);
+  const { actionModeService, layerTimelineService } = services;
+  const layer = new PathLayer({ name: 'path', children: [], pathData: new Path(PATH), ...colors });
+  layerTimelineService.addLayer(layer);
+  layerTimelineService.addBlocks([
+    {
+      layerId: layer.id,
+      propertyName: 'pathData',
+      fromValue: new Path(PATH),
+      toValue: new Path(PATH),
+      currentTime: 0,
+    },
+  ]);
+  actionModeService.setActionMode(ActionMode.Selection);
+  const canvas = document.createElement('canvas');
+  const overlay = new CanvasOverlay(
+    canvas,
+    ActionSource.From,
+    store,
+    actionModeService,
+    layerTimelineService,
+  );
+  overlay.init();
+  // Ten CSS pixels per viewport unit, so that hits snap like they do in the app. The detached
+  // canvas is at (0, 0), and so is the artboard.
+  overlay.setCamera(
+    CanvasCamera.fit({
+      panel: { w: 240, h: 240 },
+      viewport: { w: 24, h: 24 },
+      pixelRatio: 1,
+      margin: 0,
+    }),
+  );
+  return { store, services, overlay, canvas };
+}
+
+// Takes viewport coordinates.
+function mouseEvent(x: number, y: number) {
+  return new MouseEvent('mousemove', { clientX: x * 10, clientY: y * 10 });
+}
 
 describe('CanvasOverlay', () => {
   let store: Store<State>;
@@ -24,44 +70,7 @@ describe('CanvasOverlay', () => {
   beforeEach(() => {
     // Edits less than a second apart are undone together.
     vi.useFakeTimers();
-    store = createEditorStore({ logActions: false });
-    services = createEditorServices(store);
-    const { actionModeService, layerTimelineService } = services;
-    const layer = new PathLayer({
-      name: 'path',
-      children: [],
-      pathData: new Path(PATH),
-      strokeColor: '#000',
-    });
-    layerTimelineService.addLayer(layer);
-    layerTimelineService.addBlocks([
-      {
-        layerId: layer.id,
-        propertyName: 'pathData',
-        fromValue: new Path(PATH),
-        toValue: new Path(PATH),
-        currentTime: 0,
-      },
-    ]);
-    actionModeService.setActionMode(ActionMode.Selection);
-    overlay = new CanvasOverlay(
-      document.createElement('canvas'),
-      ActionSource.From,
-      store,
-      actionModeService,
-      layerTimelineService,
-    );
-    overlay.init();
-    // Ten CSS pixels per viewport unit, so that hits snap like they do in the app. The detached
-    // canvas is at (0, 0), and so is the artboard.
-    overlay.setCamera(
-      CanvasCamera.fit({
-        panel: { w: 240, h: 240 },
-        viewport: { w: 24, h: 24 },
-        pixelRatio: 1,
-        margin: 0,
-      }),
-    );
+    ({ store, services, overlay } = createOverlay({ strokeColor: '#000' }));
     vi.advanceTimersByTime(2000);
   });
 
@@ -74,11 +83,6 @@ describe('CanvasOverlay', () => {
   function getNumCommands() {
     const [block] = services.layerTimelineService.getSelectedBlocks() as PathAnimationBlock[];
     return block.fromValue?.getCommands().length;
-  }
-
-  // Takes viewport coordinates.
-  function mouseEvent(x: number, y: number) {
-    return new MouseEvent('mousemove', { clientX: x * 10, clientY: y * 10 });
   }
 
   // Reported to Bugsnag as "Command index out of bounds" and "Subpath index out of bounds".
@@ -118,5 +122,24 @@ describe('CanvasOverlay', () => {
       { type: SelectionType.Point, source: ActionSource.From, subIdx: 3, cmdIdx: 0 },
     ]);
     expect(() => overlay.draw()).not.toThrow();
+  });
+});
+
+describe('CanvasOverlay splitting a filled path', () => {
+  // CANVAS-10.
+  it('stops highlighting the hovered segment when the pointer leaves', () => {
+    const { services, overlay, canvas } = createOverlay({ fillColor: '#000' });
+    services.actionModeService.setActionMode(ActionMode.SplitSubPaths);
+    const isHighlighted = () => {
+      // Just below the top segment, and between the pixel grid's lines.
+      const [red, , , alpha] = getContext2d(canvas).getImageData(125, 41, 1, 1).data;
+      return alpha > 0 && red > 128;
+    };
+    overlay.onMouseMove(mouseEvent(12.5, 4.2));
+    expect(isHighlighted()).toBe(true);
+    overlay.onMouseLeave();
+    expect(isHighlighted()).toBe(false);
+    overlay.dispose();
+    services.dispose();
   });
 });

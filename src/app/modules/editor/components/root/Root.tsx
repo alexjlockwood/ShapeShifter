@@ -21,7 +21,7 @@ import { getCursorType } from 'app/modules/editor/store/paper/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { createSelector } from 'app/modules/editor/store/selectors';
 import { environment } from 'environments/environment';
-import { type MouseEvent, useEffect } from 'react';
+import { type MouseEvent, useEffect, useRef } from 'react';
 
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import './root.scss';
@@ -133,9 +133,17 @@ function Workspace() {
     });
   });
 
+  // Where the last press started. Pressing a text field and releasing over the workspace (e.g.
+  // after selecting some text) clicks the element they have in common, which isn't where either
+  // one happened, and past the panels that stop clicks from propagating.
+  const pressTargetRef = useRef<EventTarget | null>(null);
+
   const onClick = (event: MouseEvent<HTMLElement>) => {
     // Clicks inside of menus and dialogs bubble up to here through their React portals.
     if (!event.currentTarget.contains(event.target as Node)) {
+      return;
+    }
+    if (event.target !== pressTargetRef.current) {
       return;
     }
     const actionMode = actionModeService.getActionMode();
@@ -154,6 +162,9 @@ function Workspace() {
       className={`app-container file-drop-target fx-column fx-flex${
         isDraggingOver ? ' is-dragging-over' : ''
       }`}
+      onPointerDownCapture={event => {
+        pressTargetRef.current = event.target;
+      }}
       onClick={onClick}
       onDragStart={event => event.preventDefault()}
       {...dropTargetHandlers}

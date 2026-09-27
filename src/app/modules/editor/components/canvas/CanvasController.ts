@@ -16,6 +16,7 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { CanvasCamera, Size } from './CanvasCamera';
 import type { CanvasEditor, CanvasEditorModule } from './CanvasEditorApi';
+import { CanvasInput } from './CanvasInput';
 import { CanvasLayers } from './CanvasLayers';
 import { CanvasOverlay } from './CanvasOverlay';
 import { CanvasRuler } from './CanvasRuler';
@@ -33,7 +34,7 @@ export interface CanvasElements {
 }
 
 /**
- * Lays out and draws one of the canvases, and forwards mouse events to its overlay.
+ * Lays out and draws one of the canvases, and forwards pointer events to its overlay.
  */
 export class CanvasController extends DestroyableMixin() {
   private viewport: Size | undefined;
@@ -41,6 +42,7 @@ export class CanvasController extends DestroyableMixin() {
   private camera: CanvasCamera | undefined;
   private resizeObserver: ResizeObserver | undefined;
   private stopWatchingPixelRatio: (() => void) | undefined;
+  private readonly canvasInput: CanvasInput;
   private readonly canvasLayers: CanvasLayers;
   private readonly canvasOverlay: CanvasOverlay;
   private readonly canvasRulers: ReadonlyArray<CanvasRuler>;
@@ -79,11 +81,30 @@ export class CanvasController extends DestroyableMixin() {
       new CanvasRuler(elements.horizontalRuler, 'horizontal', themeService),
       new CanvasRuler(elements.verticalRuler, 'vertical', themeService),
     ];
+    this.canvasInput = new CanvasInput(elements.artboard, {
+      onPress: event => {
+        this.canvasOverlay.onMouseDown(event);
+        this.showRuler(event);
+      },
+      onMove: event => {
+        this.canvasOverlay.onMouseMove(event);
+        this.showRuler(event);
+      },
+      onRelease: event => {
+        this.canvasOverlay.onMouseUp(event);
+        this.showRuler(event);
+      },
+      onLeave: () => {
+        this.canvasOverlay.onMouseLeave();
+        this.hideRuler();
+      },
+    });
   }
 
   init() {
     this.canvasLayers.init();
     this.canvasOverlay.init();
+    this.canvasInput.init();
 
     this.registerSubscription(
       this.store
@@ -128,6 +149,7 @@ export class CanvasController extends DestroyableMixin() {
   dispose() {
     super.dispose();
     this.isDisposed = true;
+    this.canvasInput.dispose();
     this.resizeObserver?.disconnect();
     this.stopWatchingPixelRatio?.();
     this.canvasEditor?.dispose();
@@ -209,26 +231,6 @@ export class CanvasController extends DestroyableMixin() {
     this.canvasLayers.setCamera(camera);
     this.canvasOverlay.setCamera(camera);
     this.canvasRulers.forEach(r => r.setCamera(camera));
-  }
-
-  onMouseDown(event: MouseEvent) {
-    this.canvasOverlay.onMouseDown(event);
-    this.showRuler(event);
-  }
-
-  onMouseMove(event: MouseEvent) {
-    this.canvasOverlay.onMouseMove(event);
-    this.showRuler(event);
-  }
-
-  onMouseUp(event: MouseEvent) {
-    this.canvasOverlay.onMouseUp(event);
-    this.showRuler(event);
-  }
-
-  onMouseLeave(event: MouseEvent) {
-    this.canvasOverlay.onMouseLeave(event);
-    this.hideRuler();
   }
 
   private showRuler(event: MouseEvent) {

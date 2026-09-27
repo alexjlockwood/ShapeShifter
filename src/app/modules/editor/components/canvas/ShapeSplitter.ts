@@ -179,13 +179,8 @@ export class ShapeSplitter {
     this.component.draw();
   }
 
-  onMouseLeave(mouseLeave: Point) {
-    this.finalProjInfos = [];
-    this.lastKnownMouseLocation = mouseLeave;
-    this.hitResult = this.performHitTest(mouseLeave);
-    if (!this.initProjInfos.length) {
-      return;
-    }
+  // Forgets the hovered segment too, so its highlight doesn't stay on screen.
+  onMouseLeave() {
     this.reset();
     this.component.draw();
   }

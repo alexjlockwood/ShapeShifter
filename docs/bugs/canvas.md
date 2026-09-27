@@ -38,13 +38,8 @@
   subpath overall, so a point dragged near another subpath jumps back
   (`components/canvas/SelectionHelper.ts`). (CANVAS-9, GitHub #113, confirmed by a test; a candidate
   fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
-- **The shape splitter's hover highlight sticks after the mouse leaves the canvas.**
-  `onMouseLeave` reruns the hit test instead of clearing it, and returns early when no drag is in
-  progress, so the orange highlight and preview point stay on screen
-  (`components/canvas/ShapeSplitter.ts`). (CANVAS-10, confirmed by a test; a candidate fix exists
-  on the unmerged `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
-- **Right and middle clicks start gestures.** Nothing checks `event.button`, so a right-click adds
-  a point in add points mode, leaves pair and split modes, or selects a layer. If the context menu
-  swallows the mouseup, a drag keeps following the mouse. Only handle `button === 0`, and cancel
-  drags on blur (`components/canvas/CanvasOverlay.ts`, `components/splitter/Splitter.tsx`,
+- **Right and middle clicks start drags outside of the canvas.** The panel splitter and the
+  timeline's drags don't check `event.button`, and if the context menu swallows the mouseup, the
+  drag keeps following the mouse. Only handle `button === 0`, and cancel drags on blur, like
+  `components/canvas/CanvasInput.ts` does for the canvas (`components/splitter/Splitter.tsx`,
   `scripts/dragger/Dragger.ts`). (CANVAS-11, low, confirmed by reading)

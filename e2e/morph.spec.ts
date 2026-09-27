@@ -375,6 +375,40 @@ test('adds and deletes points, and splits stroked subpaths', async ({ page }) =>
   );
 });
 
+test('keeps dragging a point outside of the canvas, and cancels a drag with Escape', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await importSvg(page, 'line.svg', LINE_SVG);
+  await addPathMorph(page, 'line', 'M 4 6 L 20 6 M 4 18 L 20 18');
+  await startActionMode(page);
+  await clickCanvas(page, 'start', 12, 12);
+  await page.getByRole('button', { name: 'Add points (A)' }).click();
+  await clickCanvas(page, 'start', 12, 12);
+  const withPoint = ['M 4, 12 L 12, 12 L 20, 12'];
+  await expect.poll(async () => (await getMorphPaths(page)).from).toEqual(withPoint);
+  await page.keyboard.press('Escape');
+  const title = await page.locator('.toolbar-title').textContent();
+
+  // Escape during a drag only cancels the drag, and doesn't also leave the mode or clear the
+  // selection like it otherwise would.
+  const start = await toPageCoords(page, 'start', 12, 12);
+  const end = await toPageCoords(page, 'start', 16, 12);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(end.x, end.y, { steps: 10 });
+  await page.keyboard.press('Escape');
+  await page.mouse.up();
+  expect((await getMorphPaths(page)).from).toEqual(withPoint);
+  await expect(page.locator('.toolbar-title')).toHaveText(title ?? '');
+
+  // Releasing a drag below the canvas still moves the point.
+  await dragCanvas(page, 'start', [12, 12], [18, 30]);
+  await expect
+    .poll(async () => (await getMorphPaths(page)).from)
+    .toEqual(['M 4, 12 L 18, 12 L 20, 12']);
+});
+
 test('auto fixes incompatible paths', async ({ page }) => {
   await page.goto('/');
   await importSvg(page, 'play.svg', PLAY_SVG);

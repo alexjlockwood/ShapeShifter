@@ -83,18 +83,17 @@ The bundle-splitting and per-frame interpolator lookup gaps above are the only r
 
 This is the sharpest gap found in the whole survey. Only 9 `aria-*`/`role`/`tabIndex`
 attributes exist across the entire component tree, and the path-editing canvas itself
-(`components/canvas/Canvas.tsx`, lines 60-71, four bare `<canvas>` elements) has no accessible
+(`components/canvas/Canvas.tsx`, bare `<canvas>` elements over the artboard) has no accessible
 fallback at all: a screen reader or keyboard-only user cannot perceive or edit a path. A full
 fix (a keyboard-navigable path/segment model) is a multi-week redesign; a minimal pass
 (labeling the canvas region, announcing selection/tool state via a visually hidden live region)
 is 1 to 2 days, low risk.
 
-Separately, there is no touch or pointer event handling anywhere in the active code (only in
-the deferred paper.js tree), so the app is effectively mouse-only. Tablets and touchscreen
-laptops cannot interact with the canvas at all. Making the core canvas touch-operable is
-substantial, likely a week or more, and moderate risk given the imperative gesture
-architecture. The canvas editor's move to pointer events (`docs/canvas-editor.md`) is the first
-step.
+Separately, touch support is only starting. The canvas takes pointer events
+(`components/canvas/CanvasInput.ts`), so a finger or a pen can drag on the artboard, but the rest of
+the app (the timeline and the splitters) still only listens to the mouse, and nothing on the canvas
+is sized for fingers yet. Making the whole app touch-operable is likely a week or more
+(`docs/canvas-editor.md`, phase 6).
 
 MUI's `Dialog` and `Tooltip` usage already provide correct focus trapping and labeling, and
 destructive actions (deleting layers, etc.) already go through a confirmation dialog

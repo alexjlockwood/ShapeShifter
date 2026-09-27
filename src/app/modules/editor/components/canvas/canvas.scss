@@ -23,6 +23,8 @@
     // go above the canvases.
     .canvas-artboard {
         position: absolute;
+        // Touch drags on the artboard are gestures, rather than scrolling or zooming the page.
+        touch-action: none;
     }
     .canvas-ruler {
         position: absolute;

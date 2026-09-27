@@ -81,12 +81,17 @@ test('shows the start and end of the morph in action mode', async ({ page }) => 
 
   // Clicking inside of the triangle's top half in the start canvas selects it. The subpath's
   // points are at (8, 5), (8, 12), and (19, 12) in the 24x24 viewport.
+  const getSelections = () =>
+    page.evaluate(() => {
+      const { store } = (window as any).shapeshifter;
+      return store.getState().present.actionmode.selections;
+    });
   const point = await artboardPoint(page.locator('.app-canvas.start'), 10, 9);
+  // Right-clicks don't select anything.
+  await page.mouse.click(point.x, point.y, { button: 'right' });
+  expect(await getSelections()).toEqual([]);
   await page.mouse.click(point.x, point.y);
-  const selections = await page.evaluate(() => {
-    const { store } = (window as any).shapeshifter;
-    return store.getState().present.actionmode.selections;
-  });
+  const selections = await getSelections();
   // SelectionType.SubPath, ActionSource.From
   expect(selections).toEqual([{ type: 1, source: 1, subIdx: 0 }]);
 
