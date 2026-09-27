@@ -15,7 +15,8 @@ import { isBeingReset } from './reset/selectors';
 import { SetTheme } from './theme/actions';
 import { getThemeType } from './theme/selectors';
 import { getAnimation } from './timeline/selectors';
-import { IsolateUndoStep } from './undoredo/actions';
+import { IsolateUndoStep, SkipUndoStep } from './undoredo/actions';
+import { getLastRecordedState } from './undoredo/metareducer';
 
 describe('createEditorStore', () => {
   beforeEach(() => {
@@ -146,6 +147,27 @@ describe('createEditorStore', () => {
     store.dispatch(ActionCreators.undo());
     expect(getVectorLayer(store.getState())).not.toBe(editedVl);
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
+  });
+
+  it('keeps a batch with SkipUndoStep out of the undo history', () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    const numPastStates = store.getState().past.length;
+    vi.advanceTimersByTime(2000);
+    // E.g. a color being dragged.
+    const previewedVl = new VectorLayer();
+    store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(previewedVl)));
+    expect(getVectorLayer(store.getState())).toBe(previewedVl);
+    expect(store.getState().past.length).toBe(numPastStates);
+    expect(getLastRecordedState(store.getState()).layers.vectorLayer).not.toBe(previewedVl);
+
+    // The previews don't count as a recent edit, so this one gets an undo step of its own, and
+    // undoing it goes back to the state from before the previews.
+    store.dispatch(new SetSelectedLayers(new Set(['b'])));
+    store.dispatch(ActionCreators.undo());
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
+    expect(getVectorLayer(store.getState())).not.toBe(previewedVl);
   });
 
   it("doesn't count an undo or redo that does nothing as an edit", () => {

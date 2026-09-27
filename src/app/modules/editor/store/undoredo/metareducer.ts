@@ -54,13 +54,29 @@ function unbatch(action: Action) {
   return action.type === BatchActionTypes.BatchAction ? (action as BatchAction).payload : [action];
 }
 
-/** Batches are recorded unless every action in them is excluded. */
+/**
+ * Batches are recorded unless every action in them is excluded, or one of them is SkipUndoStep.
+ * redux-undo keeps the last recorded state while it skips actions, so the next recorded one starts
+ * its undo step from there.
+ */
 function isRecorded(action: Action) {
-  return unbatch(action).some(a => !UNDO_EXCLUDED_ACTIONS.has(a.type));
+  const actions = unbatch(action);
+  return (
+    !actions.some(a => a.type === UndoRedoActionTypes.SkipUndoStep) &&
+    actions.some(a => !UNDO_EXCLUDED_ACTIONS.has(a.type))
+  );
 }
 
 function isIsolated(action: Action) {
   return unbatch(action).some(a => UNDO_ISOLATED_ACTIONS.has(a.type));
+}
+
+/**
+ * Returns the state as of the last recorded action, which is where undo goes back to. It's the
+ * present state unless actions have been skipped since, e.g. previews and playback.
+ */
+export function getLastRecordedState(state: StateWithHistoryAndTimestamp): EditorState {
+  return state._latestUnfiltered ?? state.present;
 }
 
 export function metaReducer(reducer: EditorStateReducer): StateReducer {
