@@ -104,6 +104,36 @@ describe('LayerTimelineService', () => {
     });
   });
 
+  describe('addBlocks', () => {
+    function addStrokeWidthBlock(layerId: string, autoSelectBlocks?: boolean) {
+      services.layerTimelineService.addBlocks(
+        [{ layerId, propertyName: 'strokeWidth', fromValue: 1, toValue: 2, currentTime: 0 }],
+        autoSelectBlocks,
+      );
+    }
+
+    it('selects the added blocks', () => {
+      const path = newPath('path', undefined, 1);
+      load([path]);
+      services.layerTimelineService.setSelectedLayers(new Set([path.id]));
+      addStrokeWidthBlock(path.id);
+
+      expect(services.layerTimelineService.getSelectedBlocks()).toEqual(getBlocks());
+      expect(services.layerTimelineService.getSelectedLayerIds()).toEqual(new Set());
+    });
+
+    it('keeps the selection without autoSelectBlocks', () => {
+      const path = newPath('path', undefined, 1);
+      load([path]);
+      services.layerTimelineService.setSelectedLayers(new Set([path.id]));
+      addStrokeWidthBlock(path.id, false);
+
+      expect(getBlocks()).toHaveLength(1);
+      expect(services.layerTimelineService.getSelectedBlocks()).toEqual([]);
+      expect(services.layerTimelineService.getSelectedLayerIds()).toEqual(new Set([path.id]));
+    });
+  });
+
   describe('flattenGroupLayer', () => {
     it('keeps the stroke width of paths in groups that are only rotated', () => {
       load([
