@@ -281,6 +281,91 @@ describe('createEditorServices', () => {
         actionModeService.deleteSelectedActionModeModels();
       }).not.toThrow();
     });
+
+    it('leaves once the block being edited is gone', () => {
+      editBlock();
+      services.layerTimelineService.deleteSelectedModels();
+      expect(services.actionModeService.getActionMode()).toBe(ActionMode.None);
+    });
+  });
+
+  describe('editMorph', () => {
+    function addPathBlocks(...paths: ReadonlyArray<readonly [string, string]>) {
+      const { layerTimelineService } = services;
+      const layer = new PathLayer({ name: 'path', children: [], pathData: undefined });
+      layerTimelineService.addLayer(layer);
+      return paths.map(([from, to], i) => {
+        layerTimelineService.addBlocks([
+          {
+            layerId: layer.id,
+            propertyName: 'pathData',
+            fromValue: from ? new Path(from) : undefined,
+            toValue: to ? new Path(to) : undefined,
+            currentTime: i * 1000,
+          },
+        ]);
+        return layerTimelineService.getSelectedBlocks()[0];
+      });
+    }
+
+    const TRIANGLE = 'M 8 5 L 8 19 L 19 12 Z';
+    const SQUARE = 'M 6 5 L 10 5 L 10 19 L 6 19 Z';
+
+    it('selects the block and enters action mode', () => {
+      const [first] = addPathBlocks([TRIANGLE, SQUARE], [SQUARE, TRIANGLE]);
+      const { actionModeService, layerTimelineService } = services;
+      expect(actionModeService.editMorph(first.id)).toBe(true);
+      expect(layerTimelineService.getSelectedBlocks().map(b => b.id)).toEqual([first.id]);
+      expect(actionModeService.getActionMode()).toBe(ActionMode.Selection);
+    });
+
+    it('switches to another block, forgetting the selections in the first one', () => {
+      const [first, second] = addPathBlocks([TRIANGLE, SQUARE], [SQUARE, TRIANGLE]);
+      const { actionModeService, layerTimelineService } = services;
+      actionModeService.editMorph(first.id);
+      actionModeService.setActionMode(ActionMode.SplitCommands);
+      actionModeService.setSelections([
+        { type: SelectionType.SubPath, source: ActionSource.From, subIdx: 0 },
+      ]);
+      expect(actionModeService.editMorph(second.id)).toBe(true);
+      expect(layerTimelineService.getSelectedBlocks().map(b => b.id)).toEqual([second.id]);
+      expect(actionModeService.getActionMode()).toBe(ActionMode.Selection);
+      expect(actionModeService.getSelections()).toEqual([]);
+    });
+
+    it("keeps editing the block when it's already being edited", () => {
+      const [block] = addPathBlocks([TRIANGLE, SQUARE]);
+      const { actionModeService } = services;
+      actionModeService.editMorph(block.id);
+      actionModeService.setActionMode(ActionMode.SplitCommands);
+      expect(actionModeService.editMorph(block.id)).toBe(true);
+      expect(actionModeService.getActionMode()).toBe(ActionMode.SplitCommands);
+    });
+
+    it("does nothing for a block that isn't a path block", () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { actionModeService, layerTimelineService } = services;
+      const layer = new PathLayer({ name: 'path', children: [], pathData: undefined });
+      layerTimelineService.addLayer(layer);
+      layerTimelineService.addBlocks([
+        { layerId: layer.id, propertyName: 'fillAlpha', fromValue: 0, toValue: 1, currentTime: 0 },
+      ]);
+      const [block] = layerTimelineService.getSelectedBlocks();
+      expect(actionModeService.editMorph(block.id)).toBe(false);
+      expect(actionModeService.editMorph('missing')).toBe(false);
+      expect(actionModeService.isActionMode()).toBe(false);
+      expect(warn).toHaveBeenCalledTimes(2);
+    });
+
+    it('says so when one of the paths is empty', () => {
+      const [block] = addPathBlocks([TRIANGLE, '']);
+      const { actionModeService, snackBarService } = services;
+      expect(actionModeService.editMorph(block.id)).toBe(false);
+      expect(actionModeService.isActionMode()).toBe(false);
+      expect(snackBarService.getSnackBar()?.message).toBe(
+        'Set both of the paths before editing the morph',
+      );
+    });
   });
 
   describe('with blocks that animate hidden or missing layers', () => {

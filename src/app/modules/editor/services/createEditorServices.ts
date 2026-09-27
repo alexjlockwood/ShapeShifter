@@ -72,6 +72,7 @@ export function createEditorServices(
       clipboardService.destroy();
       playbackService.dispose();
       canvasViewportService.dispose();
+      actionModeService.dispose();
     },
   };
 }

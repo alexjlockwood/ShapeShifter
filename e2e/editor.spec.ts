@@ -762,6 +762,13 @@ test('edits an animated path at the ends of its morph, and auto fixes it', async
       s.timeline.animation.blocks.find((b: any) => b.propertyName === 'pathData').isAnimatable(),
     ),
   ).toBe(true);
+
+  // The badge also edits the morph in action mode, which starts at the beginning of the block.
+  await page.keyboard.press('Escape');
+  await badge.getByRole('button', { name: 'Edit morph' }).click();
+  await expect(page.locator('.app-canvas')).toHaveCount(3);
+  await expect.poll(() => getState(page, s => s.playback.currentTime)).toBe(0);
+  await expect(badge).toBeHidden();
 });
 
 test("edits a path's points, and reverses and closes subpaths, in the inspector", async ({

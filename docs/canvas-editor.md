@@ -289,9 +289,10 @@ value on the other side of the hold changes too when it's the same path, e.g. th
 block, or the layer's own path before the first one, so that a chain of morphs stays connected.
 While the path is morphing, it can't be edited. A badge at the bottom of the canvas panel says
 which end an edit changes and whether the morph still works, with a button that auto fixes it, or
-that the path is morphing, with buttons that go to either end. Auto fix changes both ends of the
-block, so it changes the values linked to them too, and fixes the linked blocks that stop morphing
-because of it, unlike auto fix in action mode. Some gaps are left for later:
+that the path is morphing, with buttons that go to either end. Either way, "Edit morph" opens the
+block in action mode, and where two morphs meet, there's a button for each. Auto fix changes both
+ends of the block, so it changes the values linked to them too, and fixes the linked blocks that
+stop morphing because of it, unlike auto fix in action mode. Some gaps are left for later:
 
 - The property inspector still shows the layer's own path rather than the one at the current time.
 - There's no way to jump to the next or previous keyframe from the keyboard.

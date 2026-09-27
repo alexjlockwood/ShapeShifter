@@ -8,7 +8,7 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { NEWER_VERSION_WARNING, ProjectFormatError } from 'app/modules/editor/model/projectVersion';
-import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
+import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { getContentSize, getPosition } from 'app/modules/editor/scripts/dom';
@@ -687,8 +687,14 @@ export class LayerTimelineController extends DestroyableMixin() {
     this.services.layerTimelineService.selectBlock(block.id, clearExisting);
   }
 
+  /** Edits a path block's morph in action mode, and otherwise goes to the block's start. */
   onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
-    this.services.playbackService.setCurrentTime(block.startTime);
+    if (
+      !(block instanceof PathAnimationBlock) ||
+      !this.services.actionModeService.editMorph(block.id)
+    ) {
+      this.services.playbackService.setCurrentTime(block.startTime);
+    }
   }
 
   onAddTimelineBlockClick(layer: Layer, propertyName: string) {

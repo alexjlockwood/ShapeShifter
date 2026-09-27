@@ -36,6 +36,7 @@ describe('getKeyframeStatus', () => {
       type: 'keyframe',
       label: 'Start of the morph, at 100 ms',
       brokenBlockIds: [],
+      morphBlockIds: ['b'],
     });
     const broken = block('M 0 0 L 1 1', 'M 0 0 L 2 2 L 3 3');
     expect(
@@ -43,7 +44,31 @@ describe('getKeyframeStatus', () => {
         { ...keyframe, targets: [{ kind: 'toValue', blockId: 'b' }], blocks: [broken] },
         200,
       ),
-    ).toEqual({ type: 'keyframe', label: 'End of the morph, at 200 ms', brokenBlockIds: ['b'] });
+    ).toEqual({
+      type: 'keyframe',
+      label: 'End of the morph, at 200 ms',
+      brokenBlockIds: ['b'],
+      morphBlockIds: ['b'],
+    });
+  });
+
+  it('offers to edit both morphs where two meet', () => {
+    const first = block('M 0 0 L 1 1', 'M 0 0 L 2 2');
+    const second = AnimationBlock.from({ ...first.toJSON(), id: 'c', startTime: 200 });
+    const status = getKeyframeStatus(
+      {
+        type: 'keyframe',
+        path: first.toValue,
+        targets: [
+          { kind: 'toValue', blockId: 'b' },
+          { kind: 'fromValue', blockId: 'c' },
+        ],
+        blocks: [first, second as PathAnimationBlock],
+      },
+      200,
+    );
+    expect(status).toMatchObject({ label: 'Where two morphs meet, at 200 ms' });
+    expect(status?.type === 'keyframe' && status.morphBlockIds).toEqual(['b', 'c']);
   });
 
   it("says when the path is morphing, so it can't be edited", () => {
@@ -51,6 +76,7 @@ describe('getKeyframeStatus', () => {
       type: 'between',
       startTime: 100,
       endTime: 200,
+      blockId: 'b',
     });
   });
 });

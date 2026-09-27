@@ -9,23 +9,15 @@
     .toolbar-title {
         font-size: 18px;
     }
-    .toolbar-subtitle {
-        margin-top: 4px;
-        font-size: 13px;
-    }
     .action-mode-close-icon {
         margin-right: 8px;
     }
+    .toolbar-done-button {
+        text-transform: none;
+        font-size: 15px;
+    }
     .toolbar-action-button {
         margin-left: 16px;
-        // The activated pill is 16px wider than the button, and spreads into the margins around
-        // it, so that the other buttons don't move.
-        &.activated {
-            padding-inline: 16px;
-            margin-left: 8px;
-            margin-right: -8px;
-            border-radius: 20px;
-        }
     }
 }
 

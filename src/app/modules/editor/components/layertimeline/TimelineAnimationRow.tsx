@@ -8,6 +8,9 @@ import { memo, useMemo } from 'react';
 import { useLayerTimelineController } from './LayerTimelineContext';
 import './timelineanimationrow.scss';
 
+/** Why the timeline doesn't respond in action mode, except to scrubbing. */
+export const LEAVE_ACTION_MODE_HINT = 'Press Esc to leave the morph editor';
+
 /**
  * Shows the layer's animation blocks, and (recursively) those of its children.
  */
@@ -52,6 +55,7 @@ export const TimelineAnimationRow = memo(function TimelineAnimationRow({
                     key={block.id}
                     className={classNames.filter(Boolean).join(' ')}
                     tabIndex={-1}
+                    title={isActionMode && !isSelected ? LEAVE_ACTION_MODE_HINT : undefined}
                     style={{
                       left: `${(100 * block.startTime) / animation.duration}%`,
                       width: `${(100 * (block.endTime - block.startTime)) / animation.duration}%`,

@@ -37,7 +37,8 @@
             box-shadow: none;
         }
         &.is-disabled {
-            cursor: default;
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         span.slt-layer-id-text {
             flex: 1 1 0;

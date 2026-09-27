@@ -9,6 +9,14 @@ Paths are relative to `src/app/modules/editor/`.
   the canvas (three of them in action mode: current, start, and end), playback controls, the
   property inspector (hidden in action mode), and the layer list and timeline. Mobile user agents
   get `components/splashscreen/` instead.
+- Action mode (the morph editor) is entered with `actionModeService.editMorph(blockId)`, from the
+  inspector, a double-click on a path block, or the canvas editor's keyframe badge, and it leaves
+  on its own once undo takes the block away. Its three panels are labeled and bordered, under a
+  status strip that says whether the paths morph (`components/toolbar/ActionModeStatusStrip.tsx`,
+  with its message from `components/toolbar/actionModeStatus.ts`), and its commands are in a
+  floating bar over the bottom of the panels (`components/toolbar/ActionBar.tsx`). The app bar
+  keeps the title and a Done button. `components/toolbar/ToolbarData.ts` decides which commands
+  apply to the selection.
 
 ## State and actions
 

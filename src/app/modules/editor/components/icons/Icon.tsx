@@ -3,6 +3,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import BugReportIcon from '@mui/icons-material/BugReport';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
@@ -10,6 +11,7 @@ import ContentCutIcon from '@mui/icons-material/ContentCut';
 import CropRotateIcon from '@mui/icons-material/CropRotate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import ErrorIcon from '@mui/icons-material/Error';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InfoIcon from '@mui/icons-material/Info';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
@@ -45,6 +47,7 @@ const MATERIAL_ICONS = {
   arrow_back: ArrowBackIcon,
   arrow_drop_down: ArrowDropDownIcon,
   bug_report: BugReportIcon,
+  check_circle: CheckCircleIcon,
   chevron_right: ChevronRightIcon,
   close: CloseIcon,
   compare_arrows: CompareArrowsIcon,
@@ -52,6 +55,7 @@ const MATERIAL_ICONS = {
   crop_rotate: CropRotateIcon,
   delete: DeleteIcon,
   edit: EditIcon,
+  error: ErrorIcon,
   expand_more: ExpandMoreIcon,
   info: InfoIcon,
   looks_one: LooksOneIcon,

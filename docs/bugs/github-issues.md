@@ -344,7 +344,7 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #279  | Offer to reload after an update          | Updates apply on the next load. No snackbar.                              |
 | #289  | Show that Backspace deletes layers       | Not done                                                                  |
 | #290  | Show the exported XML in the page        | Not implemented                                                           |
-| #298  | Red toolbar for incompatible paths       | Flagged in the subtitle, canvas, and timeline, but the toolbar isn't red  |
+| #298  | Red toolbar for incompatible paths       | A red status strip under the app bar says why the paths don't morph       |
 | #302  | Optimize imported VectorDrawables        | Not implemented (redundant moves are kept)                                |
 | #304  | Animate transforms on paths              | Works by grouping the path                                                |
 | #307  | Bulk import                              | Several files import at once (see the mixed drop entry above)             |

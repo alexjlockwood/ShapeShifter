@@ -21,7 +21,7 @@ import {
   LayerTimelineController,
 } from './LayerTimelineController';
 import './layertimeline.scss';
-import { TimelineAnimationRow } from './TimelineAnimationRow';
+import { LEAVE_ACTION_MODE_HINT, TimelineAnimationRow } from './TimelineAnimationRow';
 import { TimelineGrid } from './TimelineGrid';
 
 export function LayerTimeline() {
@@ -215,7 +215,10 @@ export function LayerTimeline() {
 
           <div ref={layersScrollerRef} className="slt-layers-list-scroller fx-flex">
             {/* Layer list. */}
-            <div className="slt-layers-list">
+            <div
+              className="slt-layers-list"
+              title={isActionMode ? LEAVE_ACTION_MODE_HINT : undefined}
+            >
               {/* Keyed by the layer's id so that the tree is recreated when the workspace is
                   reset. The root layer doesn't set a data-layer-id. */}
               <div className="slt-layer-container fx-column" key={vectorLayer.id}>
