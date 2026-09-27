@@ -13,8 +13,8 @@ and editing paths on the canvas. This is a survey only; nothing here has been im
   one chunk that blocks first paint, even though svgo/jszip and the demo loader are only needed
   for export/import flows. Splitting those behind `import()` is a half-day to a day, low risk.
 - **Playback does a linear scan every frame.** `AnimationRenderer.setCurrentTime`
-  (`scripts/animator/AnimationRenderer.ts`, around line 71) runs `_.find` over the interpolator
-  list for every animated property on every rAF tick; there's already a TODO at line 69
+  (`scripts/animator/AnimationRenderer.ts`, around line 72) runs `_.find` over the interpolator
+  list for every animated property on every rAF tick; there's already a TODO at line 70
   admitting this. Resolving the interpolator once per block instead of per frame is 1 to 2
   hours, low risk.
 - **Import failures fail silently.** In `services/fileimport.service.ts` (lines 74-89, 118-134),
@@ -77,7 +77,51 @@ Mostly already well-optimized:
 - MUI icons are already imported per-subpath (`components/icons/Icon.tsx`), not from the
   barrel file, so they are already tree-shakeable.
 
-The bundle-splitting and per-frame interpolator lookup gaps above are the only real findings.
+Besides the bundle splitting and the interpolator lookup above, a performance audit on
+2026-09-27 found these, roughly in order of impact. None has been profiled yet, so measure one on a
+big document before fixing it. The same audit fixed the worst finding: `AnimationRenderer` deep
+cloned the whole document on every pointer move of a canvas editor gesture, and now only copies the
+animated layers (#408).
+
+- **Import and spritesheet export block the main thread.** `optimizeSvg`
+  (`scripts/svgo/index.ts`, line 75) returns a promise, but runs svgo synchronously inside its
+  executor, so nothing is deferred. `SvgLoader.ts` then builds the layers with a synchronous
+  recursive walk (`nodeToLayerFn`, line 80). A large SVG freezes the tab while it imports. A web
+  worker for svgo, or at least yielding between steps, is 1 to 2 days, medium risk.
+- **Spritesheet export holds every frame in memory.** `createSvgFrames` and `createSvgSprite`
+  (`scripts/export/SpriteSerializer.ts`, lines 49-77) render and serialize every frame in one
+  synchronous loop, keep all the strings in an array, and run the joined sprite through the same
+  blocking `optimizeSvg`. The cost grows with frame rate times duration, and it runs at both 30
+  and 60 fps. Yielding per frame is a few hours; streaming frames is about a day.
+- **Every visible path replays its commands on every frame.** `executeCommands`
+  (`components/canvas/CanvasUtil.ts`, line 11) rebuilds each path on the context from its command
+  list on every draw, so layers that don't animate cost as much during playback as ones that do.
+  Caching a `Path2D` per unchanged path is about a day, low to medium risk.
+- **Morphing allocates a new path every frame.** `PathUtil.interpolate()`
+  (`model/paths/PathUtil.ts`, line 11) builds a new `Path`, and a new `Command` with a fresh
+  `uniqueId()` for every command, on every frame of a morph. Its TODOs (lines 9 and 32) already
+  point this out, and `model/paths/AGENTS.md` calls it the hot path. Reusing ids or a lighter
+  frame-only path is 1 to 2 days, medium risk.
+- **Bounding boxes aren't cached.** `getBoundingBox()` and `createBoundingBox()`
+  (`model/paths/PathState.ts`, lines 292-293 and 351) walk every command on every call, and both
+  have a `TODO: cache this?`. Paths are immutable, so caching per path is a few hours, low risk.
+- **Every action mode edit recomputes poles of inaccessibility.** `autoAddCollapsingSubPaths`
+  (`scripts/algorithms/AutoAwesome.ts`, line 134) runs after each point drag or split, and calls
+  `getPoleOfInaccessibility` (`PathState.ts`, line 262, which runs polylabel) per subpath. This
+  would cache with the bounding boxes.
+- **Auto fix is quadratic in the number of points.** `alignSubPath` (`AutoAwesome.ts`, line 215)
+  runs a Needleman-Wunsch alignment, O(n·m), for up to `MAX_ALIGNMENT_CANDIDATES` (10) candidates,
+  and `getShiftedEndPoints` (line 404) rotates the whole point ring once per shift before the
+  cutoff. It only runs when auto fix is chosen, so it matters mostly for paths with hundreds of
+  points. Worth measuring with `npm run playground` first.
+- **Trimmed paths rebuild their path on every draw.** `drawPathLayer`
+  (`components/canvas/CanvasLayers.ts`, around line 207) transforms and rebuilds the whole path to
+  measure its length when a trimmed path is scaled unevenly. Caching the length is an hour or two.
+- **The canvas editor redraws on every raw pointer move.** `CanvasEditor.onMove`
+  (`components/canvaseditor/CanvasEditor.ts`, line 336) redraws the handles, guides, and snapping
+  straight from the `pointermove` listener (`components/canvas/CanvasInput.ts`, line 52), with no
+  `requestAnimationFrame` batching, so it relies on the browser coalescing events. An hour or two,
+  low risk.
 
 ## UX and accessibility
 
