@@ -161,9 +161,12 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
 3. **Pointer input.** Pointer events with pointer capture replace the React mouse handlers, so a
    drag keeps going when the pointer leaves the canvas, and touch and pen input can work later. A
    small router decides who gets each gesture: panning, the editor's tools, or the existing
-   action mode helpers. A mouse event that shows the main button is already up, before the
-   release arrives (a macOS trackpad can send a move like that, and Chrome takes the capture away
-   for it), ends the gesture as the release would, so that the edit is kept.
+   action mode helpers. A mouse move that shows the main button is already up, before the
+   release arrives (a macOS trackpad can send one), ends the gesture as the release would, so
+   that the edit is kept. So does the canvas losing a mouse's capture, which Chrome does right
+   before that move. Safari's lostpointercapture reports no buttons, even with the button still
+   down, so it's treated as a release in every browser. Pointercancel, context menus, blur, and
+   Escape cancel the gesture.
 4. **Previewing edits.** A gesture keeps a working copy of the paths it changes, and the canvases
    draw that copy until the gesture ends. The edit is dispatched once, on pointer up, as its own
    undo step. Dispatching on every pointer move would rebuild the animation renderer each time

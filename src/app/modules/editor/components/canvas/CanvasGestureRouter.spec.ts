@@ -37,15 +37,15 @@ describe('CanvasGestureRouter', () => {
     expect(new CanvasGestureRouter(false).down({ ...MOUSE, ctrlKey: true }).started).toBe(true);
   });
 
-  it('ends the gesture like a release when an event shows the mouse button is up', () => {
+  it('ends the gesture like a release when a move shows the mouse button is up', () => {
     const router = new CanvasGestureRouter();
     router.down(MOUSE);
     expect(router.upWithoutRelease({ ...MOUSE, pointerType: 'mouse', buttons: 1 })).toBe(false);
     // Another button held down doesn't keep the gesture going.
     expect(router.upWithoutRelease({ ...MOUSE, pointerType: 'mouse', buttons: 2 })).toBe(true);
     expect(router.isActive()).toBe(false);
-    // The release that comes after it, and the capture's loss, are ignored, and the move and the
-    // ones after it are hovers.
+    // The release or the capture's loss that comes after it, and a pointercancel, are ignored,
+    // and the move and the ones after it are hovers.
     expect(router.up(MOUSE)).toBe(false);
     expect(router.cancel(MOUSE.pointerId)).toBe(false);
     expect(router.move(MOUSE)).toBe(true);

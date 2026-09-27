@@ -25,7 +25,11 @@ import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { on } from 'app/modules/editor/scripts/dom';
 import type { CanvasSettings } from 'app/modules/editor/services/canvassettings.service';
-import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
+import {
+  isSelectAllShortcut,
+  ShortcutService,
+  TEXT_FIELD_SELECTOR,
+} from 'app/modules/editor/services/shortcut.service';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
 import { getGuides } from 'app/modules/editor/store/guides/selectors';
@@ -653,7 +657,19 @@ class Editor implements CanvasEditor {
       // E.g. Escape, which the canvas took to cancel a drag.
       event.defaultPrevented ||
       this.isActionMode ||
-      target?.closest('.MuiModal-root') ||
+      target?.closest('.MuiModal-root')
+    ) {
+      return undefined;
+    }
+    if (isSelectAllShortcut(event, ShortcutService.isMac())) {
+      // Even with the focus on a toolbar button or a checkbox, since the shortcut service would
+      // select every layer instead, with the pen still drawing or the path edit stopped by the new
+      // selection. Text fields keep the browser's select all.
+      return document.activeElement?.matches(TEXT_FIELD_SELECTOR)
+        ? undefined
+        : this.selectAll(event);
+    }
+    if (
       // The toolbar's buttons handle their own keys.
       target?.closest('.canvas-editor-toolbar') ||
       document.activeElement?.matches('input, textarea, [contenteditable]')
@@ -710,19 +726,6 @@ class Editor implements CanvasEditor {
     if (this.pathEdit) {
       return this.onPathEditKeyDown(event, this.pathEdit);
     }
-    if (isSelectAllShortcut(event)) {
-      // Selects every visible layer, like Figma, rather than the page's text. Not in the middle of
-      // a gesture, which the new selection would cancel.
-      if (!event.repeat && !this.isPressing && !(this.context.preview.isEditing() && !this.nudge)) {
-        this.endNudge();
-        if (this.drawTool) {
-          // As if V was pressed first, which also finishes the pen's path.
-          this.setTool('select');
-        }
-        this.context.services.layerTimelineService.selectAllLayers();
-      }
-      return false;
-    }
     if (!this.selectedLayerIds.size) {
       // The rest act on the selection.
       return undefined;
@@ -775,6 +778,28 @@ class Editor implements CanvasEditor {
     return false;
   }
 
+  /**
+   * Selects every point of the path being edited, or else every visible layer, like Figma, rather
+   * than the page's text. Not in the middle of a gesture, which the new selection would cancel, or
+   * on key repeat.
+   */
+  private selectAll(event: KeyboardEvent) {
+    if (event.repeat || this.isPressing || (this.context.preview.isEditing() && !this.nudge)) {
+      return false;
+    }
+    this.endNudge();
+    if (this.pathEdit) {
+      this.pathEdit.selectAll();
+      return false;
+    }
+    if (this.drawTool) {
+      // As if V was pressed first, which also finishes the pen's path.
+      this.setTool('select');
+    }
+    this.context.services.layerTimelineService.selectAllLayers();
+    return false;
+  }
+
   /** Auto fixes the blocks, and the rest of the chain of morphs they're in, as one undo step. */
   private autoFix(blockIds: ReadonlyArray<string>) {
     this.endNudge();
@@ -809,7 +834,7 @@ class Editor implements CanvasEditor {
       key === 'Delete' ||
       (key === 'Tab' && !isCommand && !event.altKey && !isControlFocused()) ||
       (!!arrow && !event.altKey && !isCommand && !event.ctrlKey) ||
-      (isCommand && ['a', 'd', 'j'].includes(key.toLowerCase()));
+      (isCommand && ['d', 'j'].includes(key.toLowerCase()));
     if (!isHandled) {
       return undefined;
     }
@@ -844,8 +869,6 @@ class Editor implements CanvasEditor {
       pathEdit.selectAdjacent(event.shiftKey ? -1 : 1);
     } else if (pointType) {
       pathEdit.setPointType(pointType);
-    } else if (key.toLowerCase() === 'a') {
-      pathEdit.selectAll();
     } else if (key.toLowerCase() === 'j') {
       // Rather than opening the browser's downloads.
       pathEdit.joinSelected();
@@ -1112,18 +1135,6 @@ function getSettingShortcut(event: KeyboardEvent): keyof CanvasSettings | undefi
     return isCommand ? 'snapToPixelGrid' : 'showPixelGrid';
   }
   return !isCommand && getLetter(event) === 'r' ? 'showRulers' : undefined;
-}
-
-/** Whether the key is Cmd+A (Ctrl+A outside of Macs). */
-function isSelectAllShortcut(event: KeyboardEvent) {
-  const hasOtherModifier = ShortcutService.isMac() ? event.ctrlKey : event.metaKey;
-  return (
-    ShortcutService.isOsDependentModifierKey(event) &&
-    !hasOtherModifier &&
-    !event.shiftKey &&
-    !event.altKey &&
-    getLetter(event) === 'a'
-  );
 }
 
 /**
