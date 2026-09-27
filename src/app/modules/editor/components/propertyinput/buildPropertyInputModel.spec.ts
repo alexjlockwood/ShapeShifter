@@ -11,7 +11,11 @@ import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { SetSelectedBlocks } from 'app/modules/editor/store/timeline/actions';
 import { ActionCreators } from 'redux-undo';
 
-import { buildPropertyInputModel, type PropertyInputModel } from './buildPropertyInputModel';
+import {
+  buildPropertyInputModel,
+  getColorAlphaMultiplier,
+  type PropertyInputModel,
+} from './buildPropertyInputModel';
 
 describe('buildPropertyInputModel', () => {
   let store: Store<State>;
@@ -108,5 +112,22 @@ describe('buildPropertyInputModel', () => {
       expect(getProperty('name').canPreview).toBe(false);
       expect(getProperty('pathData').canPreview).toBe(false);
     });
+  });
+});
+
+describe('#getColorAlphaMultiplier', () => {
+  it("combines with fillColor's own alpha using the layer's fillAlpha", () => {
+    expect(getColorAlphaMultiplier({ fillAlpha: 0.5, strokeAlpha: 0.25 }, 'fillColor')).toBe(0.5);
+  });
+
+  it("combines with strokeColor's own alpha using the layer's strokeAlpha", () => {
+    expect(getColorAlphaMultiplier({ fillAlpha: 0.5, strokeAlpha: 0.25 }, 'strokeColor')).toBe(
+      0.25,
+    );
+  });
+
+  it('is 1 for a color with no separate alpha, like canvasColor or a block value', () => {
+    expect(getColorAlphaMultiplier({}, 'canvasColor')).toBe(1);
+    expect(getColorAlphaMultiplier({ fillAlpha: 0.5 }, 'fromValue')).toBe(1);
   });
 });

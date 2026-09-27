@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { expect, test } from './fixtures';
+import { boundingBox, expect, test } from './fixtures';
 
 async function loadDemo(page: Page) {
   await page.goto('/?project=demos/playtopause.shapeshifter');
@@ -62,6 +62,66 @@ test('edits the selected layer in the property inspector', async ({ page }) => {
   await canvasColorInput.press('ArrowUp');
   await expect(canvasColorInput).toHaveValue('');
   expect((await getVectorLayer(page)).canvasColor).toBeFalsy();
+});
+
+function getPathFillColor(page: Page, layerId: string) {
+  return page.evaluate(id => {
+    const { store } = (window as any).shapeshifter;
+    const vl = store.getState().present.layers.vectorLayer;
+    return vl.findLayerById(id).fillColor as string;
+  }, layerId);
+}
+
+test('edits a color with the color picker, as one undo step', async ({ page, modifier }) => {
+  await loadDemo(page);
+  const layerId = await page.evaluate(() => {
+    const { services } = (window as any).shapeshifter;
+    const path = services.layerTimelineService.getVectorLayer().findLayerByName('path');
+    services.layerTimelineService.selectLayer(path.id, true);
+    return path.id as string;
+  });
+
+  // Start from a saturated color, so dragging the hue slider actually changes it (unlike the
+  // demo's black, whose hue doesn't affect its RGB value).
+  const fillColorInput = page.locator('.spi-property input[name="fillColor"]');
+  await fillColorInput.fill('#ff0000');
+  await fillColorInput.press('Tab');
+  await expect.poll(() => getPathFillColor(page, layerId)).toBe('#ff0000');
+  const originalColor = await getPathFillColor(page, layerId);
+
+  const fillRow = page.locator('.spi-property', { has: page.locator('input[name="fillColor"]') });
+  await fillRow.getByRole('button', { name: 'Edit color' }).click();
+  const popover = page.locator('.spi-color-picker-popover');
+  await expect(popover).toBeVisible();
+
+  // Drag the hue slider. It previews the color on every move and commits once, on release.
+  const hueSlider = popover.locator('.react-colorful__hue [role="slider"]');
+  const box = await boundingBox(hueSlider);
+  await page.mouse.move(box.x + 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(() => getPathFillColor(page, layerId)).not.toBe(originalColor);
+
+  // Backspace in the picker's own hex field edits it, rather than deleting the selected layer.
+  const hexField = popover.locator('.spi-color-picker-hex');
+  await hexField.click();
+  await page.keyboard.press('Backspace');
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as any).shapeshifter.store.getState().present.layers.vectorLayer.children[0]
+            .children.length,
+      ),
+    )
+    .toBe(1);
+
+  await page.keyboard.press('Escape');
+  await expect(popover).toBeHidden();
+
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathFillColor(page, layerId)).toBe(originalColor);
 });
 
 test('switches to the dark theme from the overflow menu', async ({ page }) => {

@@ -5,6 +5,8 @@ import Tooltip from '@mui/material/Tooltip';
 import { Tip } from 'app/modules/editor/components/common/Tip';
 import { Icon, type IconName } from 'app/modules/editor/components/icons/Icon';
 import { useCanvasEditorModule } from 'app/modules/editor/components/canvas/useCanvasEditorModule';
+import { collectDocumentColors } from 'app/modules/editor/components/colorpicker/documentColors';
+import { ColorPropertyEditor } from 'app/modules/editor/components/colorpicker/ColorPropertyEditor';
 import { Splitter } from 'app/modules/editor/components/splitter';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
@@ -14,13 +16,13 @@ import type { Layer } from 'app/modules/editor/model/layers';
 import { EnumProperty } from 'app/modules/editor/model/properties';
 import type { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
-import { ColorUtil } from 'app/modules/editor/scripts/common';
 import { ShortcutService } from 'app/modules/editor/services';
 import { getPropertyInputState } from 'app/modules/editor/store/common/selectors';
 import { type KeyboardEvent, type ReactNode, useMemo, useReducer, useState } from 'react';
 
 import {
   buildPropertyInputModel,
+  getColorAlphaMultiplier,
   isPathBlockFromValueEmpty,
   isPathBlockToValueEmpty,
   type PropertyInputModel,
@@ -57,6 +59,11 @@ export function PropertyInput() {
     () =>
       buildPropertyInputModel({ store, layerTimelineService, enteredValueMap }, propertyInputState),
     [store, layerTimelineService, enteredValueMap, propertyInputState],
+  );
+  // The color picker's "In this document" swatches, shared by every color property shown below.
+  const documentColors = useMemo(
+    () => collectDocumentColors(propertyInputState.vectorLayer, propertyInputState.animation),
+    [propertyInputState.vectorLayer, propertyInputState.animation],
   );
 
   const onAnimateLayerClick = (layer: Layer, propertyName: string) => {
@@ -158,9 +165,10 @@ export function PropertyInput() {
                     <div className="spi-property-name">{ip.propertyName}</div>
                     <div className="spi-property-value fx-row">
                       {ip.typeName === 'ColorProperty' && (
-                        <div
-                          className="spi-property-color-preview"
-                          style={{ backgroundColor: ColorUtil.androidToCssHexColor(ip.value) }}
+                        <ColorPropertyEditor
+                          ip={ip}
+                          documentColors={documentColors}
+                          alphaMultiplier={getColorAlphaMultiplier(model.model, ip.propertyName)}
                         />
                       )}
                       {!ip.isEditable() && (

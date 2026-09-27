@@ -100,6 +100,22 @@ export function isPathBlockToValueEmpty(block: PathAnimationBlock) {
   return !block.toValue || !block.toValue.getPathString();
 }
 
+/**
+ * Returns the multiplier the color picker's swatch combines with a color's own alpha byte, so the
+ * swatch matches what the canvas actually draws (CanvasLayers.ts): a layer's fillAlpha for its
+ * fillColor, strokeAlpha for its strokeColor, and 1 for anything else, e.g. the vector layer's
+ * canvasColor or a color block's from and to values, none of which have a separate alpha.
+ */
+export function getColorAlphaMultiplier(model: any, propertyName: string): number {
+  if (propertyName === 'fillColor') {
+    return model.fillAlpha ?? 1;
+  }
+  if (propertyName === 'strokeColor') {
+    return model.strokeAlpha ?? 1;
+  }
+  return 1;
+}
+
 function buildInspectedLayerProperties(
   deps: Dependencies,
 

@@ -222,3 +222,108 @@
     font-size: 14px;
     line-height: 20px;
 }
+
+// The color picker: the swatch button that opens it, its popover panel, and the swatches inside
+// (the "No color" option and "In this document"). Colors that aren't layout are in
+// propertyinput-theme.scss.
+.spi-color-swatch {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    // A neutral checkerboard behind a translucent color, the same in both themes.
+    background-image:
+        linear-gradient(45deg, rgba(128, 128, 128, 0.3) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(128, 128, 128, 0.3) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(128, 128, 128, 0.3) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(128, 128, 128, 0.3) 75%);
+    background-size: 8px 8px;
+    background-position:
+        0 0,
+        0 4px,
+        4px -4px,
+        -4px 0;
+}
+.spi-color-swatch-empty-icon {
+    width: 12px;
+    height: 12px;
+}
+.spi-color-picker-popover {
+    .spi-color-picker {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        width: 232px;
+        .react-colorful {
+            width: 100%;
+            height: 200px;
+        }
+    }
+    .spi-color-picker-fields {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        input {
+            border: 0;
+            border-radius: 2px;
+            font-size: 14px;
+            height: 24px;
+            box-sizing: border-box;
+            padding: 2px 6px;
+            outline: 0;
+        }
+    }
+    .spi-color-picker-hex {
+        flex: 2 1 0;
+        min-width: 0;
+    }
+    .spi-color-picker-alpha {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+    .spi-color-picker-eyedropper.MuiIconButton-root {
+        padding: 4px;
+    }
+    .spi-color-picker-none {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        border: 0;
+        background: none;
+        padding: 4px;
+        font: inherit;
+        font-size: 14px;
+        text-align: left;
+        cursor: pointer;
+        border-radius: 2px;
+        .spi-color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    }
+    .spi-color-picker-swatches {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .spi-color-picker-swatches-label {
+        font-size: 12px;
+    }
+    .spi-color-picker-swatches-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        .spi-color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    }
+}

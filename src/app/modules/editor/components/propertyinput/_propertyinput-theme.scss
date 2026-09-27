@@ -77,4 +77,36 @@
         background-color: mat-color(mat-palette($mat-red, 50));
         border-color: mat-color(mat-palette($mat-red, 100));
     }
+    // The color picker's swatch button, its popover, and the "In this document" swatches. The
+    // checkerboard pattern behind a translucent color is in propertyinput.scss, since it's the
+    // same neutral gray in both themes.
+    .spi-color-swatch {
+        box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
+    }
+    .spi-color-swatch-empty-icon,
+    .spi-color-picker-none .ss-icon {
+        color: mat-color($foreground, disabled-text);
+    }
+    .spi-color-picker-popover {
+        background-color: mat-color($background, base);
+        color: mat-color($foreground, primary-text);
+    }
+    .spi-color-picker-hex,
+    .spi-color-picker-alpha {
+        background-color: mat-color($background, base200);
+        color: mat-color($foreground, primary-text);
+        box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
+        &:focus {
+            box-shadow: 0 0 0 1px mat-color($accent) inset;
+        }
+    }
+    .spi-color-picker-none {
+        color: mat-color($foreground, primary-text);
+        &:hover {
+            background-color: mat-color($background, base100);
+        }
+    }
+    .spi-color-picker-swatches-label {
+        color: mat-color($foreground, secondary-text);
+    }
 }
