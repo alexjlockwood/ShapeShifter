@@ -292,7 +292,9 @@ which end an edit changes and whether the morph still works, with a button that 
 that the path is morphing, with buttons that go to either end. Either way, "Edit morph" opens the
 block in action mode, and where two morphs meet, there's a button for each. Auto fix changes both
 ends of the block, so it changes the values linked to them too, and fixes the linked blocks that
-stop morphing because of it, unlike auto fix in action mode. Some gaps are left for later:
+stop morphing because of it, unlike auto fix in action mode. Right-clicking the badge opens a
+menu with the same commands and Delete, like the one on a timeline block. Some gaps are left for
+later:
 
 - The property inspector still shows the layer's own path rather than the one at the current time.
 - There's no way to jump to the next or previous keyframe from the keyboard.

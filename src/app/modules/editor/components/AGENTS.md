@@ -10,8 +10,10 @@ Paths are relative to `src/app/modules/editor/`.
   property inspector (hidden in action mode), and the layer list and timeline. Mobile user agents
   get `components/splashscreen/` instead.
 - Action mode (the morph editor) is entered with `actionModeService.editMorph(blockId)`, from the
-  inspector, a double-click on a path block, or the canvas editor's keyframe badge, and it leaves
-  on its own once undo takes the block away. Its three panels are labeled and bordered, under a
+  inspector, a double-click on a path block, the canvas editor's keyframe badge, or the context
+  menu, and it leaves on its own once undo takes the block away. `actionModeService.morphInto`
+  starts a morph from two paths ("Morph into" in the context menu, and the snackbar after an
+  import or paste), with its rules in `scripts/common/morphLayers.ts`. Its three panels are labeled and bordered, under a
   status strip that says whether the paths morph (`components/toolbar/ActionModeStatusStrip.tsx`,
   with its message from `components/toolbar/actionModeStatus.ts`), and its commands are in a
   floating bar over the bottom of the panels (`components/toolbar/ActionBar.tsx`). The app bar
@@ -109,10 +111,14 @@ once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are 
 Right-clicking the main canvas (outside of action mode) or a layer row, or clicking a row's "more"
 button, selects the layer under the pointer if it isn't selected, and opens
 `components/contextmenu/ContextMenuHost.tsx` through `components/contextmenu/contextmenu.service.ts`
-(`components/contextmenu/contextMenuSelection.ts` has the rule). Its items come from
+(`components/contextmenu/contextMenuSelection.ts` has the rule). Right-clicking a timeline block
+selects it the same way, and right-clicking the canvas editor's keyframe badge opens a menu for
+the badge's blocks without selecting them, since that would deselect the path the badge is about
+(the request carries their ids). Its items come from
 `components/contextmenu/buildContextMenu.ts`, a plain function of the saved document, the
-selection, and what the canvas editor reports, built as a list of sections. A new kind of item
-goes in a section builder of its own, added to `CONTEXT_MENU_SECTIONS`. Items that can't run say
+selection, the blocks, the current time, and what the canvas editor reports, built as a list of
+sections. A new kind of item goes in a section builder of its own, added to
+`CONTEXT_MENU_SECTIONS`, or `BLOCK_CONTEXT_MENU_SECTIONS` for blocks. Items that can't run say
 why, rather than being left out, and those that only the canvas editor runs (Duplicate, the
 boolean operations, and Outline stroke) are left out while it isn't loaded, as on the live site.
 They reach it through `services/canvaseditorbridge.service.ts`, which `CanvasController` attaches

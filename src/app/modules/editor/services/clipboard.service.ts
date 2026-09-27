@@ -80,7 +80,7 @@ export class ClipboardService {
         // Paste SVG.
         trackEvent('paste_svg');
         SvgLoader.loadVectorLayerFromSvgString(str, name => !!existingVl.findLayerByName(name))
-          .then(vl => this.layerTimelineService.importLayers([vl]))
+          .then(vl => this.importLayers(vl))
           .catch(() => console.warn('failed to import SVG'));
       } else if (isVectorDrawable) {
         // Paste VD.
@@ -90,7 +90,7 @@ export class ClipboardService {
           name => !!existingVl.findLayerByName(name),
         );
         if (importedVl) {
-          this.layerTimelineService.importLayers([importedVl]);
+          this.importLayers(importedVl);
         }
       } else if (isJson) {
         let parsed;
@@ -152,6 +152,13 @@ export class ClipboardService {
       on(window, 'copy', event => cutCopyHandlerFn(event, false)),
       on(window, 'paste', pasteHandlerFn),
     ];
+  }
+
+  /** Imports the pasted layers, and offers to morph into them if that would work. */
+  private importLayers(vl: VectorLayer) {
+    const before = this.layerTimelineService.getVectorLayer();
+    const importedIds = this.layerTimelineService.importLayers([vl]);
+    this.actionModeService.offerImportMorph(before, importedIds);
   }
 
   destroy() {

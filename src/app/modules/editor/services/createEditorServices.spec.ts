@@ -368,6 +368,157 @@ describe('createEditorServices', () => {
     });
   });
 
+  describe('morphInto', () => {
+    const SQUARE = 'M 2 2 L 10 2 L 10 10 L 2 10 Z';
+    const TRIANGLE = 'M 14 14 L 22 14 L 18 22 Z';
+
+    function load() {
+      const a = new PathLayer({
+        name: 'a',
+        children: [],
+        pathData: new Path(SQUARE),
+        fillColor: '#ff0000',
+      });
+      const b = new PathLayer({
+        name: 'b',
+        children: [],
+        pathData: new Path(TRIANGLE),
+        fillColor: '#0000ff',
+      });
+      const group = new GroupLayer({ name: 'group', children: [b], translateX: 2 });
+      const vl = new VectorLayer({ name: 'vl', width: 24, height: 24, children: [a, group] });
+      store.dispatch(new ResetWorkspace(vl, new Animation({ duration: 1000 })));
+      return { a, b, group };
+    }
+
+    it('morphs, and edits the morph, and a single undo restores both paths and the selection', () => {
+      vi.useFakeTimers();
+      try {
+        const { actionModeService, layerTimelineService, playbackService } = services;
+        const { a, b, group } = load();
+        layerTimelineService.setSelectedLayers(new Set([a.id, b.id]));
+        playbackService.setCurrentTime(200);
+        vi.advanceTimersByTime(2000);
+        const vectorLayerBefore = layerTimelineService.getVectorLayer().toJSON();
+        const animationBefore = layerTimelineService.getAnimation().toJSON();
+
+        expect(actionModeService.morphInto(a.id, b.id)).toBe(true);
+        expect(actionModeService.getActionMode()).toBe(ActionMode.Selection);
+        const vl = layerTimelineService.getVectorLayer();
+        expect(vl.findLayerById(b.id)).toBeUndefined();
+        // The group stays, since it's not one of the morphed layers.
+        expect(vl.findLayerById(group.id)?.children).toEqual([]);
+        const blocks = layerTimelineService.getAnimation().blocks;
+        expect(blocks.map(block => [block.propertyName, block.startTime])).toEqual([
+          ['pathData', 200],
+          ['fillColor', 200],
+        ]);
+        const [pathBlock] = layerTimelineService.getSelectedBlocks() as PathAnimationBlock[];
+        expect(pathBlock.id).toBe(blocks[0].id);
+        expect(pathBlock.isAnimatable()).toBe(true);
+        // B is drawn translated by its group.
+        expect(pathBlock.toValue?.getBoundingBox()).toMatchObject({ l: 16, r: 24 });
+        expect(layerTimelineService.getSelectedLayerIds()).toEqual(new Set());
+        // The panels show the colors at each end too.
+        const colorAt = (selector: typeof getActionModeStartState) => {
+          const layer = selector(store.getState()).vectorLayer?.findLayerById(a.id);
+          return layer instanceof PathLayer ? layer.fillColor : undefined;
+        };
+        expect(colorAt(getActionModeStartState)).toBe('#ff0000');
+        expect(colorAt(getActionModeEndState)).toBe('#0000ff');
+
+        store.dispatch(ActionCreators.undo());
+        expect(layerTimelineService.getVectorLayer().toJSON()).toEqual(vectorLayerBefore);
+        expect(layerTimelineService.getAnimation().toJSON()).toEqual(animationBefore);
+        expect(layerTimelineService.getSelectedLayerIds()).toEqual(new Set([a.id, b.id]));
+        expect(layerTimelineService.getSelectedBlocks()).toEqual([]);
+        expect(actionModeService.isActionMode()).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('says why it refuses, and changes nothing', () => {
+      const { actionModeService, layerTimelineService, snackBarService } = services;
+      const { a } = load();
+      const before = layerTimelineService.getDocument();
+      expect(actionModeService.morphInto(a.id, a.id)).toBe(false);
+      expect(snackBarService.getSnackBar()?.message).toBe("A path can't morph into itself");
+      expect(layerTimelineService.getDocument()).toEqual(before);
+    });
+
+    it('leaves the morph it was editing for the new one', () => {
+      const { actionModeService, layerTimelineService } = services;
+      const { a, b } = load();
+      const c = new PathLayer({ name: 'c', children: [], pathData: new Path(TRIANGLE) });
+      layerTimelineService.addLayer(c);
+      actionModeService.morphInto(a.id, c.id);
+      const [first] = layerTimelineService.getSelectedBlocks();
+      actionModeService.setSelections([
+        { type: SelectionType.SubPath, source: ActionSource.From, subIdx: 0 },
+      ]);
+      expect(actionModeService.morphInto(a.id, b.id)).toBe(true);
+      const [second] = layerTimelineService.getSelectedBlocks();
+      expect(second.id).not.toBe(first.id);
+      expect(second.startTime).toBe(first.endTime);
+      expect(actionModeService.getSelections()).toEqual([]);
+    });
+
+    it('auto fixes blocks from the context menu as one undo step', () => {
+      vi.useFakeTimers();
+      try {
+        const { actionModeService, layerTimelineService } = services;
+        const { a } = load();
+        layerTimelineService.addBlocks([
+          {
+            layerId: a.id,
+            propertyName: 'pathData',
+            fromValue: new Path(SQUARE),
+            toValue: new Path(TRIANGLE),
+            currentTime: 0,
+          },
+        ]);
+        const [block] = layerTimelineService.getSelectedBlocks() as PathAnimationBlock[];
+        vi.advanceTimersByTime(2000);
+        actionModeService.autoFixBlocks([block.id]);
+        const [fixed] = layerTimelineService.getSelectedBlocks() as PathAnimationBlock[];
+        expect(fixed.isAnimatable()).toBe(true);
+        store.dispatch(ActionCreators.undo());
+        expect(layerTimelineService.getSelectedBlocks()).toEqual([block]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('offers to morph after an import, in a snackbar', () => {
+      const { actionModeService, layerTimelineService, snackBarService } = services;
+      const { a, b } = load();
+      const before = new VectorLayer({ name: 'vl', width: 24, height: 24, children: [a] });
+      expect(actionModeService.offerImportMorph(before, [[b.id]])).toBe(true);
+      const snackBar = snackBarService.getSnackBar();
+      expect(snackBar).toMatchObject({
+        message: "Morph 'a' into the imported shape?",
+        action: 'MORPH',
+      });
+      snackBarService.clickAction(snackBar!);
+      expect(layerTimelineService.getVectorLayer().findLayerById(b.id)).toBeUndefined();
+      expect(actionModeService.isActionMode()).toBe(true);
+    });
+
+    it('takes back the offer when the next import has none', () => {
+      const { actionModeService, snackBarService } = services;
+      const { a, b } = load();
+      const before = new VectorLayer({ name: 'vl', width: 24, height: 24, children: [a] });
+      actionModeService.offerImportMorph(before, [[b.id]]);
+      expect(actionModeService.offerImportMorph(before, [['missing']])).toBe(false);
+      expect(snackBarService.getSnackBar()).toBeUndefined();
+      // Other messages stay.
+      snackBarService.show('Something else');
+      actionModeService.offerImportMorph(before, [['missing']]);
+      expect(snackBarService.getSnackBar()?.message).toBe('Something else');
+    });
+  });
+
   describe('with blocks that animate hidden or missing layers', () => {
     function buildProject() {
       const path = new PathLayer({
