@@ -695,6 +695,80 @@ describe('reversing a closed subpath', () => {
   });
 });
 
+describe('setFirstAnchor', () => {
+  function commandIds(path: Path) {
+    return path.getCommands().map(c => c.id);
+  }
+
+  function expectUniqueIds(path: Path) {
+    expect(new Set(commandIds(path)).size).toBe(commandIds(path).length);
+  }
+
+  it('rotates a closed subpath, keeping its shape, its Z, and its ids', () => {
+    const path = new Path('M 0 0 L 10 0 L 10 10 L 0 10 Z');
+    const [a0, a1, a2, a3] = ids(path);
+    const rotated = PathEdit.setFirstAnchor(path, a2);
+    expect(rotated.getPathString()).toBe('M 10 10 L 0 10 L 0 0 L 10 0 Z');
+    expect(ids(rotated)).toEqual([a2, a3, a0, a1]);
+    expect(isSubPathClosed(rotated, 0)).toBe(true);
+    expectUniqueIds(rotated);
+    // Going back to the old first point gives back the same path.
+    const back = PathEdit.setFirstAnchor(rotated, a0);
+    expect(back.getPathString()).toBe(path.getPathString());
+    expect(ids(back)).toEqual([a0, a1, a2, a3]);
+    expectUniqueIds(back);
+  });
+
+  it('keeps curves, including the one back to the start', () => {
+    const path = new Path(CIRCLE);
+    const [a0, a1, a2, a3] = ids(path);
+    const rotated = PathEdit.setFirstAnchor(path, a1);
+    expect(points(rotated)).toEqual([
+      [5, 0],
+      [10, 5],
+      [5, 10],
+      [0, 5],
+    ]);
+    expect(ids(rotated)).toEqual([a1, a2, a3, a0]);
+    expect(isSubPathClosed(rotated, 0)).toBe(true);
+    expectUniqueIds(rotated);
+    expect(rotated.getBoundingBox()).toEqual(path.getBoundingBox());
+    expect(PathEdit.setFirstAnchor(rotated, a0).getPathString()).toBe(path.getPathString());
+  });
+
+  it('keeps a line back to the start that the Z follows', () => {
+    const path = new Path('M 0 0 L 10 0 L 10 10 L 0 0 Z');
+    const [a0, a1, a2] = ids(path);
+    const rotated = PathEdit.setFirstAnchor(path, a1);
+    expect(rotated.getPathString()).toBe('M 10 0 L 10 10 L 0 0 Z');
+    expect(ids(rotated)).toEqual([a1, a2, a0]);
+    expectUniqueIds(rotated);
+  });
+
+  it('only changes the subpath the point is in', () => {
+    const path = new Path('M 0 0 L 4 0 L 4 4 Z M 10 0 L 14 0 L 14 4 Z');
+    const [, , , b0, b1, b2] = ids(path);
+    const rotated = PathEdit.setFirstAnchor(path, b2);
+    expect(rotated.getPathString()).toBe('M 0 0 L 4 0 L 4 4 Z M 14 4 L 10 0 L 14 0 Z');
+    expect(ids(rotated).slice(3)).toEqual([b2, b0, b1]);
+    expectUniqueIds(rotated);
+  });
+
+  it("refuses open subpaths and the point that's first already", () => {
+    const open = new Path('M 0 0 L 10 0 L 10 10');
+    expect(PathEdit.getSetFirstAnchorRefusal(open, ids(open)[1])).toBe(
+      'An open subpath starts at one of its ends',
+    );
+    expect(() => PathEdit.setFirstAnchor(open, ids(open)[1])).toThrow();
+    const closed = new Path('M 0 0 L 10 0 L 10 10 Z');
+    expect(PathEdit.getSetFirstAnchorRefusal(closed, ids(closed)[0])).toBe(
+      "It's the first point already",
+    );
+    expect(PathEdit.getSetFirstAnchorRefusal(closed, ids(closed)[1])).toBeUndefined();
+    expect(PathEdit.setFirstAnchor(closed, ids(closed)[0])).toBe(closed);
+  });
+});
+
 describe('joinEnds', () => {
   it('closes a subpath whose two ends are joined', () => {
     const path = new Path('M 0 0 L 10 0 L 10 10');

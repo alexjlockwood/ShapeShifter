@@ -505,6 +505,63 @@ function reverseClosedSubPath(subPath: EditSubPath): EditSubPath {
 }
 
 /**
+ * Returns why the anchor can't be made its subpath's first, or undefined if it can (see
+ * setFirstAnchor).
+ */
+export function getSetFirstAnchorRefusal(path: Path, anchorId: string) {
+  const anchor = getAnchors(path).find(a => a.id === anchorId);
+  if (!anchor) {
+    return 'The point is gone';
+  }
+  if (!toSubPaths(path)[anchor.subIdx].closed) {
+    // Starting anywhere else would change the shape, and starting at the other end is Reverse.
+    return 'An open subpath starts at one of its ends';
+  }
+  return anchor.index === 0 ? "It's the first point already" : undefined;
+}
+
+/**
+ * Makes the anchor the first of its closed subpath, which only matters for morphing, keeping the
+ * shape, the closed flag, and every anchor's id. Each segment keeps the id of the anchor it ends
+ * at, so the old closing segment takes the old move's id, and the new closing segment, which ends
+ * at the new first anchor whose id the new move takes, gets a new one. Throws for an open subpath
+ * (see getSetFirstAnchorRefusal).
+ */
+export function setFirstAnchor(path: Path, anchorId: string) {
+  const subPaths = toSubPaths(path);
+  const { subPath, index } = findAnchor(subPaths, anchorId);
+  if (!subPath.closed) {
+    throw new Error(`The subpath with the anchor ${anchorId} is open`);
+  }
+  if (index === 0) {
+    return path;
+  }
+  const count = subPath.anchors.length;
+  const rotate = <T>(items: ReadonlyArray<T>) => [...items.slice(index), ...items.slice(0, index)];
+  const oldMoveId = subPath.moveId;
+  const segments = rotate(subPath.segments).map((segment, k) => {
+    const isOldClosing = k === count - 1 - index;
+    const isNewClosing = k === count - 1;
+    // Only the last segment can be the Z that draws the way back.
+    const type = segment.type === 'Z' ? 'L' : segment.type;
+    return {
+      type: isNewClosing && type === 'L' ? ('Z' as const) : type,
+      id: isNewClosing ? uniqueId() : isOldClosing ? oldMoveId : segment.id,
+      controls: [...segment.controls],
+    };
+  });
+  subPaths[subPaths.indexOf(subPath)] = {
+    moveId: anchorId,
+    anchors: rotate(subPath.anchors),
+    segments,
+    closed: true,
+    // The Z with no length after a closing curve stays, and a closing line is the Z itself.
+    closeId: segments[count - 1].type === 'Z' ? undefined : subPath.closeId,
+  };
+  return toPath(subPaths);
+}
+
+/**
  * Joins two ends of open subpaths, like Illustrator's Join: the two ends of one subpath close it,
  * and ends of two subpaths become one subpath, with a line between them, or with the ends merged
  * if they're in the same place. The joined subpath goes where the first end's was. Returns
