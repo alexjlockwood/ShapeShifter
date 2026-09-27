@@ -434,6 +434,75 @@ describe('LayerTimelineService', () => {
       expect(store.getState().past.length).toBe(numPastStates);
     });
 
+    it('saves a preview in the undo step of a recorded action during it', () => {
+      load([newPath('path'), newPath('other')]);
+      vi.advanceTimersByTime(2000);
+      const path = getLayer<PathLayer>('path').clone();
+      path.strokeColor = '#0000ff';
+      services.layerTimelineService.updateLayer(path);
+      vi.advanceTimersByTime(200);
+      previewFillColor('#ff0000');
+      vi.advanceTimersByTime(300);
+      // E.g. a keyboard shortcut in the middle of a drag.
+      services.layerTimelineService.setSelectedLayers(new Set([getLayer('other').id]));
+      const numPastStates = store.getState().past.length;
+
+      // The selection's undo step already saved the preview, so these do nothing.
+      services.layerTimelineService.cancelPreview();
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#ff0000');
+      services.layerTimelineService.commitPreview();
+      expect(store.getState().past.length).toBe(numPastStates);
+
+      store.dispatch(ActionCreators.undo());
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#000000');
+      expect(getLayer<PathLayer>('path').strokeColor).toBe('#0000ff');
+      expect(services.layerTimelineService.getSelectedLayers()).toEqual([]);
+    });
+
+    it('clears the redo history when a preview after an undo is saved', () => {
+      load([newPath('path')]);
+      vi.advanceTimersByTime(2000);
+      const path = getLayer<PathLayer>('path').clone();
+      path.strokeColor = '#0000ff';
+      services.layerTimelineService.updateLayer(path);
+      vi.advanceTimersByTime(2000);
+      store.dispatch(ActionCreators.undo());
+      expect(store.getState().future.length).toBe(1);
+
+      previewFillColor('#ff0000');
+      services.layerTimelineService.commitPreview();
+      expect(store.getState().future.length).toBe(0);
+      // There's nothing to redo, so the undone stroke color stays undone.
+      store.dispatch(ActionCreators.redo());
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#ff0000');
+      expect(getLayer<PathLayer>('path').strokeColor).toBe('');
+    });
+
+    it('gives an edit right after a saved preview an undo step of its own', () => {
+      load([newPath('path'), newPath('other')]);
+      vi.advanceTimersByTime(2000);
+      previewFillColor('#ff0000');
+      services.layerTimelineService.commitPreview();
+      vi.advanceTimersByTime(100);
+      services.layerTimelineService.setSelectedLayers(new Set([getLayer('other').id]));
+
+      store.dispatch(ActionCreators.undo());
+      expect(getLayer<PathLayer>('path').fillColor).toBe('#ff0000');
+      expect(services.layerTimelineService.getSelectedLayers()).toEqual([]);
+    });
+
+    it("doesn't save an undo step for a preview that ends where it started", () => {
+      load([newPath('path')]);
+      const vl = services.layerTimelineService.getVectorLayer();
+      vi.advanceTimersByTime(2000);
+      const numPastStates = store.getState().past.length;
+      previewFillColor('#ff0000');
+      previewFillColor('#000000');
+      services.layerTimelineService.commitPreview();
+      expect(store.getState().past.length).toBe(numPastStates);
+      expect(services.layerTimelineService.getVectorLayer()).toBe(vl);
+    });
+
     it("doesn't save an undo step without a preview", () => {
       load([newPath('path')]);
       vi.advanceTimersByTime(2000);

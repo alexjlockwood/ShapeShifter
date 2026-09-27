@@ -34,8 +34,15 @@ import {
   getSelectedBlockIds,
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
-import { IsolateUndoStep, SkipUndoStep } from 'app/modules/editor/store/undoredo/actions';
-import { getLastRecordedState } from 'app/modules/editor/store/undoredo/metareducer';
+import {
+  EndPreview,
+  IsolateUndoStep,
+  SkipUndoStep,
+} from 'app/modules/editor/store/undoredo/actions';
+import {
+  getLastRecordedState,
+  isPreviewPending,
+} from 'app/modules/editor/store/undoredo/metareducer';
 import { difference, find, findIndex, isEqual, uniqueId } from 'lodash-es';
 
 /**
@@ -315,13 +322,26 @@ export class LayerTimelineService {
 
   /**
    * Saves the previewed layers and blocks as one undo step, however long the previews took and
-   * however soon they came after another edit. It does nothing if nothing was previewed.
+   * however soon they came after another edit. It does nothing without a pending preview, e.g. if
+   * a recorded action during the previews already saved them in its undo step (see
+   * isPreviewPending). If the previewed values save the same as the recorded ones, e.g. a color
+   * dragged back to where it started, it ends the preview like cancelPreview instead.
    */
   commitPreview() {
+    const state = this.store.getState();
+    if (!isPreviewPending(state)) {
+      return;
+    }
     const vl = this.getVectorLayer();
     const animation = this.getAnimation();
-    const recorded = getLastRecordedState(this.store.getState());
-    if (recorded.layers.vectorLayer === vl && recorded.timeline.animation === animation) {
+    const recorded = getLastRecordedState(state);
+    // LayerUtil.updateLayer always returns a new tree, so compare what a project file saves.
+    // Serializing once at the end of a drag is cheap next to the previews.
+    const isUnchanged =
+      isEqual(recorded.layers.vectorLayer.toJSON(), vl.toJSON()) &&
+      isEqual(recorded.timeline.animation.toJSON(), animation.toJSON());
+    if (isUnchanged) {
+      this.cancelPreview();
       return;
     }
     this.store.dispatch(
@@ -330,20 +350,21 @@ export class LayerTimelineService {
   }
 
   /**
-   * Shows the layers and blocks from before the previews again, without an undo step.
+   * Shows the layers and blocks from before the previews again, without an undo step. Like
+   * commitPreview, it does nothing without a pending preview. Once a recorded action has saved
+   * the previewed values, only undo takes them back.
    */
   cancelPreview() {
-    const recorded = getLastRecordedState(this.store.getState());
-    const { vectorLayer } = recorded.layers;
-    const { animation } = recorded.timeline;
-    if (vectorLayer === this.getVectorLayer() && animation === this.getAnimation()) {
+    const state = this.store.getState();
+    if (!isPreviewPending(state)) {
       return;
     }
+    const recorded = getLastRecordedState(state);
     this.store.dispatch(
       new BatchAction(
-        new SkipUndoStep(),
-        new SetVectorLayer(vectorLayer),
-        new SetAnimation(animation),
+        new EndPreview(),
+        new SetVectorLayer(recorded.layers.vectorLayer),
+        new SetAnimation(recorded.timeline.animation),
       ),
     );
   }

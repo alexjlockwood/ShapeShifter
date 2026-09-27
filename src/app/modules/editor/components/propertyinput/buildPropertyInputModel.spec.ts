@@ -1,7 +1,10 @@
 import { PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
-import { createEditorServices } from 'app/modules/editor/services/createEditorServices';
-import { createEditorStore } from 'app/modules/editor/store';
+import {
+  createEditorServices,
+  type EditorServices,
+} from 'app/modules/editor/services/createEditorServices';
+import { createEditorStore, type State, type Store } from 'app/modules/editor/store';
 import { getPropertyInputState } from 'app/modules/editor/store/common/selectors';
 import { SetSelectedLayers } from 'app/modules/editor/store/layers/actions';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
@@ -11,11 +14,25 @@ import { ActionCreators } from 'redux-undo';
 import { buildPropertyInputModel, type PropertyInputModel } from './buildPropertyInputModel';
 
 describe('buildPropertyInputModel', () => {
-  it("shows nothing if the selected layer or block doesn't exist", () => {
-    const store = createEditorStore();
-    const { layerTimelineService } = createEditorServices(store);
-    const deps = { store, layerTimelineService, enteredValueMap: new Map() };
+  let store: Store<State>;
+  let services: EditorServices;
 
+  beforeEach(() => {
+    store = createEditorStore();
+    services = createEditorServices(store);
+  });
+
+  afterEach(() => {
+    services.dispose();
+  });
+
+  function getDeps() {
+    const { layerTimelineService } = services;
+    return { store, layerTimelineService, enteredValueMap: new Map() };
+  }
+
+  it("shows nothing if the selected layer or block doesn't exist", () => {
+    const deps = getDeps();
     const noSelections: PropertyInputModel = {
       numSelections: 0,
       inspectedProperties: [],
@@ -33,12 +50,16 @@ describe('buildPropertyInputModel', () => {
     );
   });
 
-  it("previews a layer's property and saves it as one undo step", () => {
-    vi.useFakeTimers();
-    try {
-      const store = createEditorStore();
-      const { layerTimelineService } = createEditorServices(store);
-      const deps = { store, layerTimelineService, enteredValueMap: new Map() };
+  describe('previews', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function loadSelectedPath() {
       const path = new PathLayer({
         name: 'path',
         children: [],
@@ -48,26 +69,44 @@ describe('buildPropertyInputModel', () => {
       store.dispatch(new ResetWorkspace(new VectorLayer({ name: 'vector', children: [path] })));
       store.dispatch(new SetSelectedLayers(new Set([path.id])));
       vi.advanceTimersByTime(2000);
+    }
 
-      const getFillColor = () => {
-        const pim = buildPropertyInputModel(deps, getPropertyInputState(store.getState()));
-        const ip = pim.inspectedProperties.find(p => p.propertyName === 'fillColor');
-        if (!ip) {
-          throw new Error('fillColor is missing');
-        }
-        return ip;
-      };
-      expect(getFillColor().canPreview).toBe(true);
-      getFillColor().previewValue('#ff0000');
+    function getProperty(propertyName: string) {
+      const pim = buildPropertyInputModel(getDeps(), getPropertyInputState(store.getState()));
+      const ip = pim.inspectedProperties.find(p => p.propertyName === propertyName);
+      if (!ip) {
+        throw new Error(`${propertyName} is missing`);
+      }
+      return ip;
+    }
+
+    it("previews a layer's color and saves it as one undo step", () => {
+      loadSelectedPath();
+      expect(getProperty('fillColor').canPreview).toBe(true);
+      getProperty('fillColor').previewValue('#ff0000');
       vi.advanceTimersByTime(1500);
-      getFillColor().previewValue('#00ff00');
-      expect(getFillColor().value).toBe('#00ff00');
-      getFillColor().commitPreview();
+      getProperty('fillColor').previewValue('#00ff00');
+      expect(getProperty('fillColor').value).toBe('#00ff00');
+      getProperty('fillColor').commitPreview();
 
       store.dispatch(ActionCreators.undo());
-      expect(getFillColor().value).toBe('#000000');
-    } finally {
-      vi.useRealTimers();
-    }
+      expect(getProperty('fillColor').value).toBe('#000000');
+    });
+
+    it("goes back to a layer's color from before the previews when canceled", () => {
+      loadSelectedPath();
+      const numPastStates = store.getState().past.length;
+      getProperty('fillColor').previewValue('#ff0000');
+      getProperty('fillColor').cancelPreview();
+      expect(getProperty('fillColor').value).toBe('#000000');
+      expect(store.getState().past.length).toBe(numPastStates);
+    });
+
+    it("doesn't preview a layer's name", () => {
+      loadSelectedPath();
+      // A preview would skip the name's sanitizing and uniqueness checks.
+      expect(getProperty('name').canPreview).toBe(false);
+      expect(getProperty('pathData').canPreview).toBe(false);
+    });
   });
 });

@@ -6,7 +6,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
-import { NameProperty } from 'app/modules/editor/model/properties';
+import { ColorProperty, NameProperty, type Property } from 'app/modules/editor/model/properties';
 import { Animation, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import type { LayerTimelineService } from 'app/modules/editor/services';
@@ -152,7 +152,7 @@ function buildInspectedLayerProperties(
         },
         // TODO: copy AIA conditions to determine whether this should be editable
         undefined,
-        buildValuePreview(deps, value => {
+        buildValuePreview(deps, property, value => {
           const clonedLayer: any = layer.clone();
           clonedLayer[propertyName] = value;
           deps.layerTimelineService.previewLayer(clonedLayer);
@@ -221,7 +221,7 @@ function buildInspectedBlockProperties(
         undefined,
         undefined,
         undefined,
-        buildValuePreview(deps, value => {
+        buildValuePreview(deps, property, value => {
           const clonedBlock: any = block.clone();
           clonedBlock[propertyName] = value;
           deps.layerTimelineService.previewBlocks([clonedBlock]);
@@ -240,7 +240,19 @@ function buildInspectedBlockProperties(
   } as PropertyInputModel;
 }
 
-function buildValuePreview(deps: Dependencies, preview: (value: any) => void): ValuePreview<any> {
+/**
+ * Returns a preview for the properties that a drag edits, i.e. colors (for a color picker). The
+ * preview sets the value as it is, without transformEditedValueFn, so a property that needs one
+ * (like a layer's name, which must be unique) mustn't get a preview.
+ */
+function buildValuePreview(
+  deps: Dependencies,
+  property: Property<any>,
+  preview: (value: any) => void,
+): ValuePreview<any> | undefined {
+  if (!(property instanceof ColorProperty)) {
+    return undefined;
+  }
   return {
     preview,
     commit: () => deps.layerTimelineService.commitPreview(),
