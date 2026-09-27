@@ -104,6 +104,23 @@ describe('LayerTimelineService', () => {
     });
   });
 
+  describe('addLayer', () => {
+    it('adds a layer next to the selected one, in the parent getParentIdForNewLayer returns', () => {
+      load([newPath('a'), newGroup('g', [newPath('b')])]);
+      const lts = services.layerTimelineService;
+      expect(lts.getParentIdForNewLayer()).toBe(lts.getVectorLayer().id);
+
+      lts.setSelectedLayers(new Set([getLayer('b').id]));
+      expect(lts.getParentIdForNewLayer()).toBe(getLayer('g').id);
+      lts.addLayer(newPath('c'));
+      expect(getTree()).toEqual({ vector: ['a', { g: ['b', 'c'] }] });
+
+      lts.setSelectedLayers(new Set([getLayer('g').id]));
+      lts.addLayer(newPath('d'));
+      expect(getTree()).toEqual({ vector: ['a', { g: ['b', 'c'] }, 'd'] });
+    });
+  });
+
   describe('addBlocks', () => {
     function addStrokeWidthBlock(layerId: string, autoSelectBlocks?: boolean) {
       services.layerTimelineService.addBlocks(
@@ -224,6 +241,20 @@ describe('LayerTimelineService', () => {
 
       expect(getTree()).toEqual({ vector: [{ group: ['a', 'c'] }, 'b'] });
       expect(getSelectedNames()).toEqual(['group']);
+    });
+
+    it("pivots new groups at the canvas's center, in their parent's coordinates", () => {
+      load([newPath('a'), newGroup('g', [newPath('b')], { translateX: 2, translateY: -3 })]);
+      select('a');
+      services.layerTimelineService.groupOrUngroupSelectedLayers(true);
+      const group = getLayer<GroupLayer>('group');
+      expect([group.pivotX, group.pivotY]).toEqual([12, 12]);
+
+      select('b');
+      services.layerTimelineService.groupOrUngroupSelectedLayers(true);
+      const nested = getLayer<GroupLayer>('group_1');
+      expect(getTree()).toEqual({ vector: [{ group: ['a'] }, { g: [{ group_1: ['b'] }] }] });
+      expect([nested.pivotX, nested.pivotY]).toEqual([10, 15]);
     });
 
     it('moves layers out of their other parents when grouping them', () => {

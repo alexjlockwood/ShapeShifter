@@ -220,13 +220,13 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
   await expect(page.locator('.app-canvas')).toHaveCount(1);
   await expect(page.locator('.paths-incompatible-text')).toHaveCount(0);
 
-  // Group the path and rotate the group by 90 degrees about the center.
+  // Group the path and rotate the group by 90 degrees about the center, where new groups pivot.
   await page.locator('.slt-layer', { hasText: 'play' }).click();
   await page.keyboard.press(`${modifier}+g`);
   await expect(page.locator('.slt-layer')).toHaveText(['vector', 'group', 'play']);
   await page.locator('.slt-layer', { hasText: 'group' }).click();
-  await setProperty(page, 'pivotX', '12');
-  await setProperty(page, 'pivotY', '12');
+  await expect(page.locator('.spi-property input[name="pivotX"]')).toHaveValue('12');
+  await expect(page.locator('.spi-property input[name="pivotY"]')).toHaveValue('12');
   await animateSelectedLayer(page, 'rotation');
   await expect(page.locator('.slt-timeline-block')).toHaveCount(2);
   // The new block is selected.

@@ -208,26 +208,36 @@ export class LayerTimelineService {
   }
 
   /**
-   * Adds a layer to the vector tree.
+   * Adds a layer to the vector tree, in the parent that getParentIdForNewLayer returns.
    */
   addLayer(layer: Layer) {
     const vl = this.getVectorLayer();
-    const selectedLayers = this.getSelectedLayers();
-    if (selectedLayers.length === 1) {
-      const selectedLayer = selectedLayers[0];
-      if (!(selectedLayer instanceof VectorLayer)) {
-        // Add the new layer as a sibling to the currently selected layer.
-        const parent = LayerUtil.findParent(vl, selectedLayer.id)?.clone();
-        if (parent) {
-          parent.children = [...parent.children, layer];
-          this.updateLayer(parent);
-          return;
-        }
-      }
+    const parentId = this.getParentIdForNewLayer();
+    const parent = parentId === vl.id ? undefined : vl.findLayerById(parentId)?.clone();
+    if (parent) {
+      parent.children = [...parent.children, layer];
+      this.updateLayer(parent);
+      return;
     }
     const vectorLayer = vl.clone();
     vectorLayer.children = [...vectorLayer.children, layer];
     this.updateLayer(vectorLayer);
+  }
+
+  /**
+   * Returns the id of the layer that addLayer adds a layer to: the parent of the selected layer,
+   * so that the new layer is its sibling, or else the vector layer.
+   */
+  getParentIdForNewLayer() {
+    const vl = this.getVectorLayer();
+    const selectedLayers = this.getSelectedLayers();
+    if (selectedLayers.length === 1 && !(selectedLayers[0] instanceof VectorLayer)) {
+      const parent = LayerUtil.findParent(vl, selectedLayers[0].id);
+      if (parent) {
+        return parent.id;
+      }
+    }
+    return vl.id;
   }
 
   /**
@@ -531,6 +541,7 @@ export class LayerTimelineService {
       const newGroup = new GroupLayer({
         name: LayerUtil.getUniqueLayerName([vl], 'group'),
         children: tempSelLayers,
+        ...LayerUtil.getCenterPivot(vl, firstSelectedLayerParent.id),
       });
       vl = LayerUtil.removeLayers(vl, ...tempSelLayers.map(l => l.id));
       const parent = vl.findLayerById(firstSelectedLayerParent.id)?.clone();

@@ -53,9 +53,9 @@ A `GroupLayer` defines a group of 0 or more children `Layer`s. It has several pr
 
 - `scaleY` (float, animatable) - A float value describing the amount to scale in the y-direction. Default value is `1`.
 
-- `pivotX` (float, animatable) - A float value (defined in viewport space) describing the x-coordinate of the pivot used to scale/rotate the group. Default value is `0`.
+- `pivotX` (float, animatable) - A float value (defined in viewport space) describing the x-coordinate of the pivot used to scale/rotate the group. Default value is `0`, but groups added in the app start at the center of the canvas (`LayerUtil.getCenterPivot`).
 
-- `pivotY` (float, animatable) - A float value (defined in viewport space) describing the y-coordinate of the pivot used to scale/rotate the group. Default value is `0`.
+- `pivotY` (float, animatable) - A float value (defined in viewport space) describing the y-coordinate of the pivot used to scale/rotate the group. Default value is `0`, but groups added in the app start at the center of the canvas.
 
 - `translateX` (float, animatable) - A float value (defined in viewport space) describing the amount to translate in the x-direction. Default value is `0`.
 
