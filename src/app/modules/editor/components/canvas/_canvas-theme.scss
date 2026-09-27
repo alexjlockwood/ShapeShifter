@@ -14,7 +14,8 @@
         background-color: mat-color($background, base300);
     }
     // The canvas editor's toolbar.
-    .app-canvas .canvas-editor-toolbar {
+    .app-canvas .canvas-editor-toolbar,
+    .app-canvas .canvas-editor-keyframe {
         background-color: mat-color($background, base100);
         color: mat-color($foreground, secondary-text);
     }

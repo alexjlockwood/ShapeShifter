@@ -1,4 +1,4 @@
-import { ClipPathLayer, LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import { VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation } from 'app/modules/editor/model/timeline';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
@@ -8,6 +8,8 @@ import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { getCurrentTime, getIsPlaying } from 'app/modules/editor/store/playback/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { combineLatest, Subject, Subscription } from 'rxjs';
+
+import { getPathKeyframe, setKeyframePath } from './pathKeyframes';
 
 /** The layers and their animation, which an edit changes together. */
 export interface CanvasDocument {
@@ -42,8 +44,9 @@ interface WorkingCopy {
  * the time cancels it, since the copy was made from a document that's gone: e.g. undo, deleting the
  * layer, or playback.
  *
- * Changing a path that an animation block sets at the current time wouldn't show, so setPath
- * refuses to. Editing the block's value comes later (docs/canvas-editor.md, phase 5).
+ * A path that an animation block sets at the current time is edited where its keyframe is saved:
+ * the block's start or end, at those times or while the path holds still between blocks, and
+ * nowhere while it's morphing (see pathKeyframes.ts).
  */
 export class CanvasPreview {
   private edit: Edit | undefined;
@@ -123,39 +126,53 @@ export class CanvasPreview {
     this.changed();
   }
 
-  /**
-   * Returns whether the layer's path can be edited: it's a path layer, and no animation block sets
-   * its path at the current time. Blocks set the path from the time that the first one starts.
-   */
-  canEditPath(layerId: string) {
-    const state = this.store.getState();
-    const layer = getVectorLayer(state).findLayerById(layerId);
-    const currentTime = getCurrentTime(state);
-    return (
-      (layer instanceof PathLayer || layer instanceof ClipPathLayer) &&
-      !getAnimation(state).blocks.some(
-        b => b.layerId === layerId && b.propertyName === 'pathData' && b.startTime <= currentTime,
-      )
-    );
+  /** The document with the working copy in it, if there is one. */
+  getDocument(): CanvasDocument {
+    return this.working?.document ?? this.getStoreDocument();
   }
 
-  /** Shows the layer with a working copy of its path. */
+  /**
+   * Returns whether the layer's path can be edited: it's a path layer, and it isn't in the middle
+   * of morphing at the current time.
+   */
+  canEditPath(layerId: string) {
+    const keyframe = getPathKeyframe(
+      this.getStoreDocument(),
+      layerId,
+      getCurrentTime(this.store.getState()),
+    );
+    return !!keyframe && keyframe.type !== 'between' && !!keyframe.path;
+  }
+
+  /**
+   * Returns the layer's path in the edit's base, at the current time: the one that gestures change,
+   * which is a path block's value if one sets it.
+   */
+  getBasePath(layerId: string) {
+    const { edit } = this;
+    const keyframe = edit && getPathKeyframe(edit.base, layerId, edit.currentTime);
+    return keyframe && keyframe.type !== 'between' ? keyframe.path : undefined;
+  }
+
+  /** Shows the layer with a working copy of its path, where its keyframe is saved. */
   setPath(layerId: string, path: Path) {
     const { edit } = this;
     if (!edit) {
       throw new Error('Begin an edit before changing paths');
     }
-    if (!this.canEditPath(layerId)) {
+    // What the edit changes is decided by the document it started from, e.g. so that a path that
+    // was the same at both ends of a hold stays that way.
+    const keyframe = getPathKeyframe(edit.base, layerId, edit.currentTime);
+    if (!keyframe || keyframe.type === 'between') {
       throw new Error("The layer's path can't be edited at this time");
     }
-    const { vectorLayer, animation } = this.working?.document ?? edit.base;
-    const layer = vectorLayer.findLayerById(layerId) as PathLayer | ClipPathLayer;
-    const clone = layer.clone();
-    clone.pathData = path;
-    this.setDocument({
-      vectorLayer: LayerUtil.replaceLayer(vectorLayer, layerId, clone),
-      animation,
-    });
+    const targets = keyframe.type === 'static' ? [{ kind: 'base' as const }] : keyframe.targets;
+    this.setDocument(setKeyframePath(this.working?.document ?? edit.base, layerId, targets, path));
+  }
+
+  private getStoreDocument(): CanvasDocument {
+    const state = this.store.getState();
+    return { vectorLayer: getVectorLayer(state), animation: getAnimation(state) };
   }
 
   /** Saves the working copy as one undo step, and ends the edit. */
