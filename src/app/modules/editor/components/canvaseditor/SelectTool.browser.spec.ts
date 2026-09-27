@@ -408,12 +408,38 @@ describe('SelectTool', () => {
       expect(pathDataOf(a.id)).toBe('M 2.5 2.2 L 6.5 2.2 L 6.5 6.2 L 2.5 6.2 Z');
     });
 
-    it('snaps a scale handle', () => {
-      const { a, click, drag, pathDataOf } = setUp();
+    it('snaps a scale handle, and shows a guide', () => {
+      const { tool, a, click, pathDataOf } = setUp();
       click(4, 4);
       // The right edge stops at b's left edge.
-      drag([6, 4], [9.5, 4]);
+      tool.onPress({ x: 6, y: 4 }, NONE);
+      tool.onMove({ x: 9.5, y: 4 }, NONE);
+      expect(tool.getGuides()).toContainEqual({ axis: 'x', value: 10, from: 2, to: 6 });
+      tool.onRelease({ x: 9.5, y: 4 });
       expect(pathDataOf(a.id)).toBe('M 2 2 L 10 2 L 10 6 L 2 6 Z');
+    });
+
+    it('snaps where the handle is dragged to, rather than the pointer', () => {
+      const { a, click, drag, pathDataOf } = setUp();
+      click(4, 4);
+      // Half a unit to the right of the handle, so the handle lands at 9.6, in range of b.
+      drag([6.5, 4], [10.1, 4]);
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 10 2 L 10 6 L 2 6 Z');
+    });
+
+    it('only snaps the side that sets the scale when Shift keeps the proportions', () => {
+      const { tool, a, click, pathDataOf } = setUp();
+      click(4, 4);
+      // Wider more than taller, so the width sets the scale. The bottom is near b's, at 6, but it
+      // ends up at 10.
+      tool.onPress({ x: 6, y: 6 }, NONE);
+      tool.onMove({ x: 9.7, y: 6.3 }, SHIFT);
+      expect(tool.getGuides().map(guide => [guide.axis, guide.value])).toEqual([
+        ['x', 10],
+        ['x', 10],
+      ]);
+      tool.onRelease({ x: 9.7, y: 6.3 });
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 10 2 L 10 10 L 2 10 Z');
     });
   });
 });

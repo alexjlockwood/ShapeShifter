@@ -20,10 +20,13 @@ const ARTBOARD: SnapTargets = {
   y: [0, 12, 24].map(value => ({ value, from: 0, to: 24 })),
 };
 
+// Eight pixels for lines and four for the grid, at ten pixels a unit.
+const THRESHOLDS = { lines: 0.8, grid: 0.4 };
+
 describe('snapBounds', () => {
   it('lines up the closest edge or middle with the closest target in range', () => {
     // The box's middle is at 12.5, half a unit from the artboard's.
-    const snap = snapBounds({ l: 10.5, t: 3.2, r: 14.5, b: 7.2 }, ARTBOARD, 0.8);
+    const snap = snapBounds({ l: 10.5, t: 3.2, r: 14.5, b: 7.2 }, ARTBOARD, THRESHOLDS);
     expect(snap.dx).toBeCloseTo(-0.5, 9);
     expect(snap.guides).toEqual([{ axis: 'x', value: 12, from: 0, to: 24 }]);
     // Nothing is in range on y, so the top snaps to the pixel grid, without a guide.
@@ -32,19 +35,19 @@ describe('snapBounds', () => {
 
   it('shows a guide for every line the box lines up with', () => {
     // As wide as the gap from the left edge to the middle, so both edges line up.
-    const snap = snapBounds({ l: 0.3, t: 5, r: 12.3, b: 9 }, ARTBOARD, 0.8);
+    const snap = snapBounds({ l: 0.3, t: 5, r: 12.3, b: 9 }, ARTBOARD, THRESHOLDS);
     expect(snap.dx).toBeCloseTo(-0.3, 9);
     expect(snap.guides.map(g => g.value).sort((a, b) => a - b)).toEqual([0, 12]);
   });
 
   it('reaches each guide from the target to where the box ends up', () => {
     const targets: SnapTargets = { x: [{ value: 20, from: 2, to: 4 }], y: [] };
-    const snap = snapBounds({ l: 16.2, t: 10.4, r: 19.8, b: 14.4 }, targets, 0.8);
+    const snap = snapBounds({ l: 16.2, t: 10.2, r: 19.8, b: 14.2 }, targets, THRESHOLDS);
     expect(snap.guides).toEqual([{ axis: 'x', value: 20, from: 2, to: 14 }]);
   });
 
   it("doesn't snap on an axis that's turned off", () => {
-    const snap = snapBounds({ l: 10.5, t: 11.6, r: 14.5, b: 12.6 }, ARTBOARD, 0.8, {
+    const snap = snapBounds({ l: 10.5, t: 11.6, r: 14.5, b: 12.6 }, ARTBOARD, THRESHOLDS, {
       x: false,
       y: true,
     });
@@ -53,9 +56,30 @@ describe('snapBounds', () => {
     expect(snap.dy).toBeCloseTo(-0.1, 9);
   });
 
+  it('snaps to targets between whole units, before the pixel grid', () => {
+    const targets: SnapTargets = { x: [{ value: 7.25, from: 0, to: 4 }], y: [] };
+    // The left edge, at 6.6, is closer to the grid, but the target is in range.
+    const snap = snapBounds({ l: 6.6, t: 10, r: 10.6, b: 12 }, targets, THRESHOLDS);
+    expect(snap.dx).toBeCloseTo(0.65, 9);
+    expect(snap.guides).toEqual([{ axis: 'x', value: 7.25, from: 0, to: 12 }]);
+  });
+
+  it('only snaps to the pixel grid when an edge is closer to it', () => {
+    const none: SnapTargets = { x: [], y: [] };
+    // Half a unit from the grid, which is in range of a line, but not of the grid.
+    expect(snapBounds({ l: 3.5, t: 3.5, r: 5.5, b: 5.5 }, none, THRESHOLDS)).toEqual({
+      dx: 0,
+      dy: 0,
+      guides: [],
+    });
+  });
+
   it('snaps points', () => {
-    expect(snapPoint({ x: 23.7, y: 5.5 }, ARTBOARD, 0.8)).toMatchObject({ dy: 0.5 });
-    expect(snapPoint({ x: 23.7, y: 5 }, ARTBOARD, 0.8).dx).toBeCloseTo(0.3, 9);
+    // To the artboard's right edge, and on y, to the pixel grid.
+    const snap = snapPoint({ x: 23.7, y: 5.3 }, ARTBOARD, THRESHOLDS);
+    expect(snap.dx).toBeCloseTo(0.3, 9);
+    expect(snap.dy).toBeCloseTo(-0.3, 9);
+    expect(snap.guides).toEqual([{ axis: 'x', value: 24, from: 0, to: 24 }]);
   });
 });
 

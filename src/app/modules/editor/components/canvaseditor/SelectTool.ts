@@ -8,7 +8,7 @@ import {
   hitTestLayer,
 } from 'app/modules/editor/components/canvas/LayerGeometry';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
-import { MathUtil, Point, Rect } from 'app/modules/editor/scripts/common';
+import { MathUtil, Matrix, Point, Rect } from 'app/modules/editor/scripts/common';
 import { isEqual } from 'lodash-es';
 
 import { getSnapTargets, snapBounds, SnapGuide, snapPoint, SnapTargets } from './snapping';
@@ -71,6 +71,7 @@ const HIT_TOLERANCE = 6;
 const ROTATION_SNAP = 15;
 // How close something has to be to snap, in CSS pixels.
 const SNAP_THRESHOLD = 8;
+const GRID_SNAP_THRESHOLD = 4;
 // A scale can't reach 0, which would flatten the paths for good.
 const MIN_SCALE = 1e-3;
 
@@ -221,21 +222,30 @@ export class SelectTool {
           }
           this.state = { ...state, isDragging: true };
         }
-        let target = point;
         this.guides = [];
-        if (state.type === 'scaling' && !modifiers.ctrl) {
-          // The handle snaps, along the axes it scales.
-          const snap = snapPoint(point, state.targets, this.toViewportLength(SNAP_THRESHOLD), {
-            x: state.handle !== 'n' && state.handle !== 's',
-            y: state.handle !== 'e' && state.handle !== 'w',
-          });
-          target = { x: point.x + snap.dx, y: point.y + snap.dy };
-          this.guides = snap.guides;
+        let matrix: Matrix;
+        if (state.type === 'scaling') {
+          // Where the handle is dragged to, which may be a little way from the pointer.
+          const { bounds, handle } = state;
+          const handlePoint = getHandlePoint(bounds, handle);
+          let target = {
+            x: handlePoint.x + point.x - state.start.x,
+            y: handlePoint.y + point.y - state.start.y,
+          };
+          if (!modifiers.ctrl) {
+            const snap = snapPoint(
+              target,
+              state.targets,
+              this.getSnapThresholds(),
+              getSnapAxes(bounds, handle, target, modifiers),
+            );
+            target = { x: target.x + snap.dx, y: target.y + snap.dy };
+            this.guides = snap.guides;
+          }
+          matrix = getScaling(bounds, handle, target, modifiers);
+        } else {
+          matrix = getRotation(state.bounds, state.start, point, modifiers);
         }
-        const matrix =
-          state.type === 'scaling'
-            ? getScaling(state.bounds, state.handle, state.start, target, modifiers)
-            : getRotation(state.bounds, state.start, point, modifiers);
         this.context.preview.setDocument(
           transformLayers(state.document, state.rendered, state.layerIds, matrix),
         );
@@ -275,8 +285,7 @@ export class SelectTool {
         if (state.bounds && !modifiers.ctrl) {
           const { l, t, r, b } = state.bounds;
           const moved = { l: l + dx, t: t + dy, r: r + dx, b: b + dy };
-          const threshold = this.toViewportLength(SNAP_THRESHOLD);
-          const snap = snapBounds(moved, state.targets, threshold, axes);
+          const snap = snapBounds(moved, state.targets, this.getSnapThresholds(), axes);
           dx += snap.dx;
           dy += snap.dy;
           this.guides = snap.guides;
@@ -450,6 +459,13 @@ export class SelectTool {
     this.setHoveredLayerId(handle ? undefined : hitLayerId);
   }
 
+  private getSnapThresholds() {
+    return {
+      lines: this.toViewportLength(SNAP_THRESHOLD),
+      grid: this.toViewportLength(GRID_SNAP_THRESHOLD),
+    };
+  }
+
   private getSelectionBounds() {
     const selection = this.context.getSelectedLayerIds();
     return selection.size ? getLayersBounds(this.context.getVectorLayer(), selection) : undefined;
@@ -511,37 +527,70 @@ function isAdding(modifiers: Modifiers) {
   return modifiers.shift || modifiers.command;
 }
 
-/** Returns the scale for dragging the handle, pressed at start, to point. */
-function getScaling(
-  bounds: Rect,
-  handle: HandleName,
-  start: Point,
-  point: Point,
-  { shift, alt }: Modifiers,
-) {
+/**
+ * Returns the point that stays put while the handle scales, and the scale on each axis for moving
+ * the handle to target. An edge handle only scales across it.
+ */
+function getScales(bounds: Rect, handle: HandleName, target: Point, alt: boolean) {
   const anchor = alt
     ? { x: (bounds.l + bounds.r) / 2, y: (bounds.t + bounds.b) / 2 }
     : getHandlePoint(bounds, getOppositeHandle(handle));
-  // How far the handle was from the anchor, and is now that it's moved with the pointer, which
-  // may have pressed a little way from it. An edge handle only scales across it.
+  // How far the handle was from the anchor, and is now.
   const handlePoint = getHandlePoint(bounds, handle);
   const from = { x: handlePoint.x - anchor.x, y: handlePoint.y - anchor.y };
-  const to = {
-    x: from.x + point.x - start.x,
-    y: from.y + point.y - start.y,
-  };
-  const isVerticalEdge = handle === 'e' || handle === 'w';
-  const isHorizontalEdge = handle === 'n' || handle === 's';
-  let sx = isHorizontalEdge || !from.x ? 1 : to.x / from.x;
-  let sy = isVerticalEdge || !from.y ? 1 : to.y / from.y;
+  const to = { x: target.x - anchor.x, y: target.y - anchor.y };
+  const sx = isHorizontalEdge(handle) || !from.x ? 1 : to.x / from.x;
+  const sy = isVerticalEdge(handle) || !from.y ? 1 : to.y / from.y;
+  return { anchor, sx, sy };
+}
+
+/** Returns the scale for moving the handle to target. */
+function getScaling(bounds: Rect, handle: HandleName, target: Point, { shift, alt }: Modifiers) {
+  const scales = getScales(bounds, handle, target, alt);
+  let { sx, sy } = scales;
   if (shift) {
     // Keeps the proportions, going by whichever way changed more.
-    const s = isHorizontalEdge ? sy : isVerticalEdge ? sx : Math.abs(sx) > Math.abs(sy) ? sx : sy;
+    const s = isHorizontalEdge(handle)
+      ? sy
+      : isVerticalEdge(handle)
+        ? sx
+        : Math.abs(sx) > Math.abs(sy)
+          ? sx
+          : sy;
     sx = s;
     sy = s;
   }
   const clampScale = (s: number) => (Math.abs(s) < MIN_SCALE ? Math.sign(s || 1) * MIN_SCALE : s);
-  return scalingAround(anchor, clampScale(sx), clampScale(sy));
+  return scalingAround(scales.anchor, clampScale(sx), clampScale(sy));
+}
+
+/**
+ * Returns the axes a handle moved to target snaps on: the ones it scales, or with Shift keeping
+ * the proportions, just the one that sets the scale.
+ */
+function getSnapAxes(bounds: Rect, handle: HandleName, target: Point, { shift, alt }: Modifiers) {
+  if (isHorizontalEdge(handle)) {
+    return { x: false, y: true };
+  }
+  if (isVerticalEdge(handle)) {
+    return { x: true, y: false };
+  }
+  if (!shift) {
+    return { x: true, y: true };
+  }
+  const { sx, sy } = getScales(bounds, handle, target, alt);
+  const isX = Math.abs(sx) > Math.abs(sy);
+  return { x: isX, y: !isX };
+}
+
+// The handles in the middles of the top and bottom edges, which only scale vertically, and of the
+// left and right ones, which only scale horizontally.
+function isHorizontalEdge(handle: HandleName) {
+  return handle === 'n' || handle === 's';
+}
+
+function isVerticalEdge(handle: HandleName) {
+  return handle === 'e' || handle === 'w';
 }
 
 /** Returns the rotation for dragging around the middle of the bounds from start to point. */

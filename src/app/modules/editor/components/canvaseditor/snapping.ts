@@ -31,6 +31,14 @@ export interface Snap {
   readonly guides: ReadonlyArray<SnapGuide>;
 }
 
+/** How close something has to be to snap, in viewport units. */
+export interface SnapThresholds {
+  /** To the artboard and the other paths. */
+  readonly lines: number;
+  /** To the pixel grid, which is closer, since it's everywhere. */
+  readonly grid: number;
+}
+
 const NO_SNAP: Snap = { dx: 0, dy: 0, guides: [] };
 
 /**
@@ -71,18 +79,18 @@ export function getSnapTargets(
 
 /**
  * Returns how far to move the box so that its closest edge or middle on each axis lines up with a
- * target within the threshold, in viewport units. Without a target in range, it snaps an edge to
- * the pixel grid instead, since icons are drawn on whole units, but doesn't draw a guide for it.
+ * target in range. Without a target in range, it snaps an edge to the pixel grid instead, since
+ * icons are drawn on whole units, but doesn't draw a guide for it.
  */
 export function snapBounds(
   box: Rect,
   targets: SnapTargets,
-  threshold: number,
+  thresholds: SnapThresholds,
   axes: { readonly x: boolean; readonly y: boolean } = { x: true, y: true },
 ): Snap {
   const { l, t, r, b } = box;
-  const sx = axes.x ? snapAxis([l, (l + r) / 2, r], targets.x, threshold) : NO_AXIS_SNAP;
-  const sy = axes.y ? snapAxis([t, (t + b) / 2, b], targets.y, threshold) : NO_AXIS_SNAP;
+  const sx = axes.x ? snapAxis([l, (l + r) / 2, r], targets.x, thresholds) : NO_AXIS_SNAP;
+  const sy = axes.y ? snapAxis([t, (t + b) / 2, b], targets.y, thresholds) : NO_AXIS_SNAP;
   if (!sx.delta && !sy.delta && !sx.lines.length && !sy.lines.length) {
     return NO_SNAP;
   }
@@ -114,14 +122,14 @@ const NO_AXIS_SNAP = { delta: 0, lines: [] as ReadonlyArray<SnapLine> };
 function snapAxis(
   values: ReadonlyArray<number>,
   lines: ReadonlyArray<SnapLine>,
-  threshold: number,
+  thresholds: SnapThresholds,
 ) {
   let best: number | undefined;
   for (const value of values) {
     for (const line of lines) {
       const delta = line.value - value;
       if (
-        Math.abs(delta) <= threshold &&
+        Math.abs(delta) <= thresholds.lines &&
         (best === undefined || Math.abs(delta) < Math.abs(best))
       ) {
         best = delta;
@@ -139,7 +147,7 @@ function snapAxis(
   for (const value of [values[0], values[values.length - 1]]) {
     const delta = Math.round(value) - value;
     if (
-      Math.abs(delta) <= threshold &&
+      Math.abs(delta) <= thresholds.grid &&
       (gridDelta === undefined || Math.abs(delta) < Math.abs(gridDelta))
     ) {
       gridDelta = delta;
@@ -152,8 +160,8 @@ function snapAxis(
 export function snapPoint(
   point: Point,
   targets: SnapTargets,
-  threshold: number,
+  thresholds: SnapThresholds,
   axes: { readonly x: boolean; readonly y: boolean } = { x: true, y: true },
 ): Snap {
-  return snapBounds({ l: point.x, t: point.y, r: point.x, b: point.y }, targets, threshold, axes);
+  return snapBounds({ l: point.x, t: point.y, r: point.x, b: point.y }, targets, thresholds, axes);
 }
