@@ -365,7 +365,8 @@ export class CanvasController extends DestroyableMixin() {
   /**
    * Opens the context menu instead of the browser's, for the layer under the pointer, which it
    * selects first if it isn't selected already. With the editor loaded, it finds the layer the way
-   * the select tool does. In action mode, the browser's menu still opens, and so it does over text
+   * the select tool does, and while a path's points are edited, it selects the point under the
+   * pointer the same way. In action mode, the browser's menu still opens, and so it does over text
    * fields. On a Mac, a click with Ctrl held arrives as a context menu too.
    */
   private onContextMenu(event: MouseEvent) {
@@ -381,6 +382,8 @@ export class CanvasController extends DestroyableMixin() {
     const { store, services } = this;
     const { layerTimelineService, contextMenuService } = services;
     const point = this.toViewport(event);
+    // While points are edited, the menu acts on the point under the pointer.
+    this.canvasEditor?.selectPointAt(point);
     const state = store.getState();
     const hitLayerId = this.canvasEditor
       ? this.canvasEditor.getLayerAt(point)

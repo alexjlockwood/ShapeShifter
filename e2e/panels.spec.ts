@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { boundingBox, expect, test } from './fixtures';
+import { boundingBox, dispatchClipboardEvent, expect, getState, test } from './fixtures';
 
 async function loadDemo(page: Page) {
   await page.goto('/?project=demos/playtopause.shapeshifter');
@@ -184,4 +184,93 @@ test('the File, Import, and Export buttons stop showing a gray background once t
   const fileButton = page.locator('.slt-layers-menu-group-button', { hasText: 'File' });
   await fileButton.focus();
   await expect(fileButton).toHaveCSS('box-shadow', 'rgb(41, 98, 255) 0px 0px 0px 2px inset');
+});
+
+// A square and a horizontal line, which has no height.
+const SHAPES_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path id="square" d="M 2 2 H 6 V 6 H 2 Z"/>
+  <path id="line" d="M 2 20 H 10" stroke="#000"/>
+</svg>`;
+
+/** Opens an empty project, with the canvas editor off, pastes the shapes, and selects one. */
+async function openShapes(page: Page, name: string) {
+  await page.goto('/');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
+  await dispatchClipboardEvent(page, 'paste', SHAPES_SVG);
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(2);
+  await selectLayer(page, name);
+}
+
+function selectLayer(page: Page, name: string) {
+  return page.evaluate(layerName => {
+    const { services } = (window as any).shapeshifter;
+    const layer = services.layerTimelineService.getVectorLayer().findLayerByName(layerName);
+    services.layerTimelineService.setSelectedLayers(new Set([layer.id]));
+  }, name);
+}
+
+function getPathData(page: Page, name: string) {
+  return page.evaluate(layerName => {
+    const { store } = (window as any).shapeshifter;
+    const layer = store.getState().present.layers.vectorLayer.findLayerByName(layerName);
+    return layer?.pathData.getPathString() as string | undefined;
+  }, name);
+}
+
+test('moves and resizes a layer in the Layout section, as one undo step each', async ({
+  page,
+  modifier,
+}) => {
+  await openShapes(page, 'square');
+  const layout = page.getByRole('region', { name: 'Layout' });
+  const x = layout.getByLabel('Layout X');
+  await expect(x).toHaveValue('2');
+  await expect(layout.getByLabel('Layout W')).toHaveValue('4');
+  await x.fill('10');
+  await x.press('Enter');
+  await expect.poll(() => getPathData(page, 'square')).toBe('M 10 2 L 14 2 L 14 6 L 10 6 Z');
+  const width = layout.getByLabel('Layout W');
+  await width.fill('8');
+  await width.press('Enter');
+  await expect.poll(() => getPathData(page, 'square')).toBe('M 10 2 L 18 2 L 18 6 L 10 6 Z');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'square')).toBe('M 10 2 L 14 2 L 14 6 L 10 6 Z');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'square')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  await expect(x).toHaveValue('2');
+
+  // A line has no height to scale.
+  await selectLayer(page, 'line');
+  await expect(layout.getByLabel('Layout H')).toBeDisabled();
+  await expect(layout.getByLabel('Layout W')).toBeEnabled();
+});
+
+test("edits a path's text under Advanced", async ({ page }) => {
+  await openShapes(page, 'square');
+  const input = page.locator('.spi-property input[name="pathData"]');
+  await expect(input).toBeHidden();
+  await page.getByText('Advanced').click();
+  await input.fill('M 0 0 L 4 0 L 4 4 Z');
+  await input.blur();
+  await expect.poll(() => getPathData(page, 'square')).toBe('M 0 0 L 4 0 L 4 4 Z');
+  await expect(page.getByLabel('Layout X')).toHaveValue('0');
+});
+
+test('animates a property from its row, and marks the rows that are animated', async ({ page }) => {
+  await openShapes(page, 'square');
+  // Only properties that can be animated have the button.
+  await expect(page.getByRole('button', { name: 'Animate fillType' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Animate fillAlpha' }).click();
+  await expect(page.locator('.spi-selection-description')).toHaveText('fillAlpha');
+  const getBlockNames = () =>
+    getState(page, s => s.timeline.animation.blocks.map((b: any) => b.propertyName));
+  await expect.poll(getBlockNames).toEqual(['fillAlpha']);
+
+  await selectLayer(page, 'square');
+  await page.getByRole('button', { name: 'fillAlpha is animated' }).click();
+  await expect(
+    page.getByRole('menuitem', { name: 'Animated: this is the value before the first keyframe' }),
+  ).toBeDisabled();
+  await page.getByRole('menuitem', { name: 'Add another keyframe' }).click();
+  await expect.poll(getBlockNames).toEqual(['fillAlpha', 'fillAlpha']);
 });

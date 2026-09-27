@@ -58,9 +58,10 @@ Where to start for common changes:
 - **A layer property:** `model/layers/Layer.ts`, then drawing (`components/canvas/CanvasLayers.ts`),
   export (`scripts/export/AvdSerializer.ts` and `scripts/export/SvgSerializer.ts`), and import
   (`scripts/import/SvgLoader.ts` and `scripts/import/VectorDrawableLoader.ts`). The property
-  inspector finds it on its own. Prefer an optional field whose absence means the old behavior,
-  and only raise the required project version (`model/projectVersion.ts`) for something an older
-  React build would silently lose; see `model/README.md`'s "Project file versions".
+  inspector finds it on its own, and `components/propertyinput/inspectorSections.ts` places it in
+  a section. Prefer an optional field whose absence means the old behavior, and only raise the
+  required project version (`model/projectVersion.ts`) for something an older React build would
+  silently lose; see `model/README.md`'s "Project file versions".
 - **An export format:** a serializer in `scripts/export/`, a method in
   `services/fileexport.service.ts`, and the Export menu in
   `components/layertimeline/LayerTimeline.tsx`.

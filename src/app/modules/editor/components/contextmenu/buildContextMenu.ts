@@ -2,6 +2,7 @@ import type {
   CanvasEditorCommand,
   CanvasEditorMenuState,
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
+import { POINT_TYPE_OPTIONS } from 'app/modules/editor/components/canvas/pointTypes';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -111,6 +112,54 @@ function buildEmptySelectionSection(
     },
   ];
 }
+
+/**
+ * The selected points' commands, while a path's points are edited: Delete, the point type, Open or
+ * Close subpath, and Set as first point. They run in the canvas editor, as their keys do.
+ */
+export const buildPointSection: ContextMenuSectionBuilder = (
+  { editor },
+  { canvasEditorBridgeService },
+) => {
+  const points = editor?.points;
+  if (!points) {
+    return [];
+  }
+  const { selectedCount, pointType, isSubPathClosed } = points;
+  return [
+    {
+      id: 'deletePoints',
+      label: selectedCount === 1 ? 'Delete point' : 'Delete points',
+      run: () => canvasEditorBridgeService.runPointCommand({ type: 'delete' }),
+    },
+    {
+      id: 'pointType',
+      label: 'Point type',
+      submenu: POINT_TYPE_OPTIONS.map((option, i) => ({
+        id: `pointType.${option.value}`,
+        label: option.value === pointType ? `${option.label} (current)` : option.label,
+        shortcut: String(i + 1),
+        run: () =>
+          canvasEditorBridgeService.runPointCommand({
+            type: 'setPointType',
+            pointType: option.value,
+          }),
+      })),
+    },
+    {
+      id: 'toggleClosed',
+      label: isSubPathClosed ? 'Open subpath' : 'Close subpath',
+      disabledReason: points.toggleClosedReason,
+      run: () => canvasEditorBridgeService.runPointCommand({ type: 'toggleClosed' }),
+    },
+    {
+      id: 'setFirstPoint',
+      label: 'Set as first point',
+      disabledReason: points.setFirstReason,
+      run: () => canvasEditorBridgeService.runPointCommand({ type: 'setFirstPoint' }),
+    },
+  ];
+};
 
 /**
  * Duplicate (which only the canvas editor does), Group, Ungroup, Flatten group, and Convert to
@@ -255,16 +304,24 @@ export const buildAnimateSection: ContextMenuSectionBuilder = (input, { layerTim
   ];
 };
 
-export const buildDeleteSection: ContextMenuSectionBuilder = (_, { layerTimelineService }) => [
-  {
-    id: 'delete',
-    label: 'Delete',
-    run: () => layerTimelineService.deleteSelectedModels(),
-  },
-];
+/** Delete, for the selected layers, unless selected points have their own (buildPointSection). */
+export const buildDeleteSection: ContextMenuSectionBuilder = (
+  { editor },
+  { layerTimelineService },
+) =>
+  editor?.points
+    ? []
+    : [
+        {
+          id: 'delete',
+          label: 'Delete',
+          run: () => layerTimelineService.deleteSelectedModels(),
+        },
+      ];
 
 /** The menu's sections, in order. */
 export const CONTEXT_MENU_SECTIONS: ReadonlyArray<ContextMenuSectionBuilder> = [
+  buildPointSection,
   buildLayerSection,
   buildPathSection,
   buildAnimateSection,

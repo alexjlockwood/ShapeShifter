@@ -32,16 +32,24 @@ describe('buildContextMenu', () => {
   let services: EditorServices;
   let editor: CanvasEditorCommands & { menuState: CanvasEditorMenuState };
   let runCommand: Mock<CanvasEditorCommands['runCommand']>;
+  let runPointCommand: Mock<CanvasEditorCommands['runPointCommand']>;
 
   beforeEach(() => {
     store = createEditorStore();
     services = createEditorServices(store);
     runCommand = vi.fn<CanvasEditorCommands['runCommand']>();
+    runPointCommand = vi.fn<CanvasEditorCommands['runPointCommand']>();
     editor = {
       menuState: {},
       getLayerAt: () => undefined,
       getMenuState: () => editor.menuState,
       runCommand,
+      startPointEdit: () => false,
+      stopPointEdit: () => {},
+      setSelectedAnchorIds: () => {},
+      editPoints: () => {},
+      runPointCommand,
+      selectPointAt: () => {},
     };
   });
 
@@ -153,6 +161,73 @@ describe('buildContextMenu', () => {
       ['animate'],
       ['delete'],
     ]);
+  });
+
+  describe('points', () => {
+    const points = {
+      selectedCount: 1,
+      pointType: 'straight' as const,
+      isSubPathClosed: true,
+      setFirstReason: undefined,
+    };
+
+    it('offers the selected points commands first while points are edited', () => {
+      const a = path('a');
+      load([a]);
+      editor.menuState = { editingLayerId: a.id, points };
+      const menu = build([a]);
+      // The points have their own Delete, rather than the layer's.
+      expect(ids(menu)).toEqual([
+        ['deletePoints', 'pointType', 'toggleClosed', 'setFirstPoint'],
+        ['duplicate', 'group', 'convert'],
+        ['animate'],
+      ]);
+      expect(find(menu, 'deletePoints')?.label).toBe('Delete point');
+      expect(find(menu, 'toggleClosed')?.label).toBe('Open subpath');
+      const types = find(menu, 'pointType')?.submenu ?? [];
+      expect(types.map(item => [item.label, item.shortcut])).toEqual([
+        ['Straight (current)', '1'],
+        ['Mirrored', '2'],
+        ['Disconnected', '3'],
+        ['Asymmetric', '4'],
+      ]);
+      run(types[1]);
+      expect(runPointCommand).toHaveBeenCalledWith({
+        type: 'setPointType',
+        pointType: 'mirrored',
+      });
+      run(find(menu, 'setFirstPoint'));
+      expect(runPointCommand).toHaveBeenCalledWith({ type: 'setFirstPoint' });
+      run(find(menu, 'deletePoints'));
+      expect(runPointCommand).toHaveBeenCalledWith({ type: 'delete' });
+    });
+
+    it("says why a command can't run", () => {
+      const a = path('a');
+      load([a]);
+      editor.menuState = {
+        editingLayerId: a.id,
+        points: {
+          ...points,
+          selectedCount: 2,
+          isSubPathClosed: false,
+          toggleClosedReason: undefined,
+          setFirstReason: 'Select just one point',
+        },
+      };
+      const menu = build([a]);
+      expect(find(menu, 'deletePoints')?.label).toBe('Delete points');
+      expect(find(menu, 'toggleClosed')?.label).toBe('Close subpath');
+      expect(find(menu, 'setFirstPoint')?.disabledReason).toBe('Select just one point');
+    });
+
+    it("isn't offered without selected points", () => {
+      const a = path('a');
+      load([a]);
+      editor.menuState = { editingLayerId: a.id };
+      expect(find(build([a]), 'deletePoints')).toBeUndefined();
+      expect(find(build([a]), 'delete')).toBeDefined();
+    });
   });
 
   it('only offers select all with nothing selected', () => {

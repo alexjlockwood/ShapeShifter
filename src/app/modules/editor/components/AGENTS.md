@@ -100,9 +100,30 @@ measures distances (`components/canvaseditor/measuring.ts`). Boolean operations 
 stroke are in `components/canvaseditor/pathOps.ts` (which layers they apply to is in
 `scripts/common/pathOpLayers.ts`, for the context menu), which loads Skia's PathKit (`pathkit-wasm`)
 the first time it's used; `vite.config.ts` puts it with the editor's assets. The editor also
-exports `components/canvaseditor/PathInspector.tsx`, which the property inspector shows for paths
-once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are in
-`components/propertyinput/propertyinput.scss`, since the editor's code can't import CSS.
+exports `components/canvaseditor/PathInspector.tsx`, which the property inspector shows while a
+path's points are edited, once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its
+styles are in `components/propertyinput/propertyinput.scss`, since the editor's code can't import
+CSS.
+
+## Property inspector
+
+`components/propertyinput/PropertyInput.tsx` shows the selection's properties in sections of
+compact rows, like Figma's design panel. `components/propertyinput/buildPropertyInputModel.ts`
+wraps each property in an `InspectedProperty`, and
+`components/propertyinput/inspectorSections.ts` groups them with a static map from property name
+to section, row, and field label, so a property with a known name lands in the same place
+whatever model has it (the transform properties go in Transform for groups and paths alike). A
+new property needs an entry there, or it shows in an "Other" section, and its spec fails. The
+Layout section isn't made of properties: it's the layer's bounds on the canvas at the current
+time, and typing a value moves or scales the layer through `components/canvas/transformLayers.ts`
+as one undo step (`components/propertyinput/layoutValues.ts`), with the editor on or off. Rows of
+properties that can be animated end with a keyframe button, which is filled once they are.
+
+While a path's points are edited, the editor reports the path it edits and its selected points
+to `services/canvaseditorbridge.service.ts`, which the inspector subscribes to with
+`useSyncExternalStore`, and the editor's `PathInspector` takes the place of Layout and the path's
+row. Its edits go back through the bridge (`editPoints`, `runPointCommand`), so they're saved where
+the canvas saves its own, e.g. in a path block's value at a keyframe.
 
 ## Context menus
 
@@ -116,9 +137,12 @@ goes in a section builder of its own, added to `CONTEXT_MENU_SECTIONS`. Items th
 why, rather than being left out, and those that only the canvas editor runs (Duplicate, the
 boolean operations, and Outline stroke) are left out while it isn't loaded, as on the live site.
 They reach it through `services/canvaseditorbridge.service.ts`, which `CanvasController` attaches
-the editor to once it's loaded, since the editor's code is in the lazy chunk. Combine and Break
-apart (`scripts/common/combineLayers.ts`) and the rules for which layers the path operations apply
-to (`scripts/common/pathOpLayers.ts`) are outside of it, so they work with the editor off. MUI has
+the editor to once it's loaded, since the editor's code is in the lazy chunk. While a path's
+points are edited, a right-click selects the point under the pointer, and the menu starts with the
+selected points' commands (`buildPointSection`), from what the editor reports in `getMenuState`.
+Combine and Break apart (`scripts/common/combineLayers.ts`) and the rules for which layers the path
+operations apply to (`scripts/common/pathOpLayers.ts`) are outside of it, so they work with the
+editor off. MUI has
 no submenus, so the host opens one in a `Popper` inside the menu's modal: hovering, ArrowRight,
 Enter, or Space opens it, and ArrowLeft or Escape goes back.
 

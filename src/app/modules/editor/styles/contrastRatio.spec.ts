@@ -23,6 +23,9 @@ const GRAPHIC = 3;
 // pairs below aren't all against plain white or black.
 const BASE100_LIGHT = '#f5f5f5'; // $ss-light-theme-background's base100 (grey 100).
 const BASE100_DARK = '#424242'; // $ss-dark-theme-background's base100 (grey 800).
+// The property inspector's panel (components/propertyinput/_propertyinput-theme.scss).
+const BASE200_LIGHT = '#eeeeee'; // $ss-light-theme-background's base200 (grey 200).
+const BASE200_DARK = '#212121'; // $ss-dark-theme-background's base200 (grey 900).
 const DIALOG_PAPER_LIGHT = '#ffffff'; // MUI's default light background.paper.
 const DIALOG_PAPER_DARK = '#424242'; // styles/muiTheme.ts's dark theme background.paper.
 // MUI's SnackbarContent inverts the app's own background (emphasize(background.default, ...)),
@@ -68,6 +71,30 @@ const pairs: Array<{ name: string; a: string; b: string; min: number }> = [
     a: '#ffffff',
     b: '#2962ff', // accent-fill
     min: TEXT,
+  },
+  {
+    name:
+      "the inspector's Done button and selected point rows " +
+      '(components/propertyinput/_propertyinput-theme.scss, accent-fill)',
+    a: '#ffffff',
+    b: '#2962ff', // accent-fill
+    min: TEXT,
+  },
+  {
+    name:
+      "an animated row's keyframe marker and the focus rings, light theme " +
+      '(components/propertyinput/_propertyinput-theme.scss, accent-text)',
+    a: '#2962ff',
+    b: BASE200_LIGHT,
+    min: GRAPHIC,
+  },
+  {
+    name:
+      "an animated row's keyframe marker and the focus rings, dark theme " +
+      '(components/propertyinput/_propertyinput-theme.scss, accent-text)',
+    a: '#64b5f6',
+    b: BASE200_DARK,
+    min: GRAPHIC,
   },
   {
     name: 'dialog buttons, light theme (components/dialogs/_dialog-theme.scss, accent-text)',

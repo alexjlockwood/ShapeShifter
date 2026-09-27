@@ -30,6 +30,10 @@ export interface PropertyInputModel {
   readonly description?: string;
   readonly subDescription?: string;
   readonly availablePropertyNames: ReadonlyArray<string>;
+  /** The inspected layer's properties that can be animated, which get animate buttons. */
+  readonly animatablePropertyNames?: ReadonlySet<string>;
+  /** The inspected layer's properties that have blocks. */
+  readonly animatedPropertyNames?: ReadonlySet<string>;
 }
 
 interface Dependencies {
@@ -191,6 +195,10 @@ function buildInspectedLayerProperties(
     icon,
     description,
     availablePropertyNames,
+    animatablePropertyNames: new Set(layer.animatableProperties.keys()),
+    animatedPropertyNames: new Set(
+      animation.blocks.filter(b => b.layerId === layer.id).map(b => b.propertyName),
+    ),
   } as PropertyInputModel;
 }
 

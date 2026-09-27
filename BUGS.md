@@ -30,6 +30,14 @@ These existed before the migration and are still there.
   one, so a stroke of width 2 in a group scaled by 2 is drawn 1 unit wide, but Android (and the
   exported SVGs) draw it 4 units wide. The exports and flattening scale strokes the Android way
   (`components/canvas/CanvasLayers.ts`). (GitHub #186, #292, and #308)
+- **The inspector edits an animated property's value from before its first keyframe.** Once a
+  property has blocks, the canvas draws their values, but the inspector's field shows and saves the
+  layer's own value, which only shows before the first block, and not at all when a block starts
+  at 0 ms, so an edit there seems to do nothing. The row's keyframe marker says so ("Animated:
+  this is the value before the first keyframe"). Showing the value at the current time, and saving
+  an edit into the block that sets it there, as the canvas editor does for paths
+  (`components/canvas/pathKeyframes.ts`), is a follow-up
+  (`components/propertyinput/buildPropertyInputModel.ts`, the TODO on the rendered value).
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
 

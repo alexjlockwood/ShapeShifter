@@ -29,28 +29,53 @@
             color: mat-color($foreground, secondary-text);
         }
     }
+    .spi-header .spi-done-button {
+        background-color: map.get($theme, accent-fill);
+        color: white;
+    }
     .spi-body {
-        .spi-property-name {
+        .spi-section + .spi-section,
+        .spi-section + .spi-point-edit,
+        .spi-point-edit .spi-section + .spi-section,
+        .spi-point-edit + .spi-section {
+            border-top: 1px solid mat-color($foreground, divider);
+        }
+        .spi-section-title,
+        button.spi-section-toggle,
+        button.spi-subpath-toggle {
+            color: mat-color($foreground, primary-text);
+        }
+        .spi-row-label,
+        .spi-field-label,
+        .spi-row-note,
+        .spi-point-edit-hint,
+        .spi-chevron,
+        .spi-path-advanced summary,
+        .spi-point-row {
             color: mat-color($foreground, secondary-text);
         }
         .spi-property-value-static,
-        .spi-property-value-editor input,
+        input,
         .spi-property-value-menu-target {
             box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
             &.has-input-error {
                 border-left: 4px solid mat-color(mat-palette($mat-red, A700));
             }
         }
-        .spi-property-value-editor input,
+        input,
         .spi-property-value-menu-target {
             background-color: mat-color($background, base);
             color: mat-color($foreground, primary-text);
         }
-        .spi-property-value-editor input:focus,
+        input:disabled {
+            color: mat-color($foreground, disabled-text);
+            background-color: transparent;
+        }
+        input:focus,
         // Only for the keyboard, since a menu gives the focus back to its button when it closes.
         .spi-property-value-menu-target:focus-visible,
         .spi-property-value-menu-target[aria-expanded='true'] {
-            box-shadow: 0 0 0 1px mat-color($accent) inset;
+            box-shadow: 0 0 0 1px map.get($theme, accent-text) inset;
         }
         .spi-property-value-menu-target {
             .spi-property-value-menu-arrow {
@@ -60,15 +85,48 @@
         .spi-property-color-preview {
             box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
         }
-        .spi-path-inspector {
+        .spi-button,
+        .spi-point-edit
+            button:not(.spi-subpath-toggle, .spi-point-row, .spi-property-value-menu-target),
+        .spi-row-actions button {
+            background-color: mat-color($background, base);
+            color: mat-color($foreground, primary-text);
+            box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
+            &:disabled {
+                color: mat-color($foreground, disabled-text);
+            }
+            &:focus-visible {
+                box-shadow: 0 0 0 1px map.get($theme, accent-text) inset;
+            }
+        }
+        .spi-row-animate {
             color: mat-color($foreground, secondary-text);
-            button {
-                background-color: mat-color($background, base);
-                color: mat-color($foreground, primary-text);
-                box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
-                &:disabled {
-                    color: mat-color($foreground, disabled-text);
+            &:hover {
+                background-color: mat-color($background, base100);
+            }
+            &:focus-visible {
+                box-shadow: 0 0 0 1px map.get($theme, accent-text) inset;
+            }
+            .spi-keyframe-diamond {
+                border-color: currentColor;
+            }
+            &.is-animated {
+                color: map.get($theme, accent-text);
+                .spi-keyframe-diamond {
+                    background-color: currentColor;
                 }
+            }
+        }
+        .spi-point-row {
+            &:hover {
+                background-color: mat-color($background, base100);
+            }
+            &[aria-pressed='true'] {
+                background-color: map.get($theme, accent-fill);
+                color: white;
+            }
+            &:focus-visible {
+                box-shadow: 0 0 0 1px map.get($theme, accent-text) inset;
             }
         }
     }

@@ -299,10 +299,15 @@ stop morphing because of it, unlike auto fix in action mode. Some gaps are left 
 
 Phase 6 finishes the roadmap:
 
-- With the editor on, the property inspector lists a path's subpaths and points, with fields for
-  each point's x and y and buttons that reverse, close, and open subpaths, and keeps the text field
-  under "Advanced" (`components/canvaseditor/PathInspector.tsx`). It's part of the editor's
-  lazily loaded code, which `CanvasEditorApi.ts` hands to the inspector.
+- While a path's points are edited, the property inspector shows the selected point's position,
+  handles, and type, with Set as first point and Delete, and lists the subpaths, collapsed until
+  they're opened, with their points and buttons that reverse, close, and open them. Clicking a
+  point there selects it on the canvas. It shows and saves the path the editor edits, which is a
+  path block's value at a keyframe (`components/canvaseditor/PathInspector.tsx`). It's part of the
+  editor's lazily loaded code, which `CanvasEditorApi.ts` hands to the inspector, and the editor
+  reports what it edits through `services/canvaseditorbridge.service.ts`, which the inspector
+  subscribes to. Otherwise, a path's row has an Edit points button, and its text is under
+  "Advanced". Right-clicking a point selects it, and the context menu adds the point's commands.
 - While a path's points are edited, Cmd+J joins the two selected ends: the ends of one subpath
   close it, and ends of two subpaths join them into one, with a line between them or with the ends
   merged if they're in the same place.
@@ -331,8 +336,6 @@ Some gaps are left:
   and they don't work on animated paths, or when the other paths have animations that would be
   lost. Outline stroke doesn't work on animated layers, and round caps and joins come out as many
   short quadratic curves.
-- The path inspector lists points but not their handles, and for an animated path it shows the
-  layer's own path rather than the keyframe at the current time.
 - Joining doesn't average the ends.
 - Touches have no long press, and the handles are no bigger for them.
 

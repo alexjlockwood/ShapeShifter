@@ -97,7 +97,9 @@ test("edits a block's easing curve", async ({ page, modifier }) => {
   // Presets show their curve, with handles.
   await expect(editor.locator('.spi-curve-control')).toHaveCount(2);
 
-  // Dragging a handle turns the preset into a custom curve.
+  // Dragging a handle turns the preset into a custom curve. The inspector scrolls, and in a short
+  // window the curve is below its fold.
+  await editor.locator('.spi-curve-graph').scrollIntoViewIfNeeded();
   const box = await boundingBox(editor.locator('.spi-curve-control').first());
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;

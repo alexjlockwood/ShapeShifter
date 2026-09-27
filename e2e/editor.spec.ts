@@ -790,35 +790,137 @@ test('edits an animated path at the ends of its morph, and auto fixes it', async
   await expect(badge).toBeHidden();
 });
 
-test("edits a path's points, and reverses and closes subpaths, in the inspector", async ({
+/** The numbers of the selected points of the path being edited, which has one subpath. */
+function getSelectedPointNumbers(page: Page) {
+  return page.evaluate(() => {
+    const { services } = (window as any).shapeshifter;
+    const { pointEdit } = services.canvasEditorBridgeService.getState();
+    const commands: { id: string }[] = pointEdit?.path.getCommands() ?? [];
+    return commands
+      .map((command, i) => (pointEdit.selectedAnchorIds.has(command.id) ? i + 1 : 0))
+      .filter(n => n > 0);
+  });
+}
+
+test('shows and edits the selected point in the inspector while editing points', async ({
   page,
+  modifier,
 }) => {
   await openSquares(page);
   await click(page, 4, 4);
-  const point = page.getByRole('group', { name: 'Point 2' });
-  await point.getByLabel('x').fill('8');
-  await point.getByLabel('x').press('Enter');
+  await page.getByRole('button', { name: 'Edit points' }).click();
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await expect(page.locator('.spi-selection-sub-description')).toHaveText('Editing points');
+
+  // A point clicked on the canvas shows in the inspector, and editing it moves it, as one undo
+  // step.
+  await click(page, 6, 2);
+  const position = page
+    .getByRole('region', { name: 'Point 2', exact: true })
+    .getByRole('group', { name: 'Position' });
+  await expect(position.getByLabel('X')).toHaveValue('6');
+  await expect(position.getByLabel('Y')).toHaveValue('2');
+  await position.getByLabel('X').fill('8');
+  await position.getByLabel('X').press('Enter');
   await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 2 L 6 6 L 2 6 Z');
-  await page.getByRole('button', { name: 'Reverse' }).click();
-  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 2 6 L 6 6 L 8 2 Z');
-  // The text field is under "Advanced".
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  expect(await isEditingPath(page)).toBe(true);
+
+  // Subpaths are collapsed until they're opened, and clicking a point there selects it.
+  const subPath = page.getByRole('region', { name: 'Subpath 1', exact: true });
+  await expect(subPath.getByRole('button', { name: 'Point 3', exact: true })).toHaveCount(0);
+  await subPath.getByRole('button', { name: /^Subpath 1/ }).click();
+  await subPath.getByRole('button', { name: 'Point 3', exact: true }).click();
+  await expect.poll(() => getSelectedPointNumbers(page)).toEqual([3]);
+  await expect(page.getByRole('region', { name: 'Point 3', exact: true })).toBeVisible();
+
+  // Done stops editing, and the path's text is under "Advanced".
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect.poll(() => isEditingPath(page)).toBe(false);
   await page.getByText('Advanced').click();
-  await expect(page.locator('input[name="pathData"]')).toHaveValue('M 2 2 L 2 6 L 6 6 L 8 2 Z');
+  await expect(page.locator('.spi-property input[name="pathData"]')).toHaveValue(
+    'M 2 2 L 6 2 L 6 6 L 2 6 Z',
+  );
 });
 
-test('opens a subpath and closes it again in the inspector', async ({ page }) => {
+test('reverses, opens, and closes a subpath in the inspector', async ({ page }) => {
   await openSquares(page);
   await click(page, 4, 4);
-  const subPath = page.getByRole('region', { name: 'Subpath 1' });
-  await expect(subPath).toContainText('closed');
-  await subPath.getByRole('button', { name: 'Open' }).click();
-  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 L 2 2');
-  await expect(subPath).toContainText('open');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  const subPath = page.getByRole('region', { name: 'Subpath 1', exact: true });
+  await expect(subPath).toContainText('closed · 4 points');
+  await subPath.getByRole('button', { name: 'Reverse', exact: true }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 2 6 L 6 6 L 6 2 Z');
+  await subPath.getByRole('button', { name: 'Open', exact: true }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 2 6 L 6 6 L 6 2 L 2 2');
   // The new last point is on top of the first one.
-  await expect(page.getByRole('group', { name: /^Point / })).toHaveCount(5);
-  await subPath.getByRole('button', { name: 'Close' }).click();
+  await expect(subPath).toContainText('open · 5 points');
+  await subPath.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 2 6 L 6 6 L 6 2 Z');
+  await expect(subPath.getByRole('button', { name: 'Open', exact: true })).toBeVisible();
+});
+
+test('sets the first point from the inspector and the context menu', async ({ page }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await click(page, 6, 6);
+  await page.getByRole('button', { name: 'Set as first point' }).click();
+  // The shape stays, and so does the selection, which is the first point now.
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 6 6 L 2 6 L 2 2 L 6 2 Z');
+  await expect(page.getByRole('region', { name: 'Point 1', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Set as first point' })).toBeDisabled();
+
+  // A right-click on another point selects it for the menu.
+  const canvas = page.locator('.app-canvas');
+  const topLeft = await artboardPoint(canvas, 2, 2);
+  await page.mouse.click(topLeft.x, topLeft.y, { button: 'right' });
+  await expect(page.getByRole('menuitem', { name: 'Open subpath' })).toBeVisible();
+  await page.getByRole('menuitem', { name: 'Set as first point' }).click();
   await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
-  await expect(subPath.getByRole('button', { name: 'Open' })).toBeVisible();
+  expect(await isEditingPath(page)).toBe(true);
+
+  // An open subpath starts at one of its ends, so the item says why it can't.
+  await page.getByRole('button', { name: 'Open', exact: true }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 L 2 2');
+  const corner = await artboardPoint(canvas, 6, 6);
+  await page.mouse.click(corner.x, corner.y, { button: 'right' });
+  await expect(page.getByRole('menuitem', { name: /Set as first point/ })).toContainText(
+    'An open subpath starts at one of its ends',
+  );
+});
+
+test("edits a keyframe's path in the inspector, where the canvas does", async ({ page }) => {
+  await openSquares(page);
+  // a's path morphs to a bigger square, and the time is at the end of the morph.
+  await page.evaluate(() => {
+    const { services } = (window as any).shapeshifter;
+    const lts = services.layerTimelineService;
+    const a = lts.getVectorLayer().findLayerByName('a');
+    lts.addBlockForProperty(a.id, 'pathData');
+    const block = lts.getAnimation().blocks[0].clone();
+    block.toValue = new a.pathData.constructor('M 1 1 L 9 1 L 9 9 L 1 9 Z');
+    lts.updateBlocks([block]);
+    services.playbackService.setCurrentTime(block.endTime);
+    lts.setSelectedLayers(new Set([a.id]));
+  });
+  await page.getByRole('button', { name: 'Edit points' }).click();
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await click(page, 9, 1);
+  const position = page
+    .getByRole('region', { name: 'Point 2', exact: true })
+    .getByRole('group', { name: 'Position' });
+  await expect(position.getByLabel('X')).toHaveValue('9');
+  await position.getByLabel('X').fill('10');
+  await position.getByLabel('X').press('Enter');
+  const getToValue = () =>
+    getState<string>(page, s => s.timeline.animation.blocks[0].toValue.getPathString());
+  await expect.poll(getToValue).toBe('M 1 1 L 10 1 L 9 9 L 1 9 Z');
+  // The layer's own path is the start of the morph, which stays.
+  expect(await getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
 });
 
 test('joins the ends of a path with Cmd+J', async ({ page, modifier }) => {

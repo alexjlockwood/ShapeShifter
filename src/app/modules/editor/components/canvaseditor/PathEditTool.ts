@@ -267,9 +267,39 @@ export class PathEditTool {
       return 'empty';
     }
     this.commitEdit(base => PathEdit.deleteAnchors(base, selection) ?? base);
-    this.selectedAnchorIds = new Set();
-    this.context.redraw();
+    this.setSelectedAnchorIds(new Set());
     return 'deleted';
+  }
+
+  /**
+   * Changes the path, as one undo step, from the path as it's saved, and selects the points the
+   * edit picks, e.g. for the property inspector.
+   */
+  edit(
+    edit: (base: Path) => { readonly path: Path; readonly selectedAnchorIds?: ReadonlySet<string> },
+  ) {
+    let selection: ReadonlySet<string> | undefined;
+    this.commitEdit(base => {
+      const result = edit(base);
+      selection = result.selectedAnchorIds;
+      return result.path;
+    });
+    if (selection) {
+      this.setSelectedAnchorIds(selection);
+    }
+  }
+
+  /** Selects just the point at the point, if there's one there that isn't selected already. */
+  selectAnchorAt(point: Point) {
+    const hit = this.hitTest(point);
+    if (hit?.type === 'anchor' && !this.selectedAnchorIds.has(hit.anchorId)) {
+      this.setSelectedAnchorIds(new Set([hit.anchorId]));
+    }
+  }
+
+  /** The path as it's drawn, which is what the edits change. */
+  getDrawnPath() {
+    return this.getPath();
   }
 
   /**
@@ -871,7 +901,7 @@ export class PathEditTool {
       }
     }
     if (!isEqual(selection, this.selectedAnchorIds)) {
-      this.selectedAnchorIds = selection;
+      this.setSelectedAnchorIds(selection);
     }
   }
 }

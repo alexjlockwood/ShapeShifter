@@ -3,8 +3,10 @@ import type { CanvasDocument } from 'app/modules/editor/components/canvas/Canvas
 import type {
   CanvasEditor,
   CanvasEditorCommand,
+  CanvasEditorCommands,
   CanvasEditorContext,
   CanvasEditorMenuState,
+  PointCommand,
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
 import type { CanvasPreview } from 'app/modules/editor/components/canvas/CanvasPreview';
 import { getRulerLayout } from 'app/modules/editor/components/canvas/CanvasRuler';
@@ -65,6 +67,7 @@ import {
 } from './PathOpsBar';
 import { getLayerPath, PathEditTool } from './PathEditTool';
 import { PencilTool } from './PencilTool';
+import { applyPointCommand, getPointMenuState } from './pointCommands';
 import { PenTool } from './PenTool';
 import { ShapeTool } from './ShapeTool';
 import { Modifiers, SelectTool } from './SelectTool';
@@ -501,6 +504,7 @@ class Editor implements CanvasEditor {
     this.removeKeyListeners?.();
     this.nudge = undefined;
     this.pathEdit = undefined;
+    this.reportPointEdit();
     this.drawTool = undefined;
     this.toolbar?.dispose();
     this.keyframeBadge?.dispose();
@@ -812,7 +816,95 @@ class Editor implements CanvasEditor {
       : drawTool instanceof PenTool
         ? "Finish the path you're drawing first"
         : 'Finish editing first';
-    return { busyReason, editingLayerId: this.pathEdit?.layerId };
+    const { pathEdit } = this;
+    const path = pathEdit?.getDrawnPath();
+    return {
+      busyReason,
+      editingLayerId: pathEdit?.layerId,
+      points:
+        pathEdit && path && !busyReason
+          ? getPointMenuState(path, pathEdit.getSelectedAnchorIds())
+          : undefined,
+    };
+  }
+
+  startPointEdit(layerId: string) {
+    if (this.isDisposed || this.getMenuState().busyReason) {
+      return false;
+    }
+    if (this.pathEdit?.layerId === layerId) {
+      return true;
+    }
+    if (this.drawTool) {
+      // As if V was pressed first, which also finishes the pen's path.
+      this.setTool('select');
+    }
+    return this.startPathEdit(layerId);
+  }
+
+  stopPointEdit() {
+    this.endNudge();
+    this.stopPathEdit();
+  }
+
+  setSelectedAnchorIds(layerId: string, anchorIds: ReadonlySet<string>) {
+    if (this.pathEdit?.layerId === layerId && !this.isPressing) {
+      this.pathEdit.setSelectedAnchorIds(anchorIds);
+    }
+  }
+
+  editPoints(layerId: string, edit: Parameters<CanvasEditorCommands['editPoints']>[1]) {
+    const { pathEdit } = this;
+    if (pathEdit?.layerId !== layerId || this.getMenuState().busyReason) {
+      return;
+    }
+    this.endNudge();
+    pathEdit.edit(edit);
+  }
+
+  runPointCommand(command: PointCommand) {
+    const { pathEdit } = this;
+    if (!pathEdit || this.getMenuState().busyReason) {
+      return;
+    }
+    this.endNudge();
+    if (command.type === 'delete') {
+      this.deleteSelectedPoints(pathEdit);
+      return;
+    }
+    pathEdit.edit(
+      base => applyPointCommand(base, pathEdit.getSelectedAnchorIds(), command) ?? { path: base },
+    );
+  }
+
+  selectPointAt(point: Point) {
+    if (this.pathEdit && !this.getMenuState().busyReason) {
+      this.pathEdit.selectAnchorAt(point);
+    }
+  }
+
+  /** Deletes the selected points, or the layer if that would leave nothing, like Figma. */
+  private deleteSelectedPoints(pathEdit: PathEditTool) {
+    if (pathEdit.deleteSelected() === 'empty') {
+      this.stopPathEdit();
+      this.context.services.layerTimelineService.deleteSelectedModels();
+    }
+  }
+
+  /**
+   * Tells the property inspector which path's points are edited, and which are selected
+   * (services/canvaseditorbridge.service.ts). It's called on every draw, which follows every
+   * change to either, and the bridge ignores reports that change nothing.
+   */
+  private reportPointEdit() {
+    const { pathEdit } = this;
+    const path = pathEdit?.getDrawnPath();
+    this.context.services.canvasEditorBridgeService.reportPointEdit(
+      this,
+      pathEdit && path && !this.isActionMode
+        ? { layerId: pathEdit.layerId, path, selectedAnchorIds: pathEdit.getSelectedAnchorIds() }
+        : undefined,
+    );
   }
 
   runCommand(command: CanvasEditorCommand) {
@@ -914,11 +1006,7 @@ class Editor implements CanvasEditor {
     if (key === 'Escape' || key === 'Enter') {
       this.stopPathEdit();
     } else if (key === 'Backspace' || key === 'Delete') {
-      if (pathEdit.deleteSelected() === 'empty') {
-        // Deleting the points that would leave nothing deletes the layer, like Figma.
-        this.stopPathEdit();
-        this.context.services.layerTimelineService.deleteSelectedModels();
-      }
+      this.deleteSelectedPoints(pathEdit);
     } else if (key === 'Tab') {
       pathEdit.selectAdjacent(event.shiftKey ? -1 : 1);
     } else if (pointType) {
@@ -991,6 +1079,7 @@ class Editor implements CanvasEditor {
   }
 
   private draw() {
+    this.reportPointEdit();
     const { camera } = this;
     if (!camera) {
       return;
