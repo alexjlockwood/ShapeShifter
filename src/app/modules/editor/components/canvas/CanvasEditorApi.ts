@@ -25,11 +25,42 @@ export interface CanvasEditorContext {
   readonly canvas: HTMLCanvasElement;
 }
 
+/** The commands that only the editor runs, which the context menu offers while it's loaded. */
+export type CanvasEditorCommand =
+  'duplicate' | 'union' | 'subtract' | 'intersect' | 'exclude' | 'outline';
+
+/** What the context menu needs to know about the editor when it opens. */
+export interface CanvasEditorMenuState {
+  /** Why the editor can't run its commands right now, e.g. while the pen is drawing a path. */
+  readonly busyReason?: string;
+  /** The path whose points are being edited, if any. */
+  readonly editingLayerId?: string;
+}
+
+/**
+ * What the rest of the app reaches the editor through, while it's loaded
+ * (services/canvaseditorbridge.service.ts).
+ */
+export interface CanvasEditorCommands {
+  /**
+   * Returns the layer a right-click at the point is on, the way the select tool finds what a press
+   * selects, or undefined if there's none, or if the editor's in the middle of something that a
+   * new selection would interrupt.
+   */
+  getLayerAt(point: Point): string | undefined;
+  getMenuState(): CanvasEditorMenuState;
+  /**
+   * Runs the command on the selection. Editing points stops first. Commands that need PathKit
+   * run once it's loaded.
+   */
+  runCommand(command: CanvasEditorCommand): void;
+}
+
 /**
  * The editor attached to one canvas. It gets the canvas's pointer events, except in action mode,
  * with points in viewport coordinates.
  */
-export interface CanvasEditor {
+export interface CanvasEditor extends CanvasEditorCommands {
   /** The panel was resized, zoomed, or panned. */
   setCamera(camera: CanvasCamera): void;
   onPress(event: PointerEvent, point: Point): void;

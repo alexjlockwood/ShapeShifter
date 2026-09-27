@@ -39,8 +39,8 @@
   subpath overall, so a point dragged near another subpath jumps back
   (`components/canvas/SelectionHelper.ts`). (CANVAS-9, GitHub #113, confirmed by a test; a candidate
   fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
-- **Right and middle clicks start drags outside of the canvas.** The panel splitter and the
-  timeline's drags don't check `event.button`, and if the context menu swallows the mouseup, the
-  drag keeps following the mouse. Only handle `button === 0`, and cancel drags on blur, like
-  `components/canvas/CanvasInput.ts` does for the canvas (`components/splitter/Splitter.tsx`,
-  `scripts/dragger/Dragger.ts`). (CANVAS-11, low, confirmed by reading)
+- **Drags outside of the canvas keep going after the window loses focus.** The panel splitter's
+  and the timeline's drags (`scripts/dragger/Dragger.ts`) only end on mouseup, so if another
+  window takes the release, the drag keeps following the mouse. Cancel them on blur, like
+  `components/canvas/CanvasInput.ts` does for the canvas. They only start on the main button now.
+  (CANVAS-11, low, confirmed by reading)

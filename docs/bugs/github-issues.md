@@ -199,7 +199,6 @@ These are still bugs, and the entry named here covers them.
 | #305  | IMP-5 (fractional viewBox sizes are truncated)                                              |
 | #308  | `BUGS.md` stroke width entry and CANVAS-4 (trim length in scaled groups)                    |
 | #316  | MODEL-4, which the AVD hold animator entry above fixes                                      |
-| #332  | UI-5 ("Convert to clip path" disappears)                                                    |
 
 ## Fixed, close after the next deploy
 
@@ -230,6 +229,7 @@ These are still bugs, and the entry named here covers them.
 | #293       | Rewritten auto fix. The attached paths weren't identical, and the result keeps both shapes. |
 | #301       | The preview draws the animated layer at t=0 (`BUGS.md`, "Fixed during the migration")       |
 | #320       | Ids are kept, so paths with ids stay separate layers. Paths without ids still merge.        |
+| #332       | "Convert to clip path" only checks the layer's own blocks (`buildContextMenu.ts`)           |
 | #339       | `fc991051`. The reporter's file exports in all four formats.                                |
 | #357       | Renders the same as the browser now. The fixing commit wasn't pinned down.                  |
 

@@ -1,6 +1,7 @@
 import Button from '@mui/material/Button';
 import { StyledEngineProvider } from '@mui/material/styles';
 import type { BugsnagErrorBoundary } from '@bugsnag/plugin-react';
+import { ContextMenuHost } from 'app/modules/editor/components/contextmenu/ContextMenuHost';
 import { DialogHost } from 'app/modules/editor/components/dialogs';
 import { SnackbarHost } from 'app/modules/editor/components/snackbar/SnackbarHost';
 import { EditorProvider, useServices } from 'app/modules/editor/context/EditorContext';
@@ -27,6 +28,7 @@ export function App({ store, services, ErrorBoundary }: AppProps) {
           </ErrorBoundary>
           <DialogHost />
           <SnackbarHost />
+          <ContextMenuHost />
         </EditorThemeProvider>
       </EditorProvider>
     </StyledEngineProvider>

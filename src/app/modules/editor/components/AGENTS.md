@@ -89,11 +89,30 @@ tool, go to `components/canvaseditor/GuideTool.ts` first. The guides are part of
 the store (`store/guides/`, saved with the project), and the editor's settings (the rulers, the
 pixel grid, and snapping to it) are preferences in `services/canvassettings.service.ts`. Alt
 measures distances (`components/canvaseditor/measuring.ts`). Boolean operations and outline
-stroke are in `components/canvaseditor/pathOps.ts`, which loads Skia's PathKit (`pathkit-wasm`)
+stroke are in `components/canvaseditor/pathOps.ts` (which layers they apply to is in
+`scripts/common/pathOpLayers.ts`, for the context menu), which loads Skia's PathKit (`pathkit-wasm`)
 the first time it's used; `vite.config.ts` puts it with the editor's assets. The editor also
 exports `components/canvaseditor/PathInspector.tsx`, which the property inspector shows for paths
 once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are in
 `components/propertyinput/propertyinput.scss`, since the editor's code can't import CSS.
+
+## Context menus
+
+Right-clicking the main canvas (outside of action mode) or a layer row, or clicking a row's "more"
+button, selects the layer under the pointer if it isn't selected, and opens
+`components/contextmenu/ContextMenuHost.tsx` through `components/contextmenu/contextmenu.service.ts`
+(`components/contextmenu/contextMenuSelection.ts` has the rule). Its items come from
+`components/contextmenu/buildContextMenu.ts`, a plain function of the saved document, the
+selection, and what the canvas editor reports, built as a list of sections. A new kind of item
+goes in a section builder of its own, added to `CONTEXT_MENU_SECTIONS`. Items that can't run say
+why, rather than being left out, and those that only the canvas editor runs (Duplicate, the
+boolean operations, and Outline stroke) are left out while it isn't loaded, as on the live site.
+They reach it through `services/canvaseditorbridge.service.ts`, which `CanvasController` attaches
+the editor to once it's loaded, since the editor's code is in the lazy chunk. Combine and Break
+apart (`scripts/common/combineLayers.ts`) and the rules for which layers the path operations apply
+to (`scripts/common/pathOpLayers.ts`) are outside of it, so they work with the editor off. MUI has
+no submenus, so the host opens one in a `Popper` inside the menu's modal: hovering, ArrowRight,
+Enter, or Space opens it, and ArrowLeft or Escape goes back.
 
 ## Styling
 

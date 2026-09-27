@@ -304,17 +304,23 @@ Phase 6 finishes the roadmap:
   merged if they're in the same place.
 - Union, subtract, intersect, and exclude (Alt+Shift+U, S, I, and E) combine the selected paths
   into the bottom one, and outline stroke (Cmd+Alt+O) turns strokes into filled outlines, from a
-  bar at the top right of the canvas panel (`components/canvaseditor/pathOps.ts`). They use
-  Skia's PathOps through `pathkit-wasm`, which is only downloaded the first time one of them is
-  used, into the editor's own assets so that the service worker doesn't precache it.
+  bar at the top right of the canvas panel, or from the context menu
+  (`components/canvaseditor/pathOps.ts`). They use Skia's PathOps through `pathkit-wasm`, which is
+  only downloaded the first time one of them is used, into the editor's own assets so that the
+  service worker doesn't precache it.
+- Right-clicking the canvas opens a context menu instead of the browser's
+  (`components/contextmenu/`), with Duplicate, the booleans, and outline stroke while the editor is
+  loaded, and the rest of the layer commands, including Combine and Break apart, which keep every
+  subpath as it is. The menu reaches the editor through `services/canvaseditorbridge.service.ts`.
 - On a touch screen, two fingers pinch to zoom and drag to pan, which cancels what the first
   finger started, and the editor's tolerances are twice as big for fingers.
 
 Some gaps are left:
 
 - Booleans flatten into one path, rather than keeping a boolean group that can be edited later,
-  and they don't work on animated paths. Outline stroke doesn't work on animated layers, and round
-  caps and joins come out as many short quadratic curves.
+  and they don't work on animated paths, or when the other paths have animations that would be
+  lost. Outline stroke doesn't work on animated layers, and round caps and joins come out as many
+  short quadratic curves.
 - The path inspector lists points but not their handles, and for an animated path it shows the
   layer's own path rather than the keyframe at the current time.
 - Joining doesn't average the ends, and there's no way to open a closed subpath.

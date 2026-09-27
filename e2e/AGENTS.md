@@ -61,6 +61,9 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
 - Playwright's WebKit can't navigate while offline, and it can't intercept Firefox's service worker
   scripts, so a few tests in `e2e/offline.preview.spec.ts` are skipped in those browsers.
 - Clicks don't land on exact coordinates, so round canvas positions before comparing them.
+- On macOS, a click with Control held is a right-click in Chromium, even though its device's user
+  agent isn't a Mac's, so a click with the `modifier` fixture's Control opens the context menu
+  there. Add to a selection with Shift instead (`e2e/contextmenu.spec.ts`).
 - Firefox on Linux (CI, not macOS) zooms the page for Ctrl and the wheel when the app doesn't
   handle them, which moves everything on the screen. With the canvas editor off, check the canvas's
   own state (`canvasViewportService.getView()`) rather than where things are.

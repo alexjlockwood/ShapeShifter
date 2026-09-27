@@ -17,12 +17,6 @@
   browser clamps it. Scroll after the new width commits
   (`components/layertimeline/LayerTimelineController.ts`, `performZoomFn`). (UI-4, medium,
   confirmed by a test)
-- **"Convert to clip path" is hidden whenever any layer has a non-path animation.** The menu
-  button's visibility check looks at every block in the whole animation instead of just the blocks
-  on the layer being converted, so an unrelated layer's rotation block hides the button on a path
-  with only a `pathData` animation (`components/layertimeline/LayerListTree.tsx`). (UI-5, GitHub
-  #332, confirmed by an e2e test; a candidate fix exists on the unmerged `alex/fix-sweep-quick-wins`
-  branch, needs a rebase before reuse)
 - **Shift-scaling several blocks of one property can make them overlap.** With blocks from 0 to
   100 and 100 to 200 selected, Shift-dragging the second one's end to 10 ms gives 0 to 10 and 5
   to 15. Each block's minimum length is enforced by pushing its end out. Clamp the scale so every

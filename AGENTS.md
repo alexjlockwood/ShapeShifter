@@ -75,6 +75,9 @@ Where to start for common changes:
   settings, nudging, and editing points) are in `components/canvaseditor/CanvasEditor.ts`, which
   gets keys first.
 - **Copy and paste:** `services/clipboard.service.ts`.
+- **Context menus:** `components/contextmenu/buildContextMenu.ts` builds the items for the canvas
+  and the layer list, as sections. Commands that only the canvas editor runs go through
+  `services/canvaseditorbridge.service.ts`.
 - **Undo:** `store/undoredo/metareducer.ts`.
 - **Error reports and analytics:** `scripts/bugsnag/` and `scripts/analytics/`. Google Analytics
   event names may only contain letters, numbers, and underscores, and a new event parameter only

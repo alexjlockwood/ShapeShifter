@@ -1,3 +1,4 @@
+import { getContextMenuSelection } from 'app/modules/editor/components/contextmenu/contextMenuSelection';
 import { ActionMode } from 'app/modules/editor/model/actionmode';
 import {
   ClipPathLayer,
@@ -26,7 +27,7 @@ import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
-import { clamp, find, findIndex, findLastIndex, flatMap, uniqueId } from 'lodash-es';
+import { clamp, find, findIndex, findLastIndex, flatMap } from 'lodash-es';
 import type { RefObject } from 'react';
 
 import * as TimelineConsts from './constants';
@@ -297,6 +298,9 @@ export class LayerTimelineController extends DestroyableMixin() {
   }
 
   onTimelineBlockMouseDown(mouseDownEvent: MouseEvent, dragBlock: AnimationBlock) {
+    if (!isMainButtonPress(mouseDownEvent)) {
+      return;
+    }
     const animation = this.animation;
     const target = mouseDownEvent.target as Element;
 
@@ -692,36 +696,7 @@ export class LayerTimelineController extends DestroyableMixin() {
   }
 
   onAddTimelineBlockClick(layer: Layer, propertyName: string) {
-    const property = layer.inspectableProperties.get(propertyName);
-    if (!property) {
-      return;
-    }
-    const clonedValue = property.cloneValue((layer as any)[propertyName]);
-    this.services.layerTimelineService.addBlocks([
-      {
-        layerId: layer.id,
-        propertyName,
-        fromValue: clonedValue,
-        toValue: clonedValue,
-        currentTime: this.currentTime,
-      },
-    ]);
-  }
-
-  onConvertToClipPathClick(layer: Layer) {
-    const clipPathLayer = new ClipPathLayer(layer as PathLayer);
-    clipPathLayer.id = uniqueId();
-    this.services.layerTimelineService.swapLayers(layer.id, clipPathLayer);
-  }
-
-  onConvertToPathClick(layer: Layer) {
-    const pathLayer = new PathLayer(layer as ClipPathLayer);
-    pathLayer.id = uniqueId();
-    this.services.layerTimelineService.swapLayers(layer.id, pathLayer);
-  }
-
-  onFlattenGroupClick(layer: Layer) {
-    this.services.layerTimelineService.flattenGroupLayer(layer.id);
+    this.services.layerTimelineService.addBlockForProperty(layer.id, propertyName);
   }
 
   onLayerClick(event: MouseEvent, clickedLayer: Layer) {
@@ -785,6 +760,24 @@ export class LayerTimelineController extends DestroyableMixin() {
     this.services.layerTimelineService.setSelectedLayers(selectedLayerIds);
   }
 
+  /**
+   * Opens the context menu for a right-click on the layer, or its "more" button, selecting the
+   * layer first if it isn't selected.
+   */
+  onLayerContextMenu(layer: Layer, position: { readonly x: number; readonly y: number }) {
+    const { layerTimelineService, contextMenuService } = this.services;
+    const selection = getContextMenuSelection(
+      this.vectorLayer,
+      layer.id,
+      layerTimelineService.getSelectedLayerIds(),
+      { inGroups: false },
+    );
+    if (selection) {
+      layerTimelineService.setSelectedLayers(new Set(selection));
+    }
+    contextMenuService.open(position, 'layerList');
+  }
+
   onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
     const recursive = ShortcutService.isOsDependentModifierKey(event) || event.shiftKey;
     this.services.layerTimelineService.toggleExpandedLayer(layer.id, recursive);
@@ -795,6 +788,10 @@ export class LayerTimelineController extends DestroyableMixin() {
   }
 
   onLayerMouseDown(mouseDownEvent: MouseEvent, mouseDownDragLayer: Layer) {
+    if (!isMainButtonPress(mouseDownEvent)) {
+      // E.g. a right-click, which opens the context menu instead.
+      return;
+    }
     const layersList = (mouseDownEvent.target as Element).closest('.slt-layers-list');
     const scroller = (mouseDownEvent.target as Element).closest('.slt-layers-list-scroller');
     if (!layersList || !scroller) {
@@ -1101,4 +1098,12 @@ export interface DragIndicatorInfo {
   left?: number;
   top?: number;
   isVisible?: boolean;
+}
+
+/**
+ * Whether the press is with the main button, which drags. On a Mac, a click with Ctrl held is a
+ * right-click.
+ */
+function isMainButtonPress(event: MouseEvent) {
+  return event.button === 0 && !(ShortcutService.isMac() && event.ctrlKey);
 }

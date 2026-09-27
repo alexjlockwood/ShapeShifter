@@ -4,10 +4,14 @@ import { createRequire } from 'node:module';
 import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
+import {
+  getBooleanLayerIds,
+  getOutlineLayerIds,
+} from 'app/modules/editor/scripts/common/pathOpLayers';
 import init, { type PathKit } from 'pathkit-wasm/bin/pathkit.js';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { combinePaths, getBooleanLayerIds, getOutlineLayerIds, outlineStrokes } from './pathOps';
+import { combinePaths, outlineStrokes } from './pathOps';
 
 let pk: PathKit;
 
@@ -95,6 +99,27 @@ describe('combinePaths', () => {
       }),
     ];
     expect(getBooleanLayerIds({ ...doc, animation }, [a.id, b.id])).toBeUndefined();
+  });
+
+  it("doesn't combine paths whose other animations would be lost", () => {
+    const doc = document(a, b);
+    const colorBlock = (layerId: string) =>
+      AnimationBlock.from({
+        layerId,
+        propertyName: 'fillColor',
+        startTime: 0,
+        endTime: 100,
+        type: 'color',
+        fromValue: '#000000',
+        toValue: '#ffffff',
+      });
+    // The bottom path keeps its own.
+    const bottom = new Animation();
+    bottom.blocks = [colorBlock(a.id)];
+    expect(getBooleanLayerIds({ ...doc, animation: bottom }, [a.id, b.id])).toEqual([a.id, b.id]);
+    const other = new Animation();
+    other.blocks = [colorBlock(b.id)];
+    expect(getBooleanLayerIds({ ...doc, animation: other }, [a.id, b.id])).toBeUndefined();
   });
 });
 

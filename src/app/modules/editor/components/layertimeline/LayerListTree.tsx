@@ -5,15 +5,9 @@ import { Tip } from 'app/modules/editor/components/common/Tip';
 import { Icon, type IconName } from 'app/modules/editor/components/icons/Icon';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useMenu } from 'app/modules/editor/hooks/useMenu';
-import {
-  ClipPathLayer,
-  GroupLayer,
-  type Layer,
-  PathLayer,
-  VectorLayer,
-} from 'app/modules/editor/model/layers';
-import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { GroupLayer, type Layer, VectorLayer } from 'app/modules/editor/model/layers';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
+import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 import { getLayerListTreeState } from 'app/modules/editor/store/common/selectors';
 import { keys } from 'lodash-es';
 import { memo, type MouseEvent, useMemo } from 'react';
@@ -35,29 +29,9 @@ function buildLayerModel(
   const availablePropertyNames = Array.from(
     ModelUtil.getAvailablePropertyNamesForLayer(layer, animation),
   );
-  const getExistingPropertyNamesFn = (layerId: string) => {
-    return keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layerId]);
-  };
-  const existingPropertyNames = getExistingPropertyNamesFn(layer.id);
-  const canBeConvertedToPath = layer instanceof ClipPathLayer;
-  // We can't convert a path into a clip path if it has incompatible animation blocks.
-  const canBeConvertedToClipPath =
-    layer instanceof PathLayer &&
-    // TODO: comparing the sets of all animatable properties for each layer type would be more robust
-    !animation.blocks.some(b => !(b instanceof PathAnimationBlock));
-  const canBeFlattened =
-    layer instanceof GroupLayer &&
-    layer.children.length > 0 &&
-    // TODO: allow merging groups w/ existing blocks in some cases?
-    existingPropertyNames.length === 0 &&
-    layer.children.every(l => {
-      return (
-        l instanceof PathLayer ||
-        l instanceof ClipPathLayer ||
-        // TODO: allow merging groups into groups w/ existing blocks in some cases?
-        getExistingPropertyNamesFn(l.id).length === 0
-      );
-    });
+  const existingPropertyNames = keys(
+    ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layer.id],
+  );
   return {
     isSelected: selectedLayerIds.has(layer.id),
     isExpandable,
@@ -66,9 +40,6 @@ function buildLayerModel(
     availablePropertyNames,
     existingPropertyNames,
     isActionMode,
-    canBeConvertedToClipPath,
-    canBeConvertedToPath,
-    canBeFlattened,
   };
 }
 
@@ -82,7 +53,6 @@ export const LayerListTree = memo(function LayerListTree({ layer }: { layer: Lay
     () => buildLayerModel(layer, layerListTreeState),
     [layer, layerListTreeState],
   );
-  const overflowMenu = useMenu();
   const addTimelineBlockMenu = useMenu();
   const { isActionMode } = model;
 
@@ -116,7 +86,8 @@ export const LayerListTree = memo(function LayerListTree({ layer }: { layer: Lay
         className={layerClassNames.filter(Boolean).join(' ')}
         onClick={event => {
           event.stopPropagation();
-          if (!isActionMode) {
+          // On a Mac, a click with Ctrl held is a right-click, which opens the context menu.
+          if (!isActionMode && !(ShortcutService.isMac() && event.ctrlKey)) {
             controller.onLayerClick(event.nativeEvent, layer);
           }
         }}
@@ -124,6 +95,13 @@ export const LayerListTree = memo(function LayerListTree({ layer }: { layer: Lay
         onMouseDown={event => {
           if (!isActionMode) {
             controller.onLayerMouseDown(event.nativeEvent, layer);
+          }
+        }}
+        onContextMenu={event => {
+          // In action mode, the layers can't be changed, so the browser's menu opens as before.
+          if (!isActionMode) {
+            event.preventDefault();
+            controller.onLayerContextMenu(layer, { x: event.clientX, y: event.clientY });
           }
         }}
       >
@@ -145,16 +123,19 @@ export const LayerListTree = memo(function LayerListTree({ layer }: { layer: Lay
           name={layer.type as IconName}
         />
         <span className="slt-layer-id-text fx-flex">{layer.name}</span>
-        {/* Show overflow options. */}
-        {(model.canBeConvertedToClipPath || model.canBeConvertedToPath || model.canBeFlattened) && (
-          <IconButton
-            className="slt-layer-action-button slt-layer-more-actions"
-            disabled={isActionMode}
-            onClick={onMenuButtonClick(overflowMenu.openMenu)}
-          >
-            <Icon name="more_vert" />
-          </IconButton>
-        )}
+        {/* The context menu, as for a right-click on the layer. */}
+        <IconButton
+          className="slt-layer-action-button slt-layer-more-actions"
+          aria-label="More actions"
+          disabled={isActionMode}
+          onClick={event => {
+            event.stopPropagation();
+            const { left, bottom } = event.currentTarget.getBoundingClientRect();
+            controller.onLayerContextMenu(layer, { x: left, y: bottom });
+          }}
+        >
+          <Icon name="more_vert" />
+        </IconButton>
         {/* Visibility toggle. */}
         <Tip
           title={model.isVisible ? 'Hide layer' : 'Show layer'}
@@ -190,43 +171,7 @@ export const LayerListTree = memo(function LayerListTree({ layer }: { layer: Lay
         )}
       </div>
 
-      {/* The menus are rendered outside of the layer so that their clicks don't select it. */}
-      <Menu
-        anchorEl={overflowMenu.anchorEl}
-        open={overflowMenu.open}
-        onClose={overflowMenu.closeMenu}
-      >
-        {model.canBeConvertedToClipPath && (
-          <MenuItem
-            onClick={() => {
-              overflowMenu.closeMenu();
-              controller.onConvertToClipPathClick(layer);
-            }}
-          >
-            Convert to clip path
-          </MenuItem>
-        )}
-        {model.canBeConvertedToPath && (
-          <MenuItem
-            onClick={() => {
-              overflowMenu.closeMenu();
-              controller.onConvertToPathClick(layer);
-            }}
-          >
-            Convert to path
-          </MenuItem>
-        )}
-        {model.canBeFlattened && (
-          <MenuItem
-            onClick={() => {
-              overflowMenu.closeMenu();
-              controller.onFlattenGroupClick(layer);
-            }}
-          >
-            Flatten group
-          </MenuItem>
-        )}
-      </Menu>
+      {/* The menu is rendered outside of the layer so that its clicks don't select it. */}
       <Menu
         anchorEl={addTimelineBlockMenu.anchorEl}
         open={addTimelineBlockMenu.open}
