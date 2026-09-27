@@ -156,6 +156,34 @@ supported one subpath per layer, and its round trips through paper.js broke morp
 a new editor built on the current canvas and path model, behind a feature flag, with a phased
 roadmap.
 
+## Feature requests
+
+Ideas under consideration, not yet scoped or scheduled:
+
+- **Fix AnimatedVectorDrawable import.** `scripts/import/VectorDrawableLoader.ts` doesn't
+  special-case the `animated-vector` root tag, so an AVD's `<aapt:attr
+  name="android:drawable"><vector>` wrapper produces an extra nested `GroupLayer`, and
+  `viewportWidth`/`viewportHeight`/`alpha` are read off the `animated-vector` root instead of the
+  nested `vector`, silently falling back to defaults. `<target>`/`<objectAnimator>` content is
+  dropped entirely rather than becoming animation blocks. A more complete parser
+  (`loadAnimationFromXmlString`, lines 119-216) already exists in the file but is commented out
+  and not wired into `services/fileimport.service.ts` or `scripts/import/index.ts`. Reconnecting
+  and finishing that parser, plus fixing the sizing/nesting bug for the static case, is the path
+  here.
+- **Gradient import support.** Gradients are a complete gap in the data model, not just an
+  importer limitation: `model/layers/Layer.ts` defines `fillColor` (and `strokeColor`) as a plain
+  `string` via `ColorProperty`, with no gradient type anywhere in `model/layers/` or
+  `model/paths/`. Both importers only read a flat color: `VectorDrawableLoader.ts`'s `getColor()`
+  ignores `<gradient>` children of `android:fillColor`/`strokeColor`, and `SvgLoader.ts` only
+  reads the `fill` attribute as a color string, with no `<linearGradient>`/`<radialGradient>`
+  parsing. Supporting this needs a gradient paint type in the layer model before either importer
+  can populate it.
+- **Show gradients in the UI.** Follows from the point above: `components/canvas/CanvasLayers.ts`
+  sets `ctx.fillStyle` to a solid RGBA string with no `CanvasGradient` construction anywhere in
+  `components/canvas/`, and there's no gradient UI in the property inspector either. Once the
+  model has a gradient paint type, this needs canvas rendering (building a `CanvasGradient` from
+  stops) and an inspector control for editing stops/angle, likely the largest piece of the three.
+
 ## Suggested starting point
 
 Best effort-to-value ratio, all low risk: bundle splitting, the import-error-swallowing fixes,
