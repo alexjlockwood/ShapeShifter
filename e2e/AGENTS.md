@@ -42,8 +42,9 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
   them off on the dev server too). Turn one on with its URL parameter, e.g. `?editor=1` for the
   canvas editor. The canvas's `data-canvas-editor` attribute says whether the editor is `off`,
   `loading`, `ready`, or `failed`, so wait for the value you expect rather than for it to be
-  missing. Once it's `ready`, `window.shapeshifter.canvasEditor` can preview and commit path edits
-  (`components/canvaseditor/CanvasEditor.ts`), until the editor has tools to drive instead.
+  missing. Once it's `ready`, drive its tools with the mouse like `e2e/editor.spec.ts` does, or
+  preview and commit path edits directly with `window.shapeshifter.canvasEditor`
+  (`components/canvaseditor/CanvasEditor.ts`).
 
 ## Browser quirks
 

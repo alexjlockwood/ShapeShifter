@@ -190,7 +190,6 @@ These are still bugs, and the entry named here covers them.
 | #169  | MODEL-3 (importing a larger SVG doesn't rescale blocks), matched from the video's thumbnail |
 | #181  | IMP-2 (element `opacity` is ignored)                                                        |
 | #184  | MODEL-7 and UI-13 (typing an end time commits every keystroke, and inverted times swap)     |
-| #185  | MODEL-9 (bounds of rotated groups)                                                          |
 | #186  | `BUGS.md` "The editor draws strokes in scaled groups at the wrong width", and CANVAS-3      |
 | #224  | MODEL-5 (gradients import as black). Gradient support itself is #144.                       |
 | #257  | EXP-1 (empty `android:pathData`)                                                            |
@@ -213,6 +212,7 @@ These are still bugs, and the entry named here covers them.
 | #125       | `Point` is a plain interface, and `MathUtil.arePointsEqual` handles missing points          |
 | #127       | Clicking empty canvas in a split or add points mode returns to selection mode               |
 | #129       | Auto fix has unit tests and a playground (`src/playground/autofix/`)                        |
+| #185       | Group bounds transform all four corners (MODEL-9)                                           |
 | #188       | Flattening transforms both the from and to values of path blocks                            |
 | #249       | The rulers are laid out from the canvas's camera, in viewport units (CANVAS-5)              |
 | #264       | `629387af`                                                                                  |

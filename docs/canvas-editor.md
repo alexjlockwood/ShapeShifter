@@ -293,8 +293,8 @@ grows.
   `LayerTimelineService.flattenGroupLayer` already does for groups. Don't allow edits in the middle
   of an interpolation, and never write animated values into the base layers.
 - **Transforms.** Pointer positions are mapped into a layer's own coordinates with the inverse of
-  `LayerUtil.getCanvasTransformForLayer`. Group bounds have to transform all four corners
-  (MODEL-9 in `docs/bugs/layers-and-properties.md`). Decide how stroke widths behave when scaling
+  `LayerUtil.getCanvasTransformForLayer`. Group bounds have to transform all four corners (which
+  fixed MODEL-9). Decide how stroke widths behave when scaling
   (the scaled group stroke width entry in `BUGS.md`), and scale trim paths the same way (CANVAS-4
   in `docs/bugs/canvas.md`).
 - **Path invariants.** The first `M` has no start point, each command starts where the previous

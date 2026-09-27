@@ -12,7 +12,6 @@ import {
   GroupLayer,
   Layer,
   LayerUtil,
-  MorphableLayer,
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
@@ -39,6 +38,7 @@ import { combineLatest, of } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
 import { CanvasCamera } from './CanvasCamera';
+import { hitTestLayer } from './LayerGeometry';
 import type { CanvasPreview } from './CanvasPreview';
 import * as CanvasUtil from './CanvasUtil';
 import { PairSubPathHelper } from './PairSubPathHelper';
@@ -94,6 +94,8 @@ type Context = CanvasRenderingContext2D;
  */
 export class CanvasOverlay extends DestroyableMixin() {
   private camera: CanvasCamera | undefined;
+  // The canvas editor draws selected layers its own way.
+  private showsLayerSelections = true;
   vectorLayer: VectorLayer | undefined;
   // Normal mode variables.
   private hiddenLayerIds: ReadonlySet<string> = new Set<string>();
@@ -349,6 +351,12 @@ export class CanvasOverlay extends DestroyableMixin() {
     this.draw();
   }
 
+  /** Whether to highlight the selected layers, which the canvas editor does on its own. */
+  setShowsLayerSelections(show: boolean) {
+    this.showsLayerSelections = show;
+    this.draw();
+  }
+
   draw() {
     const { camera } = this;
     if (!camera) {
@@ -382,7 +390,10 @@ export class CanvasOverlay extends DestroyableMixin() {
       // Don't draw selections for hidden layers or while in action mode.
       return;
     }
-    if (this.selectedLayerIds.has(curr.id) || this.selectedBlockLayerIds.has(curr.id)) {
+    if (
+      (this.showsLayerSelections && this.selectedLayerIds.has(curr.id)) ||
+      this.selectedBlockLayerIds.has(curr.id)
+    ) {
       const flattenedTransform = LayerUtil.getCanvasTransformForLayer(root, curr.id);
       if (curr instanceof ClipPathLayer) {
         if (curr.pathData && curr.pathData.getCommands().length) {
@@ -972,39 +983,10 @@ export class CanvasOverlay extends DestroyableMixin() {
     if (!root) {
       return undefined;
     }
-    const recurseFn = (layer: Layer): MorphableLayer | undefined => {
-      if (this.hiddenLayerIds.has(layer.id)) {
-        return undefined;
-      }
-      // TODO: use a user-defined type check to confirm this layer is an instance of MorphableLayer
-      if ((layer instanceof PathLayer || layer instanceof ClipPathLayer) && layer.pathData) {
-        const canvasToLayerMatrix = LayerUtil.getCanvasTransformForLayer(root, layer.id).invert();
-        if (!canvasToLayerMatrix) {
-          // Do nothing if matrix is non-invertible.
-          return undefined;
-        }
-        const transformedPoint = MathUtil.transformPoint(point, canvasToLayerMatrix);
-        const isSegmentInRangeFn = (distance: number) => {
-          let maxDistance = 0;
-          if (layer instanceof PathLayer && layer.isStroked()) {
-            maxDistance = Math.max(this.minSnapThreshold, layer.strokeWidth / 2);
-          }
-          return distance <= maxDistance;
-        };
-        const findShapesInRange = layer.isFilled();
-        const hitResult = layer.pathData.hitTest(transformedPoint, {
-          isSegmentInRangeFn,
-          findShapesInRange,
-        });
-        return hitResult.isHit ? layer : undefined;
-      }
-      // Use 'hitTestLayer || h' and not the other way around because of reverse z-order.
-      return layer.children.reduce<MorphableLayer | undefined>(
-        (h, l) => recurseFn(l) || h,
-        undefined,
-      );
-    };
-    return recurseFn(root);
+    return hitTestLayer(root, point, {
+      hiddenLayerIds: this.hiddenLayerIds,
+      tolerance: this.minSnapThreshold,
+    });
   }
 
   // NOTE: this should only be used in action mode

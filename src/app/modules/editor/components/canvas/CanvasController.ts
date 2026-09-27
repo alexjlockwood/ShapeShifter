@@ -1,6 +1,6 @@
 import { ActionSource } from 'app/modules/editor/model/actionmode';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
-import { getCanvasPixelRatio, watchDevicePixelRatio } from 'app/modules/editor/scripts/dom';
+import { getCanvasPixelRatio, on, watchDevicePixelRatio } from 'app/modules/editor/scripts/dom';
 import { DestroyableMixin } from 'app/modules/editor/scripts/mixins';
 import type {
   CanvasView,
@@ -9,6 +9,7 @@ import type {
 import type { EditorServices } from 'app/modules/editor/services/createEditorServices';
 import { Duration, SnackBarService } from 'app/modules/editor/services/snackbar.service';
 import { State, Store } from 'app/modules/editor/store';
+import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import type { Features } from 'environments/features';
 import { isEqual, round } from 'lodash-es';
@@ -34,6 +35,8 @@ export interface CanvasElements {
   readonly rulerCorner: HTMLElement;
   readonly layers: HTMLCanvasElement;
   readonly overlay: HTMLCanvasElement;
+  /** Where the canvas editor draws, when it's on. */
+  readonly editor: HTMLCanvasElement;
 }
 
 /**
@@ -56,6 +59,10 @@ export class CanvasController extends DestroyableMixin() {
   private readonly canvasViewportService: CanvasViewportService;
   private canvasEditor: CanvasEditor | undefined;
   private isDisposed = false;
+  private isActionMode = false;
+  // Who gets the pointer events of the gesture in progress.
+  private gestureTarget: 'editor' | 'overlay' | undefined;
+  private removeClickListener: (() => void) | undefined;
 
   constructor(
     private readonly elements: CanvasElements,
@@ -97,24 +104,68 @@ export class CanvasController extends DestroyableMixin() {
     this.canvasNavigation = features.canvasEditor
       ? new CanvasNavigation(elements.root, canvasViewportService, () => this.camera)
       : undefined;
-    this.canvasInput = new CanvasInput(elements.artboard, {
+    // With the editor, the main canvas takes the pointer anywhere in the panel, e.g. to start a
+    // marquee selection off of the artboard. Otherwise only on the artboard, like before.
+    const inputElement = this.canvasPreview ? elements.root : elements.artboard;
+    this.canvasInput = new CanvasInput(inputElement, {
       onPress: event => {
-        this.canvasOverlay.onMouseDown(event);
+        this.gestureTarget = this.getInputTarget();
+        // The pointer is captured by the panel, which takes the artboard's :hover away, and with
+        // it the rulers.
+        if (event.target instanceof Node && elements.artboard.contains(event.target)) {
+          elements.root.classList.add('is-pressing-artboard');
+        }
+        if (this.gestureTarget === 'editor') {
+          this.canvasEditor?.onPress(event, this.toViewport(event));
+        } else {
+          this.canvasOverlay.onMouseDown(event);
+        }
         this.showRuler(event);
       },
       onMove: event => {
-        this.canvasOverlay.onMouseMove(event);
+        if (!this.gestureTarget && this.canvasNavigation?.isPanning()) {
+          // The pan has the pointer, so this isn't a hover.
+          return;
+        }
+        if ((this.gestureTarget ?? this.getInputTarget()) === 'editor') {
+          this.canvasEditor?.onMove(event, this.toViewport(event));
+        } else {
+          this.canvasOverlay.onMouseMove(event);
+        }
         this.showRuler(event);
       },
       onRelease: event => {
-        this.canvasOverlay.onMouseUp(event);
+        if ((this.gestureTarget ?? this.getInputTarget()) === 'editor') {
+          this.canvasEditor?.onRelease(event, this.toViewport(event));
+        } else {
+          this.canvasOverlay.onMouseUp(event);
+        }
+        this.gestureTarget = undefined;
+        elements.root.classList.remove('is-pressing-artboard');
         this.showRuler(event);
       },
       onLeave: () => {
-        this.canvasOverlay.onMouseLeave();
+        if ((this.gestureTarget ?? this.getInputTarget()) === 'editor') {
+          this.canvasEditor?.onLeave();
+        } else {
+          this.canvasOverlay.onMouseLeave();
+        }
+        this.gestureTarget = undefined;
+        elements.root.classList.remove('is-pressing-artboard');
         this.hideRuler();
       },
     });
+  }
+
+  /** The editor gets the pointer events once it's loaded, except in action mode. */
+  private getInputTarget() {
+    return this.canvasEditor && !this.isActionMode ? 'editor' : 'overlay';
+  }
+
+  private toViewport(event: PointerEvent) {
+    const { left, top } = this.elements.root.getBoundingClientRect();
+    const point = { x: event.clientX - left, y: event.clientY - top };
+    return this.camera ? this.camera.panelToViewport(point) : point;
   }
 
   init() {
@@ -123,6 +174,22 @@ export class CanvasController extends DestroyableMixin() {
     this.canvasOverlay.init();
     this.canvasInput.init();
     this.canvasNavigation?.init();
+    this.registerSubscription(
+      this.store.select(isActionMode).subscribe(value => {
+        this.isActionMode = value;
+      }),
+    );
+    if (this.canvasPreview) {
+      // Touch drags anywhere on the panel are the editor's, e.g. a marquee off of the artboard.
+      this.elements.root.classList.add('has-canvas-editor');
+      // Clicks on the main canvas are the editor's outside of action mode, so they don't reach the
+      // workspace, which would clear the selection after a marquee.
+      this.removeClickListener = on(this.elements.root, 'click', event => {
+        if (!this.isActionMode) {
+          event.stopPropagation();
+        }
+      });
+    }
 
     this.registerSubscription(
       this.store
@@ -186,6 +253,7 @@ export class CanvasController extends DestroyableMixin() {
     super.dispose();
     this.isDisposed = true;
     this.canvasInput.dispose();
+    this.removeClickListener?.();
     this.canvasNavigation?.dispose();
     this.resizeObserver?.disconnect();
     this.stopWatchingPixelRatio?.();
@@ -213,19 +281,29 @@ export class CanvasController extends DestroyableMixin() {
     if (this.isDisposed) {
       return;
     }
+    let editor: CanvasEditor | undefined;
     try {
       if (!this.canvasPreview) {
         throw new Error('The canvas editor needs a preview');
       }
-      this.canvasEditor = editorModule.createCanvasEditor({
+      editor = editorModule.createCanvasEditor({
         store: this.store,
         services: this.services,
         preview: this.canvasPreview,
+        root: this.elements.root,
+        canvas: this.elements.editor,
       });
+      if (this.camera) {
+        editor.setCamera(this.camera);
+      }
     } catch (error) {
+      // An editor that didn't finish setting up doesn't get the canvas's input.
+      editor?.dispose();
       this.onEditorFailed(error, 'error');
       return;
     }
+    this.canvasEditor = editor;
+    this.canvasOverlay.setShowsLayerSelections(false);
     this.setEditorState('ready');
   }
 
@@ -277,6 +355,7 @@ export class CanvasController extends DestroyableMixin() {
     this.canvasLayers.setCamera(camera);
     this.canvasOverlay.setCamera(camera);
     this.canvasRulers.forEach(r => r.setCamera(camera));
+    this.canvasEditor?.setCamera(camera);
     // The corner is inside of the artboard, like the rulers.
     const corner = getRulerCorner(camera);
     const { style: cornerStyle } = this.elements.rulerCorner;

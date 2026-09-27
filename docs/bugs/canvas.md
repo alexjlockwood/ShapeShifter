@@ -11,11 +11,12 @@
   segment tolerance is half the stroke width. That makes "Delete segment" unreachable for most
   icons. Give segment hits a tolerance in viewport units (`components/canvas/SelectionHelper.ts`).
   (CANVAS-2, medium, confirmed by a test)
-- **Hit and snap tolerances ignore the group transform.** In a scaled group, which imported
-  VectorDrawables often have, distances in layer units are compared with tolerances in viewport
-  units. At scale 0.1 a click 3 pixels from a point misses it, and at scale 10 a click 60 pixels
-  away hits it. Divide the tolerances by the layer's scale (`components/canvas/CanvasOverlay.ts`,
-  `performHitTest`). (CANVAS-3, GitHub #186, medium, confirmed by a test)
+- **Action mode's hit and snap tolerances ignore the group transform.** In a scaled group, which
+  imported VectorDrawables often have, distances in layer units are compared with tolerances in
+  viewport units. At scale 0.1 a click 3 pixels from a point misses it, and at scale 10 a click 60
+  pixels away hits it. Divide the tolerances by the layer's scale, as clicking layers outside of
+  action mode does (`components/canvas/CanvasOverlay.ts`, `performHitTest`, and
+  `components/canvas/LayerGeometry.ts`). (CANVAS-3, GitHub #186, medium, confirmed by a test)
 - **The trim path dash length uses the inverse matrix in scaled groups.** In a scaled group, a
   trimmed path's dashes are off by the square of the scale, so trims show repeating dashes (above a
   scale of 1) or don't trim (below it). Like the stroke width bug under "Open", the length is

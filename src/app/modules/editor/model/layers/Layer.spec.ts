@@ -110,3 +110,20 @@ describe('Property.register', () => {
     expect(newLayer('M 0 0 L 10 10').pathData?.getPathString()).toBe('M 0 0 L 10 10');
   });
 });
+
+describe('GroupLayer.bounds', () => {
+  // MODEL-9: only two corners used to be transformed, so rotated bounds could be inside out.
+  it('contains its rotated children', () => {
+    const path = new PathLayer({
+      name: 'path',
+      children: [],
+      pathData: new Path('M 0 0 L 10 0 L 10 2 L 0 2 Z'),
+    });
+    const group = new GroupLayer({ name: 'group', children: [path], rotation: 90 });
+    const { l, t, r, b } = group.bounds!;
+    expect(l).toBeCloseTo(-2, 9);
+    expect(t).toBeCloseTo(0, 9);
+    expect(r).toBeCloseTo(0, 9);
+    expect(b).toBeCloseTo(10, 9);
+  });
+});
