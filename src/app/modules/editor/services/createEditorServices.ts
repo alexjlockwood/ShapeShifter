@@ -44,6 +44,8 @@ export function createEditorServices(
     actionModeService,
     playbackService,
     layerTimelineService,
+    canvasViewportService,
+    features,
   );
   return {
     features,

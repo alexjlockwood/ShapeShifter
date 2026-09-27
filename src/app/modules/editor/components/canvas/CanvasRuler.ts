@@ -32,6 +32,8 @@ export function getRulerInterval(scale: number) {
 export interface RulerLayout {
   /** The ruler's bounds in panel coordinates. */
   readonly rect: Rect;
+  /** Whether the ruler is on the panel's edge, over the artboard, since it's too close to it. */
+  readonly isPinned: boolean;
   /** Where the ticks are, in CSS pixels from the start of the ruler, and their labels. */
   readonly ticks: ReadonlyArray<{ readonly offset: number; readonly label: string }>;
 }
@@ -39,14 +41,20 @@ export interface RulerLayout {
 /**
  * Lays the ruler out along the artboard's top or left edge, a little past each end of it. It
  * stays inside of the panel, so a ruler for an artboard that's bigger than the panel runs along
- * the panel's edge.
+ * the panel's edge. When both rulers do, they leave the corner between them to the corner square
+ * (getRulerCorner).
  */
 export function getRulerLayout(camera: CanvasCamera, orientation: Orientation): RulerLayout {
   const isHorizontal = orientation === 'horizontal';
   const { x, y, w, h } = camera.getArtboardRect();
   const [artboardStart, artboardLength, artboardSide] = isHorizontal ? [x, w, y] : [y, h, x];
   const panelLength = isHorizontal ? camera.panel.w : camera.panel.h;
-  const start = Math.max(0, artboardStart - EXTRA_RULER_PADDING);
+  const isPinned = artboardSide < RULER_SIZE;
+  const isOtherPinned = artboardStart < RULER_SIZE;
+  const start = Math.max(
+    isPinned && isOtherPinned ? RULER_SIZE : 0,
+    artboardStart - EXTRA_RULER_PADDING,
+  );
   const end = Math.min(panelLength, artboardStart + artboardLength + EXTRA_RULER_PADDING);
   const length = Math.max(0, end - start);
   const side = Math.max(0, artboardSide - RULER_SIZE);
@@ -74,7 +82,15 @@ export function getRulerLayout(camera: CanvasCamera, orientation: Orientation): 
       ticks.push({ offset, label: t.toString() });
     }
   }
-  return { rect, ticks };
+  return { rect, isPinned, ticks };
+}
+
+/** Returns the square in the corner between the rulers, when they both run along the panel. */
+export function getRulerCorner(camera: CanvasCamera): Rect | undefined {
+  const { x, y } = camera.getArtboardRect();
+  return x < RULER_SIZE && y < RULER_SIZE
+    ? { x: 0, y: 0, w: RULER_SIZE, h: RULER_SIZE }
+    : undefined;
 }
 
 /**
@@ -116,7 +132,8 @@ export class CanvasRuler {
       return;
     }
     const isHorizontal = this.orientation === 'horizontal';
-    const { rect, ticks } = getRulerLayout(camera, this.orientation);
+    const { rect, isPinned, ticks } = getRulerLayout(camera, this.orientation);
+    this.canvas.classList.toggle('is-pinned', isPinned);
     // The ruler is inside of the artboard, so that hovering over it keeps it showing.
     const artboard = camera.getArtboardRect();
     const { style } = this.canvas;

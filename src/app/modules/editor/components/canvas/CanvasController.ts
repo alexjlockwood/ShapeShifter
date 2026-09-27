@@ -14,12 +14,13 @@ import type { Features } from 'environments/features';
 import { isEqual, round } from 'lodash-es';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
-import { CanvasCamera, Size } from './CanvasCamera';
+import { CanvasCamera, getZoomStep, Size } from './CanvasCamera';
 import type { CanvasEditor, CanvasEditorModule } from './CanvasEditorApi';
 import { CanvasInput } from './CanvasInput';
 import { CanvasLayers } from './CanvasLayers';
+import { CanvasNavigation } from './CanvasNavigation';
 import { CanvasOverlay } from './CanvasOverlay';
-import { CanvasRuler } from './CanvasRuler';
+import { CanvasRuler, getRulerCorner } from './CanvasRuler';
 import { loadCanvasEditor } from './loadCanvasEditor';
 
 export interface CanvasElements {
@@ -29,6 +30,7 @@ export interface CanvasElements {
   readonly artboard: HTMLElement;
   readonly horizontalRuler: HTMLCanvasElement;
   readonly verticalRuler: HTMLCanvasElement;
+  readonly rulerCorner: HTMLElement;
   readonly layers: HTMLCanvasElement;
   readonly overlay: HTMLCanvasElement;
 }
@@ -43,6 +45,7 @@ export class CanvasController extends DestroyableMixin() {
   private resizeObserver: ResizeObserver | undefined;
   private stopWatchingPixelRatio: (() => void) | undefined;
   private readonly canvasInput: CanvasInput;
+  private readonly canvasNavigation: CanvasNavigation | undefined;
   private readonly canvasLayers: CanvasLayers;
   private readonly canvasOverlay: CanvasOverlay;
   private readonly canvasRulers: ReadonlyArray<CanvasRuler>;
@@ -81,6 +84,10 @@ export class CanvasController extends DestroyableMixin() {
       new CanvasRuler(elements.horizontalRuler, 'horizontal', themeService),
       new CanvasRuler(elements.verticalRuler, 'vertical', themeService),
     ];
+    // Zooming and panning come with the editor.
+    this.canvasNavigation = features.canvasEditor
+      ? new CanvasNavigation(elements.root, canvasViewportService, () => this.camera)
+      : undefined;
     this.canvasInput = new CanvasInput(elements.artboard, {
       onPress: event => {
         this.canvasOverlay.onMouseDown(event);
@@ -105,6 +112,7 @@ export class CanvasController extends DestroyableMixin() {
     this.canvasLayers.init();
     this.canvasOverlay.init();
     this.canvasInput.init();
+    this.canvasNavigation?.init();
 
     this.registerSubscription(
       this.store
@@ -135,7 +143,25 @@ export class CanvasController extends DestroyableMixin() {
     this.resizeObserver.observe(this.elements.root);
     this.stopWatchingPixelRatio = watchDevicePixelRatio(() => this.layout());
     // Only the canvas that shows the current time is editable. In action mode, the start and end
-    // canvases next to it are for morphing.
+    // canvases next to it are for morphing. It's also the one that carries out the zoom
+    // shortcuts, which change all three.
+    if (this.actionSource === ActionSource.Animated && this.canvasNavigation) {
+      this.registerSubscription(
+        this.canvasViewportService.getZoomCommands().subscribe(command => {
+          const { camera } = this;
+          if (!camera) {
+            return;
+          }
+          if (command === 'fit') {
+            this.canvasViewportService.fit();
+          } else {
+            const scale =
+              command === '100%' ? 1 : getZoomStep(camera.scale, command === 'in' ? 1 : -1);
+            this.canvasViewportService.setView(camera.zoomTo(scale));
+          }
+        }),
+      );
+    }
     if (this.actionSource === ActionSource.Animated) {
       if (this.features.canvasEditor) {
         void this.loadEditor();
@@ -150,6 +176,7 @@ export class CanvasController extends DestroyableMixin() {
     super.dispose();
     this.isDisposed = true;
     this.canvasInput.dispose();
+    this.canvasNavigation?.dispose();
     this.resizeObserver?.disconnect();
     this.stopWatchingPixelRatio?.();
     this.canvasEditor?.dispose();
@@ -231,6 +258,16 @@ export class CanvasController extends DestroyableMixin() {
     this.canvasLayers.setCamera(camera);
     this.canvasOverlay.setCamera(camera);
     this.canvasRulers.forEach(r => r.setCamera(camera));
+    // The corner is inside of the artboard, like the rulers.
+    const corner = getRulerCorner(camera);
+    const { style: cornerStyle } = this.elements.rulerCorner;
+    cornerStyle.display = corner ? '' : 'none';
+    if (corner) {
+      cornerStyle.left = `${corner.x - x}px`;
+      cornerStyle.top = `${corner.y - y}px`;
+      cornerStyle.width = `${corner.w}px`;
+      cornerStyle.height = `${corner.h}px`;
+    }
   }
 
   private showRuler(event: MouseEvent) {
