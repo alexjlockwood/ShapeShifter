@@ -7,7 +7,8 @@
     // Keeps the z-indexes below from competing with the rest of the page.
     isolation: isolate;
     canvas.rendering-canvas,
-    canvas.overlay-canvas {
+    canvas.overlay-canvas,
+    canvas.editor-canvas {
         position: absolute;
         left: 0;
         top: 0;
@@ -16,7 +17,8 @@
     canvas.rendering-canvas {
         z-index: 1;
     }
-    canvas.overlay-canvas {
+    canvas.overlay-canvas,
+    canvas.editor-canvas {
         z-index: 2;
     }
     // CanvasController positions the artboard. It has no z-index, so the rulers inside of it can

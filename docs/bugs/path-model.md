@@ -42,11 +42,12 @@
   Only treat a curve as a point when all of its points coincide
   (`model/paths/calculators/Calculator.ts`, `newCalculator`, and `model/paths/Command.ts`,
   `canConvertTo`). (PATH-16, low, confirmed by a test)
-- **Filled subpaths without a closing `Z` can't be clicked by their fill.** Fills close
-  implicitly, but the shape hit test skips subpaths that aren't closed, so a click inside the fill
-  misses the layer. Each subpath is also tested alone with the even-odd rule, ignoring the fill
-  type and holes. Treat filled subpaths as closed and test the whole path with its fill rule
-  (`model/paths/PathState.ts`, `hitTest`). (PATH-17, low, confirmed by reading)
+- **In action mode, filled subpaths without a closing `Z` can't be clicked by their fill.** Fills
+  close implicitly, but the shape hit test skips subpaths that aren't closed, so a click inside the
+  fill misses the subpath. Each subpath is also tested alone with the even-odd rule, ignoring the
+  fill type and holes. Treat filled subpaths as closed and test the whole path with its fill rule
+  (`model/paths/PathState.ts`, `hitTest`). Clicking layers outside of action mode already does,
+  with `Path2D` (`components/canvas/LayerGeometry.ts`). (PATH-17, low, confirmed by reading)
 - **`model/paths/SvgUtil.ts` is dead code.** Nothing imports it or `arcToBeziers`, including the
   uncompiled paper.js editor; `PathParser` converts arcs itself. (PATH-18, confirmed by reading; a
   candidate fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, which deletes the file,

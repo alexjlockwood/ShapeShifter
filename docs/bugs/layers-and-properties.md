@@ -47,10 +47,6 @@
   which clamps fractions to 1, but Android wraps 1.05 to 0.05 and draws 5% of it. Model the
   wrapping, or warn about overshooting interpolators on fraction properties
   (`model/properties/FractionProperty.ts`). (MODEL-8, low, confirmed by reading)
-- **The selection box of rotated or mirrored groups is wrong.** A group rotated 45 degrees gets a
-  selection outline that collapses to a line, and a mirrored subgroup's content falls outside it.
-  `GroupLayer.bounds` only transforms two corners of its children's bounds, and should transform all
-  four (`model/layers/Layer.ts`). (MODEL-9, GitHub #185, low, confirmed by a test)
 - **Decimal commas are silently truncated in number fields.** Typing `1,5`, as people in
   comma-decimal locales do, stores 1, since `parseFloat` stops at the comma. Accept the comma, or
   reject input that isn't a number (`model/properties/NumberProperty.ts`). (MODEL-10, low,

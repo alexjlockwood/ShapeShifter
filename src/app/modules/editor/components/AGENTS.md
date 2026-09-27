@@ -55,6 +55,14 @@ dispatching on every pointer move. A gesture commits once, as its own undo step,
 that changes the document or the time cancels it. It edits the layers' own paths, so a path that an
 animation block sets at the current time can't be edited yet (`canEditPath`).
 
+With the editor loaded, the main canvas takes the pointer anywhere in its panel and gives it to the
+editor (`components/canvaseditor/CanvasEditor.ts`), except in action mode, and the panel's clicks
+don't reach the workspace. The editor's tools, like `components/canvaseditor/SelectTool.ts`, are
+state machines that take points in viewport coordinates, and
+`components/canvaseditor/EditorRenderer.ts` draws their outlines and handles on a canvas of their
+own. Hit testing and bounds are in `components/canvas/LayerGeometry.ts`, which clicks on the canvas
+use with the editor off too.
+
 ## Styling
 
 - Styles are SCSS. MUI components are themed in `styles/muiTheme.ts` and restyled with SCSS that

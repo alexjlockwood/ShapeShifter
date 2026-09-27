@@ -281,13 +281,21 @@ export class GroupLayer extends Layer {
       Matrix.rotation(this.rotation),
       Matrix.translation(this.translateX, this.translateY),
     ];
-    const topLeft = MathUtil.transformPoint({ x: bounds.l, y: bounds.t }, ...transforms);
-    const bottomRight = MathUtil.transformPoint({ x: bounds.r, y: bounds.b }, ...transforms);
+    // All four corners, since a rotated box's extremes can be at any of them.
+    const { l, t, r, b } = bounds;
+    const corners = [
+      { x: l, y: t },
+      { x: r, y: t },
+      { x: r, y: b },
+      { x: l, y: b },
+    ].map(corner => MathUtil.transformPoint(corner, ...transforms));
+    const xs = corners.map(c => c.x);
+    const ys = corners.map(c => c.y);
     return {
-      l: topLeft.x + this.pivotX,
-      t: topLeft.y + this.pivotY,
-      r: bottomRight.x + this.pivotX,
-      b: bottomRight.y + this.pivotY,
+      l: Math.min(...xs) + this.pivotX,
+      t: Math.min(...ys) + this.pivotY,
+      r: Math.max(...xs) + this.pivotX,
+      b: Math.max(...ys) + this.pivotY,
     };
   }
 

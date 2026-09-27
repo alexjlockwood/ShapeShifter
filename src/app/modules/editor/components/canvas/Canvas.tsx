@@ -21,6 +21,7 @@ export function Canvas({ actionSource, className }: CanvasProps) {
   const rulerCornerRef = useRef<HTMLDivElement>(null);
   const layersRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
+  const editorRef = useRef<HTMLCanvasElement>(null);
 
   useLayoutEffect(() => {
     const controller = new CanvasController(
@@ -32,6 +33,7 @@ export function Canvas({ actionSource, className }: CanvasProps) {
         rulerCorner: requireRef(rulerCornerRef),
         layers: requireRef(layersRef),
         overlay: requireRef(overlayRef),
+        editor: requireRef(editorRef),
       },
       actionSource,
       store,
@@ -57,6 +59,8 @@ export function Canvas({ actionSource, className }: CanvasProps) {
       </div>
       <canvas ref={layersRef} className="rendering-canvas" />
       <canvas ref={overlayRef} className="overlay-canvas" />
+      {/* The canvas editor draws on this one, when it's on. */}
+      <canvas ref={editorRef} className="editor-canvas" width={0} height={0} />
     </div>
   );
 }

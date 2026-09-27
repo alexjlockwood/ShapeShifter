@@ -98,6 +98,24 @@ test('previews an edit, and commits it as one undo step', async ({ page, modifie
   );
 });
 
+test('selects a layer by clicking its fill', async ({ page }) => {
+  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
+  // The triangle's subpaths aren't closed with a Z at the start of the morph, which the fill
+  // closes anyway.
+  const point = await artboardPoint(page.locator('.app-canvas'), 10, 12);
+  await page.mouse.click(point.x, point.y);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const { store } = (window as any).shapeshifter;
+        const { layers } = store.getState().present;
+        return [...layers.selectedLayerIds].map(id => layers.vectorLayer.findLayerById(id).name);
+      }),
+    )
+    .toEqual(['path']);
+});
+
 test('plays and rewinds with keyboard shortcuts', async ({ page }) => {
   await page.goto('/?project=demos/searchtoclose.shapeshifter');
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);

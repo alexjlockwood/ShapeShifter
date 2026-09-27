@@ -51,7 +51,7 @@ area, in the same style as the rest of this file:
 
 - **Path model** (11 bugs): `docs/bugs/path-model.md`
 - **Store and services** (15 bugs): `docs/bugs/store-and-services.md`
-- **Layers and properties** (10 bugs): `docs/bugs/layers-and-properties.md`
+- **Layers and properties** (9 bugs): `docs/bugs/layers-and-properties.md`
 - **Import** (15 bugs): `docs/bugs/import.md`
 - **Export** (7 bugs): `docs/bugs/export.md`
 - **Canvas** (8 bugs): `docs/bugs/canvas.md`
