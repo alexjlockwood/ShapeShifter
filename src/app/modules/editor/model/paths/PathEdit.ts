@@ -161,16 +161,16 @@ export function moveAnchors(path: Path, anchorIds: ReadonlySet<string>, delta: P
 }
 
 /**
- * Moves one of the anchor's handles to the point. A mirrored anchor's other handle mirrors it, and
- * an asymmetric one's turns to stay opposite, keeping its length. A quadratic curve's control
- * point is shared with the anchor at its other end, so it isn't turned to match.
+ * Moves one of the anchor's handles to the point, on its own, or with the other handle mirroring
+ * it: the same length, in the opposite direction. A quadratic curve's control point is shared with
+ * the anchor at its other end, so it isn't turned to match.
  */
 export function moveHandle(
   path: Path,
   anchorId: string,
   side: HandleSide,
   point: Point,
-  type: PointType,
+  mirror = false,
 ) {
   const subPaths = toSubPaths(path);
   const { subPath, index } = findAnchor(subPaths, anchorId);
@@ -181,18 +181,8 @@ export function moveHandle(
   }
   handle.segment.controls[handle.controlIdx] = point;
   const opposite = getHandleRef(subPath, index, side === 'in' ? 'out' : 'in');
-  if (opposite && opposite.segment.type === 'C') {
-    const direction = normalize(subtract(anchor, point));
-    const current = opposite.segment.controls[opposite.controlIdx];
-    const length =
-      type === 'mirrored'
-        ? MathUtil.distance(anchor, point)
-        : type === 'asymmetric'
-          ? MathUtil.distance(anchor, current)
-          : undefined;
-    if (direction && length !== undefined) {
-      opposite.segment.controls[opposite.controlIdx] = add(anchor, scale(direction, length));
-    }
+  if (mirror && opposite && opposite.segment.type === 'C') {
+    opposite.segment.controls[opposite.controlIdx] = subtract(scale(anchor, 2), point);
   }
   return toPath(subPaths);
 }
@@ -216,6 +206,33 @@ export function insertAnchor(path: Path, segmentId: string, t: number) {
   subPath.anchors.splice(index + 1, 0, left[left.length - 1]);
   subPath.segments.splice(index, 1, first, second);
   return { path: toPath(subPaths), anchorId: first.id };
+}
+
+/**
+ * Adds a copy of the anchor on top of it, joined to it by a line with no length, so that the copy
+ * can be dragged away (Alt-drag). The copy goes right after the anchor and takes its out handle,
+ * keeping the id of the segment after it, and the anchor keeps its in handle. At the end of an
+ * open subpath, that's the same as appending an anchor. At the start of one, the copy goes before
+ * the anchor instead, and becomes the start. The other anchors keep their ids. Returns the new path
+ * and the copy's id.
+ */
+export function duplicateAnchor(path: Path, anchorId: string) {
+  const subPaths = toSubPaths(path);
+  const { subPath, index } = findAnchor(subPaths, anchorId);
+  const { anchors, segments } = subPath;
+  const point = anchors[index];
+  const id = uniqueId();
+  if (!subPath.closed && index === 0 && anchors.length > 1) {
+    // The line from the copy ends at the anchor, so it takes the move's id, which was the anchor's.
+    segments.unshift({ type: 'L', id: subPath.moveId, controls: [] });
+    anchors.unshift(point);
+    subPath.moveId = id;
+  } else {
+    // The segment that was after the anchor now starts at the copy, and ends where it did.
+    segments.splice(index, 0, { type: 'L', id, controls: [] });
+    anchors.splice(index + 1, 0, point);
+  }
+  return { path: toPath(subPaths), anchorId: id };
 }
 
 /**
@@ -365,7 +382,8 @@ export function appendAnchor(
 /**
  * Closes an open subpath, with a line back to its first anchor or a curve (see appendAnchor). The
  * first anchor's out handle is moved to firstOut, if it's given, turning the segment after it into
- * a cubic curve.
+ * a cubic curve. Without either, a last anchor on top of the first one is merged into it, which
+ * undoes openSubPath.
  */
 export function closeSubPath(
   path: Path,
@@ -376,6 +394,23 @@ export function closeSubPath(
   const subPaths = toSubPaths(path);
   const subPath = getOpenSubPath(subPaths, subIdx);
   const { anchors } = subPath;
+  const last = anchors.length - 1;
+  if (
+    !controls.c1 &&
+    !controls.c2 &&
+    !firstOut &&
+    last > 1 &&
+    MathUtil.arePointsEqual(anchors[last], anchors[0])
+  ) {
+    // The segment to the last anchor goes back to the first one instead, as the Z if it's a line.
+    anchors.pop();
+    const segment = subPath.segments[subPath.segments.length - 1];
+    if (segment.type === 'L') {
+      segment.type = 'Z';
+    }
+    subPath.closed = true;
+    return toPath(subPaths);
+  }
   if (firstOut && subPath.segments.length) {
     toCubic(subPath, 0);
     subPath.segments[0].controls[0] = firstOut;
@@ -385,6 +420,38 @@ export function closeSubPath(
   subPath.segments.push(segment.type === 'L' ? { ...segment, type: 'Z' } : segment);
   subPath.closed = true;
   return toPath(subPaths);
+}
+
+/**
+ * Opens a closed subpath at its first anchor. The Z becomes a line to a new last anchor on top of
+ * the first one, or, when the segment before the Z already goes back to the first anchor, the Z is
+ * dropped and that segment ends at the new anchor. The shape stays the same, and closeSubPath
+ * closes it again.
+ */
+export function openSubPath(path: Path, subIdx: number) {
+  const subPaths = toSubPaths(path);
+  const subPath = subPaths[subIdx];
+  if (!subPath?.closed) {
+    throw new Error(`No closed subpath at ${subIdx}`);
+  }
+  const last = subPath.segments[subPath.segments.length - 1];
+  if (last.type === 'Z') {
+    // It keeps the Z's id, which is the new anchor's.
+    last.type = 'L';
+  }
+  subPath.anchors.push(subPath.anchors[0]);
+  subPath.closed = false;
+  subPath.closeId = undefined;
+  return toPath(subPaths);
+}
+
+/**
+ * Whether the subpath is closed, which is whether it ends with a Z. One that only ends where it
+ * starts is open, and can be closed.
+ */
+export function isSubPathClosed(path: Path, subIdx: number) {
+  const commands = path.getSubPaths()[subIdx]?.getCommands() ?? [];
+  return commands.length > 1 && commands[commands.length - 1].type === 'Z';
 }
 
 /**
@@ -824,8 +891,9 @@ function deleteAnchor(subPath: EditSubPath, index: number) {
 
 /**
  * Returns one segment that draws about the same shape as two: a line if they're both lines, or
- * curves that draw a line in the same direction, or else a cubic curve with the same tangents at the ends, fitted to points along the two
- * by least squares (Philip Schneider's method, from Graphics Gems).
+ * curves that draw a line in the same direction, or else a cubic curve with the same tangents at
+ * the ends, fitted to points along the two by least squares (Philip Schneider's method, from
+ * Graphics Gems).
  */
 function mergeSegments(first: ReadonlyArray<Point>, second: ReadonlyArray<Point>): Point[] {
   const start = first[0];

@@ -10,7 +10,7 @@ const BIG_STEP = 10;
 
 /**
  * Lists a path's subpaths and their points, with fields for each point's x and y, and buttons to
- * reverse and close subpaths. The path's text field is under "Advanced". Its styles are in
+ * reverse, close, and open subpaths. The path's text field is under "Advanced". Its styles are in
  * components/propertyinput/propertyinput.scss, since the editor's code can't import CSS.
  */
 export function PathInspector({ path, onChange, advanced }: PathInspectorProps) {
@@ -18,9 +18,11 @@ export function PathInspector({ path, onChange, advanced }: PathInspectorProps) 
   const subPaths = path ? path.getSubPaths() : [];
   return (
     <div className="spi-path-inspector">
-      {subPaths.map((subPath, subIdx) => {
+      {subPaths.map((_, subIdx) => {
         const points = anchors.filter(a => a.subIdx === subIdx);
-        const isClosed = subPath.isClosed();
+        // Closed means it ends with a Z, which is what Open takes away, rather than that it ends
+        // where it starts.
+        const isClosed = !!path && PathEdit.isSubPathClosed(path, subIdx);
         return (
           // Subpaths don't have ids, and their order is what identifies them.
           <section className="spi-subpath" key={subIdx} aria-label={`Subpath ${subIdx + 1}`}>
@@ -35,7 +37,15 @@ export function PathInspector({ path, onChange, advanced }: PathInspectorProps) 
               >
                 Reverse
               </button>
-              {!isClosed && (
+              {isClosed ? (
+                <button
+                  type="button"
+                  disabled={!path}
+                  onClick={() => path && onChange(PathEdit.openSubPath(path, subIdx))}
+                >
+                  Open
+                </button>
+              ) : (
                 <button
                   type="button"
                   disabled={!path || points.length < 2}

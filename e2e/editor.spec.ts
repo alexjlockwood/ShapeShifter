@@ -404,6 +404,87 @@ test('adds, deletes, and changes points, with Enter to start and stop', async ({
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(2);
 });
 
+test('moves a handle on its own, and mirrors the other one with Cmd held', async ({
+  page,
+  modifier,
+}) => {
+  await page.goto('/?editor=1');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  // The point at (8, 12) has mirrored handles, at (6, 8) and (10, 16).
+  await dispatchClipboardEvent(
+    page,
+    'paste',
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path id="curve" d="M 2 12 C 2 8 6 8 8 12 C 10 16 14 16 14 12"/>
+    </svg>`,
+  );
+  await expect
+    .poll(() => getPathData(page, 'curve'))
+    .toBe('M 2 12 C 2 8 6 8 8 12 C 10 16 14 16 14 12');
+  // Inside the curve's first bump, which is filled.
+  await click(page, 5, 10.5);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await click(page, 8, 12);
+  await drag(page, [10, 16], [10, 18]);
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'curve')))
+    .toBe('M 2 12 C 2 8 6 8 8 12 C 10 18 14 16 14 12');
+  // Pressing the key once the drag has started mirrors the other handle from then on. (On a Mac,
+  // Chromium makes a press with Ctrl held a right-click, whatever its user agent says.)
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, 10, 18);
+  const middle = await artboardPoint(canvas, 10.5, 17);
+  const end = await artboardPoint(canvas, 11, 16);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(middle.x, middle.y, { steps: 5 });
+  await page.keyboard.down(modifier);
+  await page.mouse.move(end.x, end.y, { steps: 5 });
+  await page.mouse.up();
+  await page.keyboard.up(modifier);
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'curve')))
+    .toBe('M 2 12 C 2 8 5 8 8 12 C 11 16 14 16 14 12');
+});
+
+test('drags a copy out of a point with Alt held, or drops it back to leave nothing to undo', async ({
+  page,
+  modifier,
+}) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await page.keyboard.down('Alt');
+  await drag(page, [6, 2], [9, 1]);
+  await page.keyboard.up('Alt');
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'a')))
+    .toBe('M 2 2 L 6 2 L 9 1 L 6 6 L 2 6 Z');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  const getUndoSteps = () =>
+    page.evaluate(() => (window as any).shapeshifter.store.getState().past.length as number);
+  const steps = await getUndoSteps();
+  const canvas = page.locator('.app-canvas');
+  // Another point, since a press right where the last one was counts as a double-click.
+  const start = await artboardPoint(canvas, 6, 6);
+  const away = await artboardPoint(canvas, 9, 9);
+  await page.keyboard.down('Alt');
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(away.x, away.y, { steps: 10 });
+  expect(
+    await page.evaluate(() => (window as any).shapeshifter.canvasEditor.isEditing() as boolean),
+  ).toBe(true);
+  await page.mouse.move(start.x, start.y, { steps: 10 });
+  await page.mouse.up();
+  await page.keyboard.up('Alt');
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  expect(await getUndoSteps()).toBe(steps);
+});
+
 test('stops editing points on a click on another layer, or on nothing', async ({ page }) => {
   await openSquares(page);
   const point = await artboardPoint(page.locator('.app-canvas'), 4, 4);
@@ -697,6 +778,21 @@ test("edits a path's points, and reverses and closes subpaths, in the inspector"
   // The text field is under "Advanced".
   await page.getByText('Advanced').click();
   await expect(page.locator('input[name="pathData"]')).toHaveValue('M 2 2 L 2 6 L 6 6 L 8 2 Z');
+});
+
+test('opens a subpath and closes it again in the inspector', async ({ page }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  const subPath = page.getByRole('region', { name: 'Subpath 1' });
+  await expect(subPath).toContainText('closed');
+  await subPath.getByRole('button', { name: 'Open' }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 L 2 2');
+  await expect(subPath).toContainText('open');
+  // The new last point is on top of the first one.
+  await expect(page.getByRole('group', { name: /^Point / })).toHaveCount(5);
+  await subPath.getByRole('button', { name: 'Close' }).click();
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  await expect(subPath.getByRole('button', { name: 'Open' })).toBeVisible();
 });
 
 test('joins the ends of a path with Cmd+J', async ({ page, modifier }) => {
