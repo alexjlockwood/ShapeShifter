@@ -177,3 +177,27 @@ test('nudges the selection with the arrow keys, one undo step per key press', as
   await page.keyboard.press(`${modifier}+z`);
   await expect.poll(() => getPathData(page, 'a')).toBe('M 3 2 L 7 2 L 7 6 L 3 6 Z');
 });
+
+test('scales and rotates the selection with its handles', async ({ page, modifier }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  // From the bottom right corner, with the top left one staying put.
+  await drag(page, [6, 6], [10, 8]);
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'a')))
+    .toBe('M 2 2 L 10 2 L 10 8 L 2 8 Z');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+
+  // Just outside the top right corner, the cursor turns into a rotation cursor. A drag to just
+  // outside the bottom right one with Shift held turns it a quarter turn around its middle.
+  const outside = await artboardPoint(page.locator('.app-canvas'), 6.7, 1.3);
+  await page.mouse.move(outside.x, outside.y);
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-editor-cursor', 'rotate-ne');
+  await page.keyboard.down('Shift');
+  await drag(page, [6.7, 1.3], [6.7, 6.7]);
+  await page.keyboard.up('Shift');
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'a')))
+    .toBe('M 6 2 L 6 6 L 2 6 L 2 2 Z');
+});

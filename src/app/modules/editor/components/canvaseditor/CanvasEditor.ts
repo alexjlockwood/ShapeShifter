@@ -35,6 +35,9 @@ const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
   ArrowDown: [0, 1],
 };
 
+// Pressing or releasing these during a drag changes what it does, e.g. Shift keeps a move straight.
+const MODIFIER_KEYS: ReadonlySet<string> = new Set(['Shift', 'Alt', 'Meta', 'Control']);
+
 interface Nudge {
   readonly base: CanvasDocument;
   readonly rendered: VectorLayer;
@@ -147,6 +150,7 @@ class Editor implements CanvasEditor {
     this.nudge = undefined;
     this.removeTestHooks?.();
     this.renderer.clear();
+    delete this.context.root.dataset.editorCursor;
   }
 
   /** Returns the document's vector layer as it's drawn at the current time. */
@@ -158,6 +162,10 @@ class Editor implements CanvasEditor {
   }
 
   private onKeyDown(event: KeyboardEvent) {
+    if (MODIFIER_KEYS.has(event.key)) {
+      this.selectTool.onModifiersChange(getModifiers(event));
+      return undefined;
+    }
     const target = event.target instanceof Element ? event.target : undefined;
     if (
       this.isActionMode ||
@@ -205,6 +213,9 @@ class Editor implements CanvasEditor {
   }
 
   private onKeyUp(event: KeyboardEvent) {
+    if (MODIFIER_KEYS.has(event.key)) {
+      this.selectTool.onModifiersChange(getModifiers(event));
+    }
     if (ARROWS[event.key]) {
       this.endNudge();
     }
@@ -251,18 +262,27 @@ class Editor implements CanvasEditor {
     if (this.isActionMode) {
       // Action mode has its own selections, drawn by the canvases.
       this.renderer.clear();
+      delete this.context.root.dataset.editorCursor;
       return;
     }
     this.renderer.draw(camera, {
       vectorLayer: this.vectorLayer,
       hoveredLayerId: this.selectTool.getHoveredLayerId(),
       selectedLayerIds: this.selectedLayerIds,
+      isShowingHandles: this.selectTool.isShowingHandles(),
       marquee: this.selectTool.getMarquee(),
     });
+    // The panel's styles turn this into a cursor (components/canvas/canvas.scss).
+    const cursor = this.selectTool.getCursor();
+    if (cursor) {
+      this.context.root.dataset.editorCursor = cursor;
+    } else {
+      delete this.context.root.dataset.editorCursor;
+    }
   }
 }
 
-function getModifiers(event: PointerEvent): Modifiers {
+function getModifiers(event: MouseEvent | KeyboardEvent): Modifiers {
   return {
     shift: event.shiftKey,
     alt: event.altKey,

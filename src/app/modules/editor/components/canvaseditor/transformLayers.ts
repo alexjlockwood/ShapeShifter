@@ -215,3 +215,63 @@ export function duplicateLayers(
       : hiddenLayerIds,
   };
 }
+
+/**
+ * Transforms the layers by a matrix in viewport coordinates, with their animations. Every path in
+ * them is transformed in its own coordinates, along with its path blocks. Groups keep their own
+ * transforms, which can't express every matrix: scaling a rotated group along one axis skews it.
+ */
+export function transformLayers(
+  document: CanvasDocument,
+  rendered: VectorLayer,
+  layerIds: Iterable<string>,
+  matrix: Matrix,
+): CanvasDocument {
+  if (matrix.equals(Matrix.identity())) {
+    return document;
+  }
+  // Every path in the layers, and the matrix in its coordinates.
+  const transforms = new Map<string, Matrix>();
+  for (const layerId of getTopmostLayerIds(document.vectorLayer, layerIds)) {
+    const layer = document.vectorLayer.findLayerById(layerId);
+    for (const current of layer ? LayerUtil.runPreorderTraversal(layer) : []) {
+      if (!(current instanceof PathLayer || current instanceof ClipPathLayer)) {
+        continue;
+      }
+      const toViewport = LayerUtil.getCanvasTransformForLayer(rendered, current.id);
+      const fromViewport = toViewport.invert();
+      if (fromViewport) {
+        // Into viewport coordinates, through the matrix, and back.
+        transforms.set(current.id, fromViewport.dot(matrix).dot(toViewport));
+      }
+    }
+  }
+  let { animation } = document;
+  const vectorLayer = mapLayers(document.vectorLayer, layer => {
+    const local = transforms.get(layer.id);
+    if (!local || !(layer instanceof PathLayer || layer instanceof ClipPathLayer)) {
+      return layer;
+    }
+    const transform = (path: Path) => path.mutate().transform(local).build();
+    animation = mapBlocks(animation, layer.id, 'pathData', transform);
+    const clone = layer.clone();
+    if (clone.pathData) {
+      clone.pathData = transform(clone.pathData);
+    }
+    return clone;
+  });
+  return { vectorLayer, animation };
+}
+
+/** Returns a matrix that scales around a point. */
+export function scalingAround({ x, y }: { x: number; y: number }, sx: number, sy: number) {
+  return new Matrix(sx, 0, 0, sy, x - sx * x, y - sy * y);
+}
+
+/** Returns a matrix that rotates around a point, clockwise on the screen for positive degrees. */
+export function rotationAround({ x, y }: { x: number; y: number }, degrees: number) {
+  const radians = (degrees * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  return new Matrix(cos, sin, -sin, cos, x - cos * x + sin * y, y - sin * x - cos * y);
+}

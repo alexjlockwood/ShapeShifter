@@ -53,9 +53,10 @@ rest of the app (`src/test/lazyChunks.spec.ts` checks this). Its gestures show t
 `components/canvas/CanvasPreview.ts`, which the main canvas draws and hit tests, rather than
 dispatching on every pointer move. A gesture sets a working copy of the whole document (the layers
 and the animation), and commits it once, as its own undo step. Anything else that changes the
-document or the time cancels it. Moving layers moves their animation blocks with them
-(`components/canvaseditor/transformLayers.ts`), but a path that an animation block sets at the
-current time can't be reshaped yet (`canEditPath`).
+document or the time cancels it. Moving layers moves their animation blocks with them, and scaling
+or rotating them transforms every path in them, in its own coordinates, since group transforms can't
+express every matrix (`components/canvaseditor/transformLayers.ts`). A path that an animation block
+sets at the current time can't be reshaped yet (`canEditPath`).
 
 With the editor loaded, the main canvas takes the pointer anywhere in its panel and gives it to the
 editor (`components/canvaseditor/CanvasEditor.ts`), except in action mode, and the panel's clicks
