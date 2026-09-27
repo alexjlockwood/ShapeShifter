@@ -119,6 +119,13 @@ describe('ClipboardService', () => {
       expect(blocks[1].layerId).toBe(blocks[0].layerId);
     });
 
+    it('selects the pasted blocks', () => {
+      paste(copyStrokeWidthBlock('path'));
+      const blocks = getBlocks();
+      expect(blocks).toHaveLength(2);
+      expect(services.layerTimelineService.getSelectedBlocks()).toEqual([blocks[1]]);
+    });
+
     it("doesn't paste onto a layer that only has the same id in another tab", () => {
       const copied = copyStrokeWidthBlock('path');
       const other = addLayer('other');

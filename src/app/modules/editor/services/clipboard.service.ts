@@ -137,7 +137,7 @@ export class ClipboardService {
             return false;
           }
           trackEvent('paste_blocks');
-          this.layerTimelineService.addBlocks(blocks, false);
+          this.layerTimelineService.addBlocks(blocks);
         } else {
           trackEvent('paste_unknown_json');
         }

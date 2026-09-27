@@ -639,6 +639,10 @@ export class LayerTimelineService {
     return animation;
   }
 
+  /**
+   * Adds blocks in the gaps closest to their current times. With autoSelectBlocks, the added
+   * blocks become the selection. Otherwise the selection stays as it is.
+   */
   addBlocks(
     blocks: Array<{
       id?: string;
@@ -660,6 +664,10 @@ export class LayerTimelineService {
         animation = anim;
         addedBlocks.push(block);
       }
+    }
+    if (!autoSelectBlocks) {
+      this.store.dispatch(new SetAnimation(animation));
+      return;
     }
     this.store.dispatch(
       new BatchAction(
