@@ -180,7 +180,8 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
    handles, indexed by subpath and command, for drawing and hit testing. Multiple subpaths are
    supported from the start. Moving points and handles never changes a path's structure, so it
    can't break a morph. The operations that do (adding or deleting points, and turning a line
-   into a curve) are checked against the other end of the morph.
+   into a curve) are to be checked against the other end of the morph in phase 5. Until then,
+   a path that a path block sets at the current time can't be edited at all.
 
 6. **Tools as state machines,** ported from `GestureTool` and kept in the lazy chunk. They get the
    first chance at pointer events when the flag is on and action mode is off.
@@ -230,9 +231,11 @@ while held and plays or pauses when tapped. Repeat and slow motion keep their to
 
 ## Roadmap
 
-Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395) and phase 1 (#396 to #399).
-Phase 1's snapping only covers the artboard, other paths' bounds, and the pixel grid; guides come
-in phase 4.
+Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395), phase 1 (#396 to #399),
+and phase 2 (#400). Phase 1's snapping only covers the artboard, other paths' bounds, and the
+pixel grid; guides come in phase 4. In phase 2, points snap to those, to the path's other points,
+and onto the closest curve. Editing a path has no cursors of its own yet, so hovering a segment or
+holding Cmd over one looks the same as anywhere else.
 
 Phase 0 is the foundation, and it's split into small pull requests:
 

@@ -52,6 +52,8 @@ export interface SelectToolContext {
     cancel(): void;
   };
   redraw(): void;
+  /** Starts editing the path's points, e.g. on a double-click, and returns whether it did. */
+  editPath?(layerId: string): boolean;
 }
 
 /** The keys held with a press or a move. What they mean depends on the gesture. */
@@ -139,7 +141,8 @@ type State =
  *   of them, so that it can still be moved.
  * - Moves and handles snap to the artboard, the other paths, and the pixel grid, unless Ctrl is
  *   held (see snapping.ts).
- * - Hovering outlines the path under the pointer.
+ * - Hovering outlines the path under the pointer, and double-clicking it edits its points
+ *   (PathEditTool).
  */
 export class SelectTool {
   private state: State = { type: 'idle' };
@@ -189,13 +192,18 @@ export class SelectTool {
     return toRect(this.state.start, this.state.current);
   }
 
-  onPress(point: Point, modifiers: Modifiers) {
+  onPress(point: Point, modifiers: Modifiers, clickCount = 1) {
     this.lastPoint = point;
     const hitLayerId = this.hitTest(point)?.id;
     const bounds = this.getSelectionBounds();
     const handle = bounds && this.hitTestHandles(bounds, point, hitLayerId);
     if (bounds && handle) {
       this.startTransform(point, bounds, handle);
+      return;
+    }
+    if (clickCount === 2 && hitLayerId && this.context.editPath?.(hitLayerId)) {
+      // A path that can't be edited, e.g. because it's animated, gets the press as usual.
+      this.state = { type: 'idle' };
       return;
     }
     let didSelect = false;

@@ -211,3 +211,74 @@ test('snaps moves to other layers and the pixel grid', async ({ page }) => {
   await drag(page, [8, 4], [16.4, 16.3]);
   await expect.poll(() => getPathData(page, 'a')).toBe('M 14 14 L 18 14 L 18 18 L 14 18 Z');
 });
+
+function isEditingPath(page: Page) {
+  return page.evaluate(() => (window as any).shapeshifter.canvasEditor.isEditingPath() as boolean);
+}
+
+test("edits a path's points after a double-click, until Escape", async ({ page, modifier }) => {
+  await openSquares(page);
+  const point = await artboardPoint(page.locator('.app-canvas'), 4, 4);
+  await page.mouse.dblclick(point.x, point.y);
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a']);
+  // Drags the top right point up and to the right, where it snaps to whole units.
+  await drag(page, [6, 2], [8.1, 0.9]);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 1 L 6 6 L 2 6 Z');
+  // Esc stops editing, and undo puts the point back in one step.
+  await page.keyboard.press('Escape');
+  await expect.poll(() => isEditingPath(page)).toBe(false);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a']);
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+});
+
+test('adds, deletes, and changes points, with Enter to start and stop', async ({ page }) => {
+  await openSquares(page);
+  await click(page, 4, 4);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  // Clicking a segment with Shift held adds a point in its middle, and selects it.
+  await click(page, 3, 2, { shift: true });
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 4 2 L 6 2 L 6 6 L 2 6 Z');
+  // 2 makes it a mirrored point, with handles along the top.
+  await page.keyboard.press('2');
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'a')))
+    .toBe('M 2 2 C 3 2 3 2 4 2 C 5 2 5 2 6 2 L 6 6 L 2 6 Z');
+  // Backspace deletes it, and the segments on either side become one again.
+  await page.keyboard.press('Backspace');
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  // Tab selects the first point, and the arrow keys move it.
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 1 2 L 6 2 L 6 6 L 2 6 Z');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(false);
+  // Without points to edit, Backspace deletes the layer again.
+  await page.keyboard.press('Backspace');
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(2);
+});
+
+test('stops editing points on a click on another layer, or on nothing', async ({ page }) => {
+  await openSquares(page);
+  const point = await artboardPoint(page.locator('.app-canvas'), 4, 4);
+  await page.mouse.dblclick(point.x, point.y);
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  // A click on another layer stops editing, and selects it.
+  await click(page, 12, 4);
+  await expect.poll(() => isEditingPath(page)).toBe(false);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['b']);
+  // With a point selected, a click on nothing only clears the point.
+  const b = await artboardPoint(page.locator('.app-canvas'), 12, 4);
+  await page.mouse.dblclick(b.x, b.y);
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await click(page, 10, 2);
+  await click(page, 20, 20);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['b']);
+  expect(await isEditingPath(page)).toBe(true);
+  // Without one, it stops editing and clears the selection.
+  await click(page, 20, 20);
+  await expect.poll(() => isEditingPath(page)).toBe(false);
+  await expect.poll(() => getSelectedNames(page)).toEqual([]);
+});
