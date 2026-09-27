@@ -47,8 +47,16 @@
                 .slt-timeline-block-edge-end {
                     right: 0;
                 }
+                // In action mode, only the block being edited (the selected one) stands out.
                 &.is-disabled {
                     cursor: default;
+                    .slt-timeline-block-edge {
+                        cursor: inherit;
+                    }
+                    &:not(.is-selected, .is-selected-with-error) {
+                        opacity: 0.3;
+                        cursor: not-allowed;
+                    }
                 }
             }
         }

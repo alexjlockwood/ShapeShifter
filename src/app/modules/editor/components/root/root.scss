@@ -8,14 +8,57 @@
     user-select: none;
 }
 
+// Action mode's floating bar (components/toolbar/actionbar.scss) goes over the bottom of the
+// panels, and the room under them keeps it clear of the artboards when they fit.
+$action-bar-room: 12px;
+$panel-border: 1px;
+// The margins around a fit artboard, on both sides, and the panel's borders.
+$fit-width: 2 * 36px + 2 * $panel-border;
+
 // Each canvas fills its panel. In action mode, the three panels are only as wide as their
 // artboards and the margins around them (FIT_MARGIN in components/canvas/CanvasCamera.ts), so the
-// artboards stay next to each other in a wide window. CanvasController sets the aspect ratio.
+// artboards stay next to each other in a wide window, with a gap and a border between them. Root
+// sets the aspect ratio. Container query units are relative to the row's content box.
 .canvas-row {
+    position: relative;
     justify-content: center;
     container-type: size;
-    &.is-action-mode .app-canvas {
-        max-width: calc((100cqh - 72px) * var(--viewport-aspect-ratio, 1) + 72px);
+    .canvas-panel {
+        position: relative;
+        display: flex;
+        flex: 1 1 0;
+        min-width: 0;
+    }
+    &.is-action-mode {
+        gap: 8px;
+        padding: 8px 8px $action-bar-room;
+        .canvas-panel {
+            box-sizing: border-box;
+            max-width: calc(
+                (100cqh - #{$fit-width}) * var(--viewport-aspect-ratio, 1) + #{$fit-width}
+            );
+            border: $panel-border solid;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+    }
+    // In the margin above the artboard when it fits. Clicks go to the canvas under it.
+    .canvas-panel-label {
+        position: absolute;
+        z-index: 1;
+        top: 6px;
+        left: 6px;
+        max-width: calc(100% - 12px);
+        box-sizing: border-box;
+        padding: 3px 8px;
+        border-radius: 10px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        pointer-events: none;
     }
 }
 

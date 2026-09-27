@@ -1,0 +1,73 @@
+// Action mode's floating bar, over the bottom of the panels. Along with the room that
+// components/root/root.scss leaves under them, it stays within the margin under the artboards
+// when they fit (FIT_MARGIN in components/canvas/CanvasCamera.ts).
+.action-bar {
+    position: absolute;
+    z-index: 5;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: calc(100% - 16px);
+    padding: 3px;
+    border-radius: 20px;
+    box-sizing: border-box;
+    overflow-x: auto;
+    white-space: nowrap;
+    // No commands apply to what's selected.
+    &:empty {
+        display: none;
+    }
+    .action-bar-button {
+        flex: 0 0 auto;
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 17px;
+        text-transform: none;
+        font-size: 14px;
+        .MuiButton-startIcon {
+            margin-right: 6px;
+        }
+        .ss-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+        }
+    }
+}
+
+// The status strip above the panels.
+.action-mode-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    min-height: 36px;
+    padding: 2px 16px;
+    font-size: 13px;
+    .action-mode-status-icon {
+        flex: 0 0 auto;
+        width: 20px;
+        height: 20px;
+    }
+    .action-mode-status-summary {
+        font-weight: 500;
+    }
+    .action-mode-status-auto-fix {
+        flex: 0 0 auto;
+        text-transform: none;
+        .ss-icon {
+            width: 18px;
+            height: 18px;
+        }
+    }
+    .action-mode-status-hint {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}

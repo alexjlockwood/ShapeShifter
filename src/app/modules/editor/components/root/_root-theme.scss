@@ -3,9 +3,20 @@
 
 @mixin ss-root-theme($theme) {
     $background: map.get($theme, ss-background);
+    $foreground: map.get($theme, ss-foreground);
     $accent: map.get($theme, accent);
     div.display-container {
         background-color: mat-color($background, base300);
+    }
+    // The action mode panels, which stand out from the gaps between them.
+    .canvas-row.is-action-mode .canvas-panel {
+        border-color: mat-color($foreground, disabled-text);
+        background-color: mat-color($background, base200);
+    }
+    .canvas-row .canvas-panel-label {
+        background-color: mat-color($background, base100);
+        color: mat-color($foreground, primary-text);
+        box-shadow: 0 1px 3px rgba(black, 0.3);
     }
     .file-drop-target {
         &.is-dragging-over::after {

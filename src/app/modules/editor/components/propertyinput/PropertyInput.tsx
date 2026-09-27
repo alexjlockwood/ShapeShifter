@@ -9,10 +9,9 @@ import { Splitter } from 'app/modules/editor/components/splitter';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useMenu } from 'app/modules/editor/hooks/useMenu';
-import { ActionMode } from 'app/modules/editor/model/actionmode';
 import type { Layer } from 'app/modules/editor/model/layers';
 import { EnumProperty } from 'app/modules/editor/model/properties';
-import type { PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
 import { ShortcutService } from 'app/modules/editor/services';
@@ -117,7 +116,9 @@ export function PropertyInput() {
               onAnimateLayerClick={onAnimateLayerClick}
               onStartActionModeClick={() => {
                 trackEvent('action_mode_start');
-                actionModeService.setActionMode(ActionMode.Selection);
+                if (model.model instanceof PathAnimationBlock) {
+                  actionModeService.editMorph(model.model.id);
+                }
               }}
             />
             <div className="spi-body fx-column fx-flex">

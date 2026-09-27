@@ -221,11 +221,6 @@ export class CanvasController extends DestroyableMixin() {
         )
         .subscribe(viewport => {
           this.viewport = viewport;
-          // Root's styles size the canvases in action mode by it.
-          const aspectRatio = viewport.w / viewport.h;
-          if (Number.isFinite(aspectRatio) && aspectRatio > 0) {
-            this.elements.root.style.setProperty('--viewport-aspect-ratio', `${aspectRatio}`);
-          }
           this.layout();
         }),
     );

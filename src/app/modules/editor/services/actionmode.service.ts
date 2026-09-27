@@ -26,24 +26,83 @@ import {
   getActionModeSelections,
   getPairedSubPaths,
   getUnpairedSubPath,
+  isActionMode,
 } from 'app/modules/editor/store/actionmode/selectors';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
+import { createSelector } from 'app/modules/editor/store/selectors';
 import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
+import { getSingleSelectedPathBlock } from 'app/modules/editor/store/timeline/selectors';
 import { findIndex, isEqual, remove } from 'lodash-es';
+import { Subscription } from 'rxjs';
 import { LayerTimelineService } from './layertimeline.service';
 import { Duration, SnackBarService } from './snackbar.service';
+
+// True when action mode has lost the block it edits. The timeline is disabled in action mode, so
+// that mostly happens through undo and redo.
+const hasLostEditedBlock = createSelector(
+  [isActionMode, getSingleSelectedPathBlock],
+  (actionMode, block) => actionMode && !block,
+);
 
 /**
  * A simple service that provides an interface for making action mode changes.
  */
 export class ActionModeService {
+  private readonly subscription = new Subscription();
+
+  // The services are created once, outside of React (src/main.tsx), so StrictMode can't subscribe
+  // twice.
   constructor(
     private readonly store: Store<State>,
     private readonly layerTimelineService: LayerTimelineService,
     private readonly snackBarService: SnackBarService,
-  ) {}
+  ) {
+    this.subscription.add(
+      store.select(hasLostEditedBlock).subscribe(hasLost => {
+        if (hasLost) {
+          // The canvases and the toolbar have nothing to show without the block.
+          store.dispatch(new SetActionMode(ActionMode.None));
+        }
+      }),
+    );
+  }
+
+  dispose() {
+    this.subscription.unsubscribe();
+  }
 
   // Action mode.
+
+  /**
+   * Selects the path block and edits its morph in action mode, which moves the current time to
+   * the block's start (LayerTimelineController). Returns false, and changes nothing, if the block
+   * isn't a path block, or if one of its paths is empty, which says so.
+   */
+  editMorph(blockId: string) {
+    const block = this.layerTimelineService.getAnimation().blocks.find(b => b.id === blockId);
+    if (!(block instanceof PathAnimationBlock)) {
+      console.warn(`Block ${blockId} isn't a path block, so it has no morph to edit`);
+      return false;
+    }
+    if (!block.fromValue?.getPathString() || !block.toValue?.getPathString()) {
+      this.snackBarService.show(
+        'Set both of the paths before editing the morph',
+        'Dismiss',
+        Duration.Short,
+      );
+      return false;
+    }
+    if (this.isActionMode()) {
+      if (this.getActivePathBlock()?.id === blockId) {
+        return true;
+      }
+      // The selections, hover, and pairings refer to the other block's paths.
+      this.setActionMode(ActionMode.None);
+    }
+    this.layerTimelineService.selectBlock(blockId, true);
+    this.setActionMode(ActionMode.Selection);
+    return true;
+  }
 
   isActionMode() {
     return this.getActionMode() !== ActionMode.None;

@@ -230,3 +230,12 @@
         cursor: grabbing;
     }
 }
+
+// Zoomed in, rulers in action mode would cover the top and left of each panel, along with its
+// label and the points there, and the side panels' rulers would repeat the preview's.
+.canvas-row.is-action-mode .app-canvas {
+    .canvas-ruler.is-pinned,
+    .canvas-ruler-corner {
+        display: none;
+    }
+}

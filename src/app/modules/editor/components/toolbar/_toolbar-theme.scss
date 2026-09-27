@@ -4,7 +4,9 @@
 @mixin ss-toolbar-theme($theme) {
     $primary: map.get($theme, primary);
     $foreground: map.get($theme, ss-foreground);
+    $background: map.get($theme, ss-background);
     $accent-fill: map.get($theme, accent-fill);
+    $accent-text: map.get($theme, accent-text);
     $is-dark: map.get($theme, is-dark);
     .toolbar {
         background-color: mat-color($primary);
@@ -22,15 +24,56 @@
                 }
             }
         }
+    }
+    // Action mode's floating bar is the accent fill, like the app bar, with white labels.
+    .action-bar {
+        background-color: $accent-fill;
+        .action-bar-button {
+            color: white;
+            &:hover {
+                background-color: rgba(white, 0.12);
+            }
+            &.Mui-disabled {
+                color: mat-color(
+                    $foreground,
+                    if(sass($is-dark): disabled-text; else: disabled-text-inverse)
+                );
+            }
+        }
         // An activated mode shows as a white pill behind a blue icon, rather than as an icon of
         // another color, which couldn't contrast with both the blue and the white icons around it.
-        button.activated {
+        .action-bar-button.activated {
             background-color: white;
+            color: $accent-fill;
             &:hover {
                 background-color: rgba(white, 0.85);
             }
             .ss-icon {
                 color: $accent-fill;
+            }
+        }
+    }
+    // The status strip. Its colors pass WCAG AA on its background in both themes.
+    .action-mode-status {
+        background-color: mat-color($background, base50);
+        border-bottom: 1px solid mat-color($foreground, divider);
+        color: mat-color($foreground, primary-text);
+        .action-mode-status-hint {
+            color: mat-color($foreground, secondary-text);
+        }
+        .action-mode-status-auto-fix {
+            color: $accent-text;
+        }
+        &.is-morphable {
+            .action-mode-status-icon,
+            .action-mode-status-summary {
+                color: if(sass($is-dark): map.get($mat-green, 300); else: map.get($mat-green, 800));
+            }
+        }
+        &.is-broken {
+            .action-mode-status-icon,
+            .action-mode-status-summary {
+                color: if(sass($is-dark): map.get($mat-red, 200); else: map.get($mat-red, 800));
             }
         }
     }
