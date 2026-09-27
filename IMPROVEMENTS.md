@@ -56,8 +56,9 @@ and editing paths on the canvas. This is a survey only; nothing here has been im
    reducer that prunes them is half a day to a day.
 6. **No validation at data boundaries** (`fromJSON`, paste, imports) is confirmed, and connects
    directly to the silent-import-failure findings above. About a day.
-7. **UI state lives in the undoable document state** is confirmed still true and is tracked as
-   an open bug in `BUGS.md` (`store/undoredo/metareducer.ts`). 1 to 2 days.
+7. **UI state lives in the undoable document state.** The `paper` slice is now left out of the
+   undo history, but playback and action mode state are still restored by undo (STORE-1 in
+   `docs/bugs/store-and-services.md`). 1 to 2 days.
 8. **Class-instance redux actions and imperative service construction.**
    `services/createEditorServices.ts` wires every service together by hand. No new scope found;
    still open-ended.
