@@ -20,16 +20,6 @@ import { getAncestorIds, hasBlocks, type LayerDocument } from './pathOpLayers';
 /** How long a new morph takes, in ms. */
 export const MORPH_DURATION = 300;
 
-const TRANSFORM_PROPERTIES = new Set([
-  'rotation',
-  'scaleX',
-  'scaleY',
-  'pivotX',
-  'pivotY',
-  'translateX',
-  'translateY',
-]);
-
 type StyleProperty = 'fillColor' | 'fillAlpha' | 'strokeColor' | 'strokeAlpha' | 'strokeWidth';
 
 interface BlockValues {
@@ -58,7 +48,7 @@ export function getMorphFromRefusal(document: LayerDocument, fromId: string) {
   if (!from.pathData?.getPathString()) {
     return `${from.name} has no path`;
   }
-  if (hasTransformBlocks(document, fromId)) {
+  if (LayerUtil.hasTransformBlocks(document.animation, fromId)) {
     return `${from.name}'s transform is animated`;
   }
   return undefined;
@@ -381,12 +371,6 @@ function normalizeColor(color: string | undefined) {
 function transparent(color: string) {
   const parsed = ColorUtil.parseAndroidColor(color);
   return parsed ? ColorUtil.toAndroidString({ ...parsed, a: 0 }) : '';
-}
-
-function hasTransformBlocks({ animation }: LayerDocument, layerId: string) {
-  return animation.blocks.some(
-    block => block.layerId === layerId && TRANSFORM_PROPERTIES.has(block.propertyName),
-  );
 }
 
 function getBlocks(

@@ -123,6 +123,13 @@ describe('morphIntoLayer', () => {
     });
   });
 
+  it("maps through the paths' own transforms, like their groups'", () => {
+    const a = path('a', SQUARE, { translateX: 5 });
+    const b = path('b', 'M 0 0 L 4 0 L 4 4 L 0 4 Z', { scaleX: 2, scaleY: 2 });
+    const { pathBlock } = morph(document([a, b]), a.id, b.id);
+    expect(pathBlock.toValue?.getBoundingBox()).toMatchObject({ l: -5, t: 0, r: 3, b: 8 });
+  });
+
   it("starts from the path as it is at the block's start, after its last path block", () => {
     const a = path('a', SQUARE);
     const b = path('b', TRIANGLE);
