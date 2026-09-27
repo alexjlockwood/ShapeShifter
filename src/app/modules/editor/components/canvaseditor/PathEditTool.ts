@@ -193,6 +193,24 @@ export class PathEditTool {
     this.context.redraw();
   }
 
+  /**
+   * Joins the two selected points, if they're ends of open subpaths (Cmd+J): the ends of one
+   * subpath close it, and ends of two subpaths join them into one. Returns whether it did.
+   */
+  joinSelected() {
+    const [first, second, ...rest] = this.getSelectedAnchorIds();
+    if (!first || !second || rest.length) {
+      return false;
+    }
+    let isJoined = false;
+    this.commitEdit(base => {
+      const joined = PathEdit.joinEnds(base, first, second);
+      isJoined = !!joined;
+      return joined ?? base;
+    });
+    return isJoined;
+  }
+
   selectAll() {
     const path = this.getPath();
     this.setSelectedAnchorIds(new Set(path ? PathEdit.getAnchors(path).map(a => a.id) : []));

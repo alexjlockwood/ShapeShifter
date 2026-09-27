@@ -82,7 +82,12 @@ drawing tools (`components/canvaseditor/PenTool.ts`, `components/canvaseditor/Pe
 tool, go to `components/canvaseditor/GuideTool.ts` first. The guides are part of the document, in
 the store (`store/guides/`, saved with the project), and the editor's settings (the rulers, the
 pixel grid, and snapping to it) are preferences in `services/canvassettings.service.ts`. Alt
-measures distances (`components/canvaseditor/measuring.ts`).
+measures distances (`components/canvaseditor/measuring.ts`). Boolean operations and outline
+stroke are in `components/canvaseditor/pathOps.ts`, which loads Skia's PathKit (`pathkit-wasm`)
+the first time it's used; `vite.config.ts` puts it with the editor's assets. The editor also
+exports `components/canvaseditor/PathInspector.tsx`, which the property inspector shows for paths
+once `components/canvas/useCanvasEditorModule.ts` has loaded it. Its styles are in
+`components/propertyinput/propertyinput.scss`, since the editor's code can't import CSS.
 
 ## Styling
 

@@ -23,15 +23,25 @@ interface GestureEvent extends UIEvent {
   readonly clientY: number;
 }
 
+/** A pinch with two fingers on a touch screen, from where it started. */
+interface TouchPinch {
+  readonly camera: CanvasCamera;
+  readonly distance: number;
+  readonly middle: Point;
+}
+
 /**
  * Zooms and pans the canvas, like in Figma: pinching or scrolling with Cmd or Ctrl held zooms
  * around the pointer, scrolling pans, and dragging with the space bar or the middle button held
- * pans too. It listens to the whole panel, and takes a pan's pointer events before the artboard
- * can start a gesture with them.
+ * pans too. On a touch screen, two fingers pinch to zoom and drag to pan. It listens to the whole
+ * panel, and takes a pan's pointer events before the artboard can start a gesture with them.
  */
 export class CanvasNavigation {
   private pan: { readonly pointerId: number; last: Point } | undefined;
   private pinchStartScale: number | undefined;
+  // The fingers on the panel, in client coordinates, and the pinch once there are two.
+  private readonly touches = new Map<number, Point>();
+  private touchPinch: TouchPinch | undefined;
   private ignoreNextClick = false;
   private removeListeners: ReadonlyArray<() => void> = [];
   private subscription: Subscription | undefined;
@@ -40,6 +50,8 @@ export class CanvasNavigation {
     private readonly root: HTMLElement,
     private readonly canvasViewportService: CanvasViewportService,
     private readonly getCamera: () => CanvasCamera | undefined,
+    // Cancels what the first finger started, when a second one starts a pinch.
+    private readonly onPinchStart: () => void = () => {},
   ) {}
 
   init() {
@@ -65,6 +77,10 @@ export class CanvasNavigation {
       }),
       // Before the artboard sees the press, so that it doesn't start a gesture too.
       on(root, 'pointerdown', event => this.onPointerDown(event), { capture: true }),
+      on(root, 'pointermove', event => this.onTouchMove(event), { capture: true }),
+      on(root, 'pointerup', event => this.onTouchEnd(event), { capture: true }),
+      on(root, 'pointercancel', event => this.onTouchEnd(event), { capture: true }),
+      on(root, 'lostpointercapture', event => this.onTouchCaptureLost(event), { capture: true }),
       on(root, 'pointermove', event => this.onPointerMove(event)),
       on(root, 'pointerup', event => this.endPan(event.pointerId)),
       on(root, 'pointercancel', event => this.endPan(event.pointerId)),
@@ -159,6 +175,13 @@ export class CanvasNavigation {
 
   private onPointerDown(event: PointerEvent) {
     this.ignoreNextClick = false;
+    if (event.pointerType === 'touch') {
+      this.touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (this.touchPinch || this.touches.size === 2) {
+        this.startTouchPinch(event);
+        return undefined;
+      }
+    }
     const isPan =
       event.isPrimary &&
       (event.button === 1 || (event.button === 0 && this.canvasViewportService.isSpaceHeld()));
@@ -194,6 +217,90 @@ export class CanvasNavigation {
     this.pan.last = { x: event.clientX, y: event.clientY };
     this.canvasViewportService.setView(camera.panBy(event.clientX - x, event.clientY - y));
     this.canvasViewportService.notePan();
+  }
+
+  /** Starts pinching when a second finger touches the panel, or ignores a third one. */
+  private startTouchPinch(event: PointerEvent) {
+    // The canvas's gesture doesn't see the finger, or the rest of the pinch.
+    event.stopImmediatePropagation();
+    const camera = this.getCamera();
+    if (!this.touchPinch && camera) {
+      // Before the panel captures the fingers, since canceling releases the first one.
+      this.onPinchStart();
+    }
+    // So that the panel gets the fingers' moves and lifts, wherever they go.
+    for (const pointerId of this.touches.keys()) {
+      try {
+        this.root.setPointerCapture(pointerId);
+      } catch {
+        // The pointer is already gone, e.g. for a synthetic event.
+      }
+    }
+    if (this.touchPinch || !camera) {
+      return;
+    }
+    const [a, b] = [...this.touches.values()];
+    this.touchPinch = {
+      camera,
+      distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+      middle: this.toPanelPoint({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 }),
+    };
+    this.canvasViewportService.notePan();
+  }
+
+  /** Zooms around the fingers as they spread, and pans with them. */
+  private onTouchMove(event: PointerEvent) {
+    if (event.pointerType !== 'touch' || !this.touches.has(event.pointerId)) {
+      return;
+    }
+    this.touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const pinch = this.touchPinch;
+    if (!pinch) {
+      return;
+    }
+    event.stopImmediatePropagation();
+    const [a, b] = [...this.touches.values()];
+    if (!a || !b) {
+      return;
+    }
+    const distance = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+    const middle = this.toPanelPoint({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 });
+    const { camera } = pinch;
+    const zoomed = CanvasCamera.create({
+      panel: camera.panel,
+      viewport: camera.viewport,
+      pixelRatio: camera.pixelRatio,
+      view: camera.zoomAround(pinch.middle, (camera.scale * distance) / pinch.distance),
+    });
+    this.canvasViewportService.setView(
+      zoomed.panBy(middle.x - pinch.middle.x, middle.y - pinch.middle.y),
+    );
+  }
+
+  /**
+   * Starting a pinch moves the fingers' capture to the panel, from where the canvas or the browser
+   * had it, which isn't a finger lifting. Otherwise, e.g. if the panel is removed, it is.
+   */
+  private onTouchCaptureLost(event: PointerEvent) {
+    if (!this.root.hasPointerCapture(event.pointerId)) {
+      this.onTouchEnd(event);
+    } else if (this.touchPinch && this.touches.has(event.pointerId)) {
+      event.stopImmediatePropagation();
+    }
+  }
+
+  /** Ends the pinch once fewer than two fingers are left. The one left doesn't start a gesture. */
+  private onTouchEnd(event: PointerEvent) {
+    if (event.pointerType !== 'touch' || !this.touches.delete(event.pointerId)) {
+      return;
+    }
+    if (this.touchPinch) {
+      event.stopImmediatePropagation();
+      if (this.touches.size < 2) {
+        this.touchPinch = undefined;
+        this.ignoreNextClick = true;
+      }
+    }
   }
 
   /** Returns whether there was a pan to end, for the pointer if one is given. */

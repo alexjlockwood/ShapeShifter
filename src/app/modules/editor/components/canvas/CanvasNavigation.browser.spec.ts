@@ -64,6 +64,48 @@ describe('CanvasNavigation', () => {
     return event;
   }
 
+  it('zooms and pans with two fingers, and cancels what the first one started', () => {
+    navigation.dispose();
+    const onPinchStart = vi.fn<() => void>();
+    navigation = new CanvasNavigation(root, service, camera, onPinchStart);
+    navigation.init();
+    const pressed: number[] = [];
+    artboard.addEventListener('pointerdown', event => pressed.push(event.pointerId));
+    const touch = (type: string, pointerId: number, clientX: number, clientY: number) =>
+      pointer(type, artboard, {
+        pointerId,
+        pointerType: 'touch',
+        isPrimary: pointerId === 1,
+        clientX,
+        clientY,
+      });
+    const before = camera();
+    touch('pointerdown', 1, 150, 150);
+    touch('pointerdown', 2, 250, 150);
+    // The second finger's press doesn't reach the artboard, and the first one's gesture stops.
+    expect(pressed).toEqual([1]);
+    expect(onPinchStart).toHaveBeenCalledTimes(1);
+    // The panel takes both fingers' capture, from the artboard, which isn't a finger lifting.
+    // Synthetic pointers can't be captured, so this pretends they were.
+    const hasCapture = vi.spyOn(root, 'hasPointerCapture').mockReturnValue(true);
+    touch('lostpointercapture', 1, 150, 150);
+    touch('lostpointercapture', 2, 250, 150);
+    hasCapture.mockRestore();
+    // Spreading the fingers to twice as far apart zooms in twice as much around their middle.
+    const middle = before.panelToViewport({ x: 200, y: 150 });
+    touch('pointermove', 1, 100, 150);
+    touch('pointermove', 2, 300, 150);
+    expect(camera().scale).toBeCloseTo(before.scale * 2, 6);
+    expect(camera().viewportToPanel(middle).x).toBeCloseTo(200, 6);
+    // Moving them together pans.
+    touch('pointermove', 1, 110, 160);
+    touch('pointermove', 2, 310, 160);
+    expect(camera().viewportToPanel(middle).x).toBeCloseTo(210, 6);
+    expect(camera().viewportToPanel(middle).y).toBeCloseTo(160, 6);
+    touch('pointerup', 2, 310, 160);
+    touch('pointerup', 1, 110, 160);
+  });
+
   it('pans by the wheel, in pixels or in lines', () => {
     const { x, y } = artboardRect();
     expect(wheel({ deltaY: 10 }).defaultPrevented).toBe(true);

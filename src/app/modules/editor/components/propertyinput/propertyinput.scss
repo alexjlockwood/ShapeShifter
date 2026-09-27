@@ -109,6 +109,76 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    // A path, with the canvas editor's structured inspector under its name.
+    .spi-property-path {
+        flex-direction: column;
+        // It's taller than the other rows, and the body scrolls instead of squeezing it.
+        flex-shrink: 0;
+        .spi-property-value,
+        .spi-property-value-editor {
+            flex: none;
+            width: 100%;
+            min-width: 0;
+        }
+        .spi-path-advanced input {
+            width: 100%;
+        }
+    }
+    .spi-path-inspector {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 4px;
+        button {
+            border: 0;
+            border-radius: 2px;
+            padding: 0 8px;
+            height: 24px;
+            font: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            &:disabled {
+                cursor: default;
+            }
+        }
+    }
+    .spi-subpath-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+    }
+    .spi-subpath-title {
+        flex: 1 1 auto;
+    }
+    .spi-point {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+    }
+    .spi-point-label {
+        width: 20px;
+        text-align: right;
+    }
+    .spi-point-field {
+        display: flex;
+        flex: 1 1 0;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        input {
+            flex: 1 1 0;
+            // Rather than the width of 20 characters that inputs have by default.
+            width: 0;
+            min-width: 0;
+        }
+    }
+    .spi-path-advanced summary {
+        font-size: 12px;
+        cursor: pointer;
+        margin-bottom: 4px;
+    }
     .spi-property-color-preview {
         width: 16px;
         height: 16px;

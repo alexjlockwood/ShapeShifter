@@ -523,3 +523,59 @@ describe('PathEdit', () => {
     });
   });
 });
+
+describe('reversing a closed subpath', () => {
+  it('goes around the other way from the same first point, keeping the ids', () => {
+    const path = new Path('M 0 0 L 10 0 L 10 10 Z');
+    const reversed = reverseSubPath(path, 0);
+    expect(reversed.getPathString()).toBe('M 0 0 L 10 10 L 10 0 Z');
+    expect(new Set(ids(reversed))).toEqual(new Set(ids(path)));
+    expect(ids(reversed)[0]).toBe(ids(path)[0]);
+    // Twice is back where it started.
+    expect(reverseSubPath(reversed, 0).getPathString()).toBe(path.getPathString());
+  });
+
+  it('reverses curves, including the one back to the start', () => {
+    const reversed = reverseSubPath(new Path(CIRCLE), 0);
+    expect(points(reversed)).toEqual([
+      [0, 5],
+      [5, 10],
+      [10, 5],
+      [5, 0],
+    ]);
+    expect(reverseSubPath(reversed, 0).getPathString()).toBe(new Path(CIRCLE).getPathString());
+  });
+});
+
+describe('joinEnds', () => {
+  it('closes a subpath whose two ends are joined', () => {
+    const path = new Path('M 0 0 L 10 0 L 10 10');
+    const [start, , end] = ids(path);
+    expect(PathEdit.joinEnds(path, start, end)?.getPathString()).toBe('M 0 0 L 10 0 L 10 10 Z');
+  });
+
+  it('joins two subpaths with a line, turning them to meet', () => {
+    const path = new Path('M 0 0 L 4 0 M 10 0 L 6 0');
+    const [a0, a1, b0, b1] = ids(path);
+    // The end of the first to the end of the second, which is turned around.
+    const joined = PathEdit.joinEnds(path, a1, b1);
+    expect(joined?.getPathString()).toBe('M 0 0 L 4 0 L 6 0 L 10 0');
+    expect(ids(joined!)).toEqual([a0, a1, b1, b0]);
+    // The start of the first to the start of the second.
+    expect(PathEdit.joinEnds(path, a0, b0)?.getPathString()).toBe('M 4 0 L 0 0 L 10 0 L 6 0');
+  });
+
+  it('merges ends that are in the same place', () => {
+    const path = new Path('M 0 0 L 4 0 M 4 0 L 8 4');
+    const [, a1, b0] = ids(path);
+    expect(PathEdit.joinEnds(path, a1, b0)?.getPathString()).toBe('M 0 0 L 4 0 L 8 4');
+  });
+
+  it("doesn't join points that aren't ends", () => {
+    const path = new Path('M 0 0 L 4 0 L 8 0 M 10 0 L 12 0');
+    const [, middle, , b0] = ids(path);
+    expect(PathEdit.joinEnds(path, middle, b0)).toBeUndefined();
+    const closed = new Path('M 0 0 L 4 0 L 4 4 Z M 10 0 L 12 0');
+    expect(PathEdit.joinEnds(closed, ids(closed)[0], ids(closed)[3])).toBeUndefined();
+  });
+});

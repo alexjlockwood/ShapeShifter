@@ -132,33 +132,8 @@ export class EditorToolbar {
   }
 
   private addButton(label: string, shortcut: string, icon: string, onClick: () => void) {
-    const isMac = ShortcutService.isMac();
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'canvas-editor-tool';
-    button.title = `${label} (${shortcut.replace('Command', isMac ? 'Cmd' : 'Ctrl')})`;
-    button.setAttribute('aria-label', label);
-    button.setAttribute(
-      'aria-keyshortcuts',
-      shortcut.replace('Command', isMac ? 'Meta' : 'Control'),
-    );
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('aria-hidden', 'true');
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', icon);
-    svg.appendChild(path);
-    button.appendChild(svg);
-    this.removeListeners.push(
-      on(button, 'click', event => {
-        onClick();
-        if (event.detail > 0) {
-          // A click, rather than Enter or Space, so the keyboard shortcuts go back to the canvas
-          // editor instead of to the button.
-          button.blur();
-        }
-      }),
-    );
+    const [button, removeListener] = createToolButton(label, shortcut, icon, onClick);
+    this.removeListeners.push(removeListener);
     this.element.appendChild(button);
     return button;
   }
@@ -212,4 +187,40 @@ export class EditorToolbar {
     this.removeListeners.forEach(remove => remove());
     this.element.remove();
   }
+}
+
+/**
+ * Creates one of the canvas editor's buttons, with a 24 by 24 icon, labeled with its keyboard
+ * shortcut. Command in the shortcut is Ctrl outside of Macs. Returns the button, and a function
+ * that removes its listener.
+ */
+export function createToolButton(
+  label: string,
+  shortcut: string,
+  icon: string,
+  onClick: () => void,
+): readonly [HTMLButtonElement, () => void] {
+  const isMac = ShortcutService.isMac();
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'canvas-editor-tool';
+  button.title = `${label} (${shortcut.replace('Command', isMac ? 'Cmd' : 'Ctrl')})`;
+  button.setAttribute('aria-label', label);
+  button.setAttribute('aria-keyshortcuts', shortcut.replace('Command', isMac ? 'Meta' : 'Control'));
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', icon);
+  svg.appendChild(path);
+  button.appendChild(svg);
+  const removeListener = on(button, 'click', event => {
+    onClick();
+    if (event.detail > 0) {
+      // A click, rather than Enter or Space, so the keyboard shortcuts go back to the canvas
+      // editor instead of to the button.
+      button.blur();
+    }
+  });
+  return [button, removeListener];
 }

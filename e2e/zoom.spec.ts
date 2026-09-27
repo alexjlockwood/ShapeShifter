@@ -159,3 +159,46 @@ test("doesn't zoom or pan without the canvas editor", async ({ page }) => {
   );
   expect(view).toEqual({ type: 'fit' });
 });
+
+test('zooms with two fingers on a touch screen, after the first one starts a gesture', async ({
+  page,
+  browserName,
+}) => {
+  // Real touches, which the canvas captures, come from Chromium's DevTools protocol.
+  test.skip(browserName !== 'chromium', 'Needs the Chrome DevTools Protocol');
+  await loadDemo(page);
+  const layers = () => getState(page, s => JSON.stringify(s.layers.vectorLayer.toJSON()));
+  const beforeLayers = await layers();
+  const before = await artboard(page);
+  const middle = { x: before.x + before.width / 2, y: before.y + before.height / 2 };
+  const cdp = await page.context().newCDPSession(page);
+  type TouchType = 'touchStart' | 'touchMove' | 'touchEnd';
+  const touch = (type: TouchType, spread: number) =>
+    cdp.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints:
+        type === 'touchEnd'
+          ? []
+          : [
+              { x: middle.x - spread, y: middle.y, id: 1 },
+              { x: middle.x + spread, y: middle.y, id: 2 },
+            ],
+    });
+  // The first finger lands a moment before the second, and starts a gesture on the artboard,
+  // which captures it once it moves.
+  for (const type of ['touchStart', 'touchMove'] as const) {
+    await cdp.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints: [{ x: middle.x - 20, y: middle.y + (type === 'touchMove' ? 1 : 0), id: 1 }],
+    });
+  }
+  await touch('touchStart', 20);
+  for (let spread = 25; spread <= 40; spread += 5) {
+    await touch('touchMove', spread);
+  }
+  await touch('touchEnd', 40);
+  // Twice as far apart zooms in twice as much, and the first finger didn't move anything.
+  const after = await artboard(page);
+  expect(after.width / before.width).toBeCloseTo(2, 1);
+  expect(await layers()).toBe(beforeLayers);
+});
