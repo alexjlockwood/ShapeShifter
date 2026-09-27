@@ -122,6 +122,18 @@ test('edits a color with the color picker, as one undo step', async ({ page, mod
 
   await page.keyboard.press(`${modifier}+z`);
   await expect.poll(() => getPathFillColor(page, layerId)).toBe(originalColor);
+
+  // No color saves '' (not a Mixed value), and the row's text field follows undo afterward.
+  await fillRow.getByRole('button', { name: 'Edit color' }).click();
+  const noColor = popover.getByRole('button', { name: 'No color' });
+  await noColor.click();
+  await expect.poll(() => getPathFillColor(page, layerId)).toBe('');
+  await expect(noColor).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+  await expect(popover).toBeHidden();
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathFillColor(page, layerId)).toBe(originalColor);
+  await expect(fillColorInput).toHaveValue(originalColor);
 });
 
 test('switches to the dark theme from the overflow menu', async ({ page }) => {

@@ -46,10 +46,10 @@ From the outside in: the action logger (dev only), freeze (dev and tests), undo,
 - **Previews:** a batch with a `SkipUndoStep` isn't recorded at all, and doesn't count as a recent
   edit. redux-undo keeps the last recorded state (`getLastRecordedState` in
   `store/undoredo/metareducer.ts`), so undo still goes back to it. `layerTimelineService`'s
-  `previewLayer` and `previewBlocks` use it to show a value on every move of a drag, and
-  `commitPreview` saves the result as one isolated undo step (or `cancelPreview` shows the
-  recorded state again, with an `EndPreview` batch). `InspectedProperty.previewValue` does the
-  same for the inspector, for colors only.
+  `previewLayer`, `previewLayers` (for a batch edit), and `previewBlocks` use it to show a value on
+  every move of a drag, and `commitPreview` saves the result as one isolated undo step (or
+  `cancelPreview` shows the recorded state again, with an `EndPreview` batch).
+  `InspectedProperty.previewValue` does the same for the inspector's colors and interpolators.
 - **Pending previews:** a preview stays pending (`isPreviewPending`) until `commitPreview`,
   `cancelPreview`, undo, redo, or any recorded action. A recorded action during a preview (e.g. a
   keyboard shortcut or a selection change) always starts a new undo step, which holds the preview

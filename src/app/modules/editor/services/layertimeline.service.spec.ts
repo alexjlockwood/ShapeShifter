@@ -597,6 +597,19 @@ describe('LayerTimelineService', () => {
       expect(getLayer<PathLayer>('other').fillColor).toBe('#000000');
     });
 
+    it("keeps a child's edit when its group is edited too, in either order", () => {
+      load([newGroup('group', [newPath('path')])]);
+      const path = getLayer<PathLayer>('path').clone();
+      path.rotation = 30;
+      const group = getLayer<GroupLayer>('group').clone();
+      group.rotation = 30;
+
+      services.layerTimelineService.updateLayers([path, group]);
+
+      expect(getLayer<GroupLayer>('group').rotation).toBe(30);
+      expect(getLayer<PathLayer>('path').rotation).toBe(30);
+    });
+
     it('does nothing without any layers', () => {
       load([newPath('path')]);
       const numPastStates = store.getState().past.length;

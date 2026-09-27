@@ -72,10 +72,7 @@ export function ColorPickerPanel({
         className="spi-color-picker-none"
         aria-pressed={value === ''}
         onClick={() => {
-          // ip is an InspectedProperty, not a plain data prop: its editableValue setter is how a
-          // click or a keystroke is meant to change it (see InspectedProperty.ts).
-          // oxlint-disable-next-line react/immutability
-          ip.editableValue = '';
+          setColor(ip, '');
         }}
       >
         <span className="spi-color-swatch spi-color-swatch-empty" aria-hidden>
@@ -96,7 +93,7 @@ export function ColorPickerPanel({
                 aria-pressed={color === value}
                 style={{ backgroundColor: ColorUtil.androidToCssRgbaColor(color) }}
                 onClick={() => {
-                  ip.editableValue = color;
+                  setColor(ip, color);
                 }}
               />
             ))}
@@ -121,11 +118,9 @@ function HexField({ ip, isMixed }: { ip: InspectedProperty<string>; isMixed: boo
         const next = event.target.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
         setDraft(next);
         if (isValidHex(next)) {
-          // See the comment on the "No color" button's click handler above.
-          // oxlint-disable-next-line react/immutability
-          ip.editableValue = hexAndAlphaPercentToAndroidColor(
-            next,
-            androidColorToAlphaPercent(ip.value),
+          setColor(
+            ip,
+            hexAndAlphaPercentToAndroidColor(next, androidColorToAlphaPercent(ip.value)),
           );
         }
       }}
@@ -148,17 +143,23 @@ function AlphaField({ ip, isMixed }: { ip: InspectedProperty<string>; isMixed: b
         const next = event.target.value.replace(/[^0-9]/g, '').slice(0, 3);
         setDraft(next);
         if (isValidAlphaPercent(next)) {
-          // See the comment on the "No color" button's click handler above.
-          // oxlint-disable-next-line react/immutability
-          ip.editableValue = hexAndAlphaPercentToAndroidColor(
-            androidColorToHex(ip.value),
-            Number(next),
-          );
+          setColor(ip, hexAndAlphaPercentToAndroidColor(androidColorToHex(ip.value), Number(next)));
         }
       }}
       onBlur={() => setDraft(undefined)}
     />
   );
+}
+
+/**
+ * Saves a color picked in the panel. It sets the value itself rather than editableValue: an entered
+ * value would stay in the inspector's text field (which never had the focus, so never clears it)
+ * after undo or a new selection, and ColorProperty's editable setter turns '' into undefined, which
+ * a batch shows as Mixed.
+ */
+function setColor(ip: InspectedProperty<string>, value: string) {
+  ip.resolveEnteredValue();
+  ip.value = value;
 }
 
 function isEyeDropperSupported() {
@@ -172,9 +173,12 @@ async function pickWithEyeDropper(ip: InspectedProperty<string>) {
   try {
     const result = await new window.EyeDropper().open();
     // The eyedropper only returns an opaque RGB color, so keep the color's existing alpha.
-    ip.editableValue = hexAndAlphaPercentToAndroidColor(
-      result.sRGBHex.replace(/^#/, ''),
-      androidColorToAlphaPercent(ip.value),
+    setColor(
+      ip,
+      hexAndAlphaPercentToAndroidColor(
+        result.sRGBHex.replace(/^#/, ''),
+        androidColorToAlphaPercent(ip.value),
+      ),
     );
   } catch {
     // The user pressed Escape or clicked away, which rejects the promise instead of resolving it.

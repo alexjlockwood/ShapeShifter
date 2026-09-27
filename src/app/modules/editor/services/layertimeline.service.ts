@@ -340,7 +340,11 @@ export class LayerTimelineService {
 
   private getVectorLayerWithLayers(layers: ReadonlyArray<Layer>) {
     let vl = this.getVectorLayer();
-    for (const layer of layers) {
+    // Replace ancestors before their descendants. A group's replacement holds its old children, so
+    // replacing it after one of its children would undo that child's edit.
+    const order = new Map(LayerUtil.runPreorderTraversal(vl).map((l, i) => [l.id, i]));
+    const sorted = [...layers].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+    for (const layer of sorted) {
       vl = LayerUtil.updateLayer(vl, layer);
     }
     return vl;

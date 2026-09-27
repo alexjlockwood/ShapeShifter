@@ -28,8 +28,8 @@ These existed before the migration and are still there.
 - **The editor draws strokes in scaled groups and paths at the wrong width.** `CanvasLayers`
   multiplies the stroke width by the scale of the canvas-to-layer matrix instead of the
   layer-to-canvas one, so a stroke of width 2 in a group (or a path) scaled by 2 is drawn 1 unit
-  wide, but Android (and the exported SVGs) draw it 4 units wide. The exports and flattening scale strokes the Android way
-  (`components/canvas/CanvasLayers.ts`). (GitHub #186, #292, and #308)
+  wide, but Android (and the exported SVGs) draw it 4 units wide. The exports and flattening scale
+  strokes the Android way (`components/canvas/CanvasLayers.ts`). (GitHub #186, #292, and #308)
 - **The inspector edits an animated property's value from before its first keyframe.** Once a
   property has blocks, the canvas draws their values, but the inspector's field shows and saves the
   layer's own value, which only shows before the first block, and not at all when a block starts
@@ -50,6 +50,11 @@ These existed before the migration and are still there.
   other's fill rule when it's a single subpath with no other path blocks, where the rule can't
   change how it starts. Otherwise, a warning or a choice would help
   (`scripts/common/morphLayers.ts`).
+- **Changing only the alpha or hue of a Mixed color turns every selected layer black.** With
+  several layers selected whose colors differ, the color picker starts from black, so typing an
+  alpha, or clicking the hue slider, saves black with that alpha or hue to all of them. Either the
+  alpha field should apply the alpha to each layer's own color, or both should be disabled while
+  the value is Mixed (`components/colorpicker/ColorPickerPanel.tsx`, `AlphaField`).
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
 
