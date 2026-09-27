@@ -108,7 +108,7 @@ export function PropertyInput() {
         {model.numSelections === 0 ? (
           <div className="spi-empty fx-flex">Select something to edit its properties</div>
         ) : (
-          <div className="fx-column fx-flex">
+          <div className="spi-content fx-column fx-flex">
             <PropertyInputHeader
               model={model}
               onAnimateLayerClick={onAnimateLayerClick}
