@@ -73,15 +73,17 @@ during the React migration.
 
 ### What's worth keeping
 
-- The gesture state machine: `tool/GestureTool.ts` picks a gesture on mouse down from the tool
-  mode, the hit test, and the modifiers, runs it until mouse up, and goes back to hovering.
+- The gesture state machine: `scripts/paper/tool/GestureTool.ts` picks a gesture on mouse down
+  from the tool mode, the hit test, and the modifiers, runs it until mouse up, and goes back to
+  hovering.
 - The catalog of gestures and their modifier keys, which already follow Sketch closely.
 - The snapping math in `scripts/paper/util/snap/SnapUtil.ts` and `SnapBounds.ts`, and the curve
-  bending math in `MouldCurveGesture.ts`.
+  bending math in `scripts/paper/gesture/edit/MouldCurveGesture.ts`.
 - The cursor images in `public/assets/cursor/` and `public/assets/paper/`, and the tool icons in
   `public/assets/tools/`.
 - The compiled `store/paper/` slice, whose shape (tool mode, selection box, edit path info, snap
-  guides, zoom and pan, cursor) fits the new editor's transient state.
+  guides, cursor) fits the new editor's transient state. Its zoom and pan field won't be used,
+  since the camera's state lives outside the store (see below).
 
 ## Is paper.js the right library?
 
@@ -149,8 +151,9 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
 2. **A camera.** A pure class holds the zoom and pan and converts between three coordinate
    spaces: viewport units (the vector layer's), panel CSS pixels, and device pixels. It zooms
    around a point, fits the artboard in the panel, and clamps panning. Its state lives in a
-   service outside Redux, since wheel events arrive 60 to 120 times a second and shouldn't be
-   undo steps. The canvases are sized to their panel rather than to the artboard, so memory stays
+   service outside Redux, since wheel events arrive 60 to 120 times a second, and each dispatch
+   runs the store's logger, freeze, and undo reducers and every subscriber's selectors. The
+   canvases are sized to their panel rather than to the artboard, so memory stays
    flat at any zoom, and all three action mode canvases share one camera so the start and end
    paths stay aligned.
 3. **Pointer input.** Pointer events with pointer capture replace the React mouse handlers, so a
@@ -160,7 +163,9 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
 4. **Previewing edits.** A gesture keeps a working copy of the paths it changes, and the canvases
    draw that copy until the gesture ends. The edit is dispatched once, on pointer up, as its own
    undo step. Dispatching on every pointer move would rebuild the animation renderer each time
-   and split one drag into several undo steps.
+   and split one drag into several undo steps. Edits less than a second apart are normally merged
+   into one undo step, so the commit is marked to always start a new one, the way loading a
+   project is (see `store/undoredo/metareducer.ts`).
 5. **Path editing operations.** Pure functions over a path's commands, in a new module next to
    `Path`, that keep command ids:
    - moving an anchor (updating the command's end, the next command's start, and the start and
@@ -212,11 +217,16 @@ Figma's mapping is the default, since it's also a web app and avoids shortcuts t
 | Measure distances          | Hold Alt                                            |
 | Turn snapping off          | Hold Ctrl                                           |
 
-Some of these clash with the app's shortcuts (`services/shortcut.service.ts`): R toggles repeat,
-S toggles slow motion, A, D, B, and F are action mode tools, Space plays and pauses, and the
-arrow keys rewind and fast forward. Tool letters only apply when the flag is on and action mode is
-off. With the flag on, Space pans while held and plays or pauses when tapped. Repeat and slow
-motion keep their toolbar buttons.
+Some of these clash with the app's shortcuts (`services/shortcut.service.ts`):
+
+- R toggles repeat (and reverses subpaths in action mode), and its handler ignores Shift, so
+  Shift+R would toggle it too. Shortcuts with Shift have to be checked before the plain letters.
+- S toggles slow motion, and A, D, B, and F are action mode tools.
+- Space plays and pauses, and the arrow keys rewind and fast forward.
+- Cmd+O zooms the timeline to fit, which is why zooming the canvas to fit uses Shift+1.
+
+Tool letters only apply when the flag is on and action mode is off. With the flag on, Space pans
+while held and plays or pauses when tapped. Repeat and slow motion keep their toolbar buttons.
 
 ## Roadmap
 
@@ -246,8 +256,27 @@ After that:
 | 5     | Editing animated paths: at the start or end of a path animation block, edits change that end of the morph, with a live badge that says whether the two ends still morph, and a button to run auto fix. Between the ends, editing is disabled with a hint.                                                                           | 1 to 2 weeks   |
 | 6     | A structured path inspector that lists subpaths and points with x and y fields (keeping the text field under "Advanced"), joining, reversing, and closing subpaths, boolean operations and outlining strokes, and touch.                                                                                                            | 1 to 2 weeks   |
 
-Once the new editor covers what the old one did, the old code, its exclusions, and
-`src/test/paperExclusions.spec.ts` can be deleted.
+### Removing the old editor
+
+The old code only matters as a reference, and git history keeps it, so it can go once the parts
+worth keeping have been ported: the snapping math in phase 1, the curve bending and point editing
+in phase 2, and the cursors and icons as each tool lands. That's after phase 2, not after the
+whole roadmap, and it stops agents from reading notes about code to leave alone. Removing it
+means:
+
+- Deleting `components/canvas/canvaspaper.directive.ts`, `components/toolpanel/`,
+  `scripts/paper/`, `services/paper.service.ts`, and `src/typings/paper/`.
+- Removing their exclusions from `tsconfig.json`, `.oxlintrc.json`, and `.prettierignore`, and
+  deleting `src/test/paperExclusions.spec.ts`, which only keeps those lists in step.
+- Removing "Code to leave alone" from the root `AGENTS.md`, and the notes about the old editor in
+  `components/AGENTS.md` and `store/AGENTS.md`.
+- Removing the "Beta only" entries from `BUGS.md` and `docs/bugs/bugsnag.md`.
+- Deleting the images in `public/assets/paper/` and `public/assets/tools/` that the new editor
+  doesn't use, and their `globIgnores` in `vite.config.ts`.
+
+The compiled `model/paper/` and `store/paper/` stay, since `components/root/Root.tsx` and the
+canvas read them, but they should be renamed or replaced by the new editor's own state as it
+grows.
 
 ## Risks and edge cases
 
@@ -261,7 +290,8 @@ Once the new editor covers what the old one did, the old code, its exclusions, a
 - **Transforms.** Pointer positions are mapped into a layer's own coordinates with the inverse of
   `LayerUtil.getCanvasTransformForLayer`. Group bounds have to transform all four corners
   (MODEL-9 in `docs/bugs/layers-and-properties.md`). Decide how stroke widths behave when scaling
-  (CANVAS-4 in `docs/bugs/canvas.md`, and the scaled group stroke width entry in `BUGS.md`).
+  (the scaled group stroke width entry in `BUGS.md`), and scale trim paths the same way (CANVAS-4
+  in `docs/bugs/canvas.md`).
 - **Path invariants.** The first `M` has no start point, each command starts where the previous
   one ended, and collapsing subpaths come last (see `model/paths/AGENTS.md`). Path strings are
   rounded to 3 decimals, so snapping should produce values at that precision. The pen briefly
