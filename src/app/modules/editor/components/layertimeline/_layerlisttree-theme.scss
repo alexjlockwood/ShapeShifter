@@ -5,14 +5,16 @@
     $foreground: map.get($theme, ss-foreground);
     $background: map.get($theme, ss-background);
     $accent: map.get($theme, accent);
+    $accent-fill: map.get($theme, accent-fill);
     $is-dark: map.get($theme, is-dark);
     .slt-layer {
         color: mat-color($foreground, secondary-text);
-        &:focus {
+        &:focus-visible {
             box-shadow: 0 0 0 1px mat-color($accent) inset;
         }
         &.is-selected {
-            background-color: mat-color($accent);
+            // accent-fill passes WCAG AA with white text and icons in both themes, unlike accent.
+            background-color: $accent-fill;
             color: #fff;
             &,
             & .ss-icon {

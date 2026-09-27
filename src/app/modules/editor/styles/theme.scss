@@ -59,14 +59,15 @@ $dark-accent: mat-palette($mat-deep-orange, A200, A100, A400);
 $accent-fill: map.get($mat-blue, A700);
 
 $light-theme: (
-    primary: mat-palette($mat-blue-grey, 500),
+    // 700, not 500: white on 500 (#607d8b) was only 4.37:1 on the app bar.
+    primary: mat-palette($mat-blue-grey, 700),
     accent: $light-accent,
     accent-fill: $accent-fill,
     accent-text: $accent-fill,
     warn: mat-palette($mat-red),
     is-dark: false,
     ss-foreground: $ss-light-theme-foreground,
-    ss-background: $ss-light-theme-background,
+    ss-background: $ss-light-theme-background
 );
 
 $dark-theme: (

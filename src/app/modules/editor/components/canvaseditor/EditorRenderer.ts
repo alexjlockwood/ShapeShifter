@@ -15,15 +15,17 @@ import type { PathEditDrawing } from './PathEditTool';
 import { getHandlePoint, getVisibleHandles, HANDLE_SIZE } from './selectionHandles';
 import type { SnapGuide } from './snapping';
 
-// Figma's blue, and line widths in CSS pixels.
-const EDITOR_COLOR = '#0d99ff';
+// Figma's blue, darkened so that a label's white text reaches 4.5:1 (Figma's own #0d99ff was
+// 2.99:1), and line widths in CSS pixels.
+const EDITOR_COLOR = '#0a73bf';
 const MARQUEE_FILL = 'rgba(13, 153, 255, 0.1)';
 const HANDLE_FILL = '#fff';
-// Figma's snapping red, and a pink for the guides dragged out of the rulers, so they don't look like
-// snaps.
-const GUIDE_COLOR = '#f24822';
+// Deep orange 900, reused from CanvasOverlay's split points, for guides and errors, and a
+// darkened pink for the guides dragged out of the rulers, so they don't look like snaps. Both are
+// darkened from Figma's colors so a label's white text reaches 4.5:1.
+const GUIDE_COLOR = '#bf360c';
 const GUIDE_LINE_WIDTH = 1;
-const RULER_GUIDE_COLOR = '#f23fb4';
+const RULER_GUIDE_COLOR = '#c23290';
 const ACTIVE_RULER_GUIDE_LINE_WIDTH = 2;
 // The ticks at the ends of a gap or a measurement, and the labels, in CSS pixels.
 const GAP_TICK_SIZE = 4;
