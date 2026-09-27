@@ -3,6 +3,7 @@ import type {
   CanvasEditLayerIds,
 } from 'app/modules/editor/components/canvas/CanvasPreview';
 import {
+  getLayersBounds,
   getPathLayerBounds,
   hitTestLayer,
 } from 'app/modules/editor/components/canvas/LayerGeometry';
@@ -10,7 +11,22 @@ import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { MathUtil, Point, Rect } from 'app/modules/editor/scripts/common';
 import { isEqual } from 'lodash-es';
 
-import { duplicateLayers, getTopmostLayerIds, translateLayers } from './transformLayers';
+import {
+  CornerName,
+  getHandleCursor,
+  getHandlePoint,
+  getOppositeHandle,
+  HandleName,
+  hitTestHandles,
+} from './selectionHandles';
+import {
+  duplicateLayers,
+  getTopmostLayerIds,
+  rotationAround,
+  scalingAround,
+  transformLayers,
+  translateLayers,
+} from './transformLayers';
 
 /** What the select tool reads and changes. */
 export interface SelectToolContext {
@@ -45,6 +61,19 @@ export interface Modifiers {
 // How far a press has to move to become a drag, and how close to a path hits it, in CSS pixels.
 const DRAG_SLOP = 4;
 const HIT_TOLERANCE = 6;
+// Rotations with Shift held snap to multiples of this, in degrees.
+const ROTATION_SNAP = 15;
+// A scale can't reach 0, which would flatten the paths for good.
+const MIN_SCALE = 1e-3;
+
+/** What a scale or rotation starts from. */
+interface Transforming {
+  readonly start: Point;
+  readonly bounds: Rect;
+  readonly document: CanvasDocument;
+  readonly rendered: VectorLayer;
+  readonly layerIds: ReadonlyArray<string>;
+}
 
 type State =
   | { readonly type: 'idle' }
@@ -75,7 +104,9 @@ type State =
       readonly layerIds: ReadonlyArray<string>;
       // The copies to select, and the hidden layers with the copies of hidden ones.
       readonly layerStates: CanvasEditLayerIds | undefined;
-    };
+    }
+  | ({ readonly type: 'scaling'; readonly handle: HandleName } & Transforming)
+  | ({ readonly type: 'rotating'; readonly corner: CornerName } & Transforming);
 
 /**
  * Selects and moves layers on the canvas, like Figma.
@@ -86,18 +117,41 @@ type State =
  *   the ones it contains), but not clip paths.
  * - Dragging a path moves the selection, and with Alt held when the drag starts, moves copies of
  *   it instead. Shift keeps the move horizontal or vertical.
+ * - Dragging a handle on the selection's bounds scales it from the handle across from it, or from
+ *   the middle with Alt held, and Shift keeps its proportions. Dragging just outside of a corner
+ *   rotates it around its middle, and Shift turns it in steps of 15 degrees.
  * - Hovering outlines the path under the pointer.
  */
 export class SelectTool {
   private state: State = { type: 'idle' };
   private hoveredLayerId: string | undefined;
+  private hoveredCursor: string | undefined;
 
   constructor(private readonly context: SelectToolContext) {}
+
+  private readonly toViewportLength = (length: number) => this.context.toViewportLength(length);
 
   getHoveredLayerId() {
     return this.state.type === 'idle' || this.state.type === 'pressed'
       ? this.hoveredLayerId
       : undefined;
+  }
+
+  /** Whether to show the selection's handles, which are hidden while it moves. */
+  isShowingHandles() {
+    return this.state.type !== 'moving' && this.state.type !== 'marquee';
+  }
+
+  /** The cursor for the handle being hovered or dragged, if any. */
+  getCursor() {
+    const { state } = this;
+    if (state.type === 'scaling') {
+      return getHandleCursor({ type: 'scale', handle: state.handle });
+    }
+    if (state.type === 'rotating') {
+      return getHandleCursor({ type: 'rotate', corner: state.corner });
+    }
+    return state.type === 'idle' ? this.hoveredCursor : undefined;
   }
 
   /** The marquee's corners in viewport coordinates, while one is being drawn. */
@@ -109,6 +163,13 @@ export class SelectTool {
   }
 
   onPress(point: Point, modifiers: Modifiers) {
+    // The handles come first, even over a path.
+    const bounds = this.getSelectionBounds();
+    const handle = bounds && hitTestHandles(bounds, point, this.toViewportLength);
+    if (bounds && handle) {
+      this.startTransform(point, bounds, handle);
+      return;
+    }
     const hitLayerId = this.hitTest(point)?.id;
     let didSelect = false;
     if (hitLayerId && !isAdding(modifiers) && !this.isInSelection(hitLayerId)) {
@@ -122,9 +183,24 @@ export class SelectTool {
   onMove(point: Point, modifiers: Modifiers) {
     const { state } = this;
     switch (state.type) {
-      case 'idle':
-        this.setHoveredLayerId(this.hitTest(point)?.id);
+      case 'idle': {
+        const bounds = this.getSelectionBounds();
+        const handle = bounds && hitTestHandles(bounds, point, this.toViewportLength);
+        this.hoveredCursor = handle ? getHandleCursor(handle) : undefined;
+        this.setHoveredLayerId(handle ? undefined : this.hitTest(point)?.id);
         return;
+      }
+      case 'scaling':
+      case 'rotating': {
+        const matrix =
+          state.type === 'scaling'
+            ? getScaling(state.bounds, state.handle, state.start, point, modifiers)
+            : getRotation(state.bounds, state.start, point, modifiers);
+        this.context.preview.setDocument(
+          transformLayers(state.document, state.rendered, state.layerIds, matrix),
+        );
+        return;
+      }
       case 'pressed':
         if (MathUtil.distance(state.start, point) > this.context.toViewportLength(DRAG_SLOP)) {
           if (state.hitLayerId) {
@@ -179,7 +255,7 @@ export class SelectTool {
       } else if (!hitLayerId && !isAdding(modifiers)) {
         this.context.setSelectedLayerIds(new Set());
       }
-    } else if (state.type === 'moving') {
+    } else if (state.type === 'moving' || state.type === 'scaling' || state.type === 'rotating') {
       this.context.preview.commit();
     }
     this.setHoveredLayerId(this.hitTest(point)?.id);
@@ -191,7 +267,8 @@ export class SelectTool {
     const { state } = this;
     this.state = { type: 'idle' };
     this.hoveredLayerId = undefined;
-    if (state.type === 'moving') {
+    this.hoveredCursor = undefined;
+    if (state.type === 'moving' || state.type === 'scaling' || state.type === 'rotating') {
       this.context.preview.cancel();
     }
     this.context.redraw();
@@ -242,6 +319,39 @@ export class SelectTool {
       layerIds,
       layerStates,
     };
+  }
+
+  private startTransform(
+    start: Point,
+    bounds: Rect,
+    handle: NonNullable<ReturnType<typeof hitTestHandles>>,
+  ) {
+    const { preview } = this.context;
+    preview.begin(() => {
+      this.state = { type: 'idle' };
+      this.context.redraw();
+    });
+    const document = preview.getBase();
+    if (!document) {
+      return;
+    }
+    const transforming: Transforming = {
+      start,
+      bounds,
+      document,
+      rendered: this.context.render(document),
+      layerIds: getTopmostLayerIds(document.vectorLayer, this.context.getSelectedLayerIds()),
+    };
+    this.state =
+      handle.type === 'scale'
+        ? { type: 'scaling', handle: handle.handle, ...transforming }
+        : { type: 'rotating', corner: handle.corner, ...transforming };
+    this.context.redraw();
+  }
+
+  private getSelectionBounds() {
+    const selection = this.context.getSelectedLayerIds();
+    return selection.size ? getLayersBounds(this.context.getVectorLayer(), selection) : undefined;
   }
 
   /**
@@ -298,6 +408,45 @@ export class SelectTool {
 
 function isAdding(modifiers: Modifiers) {
   return modifiers.shift || modifiers.command;
+}
+
+/** Returns the scale for dragging the handle from start to point. */
+function getScaling(
+  bounds: Rect,
+  handle: HandleName,
+  start: Point,
+  point: Point,
+  { shift, alt }: Modifiers,
+) {
+  const anchor = alt
+    ? { x: (bounds.l + bounds.r) / 2, y: (bounds.t + bounds.b) / 2 }
+    : getHandlePoint(bounds, getOppositeHandle(handle));
+  // How far the handle was from the anchor, and is now. An edge handle only scales across it.
+  const from = { x: start.x - anchor.x, y: start.y - anchor.y };
+  const to = { x: point.x - anchor.x, y: point.y - anchor.y };
+  const isVerticalEdge = handle === 'e' || handle === 'w';
+  const isHorizontalEdge = handle === 'n' || handle === 's';
+  let sx = isHorizontalEdge || !from.x ? 1 : to.x / from.x;
+  let sy = isVerticalEdge || !from.y ? 1 : to.y / from.y;
+  if (shift) {
+    // Keeps the proportions, going by whichever way changed more.
+    const s = isHorizontalEdge ? sy : isVerticalEdge ? sx : Math.abs(sx) > Math.abs(sy) ? sx : sy;
+    sx = s;
+    sy = s;
+  }
+  const clampScale = (s: number) => (Math.abs(s) < MIN_SCALE ? Math.sign(s || 1) * MIN_SCALE : s);
+  return scalingAround(anchor, clampScale(sx), clampScale(sy));
+}
+
+/** Returns the rotation for dragging around the middle of the bounds from start to point. */
+function getRotation(bounds: Rect, start: Point, point: Point, { shift }: Modifiers) {
+  const center = { x: (bounds.l + bounds.r) / 2, y: (bounds.t + bounds.b) / 2 };
+  const angle = (p: Point) => (Math.atan2(p.y - center.y, p.x - center.x) * 180) / Math.PI;
+  let degrees = angle(point) - angle(start);
+  if (shift) {
+    degrees = Math.round(degrees / ROTATION_SNAP) * ROTATION_SNAP;
+  }
+  return rotationAround(center, degrees);
 }
 
 function toRect(a: Point, b: Point): Rect {

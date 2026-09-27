@@ -215,3 +215,56 @@ export function duplicateLayers(
       : hiddenLayerIds,
   };
 }
+
+/**
+ * Transforms the layers by a matrix in viewport coordinates, with their animations. Every path in
+ * them is transformed in its own coordinates, along with its path blocks. Groups keep their own
+ * transforms, which can't express every matrix: scaling a rotated group along one axis skews it.
+ */
+export function transformLayers(
+  document: CanvasDocument,
+  rendered: VectorLayer,
+  layerIds: Iterable<string>,
+  matrix: Matrix,
+): CanvasDocument {
+  let { vectorLayer, animation } = document;
+  for (const layerId of getTopmostLayerIds(vectorLayer, layerIds)) {
+    const layer = vectorLayer.findLayerById(layerId);
+    if (!layer) {
+      continue;
+    }
+    for (const current of LayerUtil.runPreorderTraversal(layer)) {
+      if (!(current instanceof PathLayer || current instanceof ClipPathLayer)) {
+        continue;
+      }
+      const toViewport = LayerUtil.getCanvasTransformForLayer(rendered, current.id);
+      const fromViewport = toViewport.invert();
+      if (!fromViewport) {
+        continue;
+      }
+      // Into viewport coordinates, through the matrix, and back.
+      const local = fromViewport.dot(matrix).dot(toViewport);
+      const transform = (path: Path) => path.transform(local);
+      const clone = current.clone();
+      if (clone.pathData) {
+        clone.pathData = transform(clone.pathData);
+      }
+      vectorLayer = LayerUtil.replaceLayer(vectorLayer, current.id, clone);
+      animation = mapBlocks(animation, current.id, 'pathData', transform);
+    }
+  }
+  return { vectorLayer, animation };
+}
+
+/** Returns a matrix that scales around a point. */
+export function scalingAround({ x, y }: { x: number; y: number }, sx: number, sy: number) {
+  return new Matrix(sx, 0, 0, sy, x - sx * x, y - sy * y);
+}
+
+/** Returns a matrix that rotates around a point, clockwise on the screen for positive degrees. */
+export function rotationAround({ x, y }: { x: number; y: number }, degrees: number) {
+  const radians = (degrees * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  return new Matrix(cos, sin, -sin, cos, x - cos * x + sin * y, y - sin * x - cos * y);
+}

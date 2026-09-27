@@ -265,4 +265,65 @@ describe('SelectTool', () => {
       expect(pathDataOf(a.id)).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
     });
   });
+
+  describe('scaling and rotating', () => {
+    // Square a covers 2 to 6, so its handles are at 2, 4, and 6.
+    function selectA(click: (x: number, y: number) => void) {
+      click(4, 4);
+    }
+
+    it('scales from the handle across from the one dragged, as one undo step', () => {
+      const { store, a, click, drag, pathDataOf } = setUp();
+      selectA(click);
+      drag([6, 6], [10, 8]);
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 10 2 L 10 8 L 2 8 Z');
+      store.dispatch(ActionCreators.undo());
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+    });
+
+    it('scales from the middle with Alt held, and keeps the proportions with Shift', () => {
+      const { a, click, drag, pathDataOf } = setUp();
+      selectA(click);
+      drag([6, 6], [8, 6], ALT);
+      expect(pathDataOf(a.id)).toBe('M 0 2 L 8 2 L 8 6 L 0 6 Z');
+      drag([8, 6], [12, 6], SHIFT);
+      expect(pathDataOf(a.id)).toBe('M 0 2 L 12 2 L 12 8 L 0 8 Z');
+    });
+
+    it('only scales across an edge handle', () => {
+      const { a, click, drag, pathDataOf } = setUp();
+      selectA(click);
+      drag([6, 4], [10, 9]);
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 10 2 L 10 6 L 2 6 Z');
+    });
+
+    it('rotates around the middle from just outside of a corner, in steps with Shift', () => {
+      const { a, click, drag, pathDataOf } = setUp();
+      selectA(click);
+      // From just outside the top right corner to just outside the bottom right one, around the
+      // middle at (4, 4): a quarter turn clockwise.
+      drag([7, 1], [7, 7], SHIFT);
+      const rounded = pathDataOf(a.id)?.replace(/-?\d+(\.\d+)?/g, n => `${Math.round(Number(n))}`);
+      expect(rounded).toBe('M 6 2 L 6 6 L 2 6 L 2 2 Z');
+    });
+
+    it('scales with a handle that is over a path', () => {
+      const { b, click, drag, pathDataOf } = setUp();
+      // Square b's top left handle is at (10, 2), on its own corner.
+      click(12, 4);
+      drag([10, 2], [8, 2]);
+      expect(pathDataOf(b.id)).toBe('M 8 2 L 14 2 L 14 6 L 8 6 Z');
+    });
+
+    it('shows the cursor for the handle under the pointer', () => {
+      const { tool, click } = setUp();
+      selectA(click);
+      tool.onMove({ x: 6, y: 6 }, NONE);
+      expect(tool.getCursor()).toBe('nwse-resize');
+      tool.onMove({ x: 7, y: 1 }, NONE);
+      expect(tool.getCursor()).toBe('rotate-ne');
+      tool.onMove({ x: 4, y: 4 }, NONE);
+      expect(tool.getCursor()).toBeUndefined();
+    });
+  });
 });

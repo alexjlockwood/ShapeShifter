@@ -147,6 +147,7 @@ class Editor implements CanvasEditor {
     this.nudge = undefined;
     this.removeTestHooks?.();
     this.renderer.clear();
+    delete this.context.root.dataset.editorCursor;
   }
 
   /** Returns the document's vector layer as it's drawn at the current time. */
@@ -251,14 +252,23 @@ class Editor implements CanvasEditor {
     if (this.isActionMode) {
       // Action mode has its own selections, drawn by the canvases.
       this.renderer.clear();
+      delete this.context.root.dataset.editorCursor;
       return;
     }
     this.renderer.draw(camera, {
       vectorLayer: this.vectorLayer,
       hoveredLayerId: this.selectTool.getHoveredLayerId(),
       selectedLayerIds: this.selectedLayerIds,
+      isShowingHandles: this.selectTool.isShowingHandles(),
       marquee: this.selectTool.getMarquee(),
     });
+    // The panel's styles turn this into a cursor (components/canvas/canvas.scss).
+    const cursor = this.selectTool.getCursor();
+    if (cursor) {
+      this.context.root.dataset.editorCursor = cursor;
+    } else {
+      delete this.context.root.dataset.editorCursor;
+    }
   }
 }
 

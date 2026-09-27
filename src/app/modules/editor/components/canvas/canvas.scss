@@ -46,6 +46,39 @@
     &.has-canvas-editor {
         touch-action: none;
     }
+    // The canvas editor's cursors, for its handles. Panning's come after, so that they win.
+    &[data-editor-cursor='nwse-resize'] {
+        cursor: nwse-resize;
+    }
+    &[data-editor-cursor='nesw-resize'] {
+        cursor: nesw-resize;
+    }
+    &[data-editor-cursor='ns-resize'] {
+        cursor: ns-resize;
+    }
+    &[data-editor-cursor='ew-resize'] {
+        cursor: ew-resize;
+    }
+    &[data-editor-cursor='rotate-nw'] {
+        cursor:
+            url('/assets/cursor/rotate-top-left.png') 10 10,
+            alias;
+    }
+    &[data-editor-cursor='rotate-ne'] {
+        cursor:
+            url('/assets/cursor/rotate-top-right.png') 10 10,
+            alias;
+    }
+    &[data-editor-cursor='rotate-se'] {
+        cursor:
+            url('/assets/cursor/rotate-bottom-right.png') 10 10,
+            alias;
+    }
+    &[data-editor-cursor='rotate-sw'] {
+        cursor:
+            url('/assets/cursor/rotate-bottom-left.png') 10 10,
+            alias;
+    }
     // The canvas can pan while the space bar is held.
     &.is-space-held {
         cursor: grab;

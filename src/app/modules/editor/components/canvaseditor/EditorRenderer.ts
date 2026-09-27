@@ -8,9 +8,12 @@ import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Rect } from 'app/modules/editor/scripts/common';
 import { getContext2d } from 'app/modules/editor/scripts/dom';
 
+import { getHandlePoint, getVisibleHandles, HANDLE_SIZE } from './selectionHandles';
+
 // Figma's blue, and line widths in CSS pixels.
 const EDITOR_COLOR = '#0d99ff';
 const MARQUEE_FILL = 'rgba(13, 153, 255, 0.1)';
+const HANDLE_FILL = '#fff';
 const HOVER_LINE_WIDTH = 2;
 const SELECTED_LINE_WIDTH = 1;
 const BOUNDS_LINE_WIDTH = 1;
@@ -19,6 +22,7 @@ export interface EditorDrawing {
   readonly vectorLayer: VectorLayer;
   readonly hoveredLayerId: string | undefined;
   readonly selectedLayerIds: ReadonlySet<string>;
+  readonly isShowingHandles: boolean;
   readonly marquee: Rect | undefined;
 }
 
@@ -43,7 +47,7 @@ export class EditorRenderer {
     // Line widths are in viewport units under the transform.
     const toViewport = (length: number) => camera.toViewportLength(length);
 
-    const { vectorLayer, hoveredLayerId, selectedLayerIds, marquee } = drawing;
+    const { vectorLayer, hoveredLayerId, selectedLayerIds, isShowingHandles, marquee } = drawing;
     const outline = (layerId: string, lineWidth: number) => {
       const layer = vectorLayer.findLayerById(layerId);
       if (isMorphableLayer(layer) && layer.pathData) {
@@ -66,6 +70,17 @@ export class EditorRenderer {
       ctx.strokeStyle = EDITOR_COLOR;
       ctx.lineWidth = toViewport(BOUNDS_LINE_WIDTH);
       ctx.stroke();
+      if (isShowingHandles) {
+        const size = toViewport(HANDLE_SIZE);
+        for (const handle of getVisibleHandles(bounds, toViewport)) {
+          const { x, y } = getHandlePoint(bounds, handle);
+          ctx.beginPath();
+          ctx.rect(x - size / 2, y - size / 2, size, size);
+          ctx.fillStyle = HANDLE_FILL;
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
     }
 
     if (marquee) {
