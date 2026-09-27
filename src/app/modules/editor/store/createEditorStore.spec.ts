@@ -8,8 +8,6 @@ import { SetGuides } from './guides/actions';
 import { getGuides } from './guides/selectors';
 import { SetSelectedLayers, SetVectorLayer } from './layers/actions';
 import { getHiddenLayerIds, getSelectedLayerIds, getVectorLayer } from './layers/selectors';
-import { SetHoveredLayerId, SetZoomPanInfo } from './paper/actions';
-import { getHoveredLayerId, getZoomPanInfo } from './paper/selectors';
 import { SetCurrentTime, SetIsPlaying } from './playback/actions';
 import { getCurrentTime } from './playback/selectors';
 import { ResetWorkspace } from './reset/actions';
@@ -111,35 +109,6 @@ describe('createEditorStore', () => {
     store.dispatch(ActionCreators.redo());
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['b']));
     expect(getThemeType(store.getState()).themeType).toBe('light');
-  });
-
-  it('does not record paper slice changes in the undo history', () => {
-    const store = createEditorStore();
-    const numPastStates = store.getState().past.length;
-    store.dispatch(new SetHoveredLayerId('a'));
-    store.dispatch(new BatchAction(new SetHoveredLayerId('b')));
-    expect(getHoveredLayerId(store.getState())).toBe('b');
-    expect(store.getState().past.length).toBe(numPastStates);
-  });
-
-  it('keeps the canvas view on undo and redo, and clears the paper state about the document', () => {
-    const store = createEditorStore();
-    vi.advanceTimersByTime(2000);
-    store.dispatch(new SetSelectedLayers(new Set(['a'])));
-    vi.advanceTimersByTime(2000);
-    store.dispatch(new SetSelectedLayers(new Set(['b'])));
-    const zoomPanInfo = { zoom: 2, translation: { tx: 10, ty: 20 } };
-    store.dispatch(new SetZoomPanInfo(zoomPanInfo));
-    store.dispatch(new SetHoveredLayerId('b'));
-    store.dispatch(ActionCreators.undo());
-    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
-    expect(getZoomPanInfo(store.getState())).toEqual(zoomPanInfo);
-    expect(getHoveredLayerId(store.getState())).toBeUndefined();
-    store.dispatch(new SetHoveredLayerId('a'));
-    store.dispatch(ActionCreators.redo());
-    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['b']));
-    expect(getZoomPanInfo(store.getState())).toEqual(zoomPanInfo);
-    expect(getHoveredLayerId(store.getState())).toBeUndefined();
   });
 
   it('gives loading a project an undo step of its own', () => {

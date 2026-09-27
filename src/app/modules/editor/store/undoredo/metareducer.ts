@@ -1,7 +1,6 @@
 import { Action, ActionReducer } from 'app/modules/editor/store';
 import { ActionModeActionTypes } from 'app/modules/editor/store/actionmode/actions';
 import { BatchAction, BatchActionTypes } from 'app/modules/editor/store/batch/actions';
-import { PaperActionTypes } from 'app/modules/editor/store/paper/actions';
 import { PlaybackActionTypes } from 'app/modules/editor/store/playback/actions';
 import { EditorState } from 'app/modules/editor/store/reducer';
 import { ResetActionTypes } from 'app/modules/editor/store/reset/actions';
@@ -24,8 +23,6 @@ const UNDO_EXCLUDED_ACTIONS: ReadonlySet<string> = new Set([
   ActionModeActionTypes.SetActionMode,
   ActionModeActionTypes.SetActionModeHover,
   ThemeActionTypes.SetTheme,
-  // The paper slice only holds canvas UI state, like the cursor, the hovered layer, and the zoom.
-  ...Object.values(PaperActionTypes),
 ]);
 const UNDO_REDO_ACTIONS: ReadonlySet<string> = new Set([
   UndoActionTypes.UNDO,
@@ -89,15 +86,8 @@ export function metaReducer(reducer: EditorStateReducer): StateReducer {
     }
     let { present } = history;
     if (state && UNDO_REDO_ACTIONS.has(action.type)) {
-      // The theme is a preference, so undoing edits shouldn't change it. The paper slice is canvas
-      // UI state: the view (zoom, cursor, and tool) stays as it is, but the rest refers to layers
-      // and points that the restored document may not have, so it's cleared.
-      const { paper } = state.present;
-      present = {
-        ...present,
-        theme: state.present.theme,
-        paper: { ...paper, toolModeInfo: { toolMode: paper.toolModeInfo.toolMode } },
-      };
+      // The theme is a preference, so undoing edits shouldn't change it.
+      present = { ...present, theme: state.present.theme };
     }
     // Excluded actions (e.g. the current time changing on every frame of playback) shouldn't
     // keep edits made more than a second apart from getting their own undo steps. The action

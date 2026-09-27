@@ -8,7 +8,6 @@ import { Toolbar } from 'app/modules/editor/components/toolbar/Toolbar';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { ActionMode, ActionSource } from 'app/modules/editor/model/actionmode';
-import { CursorType } from 'app/modules/editor/model/paper';
 import { on } from 'app/modules/editor/scripts/dom';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import {
@@ -17,7 +16,6 @@ import {
   isActionMode as getIsActionMode,
 } from 'app/modules/editor/store/actionmode/selectors';
 import { isWorkspaceDirty } from 'app/modules/editor/store/common/selectors';
-import { getCursorType } from 'app/modules/editor/store/paper/selectors';
 import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { createSelector } from 'app/modules/editor/store/selectors';
 import { environment } from 'environments/environment';
@@ -30,17 +28,13 @@ import { useDropTarget } from './useDropTarget';
 const IS_DEV_BUILD = !environment.production;
 const IS_MOBILE = window.navigator.userAgent.includes('Mobile');
 
-const getCursorClassName = createSelector(
-  [getCursorType, getActionMode, getActionModeHover],
-  (cursorType, mode, hover) => {
-    if (mode === ActionMode.SplitCommands || mode === ActionMode.SplitSubPaths) {
-      return `cursor-${CursorType.Pen}`;
-    } else if (hover) {
-      return `cursor-${CursorType.Pointer}`;
-    }
-    return `cursor-${cursorType || CursorType.Default}`;
-  },
-);
+// Action mode's cursors. The canvas editor sets its own (components/canvas/canvas.scss).
+const getCursorClassName = createSelector([getActionMode, getActionModeHover], (mode, hover) => {
+  if (mode === ActionMode.SplitCommands || mode === ActionMode.SplitSubPaths) {
+    return 'cursor-pen';
+  }
+  return hover ? 'cursor-pointer' : 'cursor-default';
+});
 
 export function Root() {
   return <div className="app-root">{IS_MOBILE ? <SplashScreen /> : <Workspace />}</div>;

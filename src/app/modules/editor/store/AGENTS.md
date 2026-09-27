@@ -9,13 +9,12 @@ was ported from ngrx. `store/createEditorStore.ts` builds it.
 
 - `store.getState()` returns redux-undo's history: `{ past, present, future, timestamp }`. The
   editor state is `present`, with one slice per directory: `layers`, `timeline`, `playback`,
-  `actionmode`, `reset`, `theme`, `paper`, and `guides` (`store/reducer.ts`).
+  `actionmode`, `reset`, `theme`, and `guides` (`store/reducer.ts`).
 - `guides` holds the canvas editor's guides (`model/guides/`). They're saved in the
   `.shapeshifter` file and loaded with `ResetWorkspace`, and changing them is an undo step
   (`services/guide.service.ts`).
-- `paper` was the old paper.js beta editor's state (its tool, cursor, and hover). That editor has
-  been removed (`docs/canvas-editor.md`), so nothing writes to it, but `components/root/Root.tsx`
-  (the cursor) and `store/common/selectors.ts` (hovered rows in the layer list) still read it. Replace it with the canvas editor's own state rather than adding to it.
+- The canvas editor's tools, hovers, and point selections aren't in the store. They're in the
+  editor (`components/canvaseditor/`), and its settings are in `services/canvassettings.service.ts`.
 - `store.select(selector)` returns an rxjs observable that emits the current value right away and
   then each change (by reference). Services and imperative controllers subscribe with it. There's
   no `store.subscribe`.
@@ -24,7 +23,7 @@ was ported from ngrx. `store/createEditorStore.ts` builds it.
 
 - Actions are classes in `store/<slice>/actions.ts`, with `readonly type = XActionTypes.Y` (strings
   like `'__layers__SET_VECTOR_LAYER'`) and a `readonly payload` set in the constructor. Add new
-  ones to the slice's union type. The paper slice's actions put their fields on the action itself.
+  ones to the slice's union type.
 - A middleware in `store/createEditorStore.ts` spreads each action into a plain object, because
   Redux rejects class instances. Reducers can't use `instanceof` or getters on the action.
 - Components don't dispatch. They call a service (`services/`), which reads the state with
@@ -38,13 +37,12 @@ From the outside in: the action logger (dev only), freeze (dev and tests), undo,
 - **Undo** (`store/undoredo/metareducer.ts`) keeps 30 states. An action more than 1 second after
   the previous recorded one starts an undo step, and the actions after it within a second join
   it. Actions in `UNDO_EXCLUDED_ACTIONS` (the playback actions, `SetActionMode`,
-  `SetActionModeHover`, `SetTheme`, and every `paper` action) update the state without recording a
+  `SetActionModeHover`, and `SetTheme`) update the state without recording a
   step. Everything else is recorded, including selections, hidden and collapsed layers, and action
   mode selections and pairings. `ResetWorkspace` always gets a step of its own, and so does a batch
   with an `IsolateUndoStep` (`store/undoredo/actions.ts`) in it, which is how
   `layerTimelineService.commitCanvasEdit` saves a gesture on the canvas. Undo and redo keep
-  the current theme and the `paper` slice's view (zoom, cursor, and tool mode), and clear the rest
-  of that slice, since it refers to layers and points.
+  the current theme.
 - **Batch:** `new BatchAction(a, b)` applies several actions as one undo step. Only one level is
   unpacked, so don't nest batches.
 - **Reset:** `ResetWorkspace` rebuilds every slice's initial state, then loads its payload. It's an

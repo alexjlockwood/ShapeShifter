@@ -5,7 +5,6 @@ import {
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/modules/editor/store/layers/selectors';
-import { getHoveredLayerId } from 'app/modules/editor/store/paper/selectors';
 import { isBeingReset } from 'app/modules/editor/store/reset/selectors';
 import {
   getAnimation,
@@ -36,7 +35,6 @@ export const getLayerListTreeState = createStructuredSelector({
   selectedLayerIds: getSelectedLayerIds,
   collapsedLayerIds: getCollapsedLayerIds,
   hiddenLayerIds: getHiddenLayerIds,
-  hoveredLayerId: getHoveredLayerId,
   isActionMode,
 });
 
