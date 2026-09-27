@@ -1,5 +1,6 @@
 export { ColorProperty } from './ColorProperty';
 export { FractionProperty } from './FractionProperty';
+export { InterpolatorProperty } from './InterpolatorProperty';
 export { NameProperty } from './NameProperty';
 export { NumberProperty } from './NumberProperty';
 export { PathProperty } from './PathProperty';

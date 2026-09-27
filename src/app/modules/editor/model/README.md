@@ -133,7 +133,7 @@ An `AnimationBlock` describes a property animation for a particular `Layer`. The
 
 - `endTime` (integer) - An integer greater than the block's `startTime` representing the block's ending time in milliseconds. Default value is `100`.
 
-- `interpolator` (enum string) - Describes the interpolator to use for the property animation. It will be one of the `value`s listed in this [`Interpolator.ts`](interpolators/Interpolator.ts) file.
+- `interpolator` (string) - The easing of the property animation. It's either a preset, one of the `value`s in `INTERPOLATORS` ([`Interpolator.ts`](interpolators/Interpolator.ts)), or a custom curve written as canonical Android `pathInterpolator` path data, e.g. `"M 0 0 C 0.4 0 0.2 1 1 1"`: absolute cubics from (0, 0) to (1, 1), with numbers rounded to 3 decimals. A curve's anchor x values strictly increase, and each control point's x is within its segment, so x only increases along it (y may leave [0, 1] to anticipate or overshoot). It has at most 32 segments. [`CustomInterpolator.ts`](interpolators/CustomInterpolator.ts) parses and validates curves, and [`InterpolatorProperty.ts`](properties/InterpolatorProperty.ts) replaces anything that's neither with the default preset, `FAST_OUT_SLOW_IN`. The AVD export writes a preset as an `android:interpolator` reference, and a curve as an inline `<pathInterpolator>` (its control points for one cubic, and its `android:pathData` for more). Custom curves need version 2 (see below).
 
 - `type` (enum string) - Describes the value type of the associated `Layer` property: `path`, `color`, or `number`.
 
@@ -154,6 +154,12 @@ things may not show and saving may drop them.
 version any registered rule can produce. `FileExportService.exportJSON` writes whatever
 `getRequiredVersion` returns for the project being saved, so an ordinary file with none of the
 rules' features stays at version 1.
+
+The versions so far:
+
+- 1: every project without the features below.
+- 2: a block's `interpolator` is a custom curve rather than a preset's name. React builds before
+  it replace a curve with the default preset.
 
 ### Format-change rules
 

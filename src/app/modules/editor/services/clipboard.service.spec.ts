@@ -126,6 +126,28 @@ describe('ClipboardService', () => {
       expect(services.layerTimelineService.getSelectedBlocks()).toEqual([blocks[1]]);
     });
 
+    it('keeps a custom interpolator', () => {
+      const layer = addLayer('path');
+      const curve = 'M 0 0 C 0.2 0 0 1.4 0.5 1.2 C 0.8 1 0.9 1 1 1';
+      services.layerTimelineService.addBlocks([
+        {
+          layerId: layer.id,
+          propertyName: 'strokeWidth',
+          fromValue: 1,
+          toValue: 2,
+          currentTime: 0,
+        },
+      ]);
+      const block = getBlocks()[0].clone();
+      block.interpolator = curve;
+      services.layerTimelineService.updateBlocks([block]);
+      services.layerTimelineService.selectBlock(block.id, true);
+      paste(copy());
+      const blocks = getBlocks();
+      expect(blocks).toHaveLength(2);
+      expect(blocks[1].interpolator).toBe(curve);
+    });
+
     it("doesn't paste onto a layer that only has the same id in another tab", () => {
       const copied = copyStrokeWidthBlock('path');
       const other = addLayer('other');

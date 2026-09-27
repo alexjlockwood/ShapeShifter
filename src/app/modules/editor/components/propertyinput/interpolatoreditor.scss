@@ -1,0 +1,36 @@
+// Like a path's row, it's taller than the others, and the inspector's body scrolls instead of
+// squeezing it (rows have a min-height, so they'd shrink under the graph).
+.spi-body .spi-property:has(.spi-interpolator-editor) {
+    flex-shrink: 0;
+}
+
+.spi-interpolator-editor {
+    gap: 8px;
+    min-width: 0;
+    .spi-curve-graph {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+        border-radius: 2px;
+        outline: 0;
+        // Drags edit the curve rather than scrolling the inspector.
+        touch-action: none;
+        user-select: none;
+    }
+    .spi-curve-frame {
+        stroke-width: 1;
+    }
+    .spi-curve-path {
+        fill: none;
+        stroke-width: 2;
+    }
+    .spi-curve-handle-line {
+        stroke-width: 1;
+    }
+    .spi-curve-anchor,
+    .spi-curve-control {
+        stroke-width: 1.5;
+        cursor: move;
+    }
+}

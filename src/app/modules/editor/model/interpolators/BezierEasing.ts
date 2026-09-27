@@ -56,7 +56,12 @@ function newtonRaphsonIterate(aX: number, aGuessT: number, mX1: number, mX2: num
   return aGuessT;
 }
 
-export function create(mX1: number, mY1: number, mX2: number, mY2: number) {
+/**
+ * Returns a function that finds the t at which a cubic bezier's x(t) reaches x, for a curve whose x
+ * runs from 0 to 1, with its control points' x values at mX1 and mX2 (both in [0, 1]). Curves
+ * whose x runs over another range must be normalized to [0, 1] first.
+ */
+export function createTForX(mX1: number, mX2: number) {
   if (!(0 <= mX1 && mX1 <= 1 && 0 <= mX2 && mX2 <= 1)) {
     throw new Error('bezier x values must be in [0, 1] range');
   }
@@ -65,13 +70,11 @@ export function create(mX1: number, mY1: number, mX2: number, mY2: number) {
   const sampleValues = isFloat32ArraySupported
     ? new Float32Array(kSplineTableSize)
     : new Array(kSplineTableSize);
-  if (mX1 !== mY1 || mX2 !== mY2) {
-    for (let i = 0; i < kSplineTableSize; i++) {
-      sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
-    }
+  for (let i = 0; i < kSplineTableSize; i++) {
+    sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
   }
 
-  function getTForX(aX: number) {
+  return function getTForX(aX: number) {
     let intervalStart = 0;
     let currentSample = 1;
     const lastSample = kSplineTableSize - 1;
@@ -95,7 +98,11 @@ export function create(mX1: number, mY1: number, mX2: number, mY2: number) {
     } else {
       return binarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize, mX1, mX2);
     }
-  }
+  };
+}
+
+export function create(mX1: number, mY1: number, mX2: number, mY2: number) {
+  const getTForX = createTForX(mX1, mX2);
 
   return (x: number) => {
     if (mX1 === mY1 && mX2 === mY2) {

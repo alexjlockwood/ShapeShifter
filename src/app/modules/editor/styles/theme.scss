@@ -6,6 +6,7 @@
 @use '../components/layertimeline/layertimeline-theme' as *;
 @use '../components/layertimeline/timelineanimationrow-theme' as *;
 @use '../components/playback/playback-theme' as *;
+@use '../components/propertyinput/interpolatoreditor-theme' as *;
 @use '../components/propertyinput/propertyinput-theme' as *;
 @use '../components/root/root-theme' as *;
 @use '../components/toolbar/toolbar-theme' as *;
@@ -88,6 +89,7 @@ $dark-theme: (
     @include ss-timelineanimationrow-theme($theme);
     @include ss-playback-theme($theme);
     @include ss-propertyinput-theme($theme);
+    @include ss-interpolatoreditor-theme($theme);
     @include ss-root-theme($theme);
     @include ss-toolbar-theme($theme);
 }

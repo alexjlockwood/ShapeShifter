@@ -30,6 +30,7 @@ import {
   shouldShowStartActionModeButton,
 } from './buildPropertyInputModel';
 import type { InspectedProperty } from './InspectedProperty';
+import { InterpolatorEditor } from './InterpolatorEditor';
 import { getSteppedValue } from './steppedValue';
 import './propertyinput.scss';
 
@@ -185,6 +186,9 @@ export function PropertyInput() {
                             textInput
                           )}
                           {ip.typeName === 'EnumProperty' && <EnumPropertyEditor ip={ip} />}
+                          {ip.typeName === 'InterpolatorProperty' && (
+                            <InterpolatorEditor key={model.model?.id} ip={ip} />
+                          )}
                         </div>
                       )}
                     </div>

@@ -1,0 +1,38 @@
+@use 'sass:map';
+@use '../../styles/palette' as *;
+
+@mixin ss-interpolatoreditor-theme($theme) {
+    $foreground: map.get($theme, ss-foreground);
+    $background: map.get($theme, ss-background);
+    $accent-text: map.get($theme, accent-text);
+    .spi-interpolator-editor {
+        .spi-curve-graph:focus-visible {
+            box-shadow: 0 0 0 1px $accent-text;
+        }
+        .spi-curve-frame {
+            fill: mat-color($background, base);
+            stroke: mat-color($foreground, divider);
+        }
+        .spi-curve-path {
+            stroke: $accent-text;
+        }
+        .spi-curve-handle-line {
+            stroke: mat-color($foreground, secondary-text);
+        }
+        .spi-curve-end {
+            fill: mat-color($foreground, secondary-text);
+        }
+        .spi-curve-anchor,
+        .spi-curve-control {
+            fill: mat-color($background, base);
+            stroke: mat-color($foreground, primary-text);
+        }
+        .spi-curve-control {
+            stroke: $accent-text;
+        }
+        .spi-curve-anchor.is-selected {
+            fill: $accent-text;
+            stroke: $accent-text;
+        }
+    }
+}

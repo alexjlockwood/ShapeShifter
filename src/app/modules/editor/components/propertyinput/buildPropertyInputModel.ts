@@ -6,7 +6,12 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
-import { ColorProperty, NameProperty, type Property } from 'app/modules/editor/model/properties';
+import {
+  ColorProperty,
+  InterpolatorProperty,
+  NameProperty,
+  type Property,
+} from 'app/modules/editor/model/properties';
 import { Animation, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import type { LayerTimelineService } from 'app/modules/editor/services';
@@ -241,7 +246,8 @@ function buildInspectedBlockProperties(
 }
 
 /**
- * Returns a preview for the properties that a drag edits, i.e. colors (for a color picker). The
+ * Returns a preview for the properties that a drag edits, i.e. colors (for a color picker) and
+ * interpolators (for the curve editor, which only blocks have). The
  * preview sets the value as it is, without transformEditedValueFn, so a property that needs one
  * (like a layer's name, which must be unique) mustn't get a preview.
  */
@@ -250,7 +256,7 @@ function buildValuePreview(
   property: Property<any>,
   preview: (value: any) => void,
 ): ValuePreview<any> | undefined {
-  if (!(property instanceof ColorProperty)) {
+  if (!(property instanceof ColorProperty || property instanceof InterpolatorProperty)) {
     return undefined;
   }
   return {

@@ -1,8 +1,7 @@
-import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
+import { getInterpolateFn } from 'app/modules/editor/model/interpolators';
 import { Layer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
-import { find } from 'lodash-es';
 const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
   activeBlock: undefined,
   interpolatedValue: false,
@@ -31,10 +30,16 @@ export class AnimationRenderer {
         // Skip blocks for layers that no longer exist.
         return;
       }
+      const orderedBlocks = animDataByLayer[layerId];
+      const interpolateFns = new Map<AnimationBlock, (fraction: number) => number>();
+      Object.values(orderedBlocks).forEach(blocks =>
+        blocks.forEach(block => interpolateFns.set(block, getInterpolateFn(block.interpolator))),
+      );
       this.animDataByLayer[layerId] = {
         originalLayer,
         renderedLayer,
-        orderedBlocks: animDataByLayer[layerId],
+        orderedBlocks,
+        interpolateFns,
       };
     });
     this.setCurrentTime(0);
@@ -67,10 +72,9 @@ export class AnimationRenderer {
           }
           if (timeMillis < block.endTime) {
             const f = (timeMillis - block.startTime) / (block.endTime - block.startTime);
-            // TODO: this is a bit hacky... no need to perform a search every time.
-            const { interpolateFn: interpolatorFn } =
-              find(INTERPOLATORS, i => i.value === block.interpolator) ?? INTERPOLATORS[0];
-            value = property.interpolateValue(block.fromValue, block.toValue, interpolatorFn(f));
+            const interpolateFn =
+              animData.interpolateFns.get(block) ?? getInterpolateFn(block.interpolator);
+            value = property.interpolateValue(block.fromValue, block.toValue, interpolateFn(f));
             _ar.activeBlock = block;
             _ar.interpolatedValue = true;
             break;
@@ -110,6 +114,8 @@ interface RendererData {
   readonly renderedLayer: Layer;
   // Maps property names to animation block lists.
   readonly orderedBlocks: Dictionary<AnimationBlock[]>;
+  // Each block's easing function, resolved once rather than on every frame.
+  readonly interpolateFns: ReadonlyMap<AnimationBlock, (fraction: number) => number>;
   cachedState?: PropertyState;
 }
 
