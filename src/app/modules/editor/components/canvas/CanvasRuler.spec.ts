@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CanvasCamera } from './CanvasCamera';
-import { getRulerInterval, getRulerLayout } from './CanvasRuler';
+import { getRulerCorner, getRulerInterval, getRulerLayout } from './CanvasRuler';
 
 describe('getRulerInterval', () => {
   it('leaves at least 40 CSS pixels between ticks', () => {
@@ -36,6 +36,8 @@ describe('getRulerLayout', () => {
     // The artboard is 328 pixels wide, at (136, 36).
     const horizontal = getRulerLayout(camera, 'horizontal');
     expect(horizontal.rect).toEqual({ x: 124, y: 4, w: 352, h: 32 });
+    expect(horizontal.isPinned).toBe(false);
+    expect(getRulerCorner(camera)).toBeUndefined();
     expect(horizontal.ticks.map(t => t.label)).toEqual(['0', '4', '8', '12', '16', '20', '24']);
     expect(horizontal.ticks[0].offset).toBe(12);
     expect(horizontal.ticks[6].offset).toBeCloseTo(340, 9);
@@ -60,10 +62,28 @@ describe('getRulerLayout', () => {
       pixelRatio: 1,
       view: { type: 'manual', scale: 100, center: { x: 12, y: 12 } },
     });
-    const { rect, ticks } = getRulerLayout(camera, 'horizontal');
-    expect(rect).toEqual({ x: 0, y: 0, w: 600, h: 32 });
-    // The panel shows x from 9 to 15.
-    expect(ticks.map(t => t.label)).toEqual(['9', '10', '11', '12', '13', '14', '15']);
-    expect(ticks[3].offset).toBe(300);
+    // Both rulers run along the panel's edges, and leave the corner between them to a square.
+    expect(getRulerCorner(camera)).toEqual({ x: 0, y: 0, w: 32, h: 32 });
+    const { rect, isPinned, ticks } = getRulerLayout(camera, 'horizontal');
+    expect(rect).toEqual({ x: 32, y: 0, w: 568, h: 32 });
+    expect(isPinned).toBe(true);
+    // The panel shows x from 9 to 15, and the ruler starts at 9.32.
+    expect(ticks.map(t => t.label)).toEqual(['10', '11', '12', '13', '14', '15']);
+    expect(ticks[2].offset).toBe(268);
+    expect(getRulerLayout(camera, 'vertical').rect).toEqual({ x: 0, y: 32, w: 32, h: 368 });
+  });
+
+  it('only pins the ruler that the artboard is too close to', () => {
+    // The artboard's top is above the panel, and its left edge is in the middle.
+    const camera = CanvasCamera.create({
+      panel,
+      viewport,
+      pixelRatio: 1,
+      view: { type: 'manual', scale: 20, center: { x: 0, y: 12 } },
+    });
+    expect(getRulerLayout(camera, 'horizontal').isPinned).toBe(true);
+    expect(getRulerLayout(camera, 'horizontal').rect.x).toBe(288);
+    expect(getRulerLayout(camera, 'vertical').isPinned).toBe(false);
+    expect(getRulerCorner(camera)).toBeUndefined();
   });
 });

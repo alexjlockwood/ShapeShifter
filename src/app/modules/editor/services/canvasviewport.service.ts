@@ -4,8 +4,10 @@ import type { State, Store } from 'app/modules/editor/store';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { isBeingReset } from 'app/modules/editor/store/reset/selectors';
 import { isEqual } from 'lodash-es';
-import { BehaviorSubject, combineLatest, Subscription } from 'rxjs';
+import { BehaviorSubject, combineLatest, Subject, Subscription } from 'rxjs';
 import { distinctUntilChanged, map, skip } from 'rxjs/operators';
+
+import { HoldSpaceToPan } from './HoldSpaceToPan';
 
 /** Fits the artboard to the canvas. */
 export interface FitView {
@@ -23,13 +25,19 @@ export type CanvasView = FitView | ManualView;
 
 export const FIT_VIEW: FitView = { type: 'fit' };
 
+/** The zoom shortcuts. The canvas carries them out, since it knows the scale that fits. */
+export type ZoomCommand = 'in' | 'out' | 'fit' | '100%';
+
 /**
  * Holds the canvas's zoom and pan, which the three canvases in action mode share. It's kept out of
  * the store, since it changes with every scroll and pinch and isn't part of the document, so undo
- * leaves it alone.
+ * leaves it alone. It also knows whether the space bar is held down to pan.
  */
 export class CanvasViewportService {
   private readonly view = new BehaviorSubject<CanvasView>(FIT_VIEW);
+  private readonly zoomCommands = new Subject<ZoomCommand>();
+  private readonly space = new HoldSpaceToPan();
+  private readonly isSpaceHeldSubject = new BehaviorSubject(false);
   private readonly subscription = new Subscription();
 
   // The document from the last reset that was fit.
@@ -75,6 +83,44 @@ export class CanvasViewportService {
 
   fit() {
     this.setView(FIT_VIEW);
+  }
+
+  zoom(command: ZoomCommand) {
+    this.zoomCommands.next(command);
+  }
+
+  getZoomCommands() {
+    return this.zoomCommands.asObservable();
+  }
+
+  pressSpace(event: { readonly repeat: boolean }) {
+    this.space.keyDown(event);
+    this.isSpaceHeldSubject.next(this.space.isHeld());
+  }
+
+  /** Returns whether the press was a tap, which plays or pauses. */
+  releaseSpace() {
+    const isTap = this.space.keyUp();
+    this.isSpaceHeldSubject.next(false);
+    return isTap;
+  }
+
+  cancelSpace() {
+    this.space.reset();
+    this.isSpaceHeldSubject.next(false);
+  }
+
+  isSpaceHeld() {
+    return this.space.isHeld();
+  }
+
+  isSpaceHeldObservable() {
+    return this.isSpaceHeldSubject.pipe(distinctUntilChanged());
+  }
+
+  /** Notes that the canvas panned, so that releasing the space bar doesn't play or pause. */
+  notePan() {
+    this.space.pan();
   }
 
   dispose() {

@@ -40,4 +40,11 @@
         opacity: 1;
         visibility: visible;
     }
+    // The canvas can pan while the space bar is held.
+    &.is-space-held {
+        cursor: grab;
+    }
+    &.is-panning {
+        cursor: grabbing;
+    }
 }

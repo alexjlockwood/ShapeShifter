@@ -18,6 +18,7 @@ export function Canvas({ actionSource, className }: CanvasProps) {
   const artboardRef = useRef<HTMLDivElement>(null);
   const horizontalRulerRef = useRef<HTMLCanvasElement>(null);
   const verticalRulerRef = useRef<HTMLCanvasElement>(null);
+  const rulerCornerRef = useRef<HTMLDivElement>(null);
   const layersRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
 
@@ -28,6 +29,7 @@ export function Canvas({ actionSource, className }: CanvasProps) {
         artboard: requireRef(artboardRef),
         horizontalRuler: requireRef(horizontalRulerRef),
         verticalRuler: requireRef(verticalRulerRef),
+        rulerCorner: requireRef(rulerCornerRef),
         layers: requireRef(layersRef),
         overlay: requireRef(overlayRef),
       },
@@ -51,6 +53,7 @@ export function Canvas({ actionSource, className }: CanvasProps) {
       >
         <canvas ref={horizontalRulerRef} className="canvas-ruler orientation-horizontal" />
         <canvas ref={verticalRulerRef} className="canvas-ruler orientation-vertical" />
+        <div ref={rulerCornerRef} className="canvas-ruler canvas-ruler-corner" />
       </div>
       <canvas ref={layersRef} className="rendering-canvas" />
       <canvas ref={overlayRef} className="overlay-canvas" />

@@ -34,13 +34,16 @@ calls `actionModeService` in action mode and `layerTimelineService` otherwise.
 
 Each canvas covers its whole panel. `components/canvas/CanvasCamera.ts` maps between its three
 coordinate spaces: viewport coordinates (the vector layer's units), panel coordinates (CSS pixels
-from the panel's top left), and device coordinates (pixels in the backing store). Draw and hit
-test through it rather than scaling by hand, and convert pixel sizes like tolerances with
+from the panel's top left), and device coordinates (pixels in the backing store). Draw and hit test
+through it rather than scaling by hand, and convert pixel sizes like tolerances with
 `toViewportLength`. The view it shows, fit or a scale and a center, is in
-`services/canvasviewport.service.ts`, outside the store so that undo leaves it alone, and the
-three canvases in action mode share it. Nothing zooms yet. The white artboard is a div under the
-canvases, which ignore the mouse, so mouse events go to it and clicks around it reach the
-workspace. The rulers are inside of it too, so hovering over it shows them.
+`services/canvasviewport.service.ts`, outside the store so that undo leaves it alone, and the three
+canvases in action mode share it. With the canvas editor on, `components/canvas/CanvasNavigation.ts`
+zooms and pans with the wheel, pinches, and drags with the space bar or middle button held, and the
+keyboard shortcuts in `services/shortcut.service.ts` zoom through the viewport service (holding the
+space bar pans, and tapping it plays). The white artboard is a div under the canvases, which ignore
+the mouse, so mouse events go to it and clicks around it reach the workspace. The rulers are inside
+of it too, so hovering over it shows them.
 
 The new canvas editor is in `components/canvaseditor/`, and it's only downloaded when its feature
 is on (`src/environments/features.ts`). `components/canvas/CanvasController.ts` loads it through
