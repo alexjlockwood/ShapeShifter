@@ -39,6 +39,8 @@ export interface DrawToolContext {
   /** CSS pixels in viewport units, for tolerances. */
   toViewportLength(length: number): number;
   getSnapThresholds(): SnapThresholds;
+  /** Whether the layer's path can be changed now, e.g. that no animation block sets it. */
+  canEditPath(layerId: string): boolean;
   /** Returns the document's vector layer as it's drawn at the current time. */
   render(document: CanvasDocument): VectorLayer;
   /** The edit that a gesture shows until it's committed (CanvasPreview). */

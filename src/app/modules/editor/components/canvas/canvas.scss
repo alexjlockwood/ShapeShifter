@@ -99,12 +99,13 @@
             url('/assets/cursor/crosshair.png') 10 10,
             crosshair;
     }
-    // The canvas editor's tools, inside of where the rulers go when they're pinned to the edges.
+    // The canvas editor's tools, inside of where the rulers go when they're pinned to the edges
+    // (RULER_SIZE in CanvasRuler.ts).
     .canvas-editor-toolbar {
         position: absolute;
         z-index: 4;
-        left: 28px;
-        top: 28px;
+        left: 36px;
+        top: 36px;
         display: flex;
         flex-direction: column;
         gap: 2px;
@@ -133,7 +134,9 @@
             fill: currentColor;
         }
         &:focus-visible {
+            // Outside of the button, so that it shows on the pressed one, which is the same blue.
             outline: 2px solid #0d99ff;
+            outline-offset: 2px;
         }
     }
     // The canvas can pan while the space bar is held.

@@ -2,13 +2,7 @@ import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 
 import { CanvasTool, DrawToolContext, EMPTY_OVERLAY, ToolOverlay } from './drawTools';
 import { fitCurves } from './fitCurves';
-import {
-  addNewLayer,
-  createPathLayer,
-  getNewLayerParentId,
-  getNewLayerToLocal,
-  toLocalPath,
-} from './newLayers';
+import { addNewLayer, createPathLayer, getNewLayerPlace, toLocalPath } from './newLayers';
 import type { Modifiers } from './SelectTool';
 
 // How far the pointer has to move to add a point, and how far the curves can stray from the
@@ -20,7 +14,7 @@ const MIN_STROKE_LENGTH = 4;
 
 /**
  * Draws freehand, like Figma's pencil. The pointer's path is fitted with smooth cubic curves when
- * it's released, and becomes a new stroked layer (see getNewLayerParentId), which is selected. The
+ * it's released, and becomes a new stroked layer (see getNewLayerSpot), which is selected. The
  * pencil stays on, for the next stroke.
  */
 export class PencilTool implements CanvasTool {
@@ -72,14 +66,18 @@ export class PencilTool implements CanvasTool {
       preview.cancel();
       return;
     }
-    const parentId = getNewLayerParentId(base.vectorLayer, this.context.getSelectedLayerIds());
-    const toLocal = getNewLayerToLocal(base, parentId, document => this.context.render(document));
-    const pathData = toLocalPath(toLocal, [
+    const place = getNewLayerPlace(
+      base,
+      this.context.getSelectedLayerIds(),
+      this.context.getHiddenLayerIds(),
+      document => this.context.render(document),
+    );
+    const pathData = toLocalPath(place.toLocal, [
       ['M', curves[0][0]],
       ...curves.map(([, c1, c2, end]) => ['C', c1, c2, end] as [string, Point, Point, Point]),
     ]);
-    const layer = createPathLayer(base.vectorLayer, 'path', pathData, 'stroked');
-    preview.setDocument(addNewLayer(base, parentId, layer), {
+    const layer = createPathLayer(base.vectorLayer, 'path', pathData, 'stroked', place);
+    preview.setDocument(addNewLayer(base, place, layer), {
       selectedLayerIds: new Set([layer.id]),
     });
     preview.commit();

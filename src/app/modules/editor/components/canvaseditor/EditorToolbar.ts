@@ -10,7 +10,7 @@ interface ToolButton {
   readonly icon: string;
 }
 
-// Material Design icons (Apache License 2.0), except for the line.
+// Simple shapes drawn for the toolbar, and Material Design's pencil (Apache License 2.0).
 const TOOLS: ReadonlyArray<ToolButton> = [
   {
     tool: 'select',
@@ -61,7 +61,10 @@ export class EditorToolbar {
 
   constructor(
     root: HTMLElement,
-    private readonly onSelect: (tool: ToolName) => void,
+    private readonly callbacks: {
+      readonly onSelect: (tool: ToolName) => void;
+      readonly onHover: () => void;
+    },
   ) {
     this.element = document.createElement('div');
     this.element.className = 'canvas-editor-toolbar';
@@ -84,17 +87,25 @@ export class EditorToolbar {
       svg.appendChild(path);
       button.appendChild(svg);
       this.removeListeners.push(
-        on(button, 'click', () => {
-          this.onSelect(tool);
-          // Leaves the keyboard shortcuts to the canvas editor, rather than to the button.
-          button.blur();
+        on(button, 'click', event => {
+          this.callbacks.onSelect(tool);
+          if (event.detail > 0) {
+            // A click, rather than Enter or Space, so the keyboard shortcuts go back to the
+            // canvas editor instead of to the button.
+            button.blur();
+          }
         }),
       );
       this.buttons.set(tool, button);
       this.element.appendChild(button);
     }
-    // Presses on the toolbar aren't gestures on the canvas under it.
-    this.removeListeners.push(on(this.element, 'pointerdown', event => event.stopPropagation()));
+    // Presses and hovers over the toolbar aren't gestures on the canvas under it.
+    this.removeListeners.push(
+      on(this.element, 'pointerdown', event => event.stopPropagation()),
+      on(this.element, 'pointermove', event => event.stopPropagation()),
+      on(this.element, 'pointerenter', () => this.callbacks.onHover()),
+      on(this.element, 'keydown', event => this.onKeyDown(event)),
+    );
     root.appendChild(this.element);
     this.setActiveTool('select');
   }
@@ -102,7 +113,34 @@ export class EditorToolbar {
   setActiveTool(active: ToolName) {
     for (const [tool, button] of this.buttons) {
       button.setAttribute('aria-pressed', String(tool === active));
+      // One tab stop for the whole toolbar, on the active tool, and the arrow keys move between
+      // the tools.
+      button.tabIndex = tool === active ? 0 : -1;
     }
+  }
+
+  private onKeyDown(event: KeyboardEvent) {
+    const buttons = [...this.buttons.values()];
+    const index = buttons.findIndex(button => button === document.activeElement);
+    const offsets: Record<string, number> = {
+      ArrowUp: -1,
+      ArrowLeft: -1,
+      ArrowDown: 1,
+      ArrowRight: 1,
+    };
+    const offset = offsets[event.key];
+    if (index < 0 || (offset === undefined && event.key !== 'Home' && event.key !== 'End')) {
+      return undefined;
+    }
+    const next =
+      event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? buttons.length - 1
+          : (index + offset + buttons.length) % buttons.length;
+    buttons[next].focus();
+    // Rather than nudging the selection or rewinding.
+    return false;
   }
 
   /** Hides the toolbar, e.g. in action mode, where the editor's tools don't work. */

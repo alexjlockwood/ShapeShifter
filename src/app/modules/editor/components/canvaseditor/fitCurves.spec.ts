@@ -64,6 +64,9 @@ describe('fitCurves', () => {
       const cross =
         (before.x - join.x) * (after.y - join.y) - (before.y - join.y) * (after.x - join.x);
       expect(Math.abs(cross)).toBeLessThan(1e-9);
+      const dot =
+        (before.x - join.x) * (after.x - join.x) + (before.y - join.y) * (after.y - join.y);
+      expect(dot).toBeLessThan(0);
       expect(curves[i - 1][3]).toEqual(join);
     }
   });

@@ -7,14 +7,14 @@ import {
   addNewLayer,
   createPathLayer,
   ellipseCommands,
-  getNewLayerParentId,
-  getNewLayerToLocal,
+  getNewLayerPlace,
   lineCommands,
+  NewLayerPlace,
   rectangleCommands,
   toLocalPath,
 } from './newLayers';
 import type { Modifiers } from './SelectTool';
-import { getSnapTargets, SnapGuide, snapPoint, SnapTargets } from './snapping';
+import { getSnapTargets, snapAlongLineToGrid, SnapGuide, snapPoint, SnapTargets } from './snapping';
 
 export type ShapeKind = 'rectangle' | 'ellipse' | 'line';
 
@@ -25,22 +25,28 @@ const LINE_ANGLE_SNAP = 45;
 
 type State =
   | { readonly type: 'idle' }
-  | { readonly type: 'pressed'; readonly start: Point }
+  | {
+      readonly type: 'pressed';
+      // Where the pointer was pressed, and where the shape starts, which may have snapped away.
+      readonly point: Point;
+      readonly start: Point;
+    }
   | {
       readonly type: 'drawing';
       readonly start: Point;
       readonly base: CanvasDocument;
-      readonly parentId: string;
+      readonly place: NewLayerPlace;
       readonly layer: PathLayer;
-      readonly toLocal: Matrix;
       readonly targets: SnapTargets;
+      // Whether the shape has no area (or the line no length), which isn't worth keeping.
+      readonly isEmpty: boolean;
     };
 
 /**
  * Draws rectangles, ellipses, and lines by dragging, like Figma. Shift makes squares and circles,
  * and turns lines in steps of 45 degrees, and Alt draws from the middle. The dragged corner snaps
  * like a move does, unless Ctrl or Shift is held. The new layer goes into the selected group (see
- * getNewLayerParentId), and is selected.
+ * getNewLayerSpot), and is selected.
  */
 export class ShapeTool implements CanvasTool {
   private state: State = { type: 'idle' };
@@ -59,7 +65,7 @@ export class ShapeTool implements CanvasTool {
   onPress(point: Point, modifiers: Modifiers) {
     this.lastPoint = point;
     const targets = this.getTargets(this.context.getVectorLayer());
-    this.state = { type: 'pressed', start: this.snap(point, targets, modifiers) };
+    this.state = { type: 'pressed', point, start: this.snap(point, targets, modifiers) };
   }
 
   onMove(point: Point, modifiers: Modifiers) {
@@ -67,7 +73,7 @@ export class ShapeTool implements CanvasTool {
     const { state } = this;
     if (state.type === 'pressed') {
       if (
-        MathUtil.distance(state.start, point) > this.context.toViewportLength(DRAG_SLOP) &&
+        MathUtil.distance(state.point, point) > this.context.toViewportLength(DRAG_SLOP) &&
         this.startDrawing(state.start)
       ) {
         this.onMove(point, modifiers);
@@ -78,7 +84,12 @@ export class ShapeTool implements CanvasTool {
       return;
     }
     const end = this.snap(point, state.targets, modifiers);
-    const [a, b] = this.getCorners(state.start, end, modifiers);
+    const [a, corner] = this.getCorners(state.start, end, modifiers);
+    // A line kept at a multiple of 45 degrees still ends on the pixel grid where it can.
+    const b =
+      this.kind === 'line' && modifiers.shift && !modifiers.alt && !modifiers.ctrl
+        ? snapAlongLineToGrid(a, corner, this.context.getSnapThresholds().grid)
+        : corner;
     const commands =
       this.kind === 'rectangle'
         ? rectangleCommands(a, b)
@@ -86,8 +97,12 @@ export class ShapeTool implements CanvasTool {
           ? ellipseCommands(a, b)
           : lineCommands(a, b);
     const layer = state.layer.clone();
-    layer.pathData = toLocalPath(state.toLocal, commands);
-    this.context.preview.setDocument(addNewLayer(state.base, state.parentId, layer), {
+    layer.pathData = toLocalPath(state.place.toLocal, commands);
+    const width = Math.abs(b.x - a.x);
+    const height = Math.abs(b.y - a.y);
+    const isEmpty = this.kind === 'line' ? !width && !height : !width || !height;
+    this.state = { ...state, isEmpty };
+    this.context.preview.setDocument(addNewLayer(state.base, state.place, layer), {
       selectedLayerIds: new Set([layer.id]),
     });
   }
@@ -96,7 +111,10 @@ export class ShapeTool implements CanvasTool {
     const { state } = this;
     this.state = { type: 'idle' };
     this.guides = [];
-    if (state.type === 'drawing') {
+    if (state.type === 'drawing' && state.isEmpty) {
+      // E.g. both corners snapped to the same point.
+      this.context.preview.cancel();
+    } else if (state.type === 'drawing') {
       this.context.preview.commit();
       this.context.finish();
     }
@@ -134,20 +152,26 @@ export class ShapeTool implements CanvasTool {
       this.state = { type: 'idle' };
       return false;
     }
-    const parentId = getNewLayerParentId(base.vectorLayer, this.context.getSelectedLayerIds());
+    const place = getNewLayerPlace(
+      base,
+      this.context.getSelectedLayerIds(),
+      this.context.getHiddenLayerIds(),
+      document => this.context.render(document),
+    );
     const style = this.kind === 'line' ? 'stroked' : 'filled';
     this.state = {
       type: 'drawing',
       start,
       base,
-      parentId,
+      place,
       layer: createPathLayer(
         base.vectorLayer,
         this.kind,
         toLocalPath(Matrix.identity(), []),
         style,
+        place,
       ),
-      toLocal: getNewLayerToLocal(base, parentId, document => this.context.render(document)),
+      isEmpty: true,
       targets: this.getTargets(this.context.render(base)),
     };
     return true;

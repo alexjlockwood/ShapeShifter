@@ -350,10 +350,11 @@ export function appendAnchor(
   subIdx: number,
   point: Point,
   controls: NewSegmentControls = {},
+  // For redoing an append as a drag moves its handles, so that the anchor keeps its id.
+  id = uniqueId(),
 ) {
   const subPaths = toSubPaths(path);
   const subPath = getOpenSubPath(subPaths, subIdx);
-  const id = uniqueId();
   subPath.segments.push(
     newSegment(id, subPath.anchors[subPath.anchors.length - 1], point, controls),
   );
@@ -361,11 +362,24 @@ export function appendAnchor(
   return { path: toPath(subPaths), anchorId: id };
 }
 
-/** Closes an open subpath, with a line back to its first anchor or a curve (see appendAnchor). */
-export function closeSubPath(path: Path, subIdx: number, controls: NewSegmentControls = {}) {
+/**
+ * Closes an open subpath, with a line back to its first anchor or a curve (see appendAnchor). The
+ * first anchor's out handle is moved to firstOut, if it's given, turning the segment after it into
+ * a cubic curve.
+ */
+export function closeSubPath(
+  path: Path,
+  subIdx: number,
+  controls: NewSegmentControls = {},
+  firstOut?: Point,
+) {
   const subPaths = toSubPaths(path);
   const subPath = getOpenSubPath(subPaths, subIdx);
   const { anchors } = subPath;
+  if (firstOut && subPath.segments.length) {
+    toCubic(subPath, 0);
+    subPath.segments[0].controls[0] = firstOut;
+  }
   const segment = newSegment(uniqueId(), anchors[anchors.length - 1], anchors[0], controls);
   // A line back is the Z itself, and a curve is followed by a Z with no length.
   subPath.segments.push(segment.type === 'L' ? { ...segment, type: 'Z' } : segment);

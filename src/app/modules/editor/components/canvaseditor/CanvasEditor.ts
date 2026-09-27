@@ -92,6 +92,8 @@ class Editor implements CanvasEditor {
   private drawTool: PenTool | PencilTool | ShapeTool | undefined;
   private toolName: ToolName = 'select';
   private toolbar: EditorToolbar | undefined;
+  // Whether the pointer is pressed, so that tools don't change in the middle of a gesture.
+  private isPressing = false;
   private lastPress: { readonly time: number; readonly point: Point; count: number } | undefined;
   private subscription: Subscription | undefined;
   private removeKeyListeners: (() => void) | undefined;
@@ -130,11 +132,15 @@ class Editor implements CanvasEditor {
       this.hiddenLayerIds = hiddenLayerIds;
       this.selectedLayerIds = selectedLayerIds;
       if (actionMode && !this.isActionMode) {
-        this.setTool('select');
+        // Without cleaning up after the pen, which would change the selection that action mode
+        // is opening for.
+        this.setTool('select', { finishPen: false });
         this.selectTool.onLeave();
       }
+      if (actionMode !== this.isActionMode) {
+        this.toolbar?.setHidden(actionMode);
+      }
       this.isActionMode = actionMode;
-      this.toolbar?.setHidden(actionMode);
       const { pathEdit } = this;
       if (
         pathEdit &&
@@ -158,7 +164,15 @@ class Editor implements CanvasEditor {
       on(window, 'blur', () => this.endNudge()),
     ];
     this.removeKeyListeners = () => removeListeners.forEach(remove => remove());
-    this.toolbar = new EditorToolbar(this.context.root, tool => this.setTool(tool));
+    this.toolbar = new EditorToolbar(this.context.root, {
+      onSelect: tool => this.setTool(tool),
+      // The pointer is over the toolbar, rather than over what's under it.
+      onHover: () => {
+        if (!this.isPressing) {
+          this.getTool().onLeave();
+        }
+      },
+    });
     this.toolbar.setHidden(this.isActionMode);
     this.removeTestHooks = environment.production ? undefined : addTestHooks(preview, this);
   }
@@ -180,6 +194,7 @@ class Editor implements CanvasEditor {
   }
 
   onPress(event: PointerEvent, point: Point) {
+    this.isPressing = true;
     this.endNudge();
     const clickCount = this.countClicks(event, point);
     const { pathEdit } = this;
@@ -205,10 +220,12 @@ class Editor implements CanvasEditor {
   }
 
   onRelease(_: PointerEvent, point: Point) {
+    this.isPressing = false;
     this.getTool().onRelease(point);
   }
 
   onLeave() {
+    this.isPressing = false;
     this.getTool().onLeave();
   }
 
@@ -240,14 +257,14 @@ class Editor implements CanvasEditor {
    * Switches tools, finishing the path the pen was drawing. The shapes and the pencil draw new
    * layers, so they stop editing points, but the pen adds subpaths to the path being edited.
    */
-  private setTool(name: ToolName) {
+  private setTool(name: ToolName, { finishPen = true } = {}) {
     if (this.isActionMode && name !== 'select') {
       return;
     }
     const { drawTool } = this;
     this.drawTool = undefined;
     drawTool?.onLeave();
-    if (drawTool instanceof PenTool) {
+    if (drawTool instanceof PenTool && finishPen) {
       drawTool.finish();
     }
     this.endNudge();
@@ -274,6 +291,7 @@ class Editor implements CanvasEditor {
         grid: toViewportLength(GRID_SNAP_THRESHOLD),
       }),
       render: document => this.render(document),
+      canEditPath: layerId => this.context.preview.canEditPath(layerId),
       preview: this.context.preview,
       redraw: () => this.draw(),
       // Back to the select tool, or to editing points if the pen was adding to a path.
@@ -374,14 +392,29 @@ class Editor implements CanvasEditor {
       event.defaultPrevented ||
       this.isActionMode ||
       target?.closest('.MuiModal-root') ||
+      // The toolbar's buttons handle their own keys.
+      target?.closest('.canvas-editor-toolbar') ||
       document.activeElement?.matches('input, textarea, [contenteditable]')
     ) {
       return undefined;
     }
     const tool = getToolShortcut(event);
     if (tool) {
-      if (!event.repeat) {
+      // Not in the middle of a gesture, which the new tool couldn't finish.
+      if (!event.repeat && !this.isPressing) {
         this.setTool(tool);
+      }
+      return false;
+    }
+    const { drawTool } = this;
+    if (
+      drawTool instanceof PenTool &&
+      (event.key === 'Backspace' || event.key === 'Delete') &&
+      drawTool.isDrawing()
+    ) {
+      // Rather than deleting the layer, like Figma.
+      if (!this.isPressing) {
+        drawTool.removeLastPoint();
       }
       return false;
     }
@@ -390,7 +423,7 @@ class Editor implements CanvasEditor {
       !hasModifiers(event) &&
       (event.key === 'Escape' || (event.key === 'Enter' && !isControlFocused()))
     ) {
-      if (this.context.preview.isEditing() && !this.nudge) {
+      if (this.isPressing || (this.context.preview.isEditing() && !this.nudge)) {
         // A drag is in progress.
         return false;
       }
@@ -619,7 +652,13 @@ function getToolShortcut(event: KeyboardEvent): ToolName | undefined {
   if (event.altKey || event.metaKey || event.ctrlKey) {
     return undefined;
   }
-  const key = event.key.toLowerCase();
+  // By the key's position on layouts without Latin letters, e.g. Cyrillic, like the app's other
+  // shortcuts, which use keyCode.
+  const key = /^[a-z]$/i.test(event.key)
+    ? event.key.toLowerCase()
+    : /^Key[A-Z]$/.test(event.code)
+      ? event.code.slice(3).toLowerCase()
+      : '';
   if (key === 'p') {
     return event.shiftKey ? 'pencil' : 'pen';
   }

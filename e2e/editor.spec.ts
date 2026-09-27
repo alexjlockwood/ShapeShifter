@@ -304,7 +304,7 @@ test('draws a rectangle with the R shortcut, and goes back to the select tool', 
   );
   // R doesn't toggle repeating while the canvas editor is on.
   expect(await getState(page, s => s.playback.isRepeating)).toBe(false);
-  await drag(page, [16.2, 16.1], [21.9, 20.2]);
+  await drag(page, [16.1, 16.05], [21.95, 20.1]);
   await expect.poll(() => getPathData(page, 'rectangle')).toBe('M 16 16 L 22 16 L 22 20 L 16 20 Z');
   await expect.poll(() => getSelectedNames(page)).toEqual(['rectangle']);
   await expect.poll(() => getToolName(page)).toBe('select');

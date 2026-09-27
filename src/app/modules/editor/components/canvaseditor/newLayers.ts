@@ -10,77 +10,128 @@ import { Path } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
 import { round } from 'lodash-es';
 
-// Like Figma's defaults: shapes are filled, and lines and drawn paths are stroked.
+// Filled black, like most icons, and lines and drawn paths stroked, a unit wide on a 24 unit icon.
 const FILL_COLOR = '#000000';
 const STROKE_COLOR = '#000000';
-const STROKE_WIDTH = 1;
+const STROKE_WIDTH_PER_24_UNITS = 1;
 // How far a circle's control points are from its points, as a fraction of its radius.
 const KAPPA = (4 * (Math.SQRT2 - 1)) / 3;
 
+/** Where a new layer goes, and the matrix from viewport coordinates to its coordinates there. */
+export interface NewLayerPlace {
+  readonly parentId: string;
+  readonly index: number;
+  readonly toLocal: Matrix;
+}
+
 /**
- * Returns the layer that new layers go into: the selected group, or the parent of the selected
- * layer, where the new one goes above it, or else the vector layer.
+ * Returns where new layers go, like Figma: at the top of the selected group, or just above the
+ * selected layer, or else at the top of the vector layer.
  */
-export function getNewLayerParentId(vl: VectorLayer, selectedLayerIds: ReadonlySet<string>) {
+export function getNewLayerSpot(vl: VectorLayer, selectedLayerIds: ReadonlySet<string>) {
   if (selectedLayerIds.size === 1) {
     const [layerId] = selectedLayerIds;
     const layer = vl.findLayerById(layerId);
     if (layer instanceof GroupLayer) {
-      return layer.id;
+      return { parentId: layer.id, index: layer.children.length };
     }
     const parent = layer && LayerUtil.findParent(vl, layer.id);
-    if (parent) {
-      return parent.id;
+    if (layer && parent) {
+      return { parentId: parent.id, index: parent.children.indexOf(layer) + 1 };
     }
   }
-  return vl.id;
+  return { parentId: vl.id, index: vl.children.length };
 }
 
-/** Adds the layer to the top of the parent's layers. */
-export function addNewLayer(document: CanvasDocument, parentId: string, layer: Layer) {
-  const parent = document.vectorLayer.findLayerById(parentId);
+/**
+ * Returns where a new layer goes (see getNewLayerSpot), with the matrix into its coordinates as
+ * it's drawn at the current time. A layer in a hidden group, or in one scaled to 0, couldn't be
+ * seen, so it goes above that group, in the closest one that it can be seen in.
+ */
+export function getNewLayerPlace(
+  document: CanvasDocument,
+  selectedLayerIds: ReadonlySet<string>,
+  hiddenLayerIds: ReadonlySet<string>,
+  render: (document: CanvasDocument) => VectorLayer,
+): NewLayerPlace {
+  const vl = document.vectorLayer;
+  const isHidden = (layerId: string) => {
+    for (let id: string | undefined = layerId; id; id = LayerUtil.findParent(vl, id)?.id) {
+      if (hiddenLayerIds.has(id)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  let { parentId, index } = getNewLayerSpot(vl, selectedLayerIds);
+  while (parentId !== vl.id) {
+    const toLocal = isHidden(parentId) ? undefined : getToLocal(document, parentId, index, render);
+    if (toLocal) {
+      return { parentId, index, toLocal };
+    }
+    const parent = LayerUtil.findParent(vl, parentId);
+    if (!parent) {
+      break;
+    }
+    index = parent.children.findIndex(child => child.id === parentId) + 1;
+    parentId = parent.id;
+  }
+  if (parentId !== vl.id) {
+    index = vl.children.length;
+  }
   return {
-    vectorLayer: LayerUtil.addLayers(
-      document.vectorLayer,
-      parentId,
-      parent?.children.length ?? 0,
-      layer,
-    ),
+    parentId: vl.id,
+    index,
+    toLocal: getToLocal(document, vl.id, index, render) ?? Matrix.identity(),
+  };
+}
+
+/** Adds the layer where the place says. */
+export function addNewLayer(document: CanvasDocument, place: NewLayerPlace, layer: Layer) {
+  return addLayerAt(document, place.parentId, place.index, layer);
+}
+
+function addLayerAt(document: CanvasDocument, parentId: string, index: number, layer: Layer) {
+  return {
+    vectorLayer: LayerUtil.addLayers(document.vectorLayer, parentId, index, layer),
     animation: document.animation,
   };
 }
 
-/**
- * Returns the matrix from viewport coordinates to the coordinates of a new layer in the parent,
- * as it's drawn at the current time.
- */
-export function getNewLayerToLocal(
+function getToLocal(
   document: CanvasDocument,
   parentId: string,
+  index: number,
   render: (document: CanvasDocument) => VectorLayer,
 ) {
   const placeholder = new PathLayer({ name: '', children: [], pathData: undefined });
-  const rendered = render(addNewLayer(document, parentId, placeholder));
-  // A group scaled to 0 can't be drawn into, so this draws as if it weren't there.
-  return (
-    LayerUtil.getCanvasTransformForLayer(rendered, placeholder.id).invert() ?? Matrix.identity()
-  );
+  const rendered = render(addLayerAt(document, parentId, index, placeholder));
+  return LayerUtil.getCanvasTransformForLayer(rendered, placeholder.id).invert();
 }
 
-/** Returns a new path layer, filled or stroked, with a name that no other layer has. */
+/**
+ * Returns a new path layer, filled or stroked, with a name that no other layer has. A stroke is as
+ * wide as a unit is on a 24 unit icon, in the place's coordinates, so it looks the same whatever
+ * the artboard's size or the group's scale.
+ */
 export function createPathLayer(
   vl: VectorLayer,
   name: string,
   pathData: Path,
   style: 'filled' | 'stroked',
+  place: NewLayerPlace,
 ) {
+  const width =
+    (Math.max(vl.width, vl.height) / 24) *
+    STROKE_WIDTH_PER_24_UNITS *
+    place.toLocal.getScaleFactor();
   return new PathLayer({
     name: LayerUtil.getUniqueLayerName([vl], name),
     children: [],
     pathData,
     ...(style === 'filled'
       ? { fillColor: FILL_COLOR }
-      : { strokeColor: STROKE_COLOR, strokeWidth: STROKE_WIDTH }),
+      : { strokeColor: STROKE_COLOR, strokeWidth: round(width, 3) || STROKE_WIDTH_PER_24_UNITS }),
   });
 }
 

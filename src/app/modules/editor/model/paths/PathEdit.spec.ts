@@ -499,6 +499,10 @@ describe('PathEdit', () => {
       expect(curved.getPathString()).toBe('M 0 0 L 10 0 L 10 10 C 10 10 -2 4 0 0 Z');
       expect(getAnchors(curved)).toHaveLength(3);
       expect(() => closeSubPath(curved, 0)).toThrow();
+      // A drag on the first point pulls out its handle into the first segment too.
+      expect(closeSubPath(path, 0, { c2: { x: -2, y: 4 } }, { x: 2, y: -4 }).getPathString()).toBe(
+        'M 0 0 C 2 -4 6.667 0 10 0 L 10 10 C 10 10 -2 4 0 0 Z',
+      );
     });
 
     it('reverses an open subpath, keeping the ids of its anchors', () => {

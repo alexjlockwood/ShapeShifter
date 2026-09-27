@@ -165,3 +165,28 @@ export function snapPoint(
 ): Snap {
   return snapBounds({ l: point.x, t: point.y, r: point.x, b: point.y }, targets, thresholds, axes);
 }
+
+/**
+ * Snaps a point that's kept at an angle from the origin, e.g. with Shift held, to the pixel grid
+ * without leaving the line it's on: along a horizontal or vertical line, the other coordinate
+ * rounds, and along a diagonal, the point moves to where x is a whole unit, if that's within the
+ * threshold.
+ */
+export function snapAlongLineToGrid(origin: Point, point: Point, threshold: number): Point {
+  const dx = point.x - origin.x;
+  const dy = point.y - origin.y;
+  const length = Math.hypot(dx, dy);
+  if (!length) {
+    return point;
+  }
+  let snapped: Point;
+  if (Math.abs(dy) < 1e-9) {
+    snapped = { x: Math.round(point.x), y: point.y };
+  } else if (Math.abs(dx) < 1e-9) {
+    snapped = { x: point.x, y: Math.round(point.y) };
+  } else {
+    const x = Math.round(point.x);
+    snapped = { x, y: origin.y + ((x - origin.x) * dy) / dx };
+  }
+  return Math.hypot(snapped.x - point.x, snapped.y - point.y) <= threshold ? snapped : point;
+}

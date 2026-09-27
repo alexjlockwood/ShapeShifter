@@ -234,13 +234,25 @@ while held and plays or pauses when tapped. Repeat and slow motion keep their to
 ## Roadmap
 
 Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395), phase 1 (#396 to #399),
-phase 2 (#400), and phase 3. Phase 1's snapping only covers the artboard, other paths' bounds,
-and the pixel grid; guides come in phase 4. In phase 2, points snap to those, to the path's other points,
-and onto the closest curve. Editing a path has no cursors of its own yet, so hovering a segment or
-holding Cmd over one looks the same as anywhere else. Phase 3 put the tools in a toolbar over the
-canvas panel's top left, with Figma's shortcuts. The pen commits each point as its own undo step,
-and the rectangle, ellipse, and line tools go back to the select tool once they've drawn, while the
-pencil stays on.
+phase 2 (#400), and phase 3 (#402). Phase 1's snapping only covers the artboard, other paths'
+bounds, and the pixel grid; guides come in phase 4. In phase 2, points snap to those, to the
+path's other points, and onto the closest curve. Editing a path has no cursors of its own yet, so
+hovering a segment or holding Cmd over one looks the same as anywhere else.
+
+Phase 3 put the tools in a toolbar over the canvas panel's top left, with Figma's shortcuts. The
+pen commits each point as its own undo step, Backspace takes the last one away, and the pen only
+adds a subpath to an existing path while that path's points are being edited (Enter, then P). The
+rectangle, ellipse, and line tools go back to the select tool once they've drawn, while the pencil
+stays on. Strokes are a unit wide on a 24 unit icon, in proportion on bigger artboards. Some gaps
+are left for later:
+
+- A click with a shape tool draws nothing, where Figma draws a shape of a default size.
+- On a Mac, Ctrl and a click is a right-click, so Ctrl can only turn snapping off once a drag has
+  started, not for the pen's clicks or where a shape starts.
+- The toolbar covers a strip of the artboard's left edge when the artboard fits the panel's
+  width, since the fit leaves a margin narrower than the toolbar.
+- Undo can go back to before a pen path's second point, which leaves a layer that's only its
+  first point, like any path whose last subpath is a lone move.
 
 Phase 0 is the foundation, and it's split into small pull requests:
 
@@ -281,7 +293,8 @@ deleted the uncompiled code (`components/canvas/canvaspaper.directive.ts`,
 its exclusions from `tsconfig.json`, `.oxlintrc.json`, and `.prettierignore`, the test that kept
 them in step, the notes telling agents to leave it alone, the "Beta only" bug entries, and the
 images that only it used (`public/assets/paper/` and `public/assets/tools/`). The cursors in
-`public/assets/cursor/` stay for the tools that come next.
+`public/assets/cursor/` stay: the pen, pencil, and crosshair cursors are the drawing tools', and
+`pen-add.png` and `point-select.png` aren't used yet.
 
 The compiled `model/paper/` and `store/paper/` stay, since `components/root/Root.tsx` and the
 canvas read them, but they should be renamed or replaced by the new editor's own state as it

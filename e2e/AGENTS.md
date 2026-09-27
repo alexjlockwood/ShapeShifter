@@ -44,7 +44,8 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
   `loading`, `ready`, or `failed`, so wait for the value you expect rather than for it to be
   missing. Once it's `ready`, drive its tools with the mouse like `e2e/editor.spec.ts` does, or
   preview and commit path edits directly with `window.shapeshifter.canvasEditor`
-  (`components/canvaseditor/CanvasEditor.ts`).
+  (`components/canvaseditor/CanvasEditor.ts`). With it on, the tool letters (V, P, R, O, and L)
+  pick tools, so R no longer toggles repeating: click the "Repeat" button instead.
 
 ## Browser quirks
 
