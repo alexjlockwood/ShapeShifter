@@ -4,10 +4,12 @@ import type { State, Store } from 'app/modules/editor/store';
 import { Features, NO_FEATURES } from 'environments/features';
 
 import { ActionModeService } from './actionmode.service';
+import { CanvasSettingsService } from './canvassettings.service';
 import { CanvasViewportService } from './canvasviewport.service';
 import { ClipboardService } from './clipboard.service';
 import { FileExportService } from './fileexport.service';
 import { FileImportService } from './fileimport.service';
+import { GuideService } from './guide.service';
 import { LayerTimelineService } from './layertimeline.service';
 import { PlaybackService } from './playback.service';
 import { ShortcutService } from './shortcut.service';
@@ -31,6 +33,8 @@ export function createEditorServices(
   const actionModeService = new ActionModeService(store, layerTimelineService, snackBarService);
   const playbackService = new PlaybackService(store);
   const canvasViewportService = new CanvasViewportService(store);
+  const canvasSettingsService = new CanvasSettingsService();
+  const guideService = new GuideService(store);
   const fileExportService = new FileExportService(store);
   const fileImportService = new FileImportService(store, snackBarService, layerTimelineService);
   const clipboardService = new ClipboardService(
@@ -50,11 +54,13 @@ export function createEditorServices(
   return {
     features,
     actionModeService,
+    canvasSettingsService,
     canvasViewportService,
     clipboardService,
     dialogService,
     fileExportService,
     fileImportService,
+    guideService,
     layerTimelineService,
     playbackService,
     projectService,

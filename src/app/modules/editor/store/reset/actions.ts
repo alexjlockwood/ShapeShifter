@@ -1,3 +1,4 @@
+import type { Guide } from 'app/modules/editor/model/guides';
 import { VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation } from 'app/modules/editor/model/timeline';
 import { Action } from 'app/modules/editor/store';
@@ -12,13 +13,15 @@ export class ResetWorkspace implements Action {
     vectorLayer?: VectorLayer;
     animation?: Animation;
     hiddenLayerIds?: ReadonlySet<string>;
+    guides?: ReadonlyArray<Guide>;
   };
   constructor(
     vectorLayer?: VectorLayer,
     animation?: Animation,
     hiddenLayerIds?: ReadonlySet<string>,
+    guides?: ReadonlyArray<Guide>,
   ) {
-    this.payload = { vectorLayer, animation, hiddenLayerIds };
+    this.payload = { vectorLayer, animation, hiddenLayerIds, guides };
   }
 }
 

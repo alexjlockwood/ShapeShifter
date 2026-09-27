@@ -1,4 +1,6 @@
 import { on } from 'app/modules/editor/scripts/dom';
+import type { CanvasSettings } from 'app/modules/editor/services/canvassettings.service';
+import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 
 export type ToolName = 'select' | 'pen' | 'pencil' | 'rectangle' | 'ellipse' | 'line';
 
@@ -50,6 +52,36 @@ const TOOLS: ReadonlyArray<ToolButton> = [
   },
 ];
 
+interface SettingButton {
+  readonly setting: keyof CanvasSettings;
+  readonly label: string;
+  readonly shortcut: string;
+  readonly icon: string;
+}
+
+// Toggles for how the canvas shows, after the tools. The shortcuts are Figma's.
+const SETTINGS: ReadonlyArray<SettingButton> = [
+  {
+    setting: 'showRulers',
+    label: 'Rulers',
+    shortcut: 'Shift+R',
+    icon: 'M3 8h18v8H3V8zm2 2v4h14v-4h-1v2h-1v-2h-2v2h-1v-2h-2v2h-1v-2H9v2H8v-2H6v2H5z',
+  },
+  {
+    setting: 'showPixelGrid',
+    label: 'Pixel grid',
+    shortcut: "Shift+'",
+    icon: 'M4 4h16v16H4V4zm2 2v3h3V6H6zm5 0v3h2V6h-2zm4 0v3h3V6h-3zM6 11v2h3v-2H6zm5 0v2h2v-2h-2zm4 0v2h3v-2h-3zM6 15v3h3v-3H6zm5 0v3h2v-3h-2zm4 0v3h3v-3h-3z',
+  },
+  {
+    setting: 'snapToPixelGrid',
+    label: 'Snap to pixel grid',
+    // Cmd on Macs, and Ctrl elsewhere.
+    shortcut: "Command+Shift+'",
+    icon: 'M6 7h4v3a2 2 0 1 0 4 0V7h4v3a6 6 0 1 1-12 0V7zM6 3h4v3H6V3zm8 0h4v3h-4V3z',
+  },
+];
+
 /**
  * The canvas editor's tools, as buttons over the top left of the canvas panel. It's plain DOM,
  * since the editor is loaded lazily and draws the rest of what it shows on a canvas.
@@ -57,12 +89,14 @@ const TOOLS: ReadonlyArray<ToolButton> = [
 export class EditorToolbar {
   private readonly element: HTMLElement;
   private readonly buttons = new Map<ToolName, HTMLButtonElement>();
+  private readonly settingButtons = new Map<keyof CanvasSettings, HTMLButtonElement>();
   private readonly removeListeners: Array<() => void> = [];
 
   constructor(
     root: HTMLElement,
     private readonly callbacks: {
       readonly onSelect: (tool: ToolName) => void;
+      readonly onToggle: (setting: keyof CanvasSettings) => void;
       readonly onHover: () => void;
     },
   ) {
@@ -72,32 +106,19 @@ export class EditorToolbar {
     this.element.setAttribute('aria-label', 'Tools');
     this.element.setAttribute('aria-orientation', 'vertical');
     for (const { tool, label, shortcut, icon } of TOOLS) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'canvas-editor-tool';
-      button.title = `${label} (${shortcut})`;
-      button.setAttribute('aria-label', label);
-      button.setAttribute('aria-keyshortcuts', shortcut);
+      const button = this.addButton(label, shortcut, icon, () => this.callbacks.onSelect(tool));
       button.dataset.tool = tool;
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', '0 0 24 24');
-      svg.setAttribute('aria-hidden', 'true');
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', icon);
-      svg.appendChild(path);
-      button.appendChild(svg);
-      this.removeListeners.push(
-        on(button, 'click', event => {
-          this.callbacks.onSelect(tool);
-          if (event.detail > 0) {
-            // A click, rather than Enter or Space, so the keyboard shortcuts go back to the
-            // canvas editor instead of to the button.
-            button.blur();
-          }
-        }),
-      );
       this.buttons.set(tool, button);
-      this.element.appendChild(button);
+    }
+    const separator = document.createElement('div');
+    separator.className = 'canvas-editor-toolbar-separator';
+    separator.setAttribute('role', 'separator');
+    this.element.appendChild(separator);
+    for (const { setting, label, shortcut, icon } of SETTINGS) {
+      const button = this.addButton(label, shortcut, icon, () => this.callbacks.onToggle(setting));
+      button.dataset.setting = setting;
+      button.tabIndex = -1;
+      this.settingButtons.set(setting, button);
     }
     // Presses and hovers over the toolbar aren't gestures on the canvas under it.
     this.removeListeners.push(
@@ -110,6 +131,45 @@ export class EditorToolbar {
     this.setActiveTool('select');
   }
 
+  private addButton(label: string, shortcut: string, icon: string, onClick: () => void) {
+    const isMac = ShortcutService.isMac();
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'canvas-editor-tool';
+    button.title = `${label} (${shortcut.replace('Command', isMac ? 'Cmd' : 'Ctrl')})`;
+    button.setAttribute('aria-label', label);
+    button.setAttribute(
+      'aria-keyshortcuts',
+      shortcut.replace('Command', isMac ? 'Meta' : 'Control'),
+    );
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', icon);
+    svg.appendChild(path);
+    button.appendChild(svg);
+    this.removeListeners.push(
+      on(button, 'click', event => {
+        onClick();
+        if (event.detail > 0) {
+          // A click, rather than Enter or Space, so the keyboard shortcuts go back to the canvas
+          // editor instead of to the button.
+          button.blur();
+        }
+      }),
+    );
+    this.element.appendChild(button);
+    return button;
+  }
+
+  /** Shows which of the settings are on. */
+  setSettings(settings: CanvasSettings) {
+    for (const [setting, button] of this.settingButtons) {
+      button.setAttribute('aria-pressed', String(settings[setting]));
+    }
+  }
+
   setActiveTool(active: ToolName) {
     for (const [tool, button] of this.buttons) {
       button.setAttribute('aria-pressed', String(tool === active));
@@ -120,7 +180,7 @@ export class EditorToolbar {
   }
 
   private onKeyDown(event: KeyboardEvent) {
-    const buttons = [...this.buttons.values()];
+    const buttons = [...this.buttons.values(), ...this.settingButtons.values()];
     const index = buttons.findIndex(button => button === document.activeElement);
     const offsets: Record<string, number> = {
       ArrowUp: -1,

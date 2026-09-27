@@ -1,3 +1,4 @@
+import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
@@ -104,12 +105,14 @@ export class FileImportService {
           let vl: VectorLayer;
           let animation: Animation;
           let hiddenLayerIds: ReadonlySet<string>;
+          let guides: ReadonlyArray<Guide>;
           try {
             const jsonObj = JSON.parse(text);
             const parsedObj = FileExportService.fromJSON(jsonObj);
             vl = parsedObj.vectorLayer;
             animation = parsedObj.animation;
             hiddenLayerIds = parsedObj.hiddenLayerIds;
+            guides = parsedObj.guides;
             const regeneratedModels = ModelUtil.regenerateModelIds(vl, animation, hiddenLayerIds);
             vl = regeneratedModels.vectorLayer;
             animation = regeneratedModels.animation;
@@ -119,7 +122,7 @@ export class FileImportService {
             this.onFailure();
             return;
           }
-          this.onSuccess(importType, resetWorkspace, [vl], animation, hiddenLayerIds);
+          this.onSuccess(importType, resetWorkspace, [vl], animation, hiddenLayerIds, guides);
         }
       };
 
@@ -162,10 +165,11 @@ export class FileImportService {
     vls: ReadonlyArray<VectorLayer>,
     animation?: Animation,
     hiddenLayerIds?: ReadonlySet<string>,
+    guides?: ReadonlyArray<Guide>,
   ) {
     if (importType === ImportType.Json) {
       trackEvent('import_shapeshifter');
-      this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds));
+      this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds, guides));
     } else {
       if (importType === ImportType.Svg) {
         trackEvent('import_svg');

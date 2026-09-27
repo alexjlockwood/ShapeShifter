@@ -2,6 +2,7 @@ import { environment } from 'environments/environment';
 
 import * as fromActionMode from './actionmode/reducer';
 import * as metaBatchAction from './batch/metareducer';
+import * as fromGuides from './guides/reducer';
 import * as fromLayers from './layers/reducer';
 import * as fromPaper from './paper/reducer';
 import * as fromPlayback from './playback/reducer';
@@ -22,6 +23,7 @@ export interface EditorState {
   readonly reset: fromReset.State;
   readonly theme: fromTheme.State;
   readonly paper: fromPaper.State;
+  readonly guides: fromGuides.State;
 }
 
 export const reducers = {
@@ -32,6 +34,7 @@ export const reducers = {
   reset: fromReset.reducer,
   theme: fromTheme.reducer,
   paper: fromPaper.reducer,
+  guides: fromGuides.reducer,
 };
 
 const prodMetaReducers = [

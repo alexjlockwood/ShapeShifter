@@ -2,6 +2,7 @@ import type {
   CanvasDocument,
   CanvasEditLayerIds,
 } from 'app/modules/editor/components/canvas/CanvasPreview';
+import type { Guide } from 'app/modules/editor/model/guides';
 import { VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Point } from 'app/modules/editor/scripts/common';
@@ -39,6 +40,8 @@ export interface DrawToolContext {
   /** CSS pixels in viewport units, for tolerances. */
   toViewportLength(length: number): number;
   getSnapThresholds(): SnapThresholds;
+  /** The guides that new points snap to. */
+  getGuides(): ReadonlyArray<Guide>;
   /** Whether the layer's path can be changed now, e.g. that no animation block sets it. */
   canEditPath(layerId: string): boolean;
   /** Returns the document's vector layer as it's drawn at the current time. */

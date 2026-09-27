@@ -1,5 +1,6 @@
 import type { CanvasDocument } from 'app/modules/editor/components/canvas/CanvasPreview';
 import { isMorphableLayer } from 'app/modules/editor/components/canvas/LayerGeometry';
+import type { Guide } from 'app/modules/editor/model/guides';
 import { Layer, LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
@@ -35,6 +36,10 @@ export interface PathEditToolContext {
     cancel(): void;
   };
   redraw(): void;
+  /** How close things snap, which is 8 CSS pixels (4 to the pixel grid) without it. */
+  getSnapThresholds?(): SnapThresholds;
+  /** The guides that points snap to, if any. */
+  getGuides?(): ReadonlyArray<Guide>;
 }
 
 /** What the renderer draws while a path is edited, in viewport coordinates. */
@@ -763,10 +768,12 @@ export class PathEditTool {
   }
 
   private getSnapThresholds(): SnapThresholds {
-    return {
-      lines: this.context.toViewportLength(SNAP_THRESHOLD),
-      grid: this.context.toViewportLength(GRID_SNAP_THRESHOLD),
-    };
+    return (
+      this.context.getSnapThresholds?.() ?? {
+        lines: this.context.toViewportLength(SNAP_THRESHOLD),
+        grid: this.context.toViewportLength(GRID_SNAP_THRESHOLD),
+      }
+    );
   }
 
   /**
@@ -775,7 +782,12 @@ export class PathEditTool {
    */
   private getSnapTargets(base: Path, movingAnchorIds: ReadonlySet<string>): SnapTargets {
     const vl = this.context.getVectorLayer();
-    const targets = getSnapTargets(vl, [this.layerId], this.context.getHiddenLayerIds());
+    const targets = getSnapTargets(
+      vl,
+      [this.layerId],
+      this.context.getHiddenLayerIds(),
+      this.context.getGuides?.(),
+    );
     const toViewport = this.getToViewport();
     const x: SnapLine[] = [...targets.x];
     const y: SnapLine[] = [...targets.y];

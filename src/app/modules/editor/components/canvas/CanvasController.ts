@@ -13,6 +13,7 @@ import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import type { Features } from 'environments/features';
 import { isEqual, round } from 'lodash-es';
+import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { CanvasCamera, getZoomStep, Size } from './CanvasCamera';
@@ -179,6 +180,21 @@ export class CanvasController extends DestroyableMixin() {
         this.isActionMode = value;
       }),
     );
+    if (this.canvasPreview) {
+      // With the editor, the main canvas's rulers show all the time, since guides are dragged out
+      // of them, unless Shift+R hides them. Otherwise they show while the pointer is over the
+      // artboard, like the ones in action mode.
+      this.registerSubscription(
+        combineLatest([
+          this.services.canvasSettingsService.asObservable(),
+          this.store.select(isActionMode),
+        ]).subscribe(([{ showRulers }, actionMode]) => {
+          const { classList } = this.elements.root;
+          classList.toggle('shows-rulers', showRulers && !actionMode);
+          classList.toggle('hides-rulers', !showRulers && !actionMode);
+        }),
+      );
+    }
     if (this.canvasPreview) {
       // Touch drags anywhere on the panel are the editor's, e.g. a marquee off of the artboard.
       this.elements.root.classList.add('has-canvas-editor');

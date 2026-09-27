@@ -5,10 +5,12 @@ import {
   isMorphableLayer,
 } from 'app/modules/editor/components/canvas/LayerGeometry';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
-import { Rect } from 'app/modules/editor/scripts/common';
+import { Point, Rect } from 'app/modules/editor/scripts/common';
 import { getContext2d } from 'app/modules/editor/scripts/dom';
 
 import type { ToolOverlay } from './drawTools';
+import { formatGuideValue, GuideDrawing } from './GuideTool';
+import type { Measurement } from './measuring';
 import type { PathEditDrawing } from './PathEditTool';
 import { getHandlePoint, getVisibleHandles, HANDLE_SIZE } from './selectionHandles';
 import type { SnapGuide } from './snapping';
@@ -17,9 +19,22 @@ import type { SnapGuide } from './snapping';
 const EDITOR_COLOR = '#0d99ff';
 const MARQUEE_FILL = 'rgba(13, 153, 255, 0.1)';
 const HANDLE_FILL = '#fff';
-// Figma's snapping red.
+// Figma's snapping red, and a pink for the guides dragged out of the rulers, so they don't look like
+// snaps.
 const GUIDE_COLOR = '#f24822';
 const GUIDE_LINE_WIDTH = 1;
+const RULER_GUIDE_COLOR = '#f23fb4';
+const ACTIVE_RULER_GUIDE_LINE_WIDTH = 2;
+// The ticks at the ends of a gap or a measurement, and the labels, in CSS pixels.
+const GAP_TICK_SIZE = 4;
+const LABEL_FONT = '600 11px Roboto, Helvetica Neue, sans-serif';
+const LABEL_HEIGHT = 16;
+const LABEL_PADDING = 4;
+const LABEL_OFFSET = 6;
+const LABEL_TEXT_COLOR = '#fff';
+// The pixel grid shows once the units are this far apart, in CSS pixels, as in Figma.
+const PIXEL_GRID_MIN_SCALE = 8;
+const PIXEL_GRID_COLOR = 'rgba(0, 0, 0, 0.1)';
 const HOVER_LINE_WIDTH = 2;
 const SELECTED_LINE_WIDTH = 1;
 const BOUNDS_LINE_WIDTH = 1;
@@ -41,6 +56,17 @@ export interface EditorDrawing {
   readonly pathEdit?: PathEditDrawing;
   /** What a drawing tool shows while it draws. */
   readonly overlay?: ToolOverlay;
+  /** The guides dragged out of the rulers, when they're showing. */
+  readonly rulerGuides?: GuideDrawing;
+  /** Distances from the selection to a target, while Alt is held. */
+  readonly measurements?: { readonly target: Rect; readonly items: ReadonlyArray<Measurement> };
+  readonly showsPixelGrid?: boolean;
+}
+
+interface Label {
+  readonly point: Point;
+  readonly text: string;
+  readonly color: string;
 }
 
 /** Draws the editor's outlines, bounds, and marquee on its own canvas, over the others. */
@@ -73,7 +99,18 @@ export class EditorRenderer {
       guides,
       pathEdit,
       overlay,
+      rulerGuides,
+      measurements,
+      showsPixelGrid,
     } = drawing;
+    // Labels are drawn last, at a fixed size, in panel coordinates.
+    const labels: Label[] = [];
+    if (showsPixelGrid && camera.scale >= PIXEL_GRID_MIN_SCALE) {
+      drawPixelGrid(ctx, camera, vectorLayer);
+    }
+    if (rulerGuides) {
+      drawRulerGuides(ctx, camera, rulerGuides, labels);
+    }
     const outline = (layerId: string, lineWidth: number) => {
       const layer = vectorLayer.findLayerById(layerId);
       if (isMorphableLayer(layer) && layer.pathData) {
@@ -116,7 +153,19 @@ export class EditorRenderer {
       }
     }
 
-    for (const { axis, value, from, to } of guides) {
+    ctx.strokeStyle = GUIDE_COLOR;
+    ctx.lineWidth = toViewport(GUIDE_LINE_WIDTH);
+    for (const { axis, value, from, to, isGap } of guides) {
+      if (isGap) {
+        // A gap that's the same as the others, measured along the other axis.
+        drawDistance(ctx, axis === 'x' ? 'y' : 'x', from, to, value, toViewport);
+        labels.push({
+          point: axis === 'x' ? { x: value, y: (from + to) / 2 } : { x: (from + to) / 2, y: value },
+          text: formatGuideValue(to - from),
+          color: GUIDE_COLOR,
+        });
+        continue;
+      }
       ctx.beginPath();
       if (axis === 'x') {
         ctx.moveTo(value, from);
@@ -125,9 +174,11 @@ export class EditorRenderer {
         ctx.moveTo(from, value);
         ctx.lineTo(to, value);
       }
-      ctx.strokeStyle = GUIDE_COLOR;
-      ctx.lineWidth = toViewport(GUIDE_LINE_WIDTH);
       ctx.stroke();
+    }
+
+    if (measurements) {
+      drawMeasurements(ctx, measurements.target, measurements.items, toViewport, labels);
     }
 
     if (marquee) {
@@ -140,7 +191,160 @@ export class EditorRenderer {
       ctx.stroke();
     }
     ctx.restore();
+    drawLabels(ctx, camera, labels);
   }
+}
+
+/** Draws a line between the units of the artboard, over the paths. */
+function drawPixelGrid(ctx: CanvasRenderingContext2D, camera: CanvasCamera, vl: VectorLayer) {
+  const { l, t, r, b } = getVisibleRect(camera);
+  const left = Math.max(0, Math.ceil(l));
+  const top = Math.max(0, Math.ceil(t));
+  const right = Math.min(vl.width, Math.floor(r));
+  const bottom = Math.min(vl.height, Math.floor(b));
+  ctx.beginPath();
+  for (let x = left; x <= right; x++) {
+    ctx.moveTo(x, Math.max(0, t));
+    ctx.lineTo(x, Math.min(vl.height, b));
+  }
+  for (let y = top; y <= bottom; y++) {
+    ctx.moveTo(Math.max(0, l), y);
+    ctx.lineTo(Math.min(vl.width, r), y);
+  }
+  ctx.strokeStyle = PIXEL_GRID_COLOR;
+  // A device pixel wide.
+  ctx.lineWidth = camera.toViewportLength(1 / camera.pixelRatio);
+  ctx.stroke();
+}
+
+/** Draws the guides across the whole panel, with the one being dragged labeled. */
+function drawRulerGuides(
+  ctx: CanvasRenderingContext2D,
+  camera: CanvasCamera,
+  { guides, activeGuideId, label }: GuideDrawing,
+  labels: Label[],
+) {
+  const { l, t, r, b } = getVisibleRect(camera);
+  ctx.strokeStyle = RULER_GUIDE_COLOR;
+  for (const { id, axis, value } of guides) {
+    ctx.beginPath();
+    if (axis === 'x') {
+      ctx.moveTo(value, t);
+      ctx.lineTo(value, b);
+    } else {
+      ctx.moveTo(l, value);
+      ctx.lineTo(r, value);
+    }
+    ctx.lineWidth = camera.toViewportLength(
+      id === activeGuideId ? ACTIVE_RULER_GUIDE_LINE_WIDTH : GUIDE_LINE_WIDTH,
+    );
+    ctx.stroke();
+  }
+  if (label) {
+    labels.push({ ...label, color: RULER_GUIDE_COLOR });
+  }
+}
+
+/** Draws the distances to the target, which is outlined, and dashes where they miss it. */
+function drawMeasurements(
+  ctx: CanvasRenderingContext2D,
+  target: Rect,
+  measurements: ReadonlyArray<Measurement>,
+  toViewport: (length: number) => number,
+  labels: Label[],
+) {
+  ctx.strokeStyle = GUIDE_COLOR;
+  ctx.lineWidth = toViewport(GUIDE_LINE_WIDTH);
+  ctx.beginPath();
+  ctx.rect(target.l, target.t, target.r - target.l, target.b - target.t);
+  ctx.stroke();
+  for (const { axis, from, to, at, extension } of measurements) {
+    drawDistance(ctx, axis, from, to, at, toViewport);
+    labels.push({
+      point: axis === 'x' ? { x: (from + to) / 2, y: at } : { x: at, y: (from + to) / 2 },
+      text: formatGuideValue(to - from),
+      color: GUIDE_COLOR,
+    });
+    if (extension) {
+      ctx.save();
+      ctx.setLineDash([toViewport(2), toViewport(2)]);
+      ctx.beginPath();
+      if (axis === 'x') {
+        ctx.moveTo(extension.at, extension.from);
+        ctx.lineTo(extension.at, extension.to);
+      } else {
+        ctx.moveTo(extension.from, extension.at);
+        ctx.lineTo(extension.to, extension.at);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+}
+
+/**
+ * Draws a distance along the axis, from one value to another, at a position across it, with a
+ * tick at each end.
+ */
+function drawDistance(
+  ctx: CanvasRenderingContext2D,
+  axis: 'x' | 'y',
+  from: number,
+  to: number,
+  at: number,
+  toViewport: (length: number) => number,
+) {
+  const tick = toViewport(GAP_TICK_SIZE) / 2;
+  ctx.beginPath();
+  if (axis === 'x') {
+    ctx.moveTo(from, at);
+    ctx.lineTo(to, at);
+    ctx.moveTo(from, at - tick);
+    ctx.lineTo(from, at + tick);
+    ctx.moveTo(to, at - tick);
+    ctx.lineTo(to, at + tick);
+  } else {
+    ctx.moveTo(at, from);
+    ctx.lineTo(at, to);
+    ctx.moveTo(at - tick, from);
+    ctx.lineTo(at + tick, from);
+    ctx.moveTo(at - tick, to);
+    ctx.lineTo(at + tick, to);
+  }
+  ctx.stroke();
+}
+
+/** Draws each label as a pill a little below and to the right of its point. */
+function drawLabels(ctx: CanvasRenderingContext2D, camera: CanvasCamera, labels: Label[]) {
+  if (!labels.length) {
+    return;
+  }
+  ctx.save();
+  const { pixelRatio } = camera;
+  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  ctx.font = LABEL_FONT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const { point, text, color } of labels) {
+    const { x, y } = camera.viewportToPanel(point);
+    const width = ctx.measureText(text).width + 2 * LABEL_PADDING;
+    const left = x - width / 2;
+    const top = y + LABEL_OFFSET;
+    ctx.beginPath();
+    ctx.roundRect(left, top, width, LABEL_HEIGHT, 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.fillStyle = LABEL_TEXT_COLOR;
+    ctx.fillText(text, x, top + LABEL_HEIGHT / 2);
+  }
+  ctx.restore();
+}
+
+/** The part of the viewport that the panel shows. */
+function getVisibleRect(camera: CanvasCamera): Rect {
+  const topLeft = camera.panelToViewport({ x: 0, y: 0 });
+  const bottomRight = camera.panelToViewport({ x: camera.panel.w, y: camera.panel.h });
+  return { l: topLeft.x, t: topLeft.y, r: bottomRight.x, b: bottomRight.y };
 }
 
 function drawPathEdit(

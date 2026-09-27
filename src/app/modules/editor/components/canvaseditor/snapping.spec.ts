@@ -124,3 +124,105 @@ describe('snapAlongLineToGrid', () => {
     });
   });
 });
+
+describe('snapping to guides', () => {
+  it('snaps to a guide, with a snap guide that only covers the box', () => {
+    const vl = new VectorLayer({ name: 'vl', children: [], width: 24, height: 24 });
+    const targets = getSnapTargets(vl, [], new Set(), [
+      { id: 'g', axis: 'x', value: 7 },
+      { id: 'h', axis: 'y', value: 17 },
+    ]);
+    const snap = snapBounds({ l: 7.4, t: 16.5, r: 9.4, b: 16.9 }, targets, THRESHOLDS);
+    expect(snap.dx).toBeCloseTo(-0.4, 9);
+    expect(snap.dy).toBeCloseTo(0.1, 9);
+    expect(snap.guides).toContainEqual({ axis: 'x', value: 7, from: 16.6, to: 17 });
+  });
+});
+
+describe('snapping to even gaps', () => {
+  // Two boxes in a row, 4 units apart.
+  const ROW = [
+    { l: 2, t: 2, r: 6, b: 6 },
+    { l: 10, t: 2, r: 14, b: 6 },
+  ];
+  const targets: SnapTargets = { x: [], y: [], boxes: ROW };
+  const gaps = { gaps: true };
+
+  it('snaps a box into the middle of a gap', () => {
+    // 2 wide, so it goes from 7 to 9 in the gap from 6 to 10.
+    const snap = snapBounds({ l: 7.5, t: 3, r: 9.5, b: 5 }, targets, THRESHOLDS, undefined, gaps);
+    expect(snap.dx).toBeCloseTo(-0.5, 9);
+    const measured = snap.guides.filter(g => g.isGap);
+    expect(measured.map(g => [g.from, g.to])).toEqual([
+      [6, 7],
+      [9, 10],
+    ]);
+    // Across the middle of where the boxes overlap.
+    expect(measured.every(g => g.axis === 'y' && g.value === 4)).toBe(true);
+  });
+
+  it('snaps a box as far past the end of a row as the row is spaced', () => {
+    const after = snapBounds(
+      { l: 18.3, t: 2, r: 22.3, b: 6 },
+      targets,
+      THRESHOLDS,
+      undefined,
+      gaps,
+    );
+    expect(after.dx).toBeCloseTo(-0.3, 9);
+    expect(after.guides.map(g => [g.from, g.to])).toEqual([
+      [6, 10],
+      [14, 18],
+    ]);
+    const before = snapBounds(
+      { l: -6.4, t: 2, r: -2.4, b: 6 },
+      targets,
+      THRESHOLDS,
+      undefined,
+      gaps,
+    );
+    expect(before.dx).toBeCloseTo(0.4, 9);
+  });
+
+  it("ignores boxes that aren't in the same row, and doesn't snap to gaps unless asked", () => {
+    const below = snapBounds(
+      { l: 18.3, t: 8, r: 22.3, b: 12 },
+      targets,
+      THRESHOLDS,
+      undefined,
+      gaps,
+    );
+    expect(below.guides).toEqual([]);
+    const withoutGaps = snapBounds({ l: 18.3, t: 2, r: 22.3, b: 6 }, targets, THRESHOLDS);
+    expect(withoutGaps.guides).toEqual([]);
+  });
+
+  it('picks whichever of a line and a gap is closer, and shows both when they agree', () => {
+    // The gap snap is 0.3 away, and a line is 0.2 away.
+    const lineCloser = snapBounds(
+      { l: 18.3, t: 2, r: 22.3, b: 6 },
+      { ...targets, x: [{ value: 18.5, from: 0, to: 1 }] },
+      THRESHOLDS,
+      undefined,
+      gaps,
+    );
+    expect(lineCloser.dx).toBeCloseTo(0.2, 9);
+    expect(lineCloser.guides.some(g => g.isGap)).toBe(false);
+    const agree = snapBounds(
+      { l: 18.3, t: 2, r: 22.3, b: 6 },
+      { ...targets, x: [{ value: 18, from: 0, to: 1 }] },
+      THRESHOLDS,
+      undefined,
+      gaps,
+    );
+    expect(agree.dx).toBeCloseTo(-0.3, 9);
+    expect(agree.guides.filter(g => g.isGap)).toHaveLength(2);
+    expect(agree.guides.filter(g => !g.isGap)).toHaveLength(1);
+  });
+
+  it('beats the pixel grid', () => {
+    // The left edge is 0.2 from the grid, but the gap snap is 0.3 away.
+    const snap = snapBounds({ l: 18.3, t: 2, r: 22.3, b: 6 }, targets, THRESHOLDS, undefined, gaps);
+    expect(snap.dx).toBeCloseTo(-0.3, 9);
+  });
+});

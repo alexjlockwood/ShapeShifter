@@ -47,8 +47,9 @@ unless they start with `src/`, `e2e/`, or `public/`.
   them, and components call them through `useServices()`.
 - `components/`: React components, plus the imperative canvas and timeline drawing. See
   `components/AGENTS.md`.
-- `model/`: layers, properties, animations, interpolators, and paths. `model/README.md` describes
-  each layer type and property, and `model/paths/AGENTS.md` the path model.
+- `model/`: layers, properties, animations, interpolators, paths, and the canvas editor's guides.
+  `model/README.md` describes each layer type and property, and `model/paths/AGENTS.md` the path
+  model.
 - `scripts/`: everything else, e.g. import, export, svgo, auto fix, and playback rendering.
 - `public/demos/`: the demo projects, listed in `scripts/demos/index.ts`.
 
@@ -69,8 +70,8 @@ Where to start for common changes:
 - **The layer list and timeline:** `components/layertimeline/LayerTimelineController.ts` and
   `services/layertimeline.service.ts`.
 - **Keyboard shortcuts:** `services/shortcut.service.ts`. The canvas editor's shortcuts (tools,
-  nudging, and editing points) are in `components/canvaseditor/CanvasEditor.ts`, which gets keys
-  first.
+  settings, nudging, and editing points) are in `components/canvaseditor/CanvasEditor.ts`, which
+  gets keys first.
 - **Copy and paste:** `services/clipboard.service.ts`.
 - **Undo:** `store/undoredo/metareducer.ts`.
 - **Error reports and analytics:** `scripts/bugsnag/` and `scripts/analytics/`. Google Analytics

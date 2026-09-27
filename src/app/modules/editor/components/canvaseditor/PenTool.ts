@@ -563,6 +563,7 @@ export class PenTool implements CanvasTool {
       vl,
       current ? [current.layerId] : [],
       this.context.getHiddenLayerIds(),
+      this.context.getGuides(),
     );
     const path = current && getLayerPath(vl, current.layerId);
     if (!current || !path) {
