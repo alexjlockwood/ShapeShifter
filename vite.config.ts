@@ -52,9 +52,6 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{css,html,ico,js,json,png,shapeshifter,svg,woff2}'],
         globIgnores: [
-          // Only used by the paper.js beta editor.
-          'assets/paper/**',
-          'assets/tools/**',
           // Replaces the old Angular service worker (see public/ngsw-worker.js).
           'ngsw-worker.js',
           // Cached when it's first used instead (see runtimeCaching).

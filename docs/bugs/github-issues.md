@@ -263,10 +263,10 @@ These are still bugs, and the entry named here covers them.
 | #349  | Not enough info     | The exported timing is right. Probably CANVAS-7.                               |
 | #351  | Beta only           | The preview and SVG export already clip only later siblings, like Android      |
 | #354  | Working as intended | Import bakes the layer transform into the path, unlike Inkscape's own `d`      |
-| #355  | Beta only           | Arrow key nudging is planned, but locking layers isn't                         |
+| #355  | Beta only           | The canvas editor nudges with the arrow keys, but locking layers isn't planned |
 
 #314 is worth a reply explaining the zero-length segment, since the reporter has asked about it
-since 2018. "Beta only" means the paper.js beta, which isn't compiled any more.
+since 2018. "Beta only" means the paper.js beta, which has been removed (`docs/canvas-editor.md`).
 
 Duplicates: #190 of #187, #242 of #115, #274 of #57, #282 of #269, #284 of #266, #309 of #149,
 #310 of #245, #324 of #220, #335 and #361 of #333, and #352 of #8.

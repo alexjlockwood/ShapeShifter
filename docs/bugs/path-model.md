@@ -24,7 +24,7 @@
   (`model/paths/CommandState.ts`, `getPathLength`). (PATH-10, low, confirmed by a test)
 - **`PathState.getPathLength` and `getPointAtLength` only see the tree roots.** Once a subpath is
   split, both give wrong answers, and `getPointAtLength` also ignores reversal and shifting. Only
-  `model/paths/Path.spec.ts` and the uncompiled paper.js beta call them. Iterate the visible
+  `model/paths/Path.spec.ts` calls them, so they're dead in the app. Iterate the visible
   subpaths instead of the roots (`model/paths/PathState.ts`). (PATH-11, low, confirmed by a test)
 - **`deleteStrokedSubPath` throws when the sibling was split again (latent).** Split a stroked
   subpath, split one half again, and delete the other half: `buildOrderedCommands` throws. It's
@@ -48,7 +48,6 @@
   fill type and holes. Treat filled subpaths as closed and test the whole path with its fill rule
   (`model/paths/PathState.ts`, `hitTest`). Clicking layers outside of action mode already does,
   with `Path2D` (`components/canvas/LayerGeometry.ts`). (PATH-17, low, confirmed by reading)
-- **`model/paths/SvgUtil.ts` is dead code.** Nothing imports it or `arcToBeziers`, including the
-  uncompiled paper.js editor; `PathParser` converts arcs itself. (PATH-18, confirmed by reading; a
+- **`model/paths/SvgUtil.ts` is dead code.** Nothing imports it or `arcToBeziers`; `PathParser` converts arcs itself. (PATH-18, confirmed by reading; a
   candidate fix exists on the unmerged `alex/fix-sweep-quick-wins` branch, which deletes the file,
   needs a rebase before reuse)

@@ -1,1 +1,0 @@
-export { HoverGesture } from './HoverGesture';

@@ -93,16 +93,6 @@ Where to start for common changes:
 - Imported files, pasted SVGs, and old projects aren't validated up front. Property setters coerce
   or replace bad values, and new code should handle bad input without crashing.
 
-## Code to leave alone
-
-The paper.js beta editor hasn't been ported, so it isn't compiled, typechecked, or linted:
-`components/canvas/canvaspaper.directive.ts`, `components/toolpanel/`, `scripts/paper/`,
-`services/paper.service.ts`, and `src/typings/paper/`. Don't edit it, and ignore it when looking
-for usages. A new canvas editor is replacing it rather than porting it: `docs/canvas-editor.md`
-explains why, and what's worth reusing. `model/paper/` and `store/paper/` are compiled.
-`src/test/paperExclusions.spec.ts` checks that this list matches `tsconfig.json`,
-`.oxlintrc.json`, and `.prettierignore`.
-
 ## Debugging
 
 - Dev builds expose `window.shapeshifter` (the `store` and `services`), log every action to the

@@ -32,14 +32,6 @@ These existed before the migration and are still there.
   (`components/canvas/CanvasLayers.ts`). (GitHub #186, #292, and #308)
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
-- **Beta only (paper.js, not yet migrated):**
-  - The tool panel template binds `model.isDefaultClick`, but the selector provides
-    `isDefaultChecked`, so the select tool never shows as checked
-    (`components/toolpanel/`, `store/paper/selectors.ts`).
-  - `PaperProject.remove()` doesn't remove the `paper.Tool` it created, and paper.js only
-    activates a new tool when none is active, so a remounted canvas keeps using the old tool
-    (`scripts/paper/PaperProject.ts`). Verified against paper.js 0.11.5: it caused the most
-    common beta crash in Bugsnag (see `docs/bugs/bugsnag.md`).
 
 ## Found by the 2026-09-25 bug sweep
 

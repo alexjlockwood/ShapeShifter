@@ -28,7 +28,7 @@ Ranked by events. Everything not marked "beta" happened on the live site.
 | Auto fix: "Error retrieving command mutation"                                                      | 13,000 | 2018-2026 | Fixed               |
 | Firefox private windows reject the service worker: "The operation is insecure"                     | 12,000 | 2018-2022 | Fixed in the port   |
 | "Script error." from cross-origin scripts                                                          | 12,000 | 2018-2026 | Noise, now filtered |
-| Beta: clicking after closing action mode: "reading '_matrix'" of null                              | 9,000  | 2018-2026 | Beta only, unported |
+| Beta: clicking after closing action mode: "reading '_matrix'" of null                              | 9,000  | 2018-2026 | Beta, now removed   |
 | Opening a demo offline: "Http failure response ... 504"                                            | 9,000  | 2018-2025 | Fixed in the port   |
 | Firefox extensions: "Permission denied to access property 'apply'"                                 | 8,000  | 2018-2022 | Gone with zone.js   |
 | Firefox timeline grid canvas too big: `NS_ERROR_FAILURE`                                           | 7,100  | 2018-2025 | Fixed in the port   |
@@ -89,33 +89,6 @@ Each of these was checked against every stack trace in the reports.
 - Stale selections in the property panel and the timeline, the `ga` global blocked by ad blockers,
   and IE and legacy Edge failures (`createDocument(undefined)`), which the new build doesn't run in
   anyway.
-
-## Beta only (paper.js)
-
-The paper.js editor isn't ported, so these don't affect the live site, but a port would bring them
-back. They were checked against paper.js 0.11.5 and rxjs 6.3.3 outside the app.
-
-- **Closing action mode leaves the old paper.js tool active.** This confirms the "not yet
-  verified" `PaperProject.remove()` item under "Open" in BUGS.md, and it's the top beta crash
-  ("reading '_matrix'" of null, 9,000 events, plus 1,000 for "reading 'globalMatrix'"). The canvas
-  remounts, but paper.js only activates a new tool when none is active, and the old tool's
-  `GestureTool` caches the removed project's layer, so every click hit-tests a project with no
-  view. Under StrictMode a port would hit it on the first load. Remove the tool in
-  `PaperProject.remove()` and read `paper.project.activeLayer` when needed
-  (`scripts/paper/tool/GestureTool.ts`, `scripts/paper/PaperProject.ts`).
-- **Gestures keep getting events after their `onMouseDown` threw or before their first drag**
-  (about 4,300). Holding Shift or Alt with the shape tools throws "reading 'vpDownPoint'" on every
-  key repeat, pressing Escape mid-drag throws "reading 'pathData'", and a failed mouse down throws
-  "reading 'keys'" on every drag (`scripts/paper/gesture/`).
-- **Paths without a fill or stroke report a color warning on every redraw** (4,000 events, shared
-  with the stable color field warning) (`scripts/paper/item/PaperLayer.ts`).
-- **Hit testing throws inside a group scaled to 0**, since `globalToLocal` returns null (about 1,250).
-- **The Vector tool enters edit path mode on a group or the vector layer** (1,000), which has no
-  segments.
-- Smaller: NaN in path data breaks paper.js's parser (the `a` in `NaN` reads as an arc), a click just
-  past an open path's end point throws in `divideAtTime`, handle images that failed to load are
-  drawn anyway, and after any error rxjs 6 silently unsubscribed the canvas from the store (which
-  rxjs 7 no longer does).
 
 ## Noise
 
