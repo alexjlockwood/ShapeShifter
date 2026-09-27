@@ -1,6 +1,7 @@
 import { ActionMode, ActionSource, SelectionType } from 'app/modules/editor/model/actionmode';
 import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
+import { CURRENT_PROJECT_VERSION } from 'app/modules/editor/model/projectVersion';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
@@ -72,10 +73,14 @@ describe('createEditorServices', () => {
         const { vectorLayer, animation, hiddenLayerIds } = loadDemo(json);
 
         services.fileExportService.exportJSON();
-        const exported = FileExportService.fromJSON(JSON.parse(await downloads[0].text()));
+        const rawExported = JSON.parse(await downloads[0].text());
+        expect(rawExported.version).toBe(CURRENT_PROJECT_VERSION);
+        const exported = FileExportService.fromJSON(rawExported);
         expect(exported.vectorLayer.toJSON()).toEqual(vectorLayer.toJSON());
         expect(exported.animation.toJSON()).toEqual(animation.toJSON());
         expect(exported.hiddenLayerIds).toEqual(hiddenLayerIds);
+        // A file this build just wrote never trips its own newer-version warning.
+        expect(exported.newerVersion).toBe(false);
 
         services.fileExportService.exportVectorDrawable();
         services.fileExportService.exportAnimatedVectorDrawable();

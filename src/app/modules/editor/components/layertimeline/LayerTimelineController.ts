@@ -7,6 +7,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
+import { NEWER_VERSION_WARNING } from 'app/modules/editor/model/projectVersion';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
@@ -204,8 +205,11 @@ export class LayerTimelineController extends DestroyableMixin() {
       }
       trackEvent('select_demo', { demo_title: selectedDemoInfo.title });
       this.services.projectService.getProject(`demos/${selectedDemoInfo.id}.shapeshifter`).then(
-        ({ vectorLayer, animation, hiddenLayerIds, guides }) => {
+        ({ vectorLayer, animation, hiddenLayerIds, guides, newerVersion }) => {
           this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds, guides));
+          if (newerVersion) {
+            this.services.snackBarService.show(NEWER_VERSION_WARNING, 'Dismiss', Duration.Long);
+          }
         },
         // Only fetch failures are handled here, so that errors from opening the demo are still
         // reported. navigator.serviceWorker is undefined in some embedded browsers.

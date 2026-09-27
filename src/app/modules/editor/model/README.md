@@ -141,6 +141,34 @@ An `AnimationBlock` describes a property animation for a particular `Layer`. The
 
 - `toValue` (the value type of the associated `Layer` property) - The end value of the property animation.
 
+## Project file versions
+
+A saved `.shapeshifter` file has a top-level `version` integer, alongside `layers` (holding
+`vectorLayer` and `hiddenLayerIds`) and `timeline` (holding `animation`). There's no migrations
+framework: every version's shape still loads directly, so version only decides whether
+`FileExportService.fromJSON` returns `newerVersion: true`, which callers use to warn that some
+things may not show and saving may drop them.
+
+[`projectVersion.ts`](projectVersion.ts) holds `getRequiredVersion(json)`, an ordered list of
+`ProjectVersionRule`s (`{ version, test }`), and `CURRENT_PROJECT_VERSION`, derived as the highest
+version any registered rule can produce. `FileExportService.exportJSON` writes whatever
+`getRequiredVersion` returns for the project being saved, so an ordinary file with none of the
+rules' features stays at version 1.
+
+### Format-change rules
+
+Add a rule to `projectVersion.ts` when a format change means an older React build would silently
+lose something, following these guidelines:
+
+- Prefer an optional field whose absence means the old behavior, so old files and old code both
+  keep working without a version bump.
+- Raise the required version (add a rule) only for a change an older React build would otherwise
+  silently drop or misinterpret, not for every new optional field.
+- The live site (shapeshifter.design) is still the Angular 1.0.15 build, which ignores the
+  `version` field entirely and crashes on formats it doesn't understand (e.g. an unknown
+  interpolator string or a transform block on a path). Only the next deploy replaces it, so a rule
+  documents the risk rather than working around 1.0.15.
+
 ## Useful links
 
 The source code for each of these model objects is located here:
@@ -148,6 +176,7 @@ The source code for each of these model objects is located here:
 - [`layers/Layer.ts`](layers/Layer.ts)
 - [`timeline/Animation.ts`](timeline/Animation.ts)
 - [`timeline/AnimationBlock.ts`](timeline/AnimationBlock.ts)
+- [`projectVersion.ts`](projectVersion.ts)
 
 You may also find the documentation for `VectorDrawable` and `AnimatedVectorDrawable` useful, as Shape Shifter was closely modeled after the structure of these two Android classes:
 
