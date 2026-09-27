@@ -837,9 +837,14 @@ export class CanvasOverlay extends DestroyableMixin() {
     if (camera.scale > 4) {
       ctx.save();
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
-      const { pixelRatio, deviceScale, viewport } = camera;
+      const { pixelRatio, deviceScale, viewport, panel } = camera;
       const origin = camera.viewportToDevice({ x: 0, y: 0 });
-      for (let x = 1; x < viewport.w; x++) {
+      // Only the lines in the panel, since a zoomed in artboard can have many more.
+      const topLeft = camera.panelToViewport({ x: 0, y: 0 });
+      const bottomRight = camera.panelToViewport({ x: panel.w, y: panel.h });
+      const lastX = Math.min(viewport.w, bottomRight.x + 1);
+      const lastY = Math.min(viewport.h, bottomRight.y + 1);
+      for (let x = Math.max(1, Math.ceil(topLeft.x)); x < lastX; x++) {
         ctx.fillRect(
           origin.x + x * deviceScale - pixelRatio / 2,
           origin.y,
@@ -847,7 +852,7 @@ export class CanvasOverlay extends DestroyableMixin() {
           viewport.h * deviceScale,
         );
       }
-      for (let y = 1; y < viewport.h; y++) {
+      for (let y = Math.max(1, Math.ceil(topLeft.y)); y < lastY; y++) {
         ctx.fillRect(
           origin.x,
           origin.y + y * deviceScale - pixelRatio / 2,

@@ -58,11 +58,16 @@ export function executeCommands(ctx: Context, commands: ReadonlyArray<Command>, 
   ctx.restore();
 }
 
-/** Sizes the canvas to cover the camera's panel, which clears it. */
+/**
+ * Sizes the canvas to cover the camera's panel. Resizing a canvas clears it and reallocates its
+ * memory, so it's skipped when the size is the same, e.g. after a zoom.
+ */
 export function setCanvasSize(canvas: HTMLCanvasElement, camera: CanvasCamera) {
   const { w, h } = camera.getDeviceSize();
-  canvas.width = w;
-  canvas.height = h;
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
   // The CSS size is rounded like the backing store, so that each device pixel in it maps to
   // exactly one on the screen.
   canvas.style.width = `${w / camera.pixelRatio}px`;

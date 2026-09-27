@@ -79,7 +79,6 @@ export class CanvasLayers extends DestroyableMixin() {
   setCamera(camera: CanvasCamera) {
     this.camera = camera;
     CanvasUtil.setCanvasSize(this.renderingCanvas, camera);
-    CanvasUtil.setCanvasSize(this.offscreenCanvas, camera);
     this.draw();
   }
 
@@ -114,6 +113,8 @@ export class CanvasLayers extends DestroyableMixin() {
 
     const currentAlpha = this.vectorLayer ? this.vectorLayer.alpha : 1;
     if (currentAlpha < 1) {
+      // It's only sized when it's needed, since it's as big as the panel.
+      CanvasUtil.setCanvasSize(this.offscreenCanvas, camera);
       this.offscreenCtx.save();
       setupCtxWithViewportCoordsFn(this.offscreenCtx);
     }
@@ -133,6 +134,10 @@ export class CanvasLayers extends DestroyableMixin() {
       this.renderingCtx.drawImage(this.offscreenCtx.canvas, 0, 0);
       this.renderingCtx.restore();
       this.offscreenCtx.restore();
+    } else if (this.offscreenCanvas.width) {
+      // Frees its memory.
+      this.offscreenCanvas.width = 0;
+      this.offscreenCanvas.height = 0;
     }
     this.renderingCtx.restore();
   }

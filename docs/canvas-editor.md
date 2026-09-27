@@ -238,7 +238,8 @@ Phase 0 is the foundation, and it's split into small pull requests:
 3. The feature flag and the lazily loaded editor chunk.
 4. Remove the old `environment.beta` flag and the paper-era behavior it guards.
 5. Size the canvases to their panel and draw through a camera that only fits for now. This is the
-   one change users with the flag off could notice, so it's checked against the old drawing code.
+   one change users with the flag off could notice, so a browser test checks that each demo draws
+   the same pixels on the artboard as a canvas the size of the artboard, the way it used to be.
 6. Camera state, and ruler ticks that follow the zoom (CANVAS-5 in `docs/bugs/canvas.md`).
 7. Pointer input (CANVAS-10, part of CANVAS-11, and UI-1 in `docs/bugs/timeline-and-ui.md`).
 8. Zoom and pan, with the flag on.
