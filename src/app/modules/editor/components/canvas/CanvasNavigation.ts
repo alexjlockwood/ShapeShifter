@@ -80,7 +80,7 @@ export class CanvasNavigation {
       on(root, 'pointermove', event => this.onTouchMove(event), { capture: true }),
       on(root, 'pointerup', event => this.onTouchEnd(event), { capture: true }),
       on(root, 'pointercancel', event => this.onTouchEnd(event), { capture: true }),
-      on(root, 'lostpointercapture', event => this.onTouchEnd(event), { capture: true }),
+      on(root, 'lostpointercapture', event => this.onTouchCaptureLost(event), { capture: true }),
       on(root, 'pointermove', event => this.onPointerMove(event)),
       on(root, 'pointerup', event => this.endPan(event.pointerId)),
       on(root, 'pointercancel', event => this.endPan(event.pointerId)),
@@ -223,16 +223,22 @@ export class CanvasNavigation {
   private startTouchPinch(event: PointerEvent) {
     // The canvas's gesture doesn't see the finger, or the rest of the pinch.
     event.stopImmediatePropagation();
-    try {
-      this.root.setPointerCapture(event.pointerId);
-    } catch {
-      // The pointer is already gone, e.g. for a synthetic event.
-    }
     const camera = this.getCamera();
+    if (!this.touchPinch && camera) {
+      // Before the panel captures the fingers, since canceling releases the first one.
+      this.onPinchStart();
+    }
+    // So that the panel gets the fingers' moves and lifts, wherever they go.
+    for (const pointerId of this.touches.keys()) {
+      try {
+        this.root.setPointerCapture(pointerId);
+      } catch {
+        // The pointer is already gone, e.g. for a synthetic event.
+      }
+    }
     if (this.touchPinch || !camera) {
       return;
     }
-    this.onPinchStart();
     const [a, b] = [...this.touches.values()];
     this.touchPinch = {
       camera,
@@ -269,6 +275,18 @@ export class CanvasNavigation {
     this.canvasViewportService.setView(
       zoomed.panBy(middle.x - pinch.middle.x, middle.y - pinch.middle.y),
     );
+  }
+
+  /**
+   * Starting a pinch moves the fingers' capture to the panel, from where the canvas or the browser
+   * had it, which isn't a finger lifting. Otherwise, e.g. if the panel is removed, it is.
+   */
+  private onTouchCaptureLost(event: PointerEvent) {
+    if (!this.root.hasPointerCapture(event.pointerId)) {
+      this.onTouchEnd(event);
+    } else if (this.touchPinch && this.touches.has(event.pointerId)) {
+      event.stopImmediatePropagation();
+    }
   }
 
   /** Ends the pinch once fewer than two fingers are left. The one left doesn't start a gesture. */

@@ -85,6 +85,12 @@ describe('CanvasNavigation', () => {
     // The second finger's press doesn't reach the artboard, and the first one's gesture stops.
     expect(pressed).toEqual([1]);
     expect(onPinchStart).toHaveBeenCalledTimes(1);
+    // The panel takes both fingers' capture, from the artboard, which isn't a finger lifting.
+    // Synthetic pointers can't be captured, so this pretends they were.
+    const hasCapture = vi.spyOn(root, 'hasPointerCapture').mockReturnValue(true);
+    touch('lostpointercapture', 1, 150, 150);
+    touch('lostpointercapture', 2, 250, 150);
+    hasCapture.mockRestore();
     // Spreading the fingers to twice as far apart zooms in twice as much around their middle.
     const middle = before.panelToViewport({ x: 200, y: 150 });
     touch('pointermove', 1, 100, 150);

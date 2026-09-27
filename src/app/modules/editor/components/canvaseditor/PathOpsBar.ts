@@ -1,15 +1,23 @@
 import { on } from 'app/modules/editor/scripts/dom';
 import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 
+import { createToolButton } from './EditorToolbar';
 import type { BooleanOp } from './pathOps';
 
 export type PathOpName = BooleanOp | 'outline';
+
+/** Whether the boolean operations, and outlining strokes, apply to the selection. */
+export interface AvailablePathOps {
+  readonly booleans: boolean;
+  readonly outline: boolean;
+}
+
+export const NO_PATH_OPS: AvailablePathOps = { booleans: false, outline: false };
 
 interface PathOpButton {
   readonly op: PathOpName;
   readonly label: string;
   readonly shortcut: string;
-  // A 24 by 24 icon.
   readonly icon: string;
 }
 
@@ -62,34 +70,9 @@ export class PathOpsBar {
     this.element.setAttribute('role', 'toolbar');
     this.element.setAttribute('aria-label', 'Path operations');
     this.element.hidden = true;
-    const isMac = ShortcutService.isMac();
     for (const { op, label, shortcut, icon } of OPS) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'canvas-editor-tool';
-      const shown = shortcut.replace('Command', isMac ? 'Cmd' : 'Ctrl');
-      button.title = `${label} (${shown})`;
-      button.setAttribute('aria-label', label);
-      button.setAttribute(
-        'aria-keyshortcuts',
-        shortcut.replace('Command', isMac ? 'Meta' : 'Control'),
-      );
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', '0 0 24 24');
-      svg.setAttribute('aria-hidden', 'true');
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', icon);
-      svg.appendChild(path);
-      button.appendChild(svg);
-      this.removeListeners.push(
-        on(button, 'click', event => {
-          onRun(op);
-          if (event.detail > 0) {
-            // So that the keyboard shortcuts go back to the canvas editor.
-            button.blur();
-          }
-        }),
-      );
+      const [button, removeListener] = createToolButton(label, shortcut, icon, () => onRun(op));
+      this.removeListeners.push(removeListener);
       this.buttons.set(op, button);
       this.element.appendChild(button);
     }
@@ -102,7 +85,7 @@ export class PathOpsBar {
   }
 
   /** Shows the operations that apply to the selection, or hides the bar if none do. */
-  setAvailable({ booleans, outline }: { readonly booleans: boolean; readonly outline: boolean }) {
+  setAvailable({ booleans, outline }: AvailablePathOps) {
     this.element.hidden = !booleans && !outline;
     for (const [op, button] of this.buttons) {
       button.disabled = op === 'outline' ? !outline : !booleans;

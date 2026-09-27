@@ -24,18 +24,13 @@ import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
 import { getGuides } from 'app/modules/editor/store/guides/selectors';
-import {
-  getHiddenLayerIds,
-  getSelectedLayerIds,
-  getVectorLayer,
-} from 'app/modules/editor/store/layers/selectors';
+import { getHiddenLayerIds, getSelectedLayerIds } from 'app/modules/editor/store/layers/selectors';
 import {
   getAnimatedVectorLayer,
   getCurrentTime,
   getIsPlaying,
 } from 'app/modules/editor/store/playback/selectors';
 import { environment } from 'environments/environment';
-import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { combineLatest, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
@@ -52,7 +47,13 @@ import {
   loadPathKit,
   outlineStrokes,
 } from './pathOps';
-import { getPathOpShortcut, PathOpName, PathOpsBar } from './PathOpsBar';
+import {
+  AvailablePathOps,
+  getPathOpShortcut,
+  NO_PATH_OPS,
+  PathOpName,
+  PathOpsBar,
+} from './PathOpsBar';
 import { getLayerPath, PathEditTool } from './PathEditTool';
 import { PencilTool } from './PencilTool';
 import { PenTool } from './PenTool';
@@ -139,6 +140,14 @@ class Editor implements CanvasEditor {
   private keyframeBadge: KeyframeBadge | undefined;
   // Combines the selected paths and outlines their strokes.
   private pathOpsBar: PathOpsBar | undefined;
+  // What getAvailablePathOps worked out last, and from what.
+  private availablePathOps:
+    | {
+        readonly document: CanvasDocument;
+        readonly selectedLayerIds: ReadonlySet<string>;
+        readonly available: AvailablePathOps;
+      }
+    | undefined;
   private isDisposed = false;
   // Whether the pointer is pressed, so that tools don't change in the middle of a gesture.
   private isPressing = false;
@@ -362,13 +371,16 @@ class Editor implements CanvasEditor {
     this.isPressing = false;
     if (this.guideTool.isDragging()) {
       this.guideTool.onRelease();
-      return;
+    } else {
+      this.getTool().onRelease(point);
     }
-    this.getTool().onRelease(point);
+    // A finger doesn't hover, so what comes next, like the keyboard, uses the mouse's tolerances.
+    this.toleranceScale = 1;
   }
 
   onLeave() {
     this.isPressing = false;
+    this.toleranceScale = 1;
     this.hoverPoint = undefined;
     this.isOverRuler = false;
     this.guideTool.onLeave();
@@ -540,7 +552,12 @@ class Editor implements CanvasEditor {
       case 'pen':
         return new PenTool({ ...context, targetLayerId: this.pathEdit?.layerId });
       case 'pencil':
-        return new PencilTool(context);
+        // Its lengths are how closely it follows the pointer, rather than tolerances, so they're
+        // the same for fingers.
+        return new PencilTool({
+          ...context,
+          toViewportLength: length => this.camera?.toViewportLength(length) ?? length,
+        });
       default:
         return new ShapeTool(name, context);
     }
@@ -887,7 +904,7 @@ class Editor implements CanvasEditor {
     if (this.isActionMode) {
       // Action mode has its own selections, drawn by the canvases.
       this.renderer.clear();
-      this.pathOpsBar?.setAvailable({ booleans: false, outline: false });
+      this.pathOpsBar?.setAvailable(NO_PATH_OPS);
       delete this.context.root.dataset.editorCursor;
       return;
     }
@@ -922,21 +939,29 @@ class Editor implements CanvasEditor {
     }
   }
 
-  /** Which path operations apply to the selection, with the select tool. */
-  private getAvailablePathOps() {
+  /**
+   * Which path operations apply to the selection, with the select tool. It's drawn on every hover,
+   * so this only works it out again when the document or the selection changes.
+   */
+  private getAvailablePathOps(): AvailablePathOps {
     if (this.drawTool || this.pathEdit || !this.selectedLayerIds.size) {
-      return { booleans: false, outline: false };
+      return NO_PATH_OPS;
     }
-    const document = this.getStoreDocument();
-    return {
+    const document = this.context.preview.getStoreDocument();
+    const cached = this.availablePathOps;
+    if (
+      cached?.document.vectorLayer === document.vectorLayer &&
+      cached.document.animation === document.animation &&
+      cached.selectedLayerIds === this.selectedLayerIds
+    ) {
+      return cached.available;
+    }
+    const available = {
       booleans: !!getBooleanLayerIds(document, this.selectedLayerIds),
       outline: !!getOutlineLayerIds(document, this.selectedLayerIds),
     };
-  }
-
-  private getStoreDocument() {
-    const state = this.context.store.getState();
-    return { vectorLayer: getVectorLayer(state), animation: getAnimation(state) };
+    this.availablePathOps = { document, selectedLayerIds: this.selectedLayerIds, available };
+    return available;
   }
 
   /**
@@ -962,7 +987,7 @@ class Editor implements CanvasEditor {
       return;
     }
     this.endNudge();
-    const document = this.getStoreDocument();
+    const document = this.context.preview.getStoreDocument();
     const selected = this.selectedLayerIds;
     try {
       if (op === 'outline') {

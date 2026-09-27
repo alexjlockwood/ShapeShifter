@@ -139,4 +139,31 @@ describe('outlineStrokes', () => {
       0, 11, 10, 13,
     ]);
   });
+
+  it('trims like the canvas when the start is past the end, keeping both ends', () => {
+    const line = new PathLayer({
+      name: 'line',
+      children: [],
+      pathData: new Path('M 0 12 L 20 12'),
+      strokeColor: '#f00',
+      strokeWidth: 2,
+      trimPathStart: 0.75,
+      trimPathEnd: 0.25,
+    });
+    const { document: outlined } = outlineStrokes(pk, document(line), [line.id]);
+    const outline = outlined.vectorLayer.findLayerById(line.id) as PathLayer;
+    // From 0 to 5 and from 15 to 20, and not the middle.
+    expect(bounds(outline)).toEqual([0, 11, 20, 13]);
+    expect(outline.pathData?.getSubPaths()).toHaveLength(2);
+    const trimmed = (offset: number) => {
+      const moved = line.clone();
+      moved.trimPathStart = 0;
+      moved.trimPathEnd = 0.25;
+      moved.trimPathOffset = offset;
+      const result = outlineStrokes(pk, document(moved), [moved.id]).document;
+      return bounds(result.vectorLayer.findLayerById(moved.id) as PathLayer);
+    };
+    // The offset moves the part that's kept along.
+    expect(trimmed(0.5)).toEqual([10, 11, 15, 13]);
+  });
 });

@@ -18,8 +18,8 @@ declare module 'pathkit-wasm/bin/pathkit.js' {
     }): SkPath | null;
     /** Resolves overlaps, in place, e.g. in a stroke's outline. */
     simplify(): SkPath | null;
-    /** Keeps the part of the path from start to end, as fractions of its length, in place. */
-    trim(start: number, end: number, isComplement: boolean): SkPath | null;
+    /** Dashes the path, in place, like a canvas's line dash and its offset (the phase). */
+    dash(on: number, off: number, phase: number): SkPath | null;
     /** Transforms the path by a 3 by 3 matrix, in row order, in place. */
     transform(
       scaleX: number,
@@ -42,7 +42,6 @@ declare module 'pathkit-wasm/bin/pathkit.js' {
 
   interface PathKit {
     FromSVGString(pathData: string): SkPath | null;
-    MakeFromOp(a: SkPath, b: SkPath, op: PathKitEnum): SkPath | null;
     readonly PathOp: {
       readonly DIFFERENCE: PathKitEnum;
       readonly INTERSECT: PathKitEnum;

@@ -210,22 +210,34 @@ function outlineStroke(pk: PathKit, layer: PathLayer) {
 }
 
 /**
- * Trims the path the way VectorDrawables do, from the start to the end, moved along by the offset
- * and wrapping around. Returns whether anything's left.
+ * Trims the path the way the canvas draws it (components/canvas/CanvasLayers.ts): with a dash as
+ * long as the part that's kept, and a gap for the rest, measured along the first subpath. When the
+ * start is past the end, or the offset moves them past the end, what's kept wraps around to the
+ * start. Skia draws canvas dashes, so this keeps what the canvas shows, even in the other subpaths.
+ * Returns whether anything's left.
  */
-function trim(skPath: SkPath, { trimPathStart, trimPathEnd, trimPathOffset }: PathLayer) {
-  const from = Math.min(trimPathStart, trimPathEnd) + trimPathOffset;
-  const to = Math.max(trimPathStart, trimPathEnd) + trimPathOffset;
-  if (to - from >= 1) {
+function trim(skPath: SkPath, { trimPathStart, trimPathEnd, trimPathOffset, pathData }: PathLayer) {
+  if (trimPathStart === 0 && trimPathEnd === 1 && trimPathOffset === 0) {
     return true;
   }
-  if (to - from <= 0) {
+  if (trimPathStart === trimPathEnd) {
     return false;
   }
-  const start = from - Math.floor(from);
-  const end = start + (to - from);
-  // Past the end, what's kept wraps around to the start, so it's everything but the rest.
-  return end <= 1 ? !!skPath.trim(start, end, false) : !!skPath.trim(end - 1, start, true);
+  const length = pathData?.getSubPathLength(0) ?? 0;
+  const [dash, gap] = LayerUtil.toStrokeDashArray(
+    trimPathStart,
+    trimPathEnd,
+    trimPathOffset,
+    length,
+  );
+  if (gap <= 0) {
+    return true;
+  }
+  if (dash <= 0) {
+    return false;
+  }
+  const phase = LayerUtil.toStrokeDashOffset(trimPathStart, trimPathEnd, trimPathOffset, length);
+  return !!skPath.dash(dash, gap, phase);
 }
 
 /** The layer's path in viewport coordinates, with its fill rule. */

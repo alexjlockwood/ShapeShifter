@@ -170,7 +170,8 @@ export class CanvasPreview {
     this.setDocument(setKeyframePath(this.working?.document ?? edit.base, layerId, targets, path));
   }
 
-  private getStoreDocument(): CanvasDocument {
+  /** The document as it's saved, without the working copy. */
+  getStoreDocument(): CanvasDocument {
     const state = this.store.getState();
     return { vectorLayer: getVectorLayer(state), animation: getAnimation(state) };
   }
