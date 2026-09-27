@@ -92,7 +92,9 @@ describe('createEditorServices', () => {
 
         services.fileExportService.exportSvg();
         services.fileExportService.exportSvgSpritesheet();
-        await vi.waitFor(() => expect(downloads.length).toBe(5));
+        // Rendering the SVG frames takes more than waitFor's default second when the whole suite
+        // runs at once, and a late download would land in the next test's list.
+        await vi.waitFor(() => expect(downloads.length).toBe(5), { timeout: 10000 });
         expect(downloads.slice(3).map(d => d.size > 0)).toEqual([true, true]);
       });
     });
