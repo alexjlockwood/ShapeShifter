@@ -37,15 +37,33 @@ describe('CanvasGestureRouter', () => {
     expect(new CanvasGestureRouter(false).down({ ...MOUSE, ctrlKey: true }).started).toBe(true);
   });
 
-  it('notices a missed release, when the mouse moves with its button up', () => {
+  it('ends the gesture like a release when an event shows the mouse button is up', () => {
     const router = new CanvasGestureRouter();
     router.down(MOUSE);
-    expect(router.isReleaseMissed({ ...MOUSE, pointerType: 'mouse', buttons: 1 })).toBe(false);
-    expect(router.isReleaseMissed({ ...MOUSE, pointerType: 'mouse', buttons: 0 })).toBe(true);
-    // Pens and touches report buttons differently, and hovers have nothing to miss.
-    expect(router.isReleaseMissed({ ...MOUSE, pointerType: 'pen', buttons: 0 })).toBe(false);
-    router.up(MOUSE);
-    expect(router.isReleaseMissed({ ...MOUSE, pointerType: 'mouse', buttons: 0 })).toBe(false);
+    expect(router.upWithoutRelease({ ...MOUSE, pointerType: 'mouse', buttons: 1 })).toBe(false);
+    // Another button held down doesn't keep the gesture going.
+    expect(router.upWithoutRelease({ ...MOUSE, pointerType: 'mouse', buttons: 2 })).toBe(true);
+    expect(router.isActive()).toBe(false);
+    // The release that comes after it, and the capture's loss, are ignored, and the move and the
+    // ones after it are hovers.
+    expect(router.up(MOUSE)).toBe(false);
+    expect(router.cancel(MOUSE.pointerId)).toBe(false);
+    expect(router.move(MOUSE)).toBe(true);
+    expect(router.upWithoutRelease({ ...MOUSE, pointerType: 'mouse', buttons: 0 })).toBe(false);
+  });
+
+  it("only ends a gesture early for the gesture's mouse", () => {
+    const router = new CanvasGestureRouter();
+    router.down(MOUSE);
+    // Pens and touches report buttons differently, and some events don't report them at all.
+    expect(router.upWithoutRelease({ ...MOUSE, pointerType: 'pen', buttons: 0 })).toBe(false);
+    expect(router.upWithoutRelease({ ...MOUSE, pointerType: 'touch', buttons: 0 })).toBe(false);
+    expect(router.upWithoutRelease({ ...MOUSE, pointerType: 'mouse' })).toBe(false);
+    expect(
+      router.upWithoutRelease({ ...MOUSE, pointerId: 2, pointerType: 'mouse', buttons: 0 }),
+    ).toBe(false);
+    expect(router.isActive()).toBe(true);
+    expect(router.up(MOUSE)).toBe(true);
   });
 
   it('ignores other pointers during a gesture, and a second finger', () => {

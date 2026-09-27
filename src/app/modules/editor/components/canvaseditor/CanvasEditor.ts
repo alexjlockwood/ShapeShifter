@@ -706,6 +706,19 @@ class Editor implements CanvasEditor {
     if (this.pathEdit) {
       return this.onPathEditKeyDown(event, this.pathEdit);
     }
+    if (isSelectAllShortcut(event)) {
+      // Selects every visible layer, like Figma, rather than the page's text. Not in the middle of
+      // a gesture, which the new selection would cancel.
+      if (!event.repeat && !this.isPressing && !(this.context.preview.isEditing() && !this.nudge)) {
+        this.endNudge();
+        if (this.drawTool) {
+          // As if V was pressed first, which also finishes the pen's path.
+          this.setTool('select');
+        }
+        this.context.services.layerTimelineService.selectAllLayers();
+      }
+      return false;
+    }
     if (!this.selectedLayerIds.size) {
       // The rest act on the selection.
       return undefined;
@@ -1095,6 +1108,18 @@ function getSettingShortcut(event: KeyboardEvent): keyof CanvasSettings | undefi
     return isCommand ? 'snapToPixelGrid' : 'showPixelGrid';
   }
   return !isCommand && getLetter(event) === 'r' ? 'showRulers' : undefined;
+}
+
+/** Whether the key is Cmd+A (Ctrl+A outside of Macs). */
+function isSelectAllShortcut(event: KeyboardEvent) {
+  const hasOtherModifier = ShortcutService.isMac() ? event.ctrlKey : event.metaKey;
+  return (
+    ShortcutService.isOsDependentModifierKey(event) &&
+    !hasOtherModifier &&
+    !event.shiftKey &&
+    !event.altKey &&
+    getLetter(event) === 'a'
+  );
 }
 
 /**

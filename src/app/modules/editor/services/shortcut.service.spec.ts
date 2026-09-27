@@ -1,5 +1,9 @@
+import { PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import { Path } from 'app/modules/editor/model/paths';
+import { Animation } from 'app/modules/editor/model/timeline';
 import { createEditorStore } from 'app/modules/editor/store';
 import { getIsPlaying } from 'app/modules/editor/store/playback/selectors';
+import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { NO_FEATURES } from 'environments/features';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -63,7 +67,7 @@ describe('ShortcutService', () => {
     services = createEditorServices(store, { features: { ...NO_FEATURES, canvasEditor } });
     services.shortcutService.init();
     const isPlaying = () => getIsPlaying(store.getState());
-    return { services, isPlaying };
+    return { services, store, isPlaying };
   }
 
   function press(type: 'keydown' | 'keyup', init: KeyboardEventInit) {
@@ -164,6 +168,27 @@ describe('ShortcutService', () => {
     press('keyup', { key: 'Meta', metaKey: false });
     expect(services.canvasViewportService.isSpaceHeld()).toBe(false);
     vi.restoreAllMocks();
+  });
+
+  it('selects every layer with Cmd+A, except in a text field', () => {
+    const { services, store } = setUp(false);
+    const { layerTimelineService } = services;
+    const children = ['a', 'b'].map(
+      name => new PathLayer({ name, children: [], pathData: new Path('M 1 1 L 5 1') }),
+    );
+    store.dispatch(
+      new ResetWorkspace(new VectorLayer({ name: 'vector', children }), new Animation()),
+    );
+    const modifiers = { metaKey: true, ctrlKey: true };
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    input.focus();
+    expect(press('keydown', { ...modifiers, key: 'a', keyCode: 65 }).defaultPrevented).toBe(false);
+    expect(layerTimelineService.getSelectedLayers()).toEqual([]);
+    input.remove();
+
+    expect(press('keydown', { ...modifiers, key: 'a', keyCode: 65 }).defaultPrevented).toBe(true);
+    expect(layerTimelineService.getSelectedLayers().map(l => l.name)).toEqual(['a', 'b']);
   });
 
   it("doesn't zoom without the canvas editor", () => {

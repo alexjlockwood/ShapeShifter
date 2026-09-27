@@ -36,7 +36,9 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
   demos are short (`playtopause` is 300 ms), so turn on repeat before checking anything while one
   plays, or it can finish first on a slow runner.
 - Wait with `expect.poll` and auto-retrying assertions, never fixed timeouts. Drag with
-  `page.mouse` and several `steps`.
+  `page.mouse` and several `steps`. For input that `page.mouse` can't send, like real touches or
+  a move with the button already up, use a CDP session in Chromium (`e2e/zoom.spec.ts` and
+  `pressWithStrayMove` in `e2e/editor.spec.ts`).
 - Find elements by role and name, e.g. `page.getByRole('button', { name: 'Play (Spacebar)' })`.
 - Unfinished features are off in every test, as they are for users (`playwright.config.ts` turns
   them off on the dev server too). Turn one on with its URL parameter, e.g. `?editor=1` for the

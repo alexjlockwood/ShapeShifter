@@ -73,6 +73,71 @@ test('selects layers with a marquee, starting off of the artboard', async ({ pag
   await expect.poll(() => getSelectedNames(page)).toEqual(['a', 'b']);
 });
 
+test('selects every visible layer with Cmd+A', async ({ page, modifier }) => {
+  await openSquares(page);
+  // b and c in a group, which is selected as a whole.
+  await click(page, 12, 4);
+  await click(page, 4, 12, { shift: true });
+  await page.keyboard.press(`${modifier}+g`);
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(2);
+  const groupName = await getState<string>(page, s => s.layers.vectorLayer.children[1].name);
+  await click(page, 20, 20);
+  await expect.poll(() => getSelectedNames(page)).toEqual([]);
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a', groupName].sort());
+
+  // Hidden layers are skipped.
+  await page.evaluate(() => {
+    const { store, services } = (window as any).shapeshifter;
+    const [a] = store.getState().present.layers.vectorLayer.children;
+    services.layerTimelineService.toggleVisibleLayer(a.id);
+  });
+  await click(page, 20, 20);
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getSelectedNames(page)).toEqual([groupName]);
+
+  // With a drawing tool, it goes back to the select tool first.
+  await click(page, 20, 20);
+  await page.keyboard.press('p');
+  await expect.poll(() => getToolName(page)).toBe('pen');
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getToolName(page)).toBe('select');
+  await expect.poll(() => getSelectedNames(page)).toEqual([groupName]);
+});
+
+test('selects every layer with Cmd+A with the canvas editor off, except while typing', async ({
+  page,
+  modifier,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
+  await dispatchClipboardEvent(page, 'paste', SQUARES_SVG);
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(3);
+  await page.keyboard.press(`${modifier}+a`);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a', 'b', 'c']);
+
+  // A text field keeps the browser's select all.
+  await click(page, 4, 4);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['a']);
+  await page.locator('.spi-property input[name="name"]').focus();
+  const isPrevented = await page.evaluate(
+    key => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'a',
+        keyCode: 65,
+        bubbles: true,
+        cancelable: true,
+        ...key,
+      });
+      document.activeElement?.dispatchEvent(event);
+      return event.defaultPrevented;
+    },
+    modifier === 'Meta' ? { metaKey: true } : { ctrlKey: true },
+  );
+  expect(isPrevented).toBe(false);
+  expect(await getSelectedNames(page)).toEqual(['a']);
+});
+
 function getPathData(page: Page, name: string) {
   return page.evaluate(layerName => {
     const { store } = (window as any).shapeshifter;
@@ -336,6 +401,77 @@ test('draws a path with the pen, one undo step per point', async ({ page, modifi
   await page.keyboard.press('Escape');
   await expect.poll(() => getToolName(page)).toBe('select');
   await expect.poll(() => getPathData(page, 'path_1')).toBe('M 16 2 L 20 2');
+});
+
+/**
+ * Presses at from and drags to to, in viewport coordinates, then moves 1px with the main button
+ * already up and releases there, as a macOS trackpad can. Only Chromium's DevTools protocol sends
+ * mouse events like that.
+ */
+async function pressWithStrayMove(page: Page, from: [number, number], to = from) {
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, ...from);
+  const end = await artboardPoint(canvas, ...to);
+  const cdp = await page.context().newCDPSession(page);
+  type MouseType = 'mouseMoved' | 'mousePressed' | 'mouseReleased';
+  const send = (type: MouseType, { x, y }: { x: number; y: number }, buttons: number) =>
+    cdp.send('Input.dispatchMouseEvent', {
+      type,
+      x,
+      y,
+      button: type === 'mouseMoved' && !buttons ? 'none' : 'left',
+      buttons,
+      clickCount: type === 'mouseMoved' ? 0 : 1,
+    });
+  await send('mouseMoved', start, 0);
+  await send('mousePressed', start, 1);
+  if (to !== from) {
+    for (let i = 1; i <= 10; i++) {
+      const t = i / 10;
+      await send(
+        'mouseMoved',
+        { x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t },
+        1,
+      );
+    }
+  }
+  const stray = { x: end.x + 1, y: end.y + 1 };
+  await send('mouseMoved', stray, 0);
+  await send('mouseReleased', stray, 0);
+  await cdp.detach();
+}
+
+test("keeps the pen's point when the mouse reports its button up before the release", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Needs the Chrome DevTools Protocol');
+  await openSquares(page);
+  await page.keyboard.press('p');
+  await click(page, 16, 16);
+  await click(page, 22, 16);
+  await pressWithStrayMove(page, [22, 22]);
+  await expect.poll(() => getPathData(page, 'path')).toBe('M 16 16 L 22 16 L 22 22');
+  // The pen is still drawing, from the new point.
+  await click(page, 16, 22);
+  await expect.poll(() => getPathData(page, 'path')).toBe('M 16 16 L 22 16 L 22 22 L 16 22');
+});
+
+test('keeps a dragged point when the mouse reports its button up before the release', async ({
+  page,
+  browserName,
+  modifier,
+}) => {
+  test.skip(browserName !== 'chromium', 'Needs the Chrome DevTools Protocol');
+  await openSquares(page);
+  const point = await artboardPoint(page.locator('.app-canvas'), 4, 4);
+  await page.mouse.dblclick(point.x, point.y);
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await pressWithStrayMove(page, [6, 2], [8.1, 0.9]);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 8 1 L 6 6 L 2 6 Z');
+  // As one undo step.
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'a')).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
 });
 
 test('draws freehand with the pencil', async ({ page }) => {

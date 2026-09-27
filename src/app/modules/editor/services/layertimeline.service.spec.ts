@@ -200,6 +200,20 @@ describe('LayerTimelineService', () => {
     });
   });
 
+  describe('selectAllLayers', () => {
+    it('selects the visible layers at the top of the tree, with groups as a whole', () => {
+      const clipPath = new ClipPathLayer(newPath('clip'));
+      load([clipPath, newPath('a'), newGroup('g', [newPath('b')]), newPath('hidden')]);
+      services.layerTimelineService.toggleVisibleLayer(getLayer('hidden').id);
+      services.layerTimelineService.selectAllLayers();
+      expect(services.layerTimelineService.getSelectedLayers().map(l => l.name)).toEqual([
+        'clip',
+        'a',
+        'g',
+      ]);
+    });
+  });
+
   describe('swapLayers', () => {
     it('converts paths to clip paths and back, keeping the animations that still apply', () => {
       const path = newPath('path');
