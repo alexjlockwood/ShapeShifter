@@ -247,8 +247,8 @@ Phase 3 put the tools in a toolbar over the canvas panel's top left, with Figma'
 pen commits each point as its own undo step, Backspace takes the last one away, and the pen only
 adds a subpath to an existing path while that path's points are being edited (Enter, then P). The
 rectangle, ellipse, and line tools go back to the select tool once they've drawn, while the pencil
-stays on. Strokes are a unit wide on a 24 unit icon, in proportion on bigger artboards. Some gaps
-are left for later:
+stays on. Strokes are a viewport unit wide, whatever the artboard's size. Some gaps are left for
+later:
 
 - A click with a shape tool draws nothing, where Figma draws a shape of a default size.
 - On a Mac, Ctrl and a click is a right-click, so Ctrl can only turn snapping off once a drag has
