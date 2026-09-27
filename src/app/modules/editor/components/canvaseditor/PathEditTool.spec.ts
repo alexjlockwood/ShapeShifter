@@ -1,6 +1,7 @@
 import { CanvasPreview } from 'app/modules/editor/components/canvas/CanvasPreview';
 import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
-import { Path, PathEdit } from 'app/modules/editor/model/paths';
+import { Path } from 'app/modules/editor/model/paths';
+import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
 import { createEditorServices } from 'app/modules/editor/services/createEditorServices';
 import { createEditorStore } from 'app/modules/editor/store';
 import { getHiddenLayerIds, getVectorLayer } from 'app/modules/editor/store/layers/selectors';
@@ -45,6 +46,8 @@ describe('PathEditTool', () => {
       pathLayer('other', 'M 20 20 L 23 20 L 23 23 Z'),
       // Off of the artboard, away from the others.
       pathLayer('diagonal', 'M 30 0 L 50 20'),
+      // A square with a square hole, far from the others, so that they don't snap to it.
+      pathLayer('holes', 'M 60 60 L 80 60 L 80 80 L 60 80 Z M 64 64 L 64 76 L 76 76 L 76 64 Z'),
       new GroupLayer({
         name: 'group',
         children: [pathLayer('scaled', 'M 1 1 L 5 1')],
@@ -136,6 +139,12 @@ describe('PathEditTool', () => {
       expect(selected()).toEqual([0, 1, 2]);
     });
 
+    it('selects points across subpaths with a marquee', () => {
+      const { drag, selected } = setUp('holes');
+      drag([59, 59], [65, 65]);
+      expect(selected()).toEqual([0, 4]);
+    });
+
     it('selects the next and previous points, going around', () => {
       const { tool, click, selected } = setUp();
       tool.selectAdjacent(1);
@@ -176,10 +185,10 @@ describe('PathEditTool', () => {
     });
 
     it('snaps to the other points', () => {
-      const { drag, pathData } = setUp();
-      // The first point is at x = 2, and 0.6 away is close enough.
-      drag([12, 2], [2.6, 5.5]);
-      expect(pathData()).toBe('M 2 2 L 2 5.5 L 12 12 L 2 12 Z');
+      const { drag, pathData } = setUp('curve');
+      // Only the middle point is at x = 8, and 0.5 away is close enough.
+      drag([14, 16], [8.5, 18.5]);
+      expect(pathData()).toBe('M 2 16 C 2 13 5 13 8 16 C 11 19 8 21.5 8 18.5');
     });
 
     it('snaps onto a curve without anything to line up with', () => {
@@ -325,11 +334,37 @@ describe('PathEditTool', () => {
       expect(PathEdit.getAnchors(path())[1].type).toBe('straight');
     });
 
+    it("doesn't change a point that the first click of a double-click added", () => {
+      const { tool, path } = setUp();
+      tool.onPress({ x: 5, y: 2 }, NONE, 1);
+      tool.onRelease({ x: 5, y: 2 });
+      tool.onPress({ x: 5, y: 2 }, NONE, 2);
+      tool.onRelease({ x: 5, y: 2 });
+      expect(path().getPathString()).toBe('M 2 2 L 5 2 L 12 2 L 12 12 L 2 12 Z');
+      // A third press is a new click.
+      tool.onPress({ x: 5, y: 2 }, NONE, 3);
+      tool.onRelease({ x: 5, y: 2 });
+      expect(PathEdit.getAnchors(path())[1].type).toBe('straight');
+    });
+
     it("changes the selected points' type", () => {
       const { tool, click, path } = setUp('curve');
       click(8, 16);
       tool.setPointType('straight');
       expect(PathEdit.getAnchors(path())[1].type).toBe('straight');
+    });
+
+    it("drags a mirrored point's handle on its own once it's made disconnected", () => {
+      const { tool, click, drag, pathData, undo } = setUp('curve');
+      const before = pathData();
+      click(8, 16);
+      tool.setPointType('disconnected');
+      // Nothing about the path changed, so there's nothing to undo.
+      expect(pathData()).toBe(before);
+      drag([11, 19], [11, 20], CTRL);
+      expect(pathData()).toBe('M 2 16 C 2 13 5 13 8 16 C 11 20 14 19 14 16');
+      undo();
+      expect(pathData()).toBe(before);
     });
 
     it('deletes the selected points, but not all of them', () => {
@@ -342,6 +377,12 @@ describe('PathEditTool', () => {
       tool.selectAll();
       expect(tool.deleteSelected()).toBe('empty');
       expect(pathData()).toBe('M 2 2 L 12 12 L 2 12 Z');
+    });
+
+    it('leaves the layer to be deleted for one end of a line', () => {
+      const { tool, click } = setUp('scaled');
+      click(10, 2);
+      expect(tool.deleteSelected()).toBe('empty');
     });
   });
 });

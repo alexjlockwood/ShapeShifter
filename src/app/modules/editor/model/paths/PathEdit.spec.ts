@@ -1,4 +1,5 @@
-import { Path, PathEdit } from 'app/modules/editor/model/paths';
+import { Path } from 'app/modules/editor/model/paths';
+import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
 import { Point } from 'app/modules/editor/scripts/common';
 
 const {
@@ -85,6 +86,15 @@ describe('PathEdit', () => {
       expect(start.out).toEqual({ x: 5, y: 5 });
       expect(end.in).toEqual({ x: 5, y: 5 });
     });
+  });
+
+  it('tells that short handles line up, after rounding to 3 decimals', () => {
+    for (let degrees = 0; degrees < 360; degrees += 0.5) {
+      const radians = (degrees * Math.PI) / 180;
+      const [dx, dy] = [0.25 * Math.cos(radians), 0.25 * Math.sin(radians)];
+      const pathData = `M -5 0 C -5 0 ${-dx} ${-dy} 0 0 C ${dx} ${dy} 5 0 5 0`;
+      expect(getAnchors(new Path(pathData))[1].type).toBe('mirrored');
+    }
   });
 
   describe('getSegments', () => {
@@ -198,6 +208,12 @@ describe('PathEdit', () => {
       expect(ids(split)).toEqual([ids(path)[0], anchorId, ids(path)[1]]);
     });
 
+    it("doesn't put a point on top of an end", () => {
+      const path = new Path('M 0 0 L 10 0');
+      const { path: split } = insertAnchor(path, ids(path)[1], 0);
+      expect(getSegments(split)).toHaveLength(2);
+    });
+
     it('splits the line that a Z draws', () => {
       const path = new Path('M 0 0 L 10 0 L 10 10 Z');
       const z = path.getCommands()[3].id;
@@ -294,6 +310,13 @@ describe('PathEdit', () => {
       expect(deleted.getCommands().map(c => c.type)).toEqual(['M', 'L', 'C', 'Z']);
     });
 
+    it('keeps the subpaths that were only ever one point', () => {
+      const path = new Path('M 0 0 L 10 0 L 10 10 M 20 20 Z');
+      expect(deleteAnchors(path, new Set([ids(path)[1]]))?.getPathString()).toBe(
+        'M 0 0 L 10 10 M 20 20 Z',
+      );
+    });
+
     it('deletes subpaths with one anchor left, and returns undefined for no path', () => {
       const path = new Path('M 0 0 L 10 0 M 20 0 L 30 0');
       const [a, b, c] = ids(path);
@@ -307,6 +330,47 @@ describe('PathEdit', () => {
       const path = new Path('M 0 0 C 0 5 5 10 10 10 C 15 10 20 5 20 0');
       const straight = setPointType(path, new Set(ids(path)), 'straight');
       expect(straight.getPathString()).toBe('M 0 0 L 10 10 L 20 0');
+    });
+
+    it("leaves the curves that aren't next to a straightened point alone", () => {
+      // The first curve has no handles, which may be on purpose, e.g. to morph with a curve.
+      const path = new Path('M 0 0 C 0 0 10 0 10 0 L 20 5 L 30 0');
+      expect(setPointType(path, new Set([ids(path)[2]]), 'straight').getPathString()).toBe(
+        path.getPathString(),
+      );
+    });
+
+    it('puts a missing handle across from the other one', () => {
+      // The middle point's in handle is on the point, and its out handle is 6 long.
+      const path = new Path('M 0 0 C 0 5 10 10 10 10 C 16 10 20 5 20 0');
+      const mirrored = getAnchors(setPointType(path, new Set([ids(path)[1]]), 'mirrored'))[1];
+      expect(mirrored.type).toBe('mirrored');
+      expect(mirrored.in).toEqual({ x: 4, y: 10 });
+      expect(mirrored.out).toEqual({ x: 16, y: 10 });
+      const asymmetric = getAnchors(setPointType(path, new Set([ids(path)[1]]), 'asymmetric'))[1];
+      expect(asymmetric.type).toBe('asymmetric');
+    });
+
+    it('lines up handles that point the same way along the line between the neighbors', () => {
+      const path = new Path('M 0 0 C 0 5 5 5 10 10 C 5 5 20 5 20 0');
+      expect(getAnchors(setPointType(path, new Set([ids(path)[1]]), 'mirrored'))[1].type).toBe(
+        'mirrored',
+      );
+    });
+
+    it("leaves points alone that can't be smooth", () => {
+      // The ends of an open path only have one handle, and the neighbors of the middle point of
+      // a closed path with two points are the same point.
+      for (const [pathData, index] of [
+        ['M 0 0 L 10 0 L 20 5', 0],
+        ['M 0 0 L 10 0 L 20 5', 2],
+        ['M 0 0 L 10 0 Z', 1],
+      ] as const) {
+        const path = new Path(pathData);
+        expect(setPointType(path, new Set([ids(path)[index]]), 'mirrored').getPathString()).toBe(
+          path.getPathString(),
+        );
+      }
     });
 
     it('makes a straight point mirrored, along the line between its neighbors', () => {
@@ -350,6 +414,16 @@ describe('PathEdit', () => {
   });
 
   describe('bendSegment', () => {
+    it('bends near an end without swinging the other way', () => {
+      const path = new Path('M 0 0 L 10 0');
+      const segmentId = ids(path)[1];
+      const bent = bendSegment(path, segmentId, 0.1, { x: 0, y: 5 });
+      expectClose(getPointOnSegment(bent, segmentId, 0.1), { x: 1, y: 5 });
+      for (let t = 0; t <= 1; t += 0.05) {
+        expect(getPointOnSegment(bent, segmentId, t).y).toBeGreaterThanOrEqual(-1e-9);
+      }
+    });
+
     it('bends a line so that the point that was dragged follows', () => {
       const path = new Path('M 0 0 L 10 0');
       const segmentId = ids(path)[1];
@@ -380,13 +454,14 @@ describe('PathEdit', () => {
   });
 
   describe('getAdjacentAnchorId', () => {
-    it('goes around the subpath', () => {
+    it('goes on to the next subpath, and around at the end of the path', () => {
       const path = new Path('M 0 0 L 10 0 L 10 10 Z M 20 20 L 30 30');
       const [a, b, c, d, e] = ids(path);
       expect(getAdjacentAnchorId(path, a, 1)).toBe(b);
-      expect(getAdjacentAnchorId(path, c, 1)).toBe(a);
-      expect(getAdjacentAnchorId(path, a, -1)).toBe(c);
-      expect(getAdjacentAnchorId(path, e, 1)).toBe(d);
+      expect(getAdjacentAnchorId(path, c, 1)).toBe(d);
+      expect(getAdjacentAnchorId(path, d, -1)).toBe(c);
+      expect(getAdjacentAnchorId(path, e, 1)).toBe(a);
+      expect(getAdjacentAnchorId(path, a, -1)).toBe(e);
     });
   });
 });

@@ -5,8 +5,10 @@ import type {
   CanvasEditorContext,
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
 import type { CanvasPreview } from 'app/modules/editor/components/canvas/CanvasPreview';
-import { VectorLayer } from 'app/modules/editor/model/layers';
-import { Path, PathEdit } from 'app/modules/editor/model/paths';
+import { hitTestLayer } from 'app/modules/editor/components/canvas/LayerGeometry';
+import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
+import { Path } from 'app/modules/editor/model/paths';
+import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { on } from 'app/modules/editor/scripts/dom';
@@ -39,6 +41,8 @@ const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
 // Pressing or releasing these during a drag changes what it does, e.g. Shift keeps a move straight.
 const MODIFIER_KEYS: ReadonlySet<string> = new Set(['Shift', 'Alt', 'Meta', 'Control']);
 
+// How close to a layer's outline a press hits it, in CSS pixels, as in SelectTool.
+const LAYER_HIT_TOLERANCE = 6;
 // Presses closer together than this, in milliseconds and CSS pixels, are a double-click.
 const DOUBLE_CLICK_TIME = 500;
 const DOUBLE_CLICK_DISTANCE = 4;
@@ -124,9 +128,11 @@ class Editor implements CanvasEditor {
           selectedLayerIds.size !== 1 ||
           !selectedLayerIds.has(pathEdit.layerId) ||
           !getLayerPath(this.vectorLayer, pathEdit.layerId) ||
+          this.isHidden(pathEdit.layerId) ||
           (!preview.isEditing() && !preview.canEditPath(pathEdit.layerId)))
       ) {
-        // E.g. another layer was selected in the layer list, or undo took the path away.
+        // E.g. another layer was selected in the layer list, undo took the path away, or the time
+        // moved into one of its path blocks.
         this.stopPathEdit();
       }
       this.draw();
@@ -154,7 +160,23 @@ class Editor implements CanvasEditor {
 
   onPress(event: PointerEvent, point: Point) {
     this.endNudge();
-    this.getTool().onPress(point, getModifiers(event), this.countClicks(event, point));
+    const clickCount = this.countClicks(event, point);
+    const { pathEdit } = this;
+    if (pathEdit && !pathEdit.isOverPath(point)) {
+      const hitLayerId = hitTestLayer(this.vectorLayer, point, {
+        hiddenLayerIds: this.hiddenLayerIds,
+        tolerance: this.camera?.toViewportLength(LAYER_HIT_TOLERANCE) ?? 0,
+      })?.id;
+      if (
+        (hitLayerId && hitLayerId !== pathEdit.layerId) ||
+        (!hitLayerId && !pathEdit.getSelectedAnchorIds().size)
+      ) {
+        // A press on another layer, or on nothing with no points selected, stops editing, like in
+        // Sketch, and selects what was pressed.
+        this.stopPathEdit();
+      }
+    }
+    this.getTool().onPress(point, getModifiers(event), clickCount);
   }
 
   onMove(event: PointerEvent, point: Point) {
@@ -207,13 +229,20 @@ class Editor implements CanvasEditor {
     return this.lastPress.count;
   }
 
-  /** Starts editing the layer's points, if its path can be edited now. */
+  /** Starts editing the layer's points, if its path can be edited now, and returns whether it did. */
   private startPathEdit(layerId: string) {
     const { preview, services } = this.context;
-    if (this.isActionMode || !preview.canEditPath(layerId)) {
-      return;
+    if (
+      this.isActionMode ||
+      !getLayerPath(this.vectorLayer, layerId) ||
+      this.isHidden(layerId) ||
+      !preview.canEditPath(layerId)
+    ) {
+      return false;
     }
     this.endNudge();
+    // The next press starts a new click, rather than adding to the double-click that got here.
+    this.lastPress = undefined;
     this.selectTool.onLeave();
     services.layerTimelineService.setSelectedLayers(new Set([layerId]));
     this.pathEdit = new PathEditTool({
@@ -225,6 +254,21 @@ class Editor implements CanvasEditor {
       redraw: () => this.draw(),
     });
     this.draw();
+    return true;
+  }
+
+  /** Whether the layer, or a group it's in, is hidden. */
+  private isHidden(layerId: string) {
+    for (
+      let id: string | undefined = layerId;
+      id;
+      id = LayerUtil.findParent(this.vectorLayer, id)?.id
+    ) {
+      if (this.hiddenLayerIds.has(id)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private stopPathEdit() {
@@ -256,18 +300,16 @@ class Editor implements CanvasEditor {
     if (this.pathEdit) {
       return this.onPathEditKeyDown(event, this.pathEdit);
     }
-    if (
-      event.key === 'Enter' &&
-      !hasModifiers(event) &&
-      this.selectedLayerIds.size === 1 &&
-      !document.activeElement?.matches('button, a, [role="button"], [role="menuitem"]')
-    ) {
-      const [layerId] = this.selectedLayerIds;
-      if (getLayerPath(this.vectorLayer, layerId)) {
-        this.startPathEdit(layerId);
+    if (event.key === 'Enter' && !hasModifiers(event) && !isControlFocused()) {
+      if (this.context.preview.isEditing() && !this.nudge) {
+        // A drag is in progress, which starting to edit would throw away.
         return false;
       }
-      return undefined;
+      const [layerId] = this.selectedLayerIds;
+      if (event.repeat || this.selectedLayerIds.size !== 1) {
+        return undefined;
+      }
+      return this.startPathEdit(layerId) ? false : undefined;
     }
     const arrow = ARROWS[event.key];
     const isNudge = !!arrow && !event.altKey && !event.metaKey && !event.ctrlKey;
@@ -310,12 +352,15 @@ class Editor implements CanvasEditor {
     const { key } = event;
     const isCommand = ShortcutService.isOsDependentModifierKey(event);
     const arrow = ARROWS[key];
-    const pointType = /^[1-4]$/.test(key) ? PathEdit.POINT_TYPES[Number(key) - 1] : undefined;
+    // The digits' codes, for keyboards like AZERTY that type other characters without Shift.
+    const digit = /^Digit[1-4]$/.test(event.code) ? event.code.slice(-1) : key;
+    const pointType = /^[1-4]$/.test(digit) ? PathEdit.POINT_TYPES[Number(digit) - 1] : undefined;
     const isHandled =
-      (!hasModifiers(event) && (key === 'Escape' || key === 'Enter' || !!pointType)) ||
+      (!hasModifiers(event) && (key === 'Escape' || !!pointType)) ||
+      (!hasModifiers(event) && key === 'Enter' && !isControlFocused()) ||
       key === 'Backspace' ||
       key === 'Delete' ||
-      (key === 'Tab' && !isCommand && !event.altKey) ||
+      (key === 'Tab' && !isCommand && !event.altKey && !isControlFocused()) ||
       (!!arrow && !event.altKey && !isCommand && !event.ctrlKey) ||
       (isCommand && (key.toLowerCase() === 'a' || key.toLowerCase() === 'd'));
     if (!isHandled) {
@@ -330,12 +375,21 @@ class Editor implements CanvasEditor {
       this.nudgeBy(arrow[0] * distance, arrow[1] * distance);
       return false;
     }
+    if (event.repeat && key !== 'Tab') {
+      // Holding Enter would stop and start editing, and holding the others would repeat an edit.
+      return false;
+    }
+    if (key === 'Escape' && this.nudge) {
+      // Escape throws a nudge in progress away, rather than committing it.
+      this.nudge = undefined;
+      this.context.preview.cancel();
+    }
     this.endNudge();
     if (key === 'Escape' || key === 'Enter') {
       this.stopPathEdit();
     } else if (key === 'Backspace' || key === 'Delete') {
       if (pathEdit.deleteSelected() === 'empty') {
-        // Deleting every point deletes the layer, like Figma.
+        // Deleting the points that would leave nothing deletes the layer, like Figma.
         this.stopPathEdit();
         this.context.services.layerTimelineService.deleteSelectedModels();
       }
@@ -436,6 +490,13 @@ class Editor implements CanvasEditor {
       delete this.context.root.dataset.editorCursor;
     }
   }
+}
+
+/** Whether a control that Enter and Tab work in has the focus, e.g. a button. */
+function isControlFocused() {
+  return !!document.activeElement?.matches(
+    'button, a, select, [role="button"], [role="menuitem"], [role="tab"]',
+  );
 }
 
 function hasModifiers(event: KeyboardEvent) {

@@ -27,6 +27,7 @@ const ANCHOR_RADIUS = 3.5;
 const HOVERED_ANCHOR_RADIUS = 4.5;
 const CONTROL_RADIUS = 3;
 const INSERT_POINT_RADIUS = 3;
+const CURVE_SNAP_SIZE = 4;
 
 export interface EditorDrawing {
   readonly vectorLayer: VectorLayer;
@@ -192,5 +193,18 @@ function drawPathEdit(
   }
   if (insertPoint) {
     circle(insertPoint.x, insertPoint.y, INSERT_POINT_RADIUS, EDITOR_COLOR, EDITOR_COLOR);
+  }
+  if (drawing.curveSnap) {
+    // A cross, like the guides, where the point snapped onto a curve.
+    const { x, y } = drawing.curveSnap;
+    const size = toViewport(CURVE_SNAP_SIZE);
+    ctx.beginPath();
+    ctx.moveTo(x - size, y - size);
+    ctx.lineTo(x + size, y + size);
+    ctx.moveTo(x - size, y + size);
+    ctx.lineTo(x + size, y - size);
+    ctx.strokeStyle = GUIDE_COLOR;
+    ctx.lineWidth = toViewport(GUIDE_LINE_WIDTH);
+    ctx.stroke();
   }
 }

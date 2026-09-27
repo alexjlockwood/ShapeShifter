@@ -68,6 +68,7 @@ describe('SelectTool', () => {
       preview.dispose();
       services.dispose();
     };
+    const editedPaths: string[] = [];
     const tool = new SelectTool({
       getVectorLayer: () => {
         const { vl, currentTime } = getAnimatedVectorLayer(store.getState());
@@ -83,9 +84,11 @@ describe('SelectTool', () => {
         ),
       preview,
       redraw: () => {},
-      editPath: layerId => editedPaths.push(layerId),
+      editPath: layerId => {
+        editedPaths.push(layerId);
+        return true;
+      },
     });
-    const editedPaths: string[] = [];
     const click = (x: number, y: number, modifiers = NONE) => {
       tool.onPress({ x, y }, modifiers);
       tool.onRelease({ x, y });
@@ -188,7 +191,7 @@ describe('SelectTool', () => {
       tool.onPress({ x: 4, y: 4 }, NONE, 2);
       tool.onRelease({ x: 4, y: 4 });
       expect(editedPaths).toEqual([a.id]);
-      // Not nothing.
+      // Double-clicking nothing edits nothing.
       tool.onPress({ x: 20, y: 20 }, NONE, 2);
       tool.onRelease({ x: 20, y: 20 });
       expect(editedPaths).toEqual([a.id]);

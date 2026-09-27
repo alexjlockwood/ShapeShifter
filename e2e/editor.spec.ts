@@ -259,3 +259,26 @@ test('adds, deletes, and changes points, with Enter to start and stop', async ({
   await page.keyboard.press('Backspace');
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(2);
 });
+
+test('stops editing points on a click on another layer, or on nothing', async ({ page }) => {
+  await openSquares(page);
+  const point = await artboardPoint(page.locator('.app-canvas'), 4, 4);
+  await page.mouse.dblclick(point.x, point.y);
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  // A click on another layer stops editing, and selects it.
+  await click(page, 12, 4);
+  await expect.poll(() => isEditingPath(page)).toBe(false);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['b']);
+  // With a point selected, a click on nothing only clears the point.
+  const b = await artboardPoint(page.locator('.app-canvas'), 12, 4);
+  await page.mouse.dblclick(b.x, b.y);
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  await click(page, 10, 2);
+  await click(page, 20, 20);
+  await expect.poll(() => getSelectedNames(page)).toEqual(['b']);
+  expect(await isEditingPath(page)).toBe(true);
+  // Without one, it stops editing and clears the selection.
+  await click(page, 20, 20);
+  await expect.poll(() => isEditingPath(page)).toBe(false);
+  await expect.poll(() => getSelectedNames(page)).toEqual([]);
+});

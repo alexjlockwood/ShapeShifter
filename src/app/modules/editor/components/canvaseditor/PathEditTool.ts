@@ -1,7 +1,8 @@
 import type { CanvasDocument } from 'app/modules/editor/components/canvas/CanvasPreview';
 import { isMorphableLayer } from 'app/modules/editor/components/canvas/LayerGeometry';
-import { Layer, LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
-import { Path, PathEdit } from 'app/modules/editor/model/paths';
+import { Layer, LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import { Path } from 'app/modules/editor/model/paths';
+import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
 import type { Anchor, HandleSide, PointType } from 'app/modules/editor/model/paths';
 import { MathUtil, Matrix, Point, Rect } from 'app/modules/editor/scripts/common';
 import { isEqual } from 'lodash-es';
@@ -55,6 +56,8 @@ export interface PathEditDrawing {
   readonly insertPoint: Point | undefined;
   readonly marquee: Rect | undefined;
   readonly guides: ReadonlyArray<SnapGuide>;
+  /** Where a moving point snapped onto a curve. */
+  readonly curveSnap: Point | undefined;
 }
 
 /** A change that moves the selected points by a distance in viewport units, for nudging them. */
@@ -148,11 +151,19 @@ const HANDLE_ANGLE_SNAP = 45;
 export class PathEditTool {
   private state: State = { type: 'idle' };
   private selectedAnchorIds: ReadonlySet<string> = new Set();
+  // The types picked for points, which their handles can't always tell apart, e.g. disconnected
+  // handles that happen to mirror each other (see getPointType).
+  private readonly pointTypes = new Map<string, PointType>();
   private hovered: Hit | undefined;
   private modifiers: Modifiers | undefined;
   // Where the pointer last moved, to redo the gesture when a modifier key changes.
   private lastPoint: Point | undefined;
   private guides: ReadonlyArray<SnapGuide> = [];
+  // Where a moving point snapped onto a curve, which has no guide of its own.
+  private curveSnap: Point | undefined;
+  // The point that the last press hit, so that a double-click only changes a point that was there
+  // for both presses, and not one that the first click added.
+  private lastPressedAnchorId: string | undefined;
 
   constructor(private readonly context: PathEditToolContext) {}
 
@@ -206,12 +217,13 @@ export class PathEditTool {
     const selection = this.getSelectedAnchorIds();
     if (selection.size) {
       this.commitEdit(base => PathEdit.setPointType(base, selection, type));
+      selection.forEach(anchorId => this.pointTypes.set(anchorId, type));
     }
   }
 
   /**
    * Deletes the selected points, as one undo step. Returns 'empty' without changing anything if
-   * they're all of the path's points, so that the layer can be deleted instead.
+   * nothing would be left, e.g. for one end of a line, so that the layer can be deleted instead.
    */
   deleteSelected(): 'deleted' | 'empty' | 'none' {
     const selection = this.getSelectedAnchorIds();
@@ -240,6 +252,11 @@ export class PathEditTool {
       base: basePath,
       move: (dx, dy) => PathEdit.moveAnchors(basePath, selection, toLocalDelta(toLocal, dx, dy)),
     };
+  }
+
+  /** Whether the point is on the path's points, handles, or segments. */
+  isOverPath(point: Point) {
+    return !!this.hitTest(point);
   }
 
   isGestureInProgress() {
@@ -291,6 +308,7 @@ export class PathEditTool {
           : undefined,
       marquee: state.type === 'marquee' ? toRect(state.start, state.current) : undefined,
       guides: this.guides,
+      curveSnap: state.type === 'moving' ? this.curveSnap : undefined,
     };
   }
 
@@ -298,9 +316,11 @@ export class PathEditTool {
     this.lastPoint = point;
     this.modifiers = modifiers;
     const hit = this.hitTest(point);
+    const lastPressedAnchorId = this.lastPressedAnchorId;
+    this.lastPressedAnchorId = hit?.type === 'anchor' ? hit.anchorId : undefined;
     let didSelect = false;
     if (hit?.type === 'anchor') {
-      if (clickCount >= 2) {
+      if (clickCount === 2 && lastPressedAnchorId === hit.anchorId) {
         this.togglePointType(hit.anchorId);
         return;
       }
@@ -345,6 +365,7 @@ export class PathEditTool {
           axes = { x: isHorizontal, y: !isHorizontal };
         }
         this.guides = [];
+        this.curveSnap = undefined;
         if (!modifiers.ctrl) {
           const target = { x: state.origin.x + dx, y: state.origin.y + dy };
           const thresholds = this.getSnapThresholds();
@@ -355,6 +376,7 @@ export class PathEditTool {
             snap.guides.length || modifiers.shift
               ? undefined
               : snapOntoCurves(target, state.curves, thresholds.lines);
+          this.curveSnap = onCurve;
           if (onCurve) {
             dx = onCurve.x - state.origin.x;
             dy = onCurve.y - state.origin.y;
@@ -429,7 +451,7 @@ export class PathEditTool {
         }
       } else if (hit?.type === 'segment') {
         if (!modifiers.command) {
-          this.insertAnchor(hit, modifiers);
+          this.insertAnchor(hit, modifiers.shift);
           this.context.preview.commit();
         }
       } else if (!hit && !modifiers.shift) {
@@ -461,6 +483,7 @@ export class PathEditTool {
     this.hovered = undefined;
     this.lastPoint = undefined;
     this.guides = [];
+    this.curveSnap = undefined;
     if (wasEditing) {
       this.context.preview.cancel();
     }
@@ -490,11 +513,14 @@ export class PathEditTool {
         this.state = { type: 'bending', start, base, segmentId: hit.segmentId, t: hit.t, toLocal };
         return;
       }
-      // Adds a point, and moves it.
-      const anchorId = this.insertAnchor(hit, modifiers);
+      // Adds a point under the pointer, rather than in the middle with Shift held, since Shift
+      // keeps the move straight, and moves it.
+      const anchorId = this.insertAnchor(hit, false);
       const path = this.getPath();
       const anchor = path && PathEdit.getAnchors(path).find(a => a.id === anchorId);
       if (!anchorId || !path || !anchor) {
+        this.context.preview.cancel();
+        this.state = { type: 'idle' };
         return;
       }
       this.startMove(start, path, new Set([anchorId]), transform(anchor.point, toViewport));
@@ -517,7 +543,7 @@ export class PathEditTool {
         base,
         anchorId: anchor.id,
         side: hit.side,
-        pointType: anchor.type,
+        pointType: this.getPointType(anchor),
         anchor: transform(anchor.point, toViewport),
         handle: transform(handle, toViewport),
         toLocal,
@@ -558,7 +584,8 @@ export class PathEditTool {
       if (hiddenLayerIds.has(layer.id)) {
         return;
       }
-      const path = layer.id === layerId ? base : isMorphableLayer(layer) && layer.pathData;
+      // Clip paths aren't drawn, so only the edited one counts.
+      const path = layer.id === layerId ? base : layer instanceof PathLayer && layer.pathData;
       if (path) {
         const toViewport = LayerUtil.getCanvasTransformForLayer(vl, layer.id);
         for (const segment of PathEdit.getSegments(path)) {
@@ -577,17 +604,13 @@ export class PathEditTool {
     return curves;
   }
 
-  /** Adds a point where the segment was pressed, and selects it. Returns its id. */
-  private insertAnchor(hit: Extract<Hit, { type: 'segment' }>, modifiers: Modifiers) {
+  /** Adds a point where the segment was pressed, or in its middle, and selects it. Returns its id. */
+  private insertAnchor(hit: Extract<Hit, { type: 'segment' }>, isMiddle: boolean) {
     const base = this.context.preview.getBase() ? this.getBasePath() : this.beginEdit();
     if (!base) {
       return undefined;
     }
-    const { path, anchorId } = PathEdit.insertAnchor(
-      base,
-      hit.segmentId,
-      modifiers.shift ? 0.5 : hit.t,
-    );
+    const { path, anchorId } = PathEdit.insertAnchor(base, hit.segmentId, isMiddle ? 0.5 : hit.t);
     this.context.preview.setPath(this.layerId, path);
     this.setSelectedAnchorIds(new Set([anchorId]));
     return anchorId;
@@ -602,7 +625,22 @@ export class PathEditTool {
     }
     const type = anchor.type === 'straight' ? 'mirrored' : 'straight';
     this.commitEdit(base => PathEdit.setPointType(base, new Set([anchorId]), type));
+    this.pointTypes.set(anchorId, type);
     this.setSelectedAnchorIds(new Set([anchorId]));
+  }
+
+  /**
+   * Returns the point's type: the one picked for it, as long as its handles still fit it, or else
+   * the one its handles have. Mirrored handles fit any type but straight, and lined up ones fit
+   * asymmetric and disconnected.
+   */
+  private getPointType(anchor: Anchor): PointType {
+    const picked = this.pointTypes.get(anchor.id);
+    const fits =
+      picked === anchor.type ||
+      picked === 'disconnected' ||
+      (picked === 'asymmetric' && anchor.type === 'mirrored');
+    return picked && fits ? picked : anchor.type;
   }
 
   /** Starts an edit, and returns the path it starts from. */
@@ -622,10 +660,14 @@ export class PathEditTool {
 
   private commitEdit(edit: (base: Path) => Path) {
     const base = this.beginEdit();
-    if (base) {
-      this.context.preview.setPath(this.layerId, edit(base));
-      this.context.preview.commit();
+    const path = base && edit(base);
+    if (!base || !path || path.getPathString() === base.getPathString()) {
+      // E.g. a smooth point made disconnected, which only changes how its handles are dragged.
+      this.context.preview.cancel();
+      return;
     }
+    this.context.preview.setPath(this.layerId, path);
+    this.context.preview.commit();
   }
 
   private getBasePath() {
@@ -776,6 +818,10 @@ function snapOntoCurves(
 ): Point | undefined {
   let best: { point: Point; distance: number } | undefined;
   for (const curve of curves) {
+    if (PathEdit.getDistanceToHull(curve, point) > threshold) {
+      // Most curves are far away, and this is much cheaper than projecting onto them.
+      continue;
+    }
     const projection = PathEdit.projectOntoCurve(curve, point);
     if (projection.distance <= threshold && (!best || projection.distance < best.distance)) {
       best = projection;

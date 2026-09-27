@@ -116,6 +116,10 @@ export function getSegments(path: Path): Segment[] {
 export function projectOntoSegments(path: Path, point: Point): SegmentProjection | undefined {
   let best: SegmentProjection | undefined;
   for (const segment of getSegments(path)) {
+    if (best && getDistanceToHull(segment.points, point) > best.distance) {
+      // A curve is inside of its control points' box, so nothing on it is closer.
+      continue;
+    }
     const projection = projectOntoCurve(segment.points, point);
     if (!best || projection.distance < best.distance) {
       best = { segmentId: segment.id, ...projection };
@@ -201,7 +205,8 @@ export function insertAnchor(path: Path, segmentId: string, t: number) {
   const subPaths = toSubPaths(path);
   const { subPath, index } = findSegment(subPaths, segmentId);
   const segment = subPath.segments[index];
-  const [left, right] = splitCurve(getSegmentPoints(subPath, index), t);
+  // Not on top of an end, which would make a segment with no length.
+  const [left, right] = splitCurve(getSegmentPoints(subPath, index), clamp(t, 1e-3, 1 - 1e-3));
   const first: EditSegment = {
     type: segment.type === 'Z' ? 'L' : segment.type,
     id: uniqueId(),
@@ -215,19 +220,22 @@ export function insertAnchor(path: Path, segmentId: string, t: number) {
 
 /**
  * Deletes the anchors. The segments on either side of each one become one segment, fitted to the
- * shape they drew, and a subpath left with a single anchor is deleted too. Returns undefined if
- * nothing is left.
+ * shape they drew, and a subpath that it leaves with a single anchor is deleted too. Returns
+ * undefined if nothing is left.
  */
 export function deleteAnchors(path: Path, anchorIds: ReadonlySet<string>) {
   const subPaths = toSubPaths(path);
+  const changed = new Set<EditSubPath>();
   for (const subPath of subPaths) {
     for (let i = subPath.anchors.length - 1; i >= 0; i--) {
       if (anchorIds.has(getAnchorId(subPath, i))) {
         deleteAnchor(subPath, i);
+        changed.add(subPath);
       }
     }
   }
-  const remaining = subPaths.filter(subPath => subPath.anchors.length > 1);
+  // A subpath that was only ever one point, like a dot with a round cap, stays.
+  const remaining = subPaths.filter(subPath => subPath.anchors.length > 1 || !changed.has(subPath));
   return remaining.length ? toPath(remaining) : undefined;
 }
 
@@ -237,18 +245,23 @@ export function deleteAnchors(path: Path, anchorIds: ReadonlySet<string>) {
  * lines and quadratic curves next to it into cubic curves that draw the same shape, and then:
  * mirrored handles line up and have the same length, asymmetric ones line up, and disconnected
  * ones are left as they are. Handles that are added point along the line between the anchor's
- * neighbors, a third of the way to each.
+ * neighbors, a third of the way to each, or across from the anchor's one handle. The ends of an
+ * open subpath only change when they're made straight.
  */
 export function setPointType(path: Path, anchorIds: ReadonlySet<string>, type: PointType) {
   const subPaths = toSubPaths(path);
   for (const subPath of subPaths) {
+    const changed = new Set<number>();
     subPath.anchors.forEach((_, i) => {
       if (anchorIds.has(getAnchorId(subPath, i))) {
-        setAnchorType(subPath, i, type);
+        setAnchorType(subPath, i, type).forEach(segmentIdx => changed.add(segmentIdx));
       }
     });
     if (type === 'straight') {
-      subPath.segments.forEach((segment, i) => {
+      // Only the curves it changed, since a curve with no handles elsewhere may be there on
+      // purpose, e.g. to morph with another curve.
+      for (const i of changed) {
+        const segment = subPath.segments[i];
         const points = getSegmentPoints(subPath, i);
         const [start, end] = [points[0], points[points.length - 1]];
         if (
@@ -259,55 +272,45 @@ export function setPointType(path: Path, anchorIds: ReadonlySet<string>, type: P
           segment.type = 'L';
           segment.controls = [];
         }
-      });
+      }
     }
   }
   return toPath(subPaths);
 }
 
 /**
- * Bends the segment so that its point at t moves by delta, keeping its ends where they are (see
- * https://pomax.github.io/bezierinfo/#moulding). Lines and quadratic curves become cubic curves.
+ * Bends the segment so that its point at t moves by delta, keeping its ends where they are. The
+ * control points move as little as they can for that, each in proportion to how much it pulls on
+ * the point at t. Lines and quadratic curves become cubic curves.
  */
 export function bendSegment(path: Path, segmentId: string, t: number, delta: Point) {
   const subPaths = toSubPaths(path);
   const { subPath, index } = findSegment(subPaths, segmentId);
   toCubic(subPath, index);
-  const [start, c1, c2, end] = getSegmentPoints(subPath, index);
-  // Close to the ends, the new control points would be far away.
-  t = clamp(t, 0.1, 0.9);
-  // At t, B is on the curve, A is on the hull above it, and C is on the line between the ends, in
-  // a ratio that only depends on t.
-  const [e1, e2] = [
-    lerpPoint(lerpPoint(start, c1, t), lerpPoint(c1, c2, t), t),
-    lerpPoint(lerpPoint(c1, c2, t), lerpPoint(c2, end, t), t),
-  ];
-  const b = lerpPoint(e1, e2, t);
-  const cubes = t ** 3 + (1 - t) ** 3;
-  const u = (1 - t) ** 3 / cubes;
-  const c = add(scale(start, u), scale(end, 1 - u));
-  const ratio = Math.abs((cubes - 1) / cubes);
-  // B moves, and A moves so that A, B, and C stay in line and in the same ratio.
-  const newB = add(b, delta);
-  const newA = subtract(newB, scale(subtract(c, newB), 1 / ratio));
-  // The struts through B keep their shape.
-  const newE1 = add(newB, subtract(e1, b));
-  const newE2 = add(newB, subtract(e2, b));
-  const v1 = subtract(newA, scale(subtract(newA, newE1), 1 / (1 - t)));
-  const v2 = add(newA, scale(subtract(newE2, newA), 1 / t));
+  // At the very ends, the control points don't pull on the curve at all.
+  t = clamp(t, 0.05, 0.95);
+  const b1 = 3 * t * (1 - t) ** 2;
+  const b2 = 3 * t ** 2 * (1 - t);
+  const sum = b1 * b1 + b2 * b2;
+  const [c1, c2] = subPath.segments[index].controls;
   subPath.segments[index].controls = [
-    add(start, scale(subtract(v1, start), 1 / t)),
-    subtract(end, scale(subtract(end, v2), 1 / (1 - t))),
+    add(c1, scale(delta, b1 / sum)),
+    add(c2, scale(delta, b2 / sum)),
   ];
   return toPath(subPaths);
 }
 
-/** Returns the anchor after (or before) this one in its subpath, going around at the ends. */
+/**
+ * Returns the anchor after (or before) this one: the next one in its subpath, or the first one in
+ * the next subpath, going around at the end of the path.
+ */
 export function getAdjacentAnchorId(path: Path, anchorId: string, direction: 1 | -1) {
-  const subPaths = toSubPaths(path);
-  const { subPath, index } = findAnchor(subPaths, anchorId);
-  const count = subPath.anchors.length;
-  return getAnchorId(subPath, MathUtil.floorMod(index + direction, count));
+  const ids = getAnchors(path).map(anchor => anchor.id);
+  const index = ids.indexOf(anchorId);
+  if (index < 0) {
+    throw new Error(`No anchor with the id ${anchorId}`);
+  }
+  return ids[MathUtil.floorMod(index + direction, ids.length)];
 }
 
 function toSubPaths(path: Path): EditSubPath[] {
@@ -430,8 +433,11 @@ function getType(point: Point, handleIn: Point | undefined, handleOut: Point | u
   if (!v1 || !v2 || isZeroLength(l1) || isZeroLength(l2)) {
     return isZeroLength(l1) && isZeroLength(l2) ? 'straight' : 'disconnected';
   }
-  // Paths are saved with 3 decimals, which is enough to throw off exact comparisons.
-  const isOpposite = cross(v1, v2) / (l1 * l2) < 1e-3 && dot(v1, v2) < 0;
+  // Paths are saved with 3 decimals, which moves a short handle's tip off of the line by up to
+  // 7e-4 units, so that counts as lined up too.
+  const isOpposite =
+    dot(v1, v2) < 0 &&
+    (cross(v1, v2) / (l1 * l2) < 1e-3 || cross(v1, v2) / Math.max(l1, l2) < 2e-3);
   if (!isOpposite) {
     return 'disconnected';
   }
@@ -442,51 +448,83 @@ function isZeroLength(l: number) {
   return l < 1e-6;
 }
 
-function setAnchorType(subPath: EditSubPath, index: number, type: PointType) {
+/** Changes the anchor's type, and returns the indices of the segments it changed. */
+function setAnchorType(subPath: EditSubPath, index: number, type: PointType): number[] {
   const anchor = subPath.anchors[index];
+  const inIdx = getSegmentIndex(subPath, index, 'in');
+  const outIdx = getSegmentIndex(subPath, index, 'out');
   const sides: HandleSide[] = ['in', 'out'];
   if (type === 'straight') {
+    const changed: number[] = [];
     for (const side of sides) {
-      const segmentIdx = getSegmentIndex(subPath, index, side);
-      if (segmentIdx === undefined || subPath.segments[segmentIdx].type === 'L') {
+      const segmentIdx = side === 'in' ? inIdx : outIdx;
+      if (segmentIdx === undefined || !['Q', 'C'].includes(subPath.segments[segmentIdx].type)) {
         continue;
       }
-      if (subPath.segments[segmentIdx].type === 'Q') {
-        toCubic(subPath, segmentIdx);
-      }
+      toCubic(subPath, segmentIdx);
       const handle = getHandleRef(subPath, index, side);
       if (handle) {
         handle.segment.controls[handle.controlIdx] = anchor;
+        changed.push(segmentIdx);
       }
     }
-    return;
+    return changed;
   }
+  if (inIdx === undefined || outIdx === undefined) {
+    // An end of an open subpath only has one handle, so it can't line up with another.
+    return [];
+  }
+  const count = subPath.anchors.length;
+  const previous = subPath.anchors[MathUtil.floorMod(index - 1, count)];
+  const next = subPath.anchors[nextIndex(subPath, index)];
+  // The direction of the line between the neighbors, for handles that are added.
+  const smooth = normalize(subtract(next, previous));
+  const isLine = (i: number) => ['L', 'Z'].includes(subPath.segments[i].type);
+  const wasLineIn = isLine(inIdx);
+  const wasLineOut = isLine(outIdx);
   const before = getHandles(subPath, index);
-  const wasStraight = getType(anchor, before.in, before.out) === 'straight';
-  for (const side of sides) {
-    const segmentIdx = getSegmentIndex(subPath, index, side);
-    if (segmentIdx !== undefined) {
-      toCubic(subPath, segmentIdx);
-    }
+  const hasIn = !wasLineIn && !!before.in && !isZeroLength(MathUtil.distance(before.in, anchor));
+  const hasOut =
+    !wasLineOut && !!before.out && !isZeroLength(MathUtil.distance(before.out, anchor));
+  if (!hasIn && !hasOut && !smooth) {
+    // E.g. both neighbors are the same point, so there's no direction to smooth it along.
+    return [];
   }
+  toCubic(subPath, inIdx);
+  toCubic(subPath, outIdx);
   const handleIn = getHandleRef(subPath, index, 'in');
   const handleOut = getHandleRef(subPath, index, 'out');
-  const count = subPath.anchors.length;
-  const previous = handleIn && subPath.anchors[MathUtil.floorMod(index - 1, count)];
-  const next = handleOut && subPath.anchors[nextIndex(subPath, index)];
-  let v1 = handleIn && subtract(handleIn.segment.controls[handleIn.controlIdx], anchor);
-  let v2 = handleOut && subtract(handleOut.segment.controls[handleOut.controlIdx], anchor);
-  if (wasStraight) {
+  if (!handleIn || !handleOut) {
+    return [inIdx, outIdx];
+  }
+  // A line's handles, after toCubic, are on the line, so they don't count as the anchor's.
+  let v1: Point | undefined = hasIn
+    ? subtract(handleIn.segment.controls[handleIn.controlIdx], anchor)
+    : undefined;
+  let v2: Point | undefined = hasOut
+    ? subtract(handleOut.segment.controls[handleOut.controlIdx], anchor)
+    : undefined;
+  const toPrevious = MathUtil.distance(anchor, previous) / 3;
+  const toNext = MathUtil.distance(anchor, next) / 3;
+  if (!v1 && !v2 && smooth) {
     // The handles go along the line between the neighbors, a third of the way to each.
-    const direction = normalize(subtract(next ?? anchor, previous ?? anchor));
-    if (!direction) {
-      return;
-    }
-    v1 = previous && scale(direction, -MathUtil.distance(anchor, previous) / 3);
-    v2 = next && scale(direction, MathUtil.distance(anchor, next) / 3);
-  } else if (type !== 'disconnected' && v1 && v2) {
-    // They line up along the average of their directions.
-    const direction = normalize(subtract(normalize(v2) ?? v2, normalize(v1) ?? v1));
+    v1 = scale(smooth, -toPrevious);
+    v2 = scale(smooth, toNext);
+  } else if (v1 && !v2) {
+    // The missing handle goes across from the other one.
+    v2 =
+      type === 'disconnected'
+        ? undefined
+        : scale(unit(v1), type === 'mirrored' ? -length(v1) : -toNext);
+  } else if (v2 && !v1) {
+    v1 =
+      type === 'disconnected'
+        ? undefined
+        : scale(unit(v2), type === 'mirrored' ? -length(v2) : -toPrevious);
+  } else if (v1 && v2 && type !== 'disconnected') {
+    // They line up along the average of their directions, or the line between the neighbors if
+    // they point the same way.
+    const direction = normalize(subtract(unit(v2), unit(v1))) ?? smooth;
     if (direction) {
       v1 = scale(direction, -length(v1));
       v2 = scale(direction, length(v2));
@@ -494,15 +532,21 @@ function setAnchorType(subPath: EditSubPath, index: number, type: PointType) {
   }
   if (type === 'mirrored' && v1 && v2) {
     const average = (length(v1) + length(v2)) / 2;
-    v1 = scale(normalize(v1) ?? v1, average);
-    v2 = scale(normalize(v2) ?? v2, average);
+    v1 = scale(unit(v1), average);
+    v2 = scale(unit(v2), average);
   }
-  if (handleIn && v1) {
+  if (v1) {
     handleIn.segment.controls[handleIn.controlIdx] = add(anchor, v1);
   }
-  if (handleOut && v2) {
+  if (v2) {
     handleOut.segment.controls[handleOut.controlIdx] = add(anchor, v2);
   }
+  return [inIdx, outIdx];
+}
+
+/** The vector's direction, or the vector itself if it has no length. */
+function unit(p: Point) {
+  return normalize(p) ?? p;
 }
 
 /** Turns the segment into a cubic curve that draws the same shape. */
@@ -577,10 +621,9 @@ function deleteAnchor(subPath: EditSubPath, index: number) {
 }
 
 /**
- * Returns one segment that draws about the same shape as two: a line if they're both straight and
- * in line, or a
- * cubic curve with the same tangents at the ends, fitted to points along the two by least squares
- * (Philip Schneider's method, from Graphics Gems).
+ * Returns one segment that draws about the same shape as two: a line if they're both lines, or
+ * curves that draw a line in the same direction, or else a cubic curve with the same tangents at the ends, fitted to points along the two
+ * by least squares (Philip Schneider's method, from Graphics Gems).
  */
 function mergeSegments(first: ReadonlyArray<Point>, second: ReadonlyArray<Point>): Point[] {
   const start = first[0];
@@ -635,7 +678,7 @@ function mergeSegments(first: ReadonlyArray<Point>, second: ReadonlyArray<Point>
   return [start, add(start, scale(tangentStart, alpha1)), add(end, scale(tangentEnd, alpha2)), end];
 }
 
-/** Whether the point is on the line between start and end, within the precision paths are saved at. */
+/** Whether the point is on the line between start and end, to the precision paths are saved at. */
 function isOnLine(point: Point, start: Point, end: Point) {
   const direction = normalize(subtract(end, start));
   if (!direction) {
@@ -683,6 +726,18 @@ function splitCurve(points: ReadonlyArray<Point>, t: number): [Point[], Point[]]
 
 function sampleCurve(points: ReadonlyArray<Point>, count: number) {
   return Array.from({ length: count + 1 }, (_, i) => evaluate(points, i / count));
+}
+
+/**
+ * Returns how far the point is from the box around a curve's points, which is never farther than
+ * any point on the curve.
+ */
+export function getDistanceToHull(points: ReadonlyArray<Point>, point: Point) {
+  const xs = points.map(p => p.x);
+  const ys = points.map(p => p.y);
+  const dx = Math.max(Math.min(...xs) - point.x, 0, point.x - Math.max(...xs));
+  const dy = Math.max(Math.min(...ys) - point.y, 0, point.y - Math.max(...ys));
+  return Math.hypot(dx, dy);
 }
 
 /**

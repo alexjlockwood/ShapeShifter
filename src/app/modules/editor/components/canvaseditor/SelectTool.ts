@@ -52,8 +52,8 @@ export interface SelectToolContext {
     cancel(): void;
   };
   redraw(): void;
-  /** Starts editing the path's points, e.g. on a double-click. */
-  editPath?(layerId: string): void;
+  /** Starts editing the path's points, e.g. on a double-click, and returns whether it did. */
+  editPath?(layerId: string): boolean;
 }
 
 /** The keys held with a press or a move. What they mean depends on the gesture. */
@@ -195,15 +195,15 @@ export class SelectTool {
   onPress(point: Point, modifiers: Modifiers, clickCount = 1) {
     this.lastPoint = point;
     const hitLayerId = this.hitTest(point)?.id;
-    if (clickCount >= 2 && hitLayerId && this.context.editPath) {
-      this.state = { type: 'idle' };
-      this.context.editPath(hitLayerId);
-      return;
-    }
     const bounds = this.getSelectionBounds();
     const handle = bounds && this.hitTestHandles(bounds, point, hitLayerId);
     if (bounds && handle) {
       this.startTransform(point, bounds, handle);
+      return;
+    }
+    if (clickCount === 2 && hitLayerId && this.context.editPath?.(hitLayerId)) {
+      // A path that can't be edited, e.g. because it's animated, gets the press as usual.
+      this.state = { type: 'idle' };
       return;
     }
     let didSelect = false;
