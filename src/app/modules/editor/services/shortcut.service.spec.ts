@@ -1,11 +1,11 @@
 import { createEditorStore } from 'app/modules/editor/store';
 import { getIsPlaying } from 'app/modules/editor/store/playback/selectors';
 import { NO_FEATURES } from 'environments/features';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ZoomCommand } from './canvasviewport.service';
 import { createEditorServices, type EditorServices } from './createEditorServices';
-import { getZoomShortcut } from './shortcut.service';
+import { getZoomShortcut, ShortcutService } from './shortcut.service';
 
 const NO_KEYS = {
   key: '',
@@ -116,6 +116,54 @@ describe('ShortcutService', () => {
     press('keydown', { shiftKey: true, key: '!', code: 'Digit1' });
     press('keydown', { shiftKey: true, key: ')', code: 'Digit0' });
     expect(commands).toEqual(['in', 'out', 'fit', '100%']);
+  });
+
+  it('zooms while typing, but lets Shift+1 type', () => {
+    const { services } = setUp(true);
+    const commands: ZoomCommand[] = [];
+    services.canvasViewportService.getZoomCommands().subscribe(c => commands.push(c));
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    input.focus();
+    press('keydown', { metaKey: true, ctrlKey: true, key: '=', code: 'Equal' });
+    expect(press('keydown', { shiftKey: true, key: '!', code: 'Digit1' }).defaultPrevented).toBe(
+      false,
+    );
+    expect(commands).toEqual(['in']);
+    input.remove();
+  });
+
+  it('leaves the space bar alone when it went down elsewhere, e.g. on a dialog button', () => {
+    const { services, isPlaying } = setUp(true);
+    const dialog = document.createElement('div');
+    dialog.className = 'MuiModal-root';
+    const button = document.createElement('button');
+    dialog.appendChild(button);
+    document.body.appendChild(dialog);
+    const keyDown = new KeyboardEvent('keydown', { key: ' ', keyCode: 32, bubbles: true });
+    button.dispatchEvent(keyDown);
+    expect(services.canvasViewportService.isSpaceHeld()).toBe(false);
+    // Browsers press the button when the key comes up, unless its default is prevented.
+    const keyUp = new KeyboardEvent('keyup', {
+      key: ' ',
+      keyCode: 32,
+      bubbles: true,
+      cancelable: true,
+    });
+    button.dispatchEvent(keyUp);
+    expect(keyUp.defaultPrevented).toBe(false);
+    expect(isPlaying()).toBe(false);
+    dialog.remove();
+  });
+
+  it('forgets that Space is held when Cmd comes up on a Mac', () => {
+    vi.spyOn(ShortcutService, 'isMac').mockReturnValue(true);
+    const { services } = setUp(true);
+    press('keydown', { key: ' ', keyCode: 32 });
+    // macOS doesn't send the space bar's release while Cmd is held.
+    press('keyup', { key: 'Meta', metaKey: false });
+    expect(services.canvasViewportService.isSpaceHeld()).toBe(false);
+    vi.restoreAllMocks();
   });
 
   it("doesn't zoom without the canvas editor", () => {

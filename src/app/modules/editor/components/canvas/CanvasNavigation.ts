@@ -1,13 +1,17 @@
 import { Point } from 'app/modules/editor/scripts/common';
 import { on } from 'app/modules/editor/scripts/dom';
 import { CanvasViewportService } from 'app/modules/editor/services/canvasviewport.service';
+import { clamp } from 'lodash-es';
 import { Subscription } from 'rxjs';
 
 import { CanvasCamera } from './CanvasCamera';
 
-// How much a wheel zooms, per pixel it scrolls. A mouse wheel's notch is about 100 pixels, which
-// zooms by the square root of 2.
-const WHEEL_ZOOM_SPEED = 1 / 200;
+// Chrome and Firefox turn a trackpad pinch into wheel events with Ctrl held, whose deltaY is -100
+// times the log of how much the fingers spread, so zooming by e to the -deltaY / 100 follows them.
+const WHEEL_ZOOM_PIXELS = 100;
+// A mouse wheel's notch scrolls 100 pixels or more, which would zoom by e, so a wheel event zooms
+// by at most e to the 0.5 (about 1.65).
+const MAX_WHEEL_ZOOM_DELTA = 50;
 // Wheels that scroll by lines or pages instead of pixels, which Firefox's can.
 const LINE_HEIGHT = 16;
 const PAGE_HEIGHT = 800;
@@ -82,6 +86,9 @@ export class CanvasNavigation {
         },
         { capture: true },
       ),
+      on(root, 'contextmenu', () => {
+        this.endPan();
+      }),
       on(window, 'blur', () => this.endPan()),
       on(
         window,
@@ -120,9 +127,11 @@ export class CanvasNavigation {
           : 1;
     let dx = event.deltaX * unit;
     let dy = event.deltaY * unit;
+    // Releasing the space bar after this doesn't play or pause.
+    this.canvasViewportService.notePan();
     if (event.ctrlKey || event.metaKey) {
-      // Trackpad pinches arrive as wheel events with Ctrl held, in Chrome and Firefox.
-      const scale = camera.scale * 2 ** (-dy * WHEEL_ZOOM_SPEED);
+      const delta = clamp(dy, -MAX_WHEEL_ZOOM_DELTA, MAX_WHEEL_ZOOM_DELTA);
+      const scale = camera.scale * Math.exp(-delta / WHEEL_ZOOM_PIXELS);
       this.canvasViewportService.setView(camera.zoomAround(this.toPanelPoint(event), scale));
       return false;
     }
@@ -141,6 +150,7 @@ export class CanvasNavigation {
     }
     const scale = this.pinchStartScale * event.scale;
     this.canvasViewportService.setView(camera.zoomAround(this.toPanelPoint(event), scale));
+    this.canvasViewportService.notePan();
   }
 
   private onPointerDown(event: PointerEvent) {
@@ -158,6 +168,8 @@ export class CanvasNavigation {
       // The pointer is already gone, e.g. for a synthetic event.
     }
     this.root.classList.add('is-panning');
+    // Even a press that doesn't move is a pan, not a tap of the space bar.
+    this.canvasViewportService.notePan();
     // Keeps the artboard from starting a gesture. The default isn't prevented, so that the press
     // still takes the focus from a text field.
     event.stopPropagation();
@@ -167,6 +179,11 @@ export class CanvasNavigation {
   private onPointerMove(event: PointerEvent) {
     const camera = this.getCamera();
     if (!this.pan || event.pointerId !== this.pan.pointerId || !camera) {
+      return;
+    }
+    if (event.pointerType === 'mouse' && !event.buttons) {
+      // The release went elsewhere, e.g. to a context menu.
+      this.endPan();
       return;
     }
     const { x, y } = this.pan.last;
@@ -179,6 +196,9 @@ export class CanvasNavigation {
   private endPan(pointerId?: number) {
     if (!this.pan || (pointerId !== undefined && pointerId !== this.pan.pointerId)) {
       return false;
+    }
+    if (this.root.hasPointerCapture(this.pan.pointerId)) {
+      this.root.releasePointerCapture(this.pan.pointerId);
     }
     this.pan = undefined;
     this.ignoreNextClick = true;

@@ -48,22 +48,28 @@ test('pans by scrolling, and by dragging with the space bar held', async ({ page
   await page.mouse.wheel(0, 100);
   await expect.poll(async () => (await artboard(page)).y).toBeCloseTo(start.y - 100, 0);
 
+  // Start on the panel around the artboard, where a click would clear the selection.
   const scrolled = await artboard(page);
+  const panel = await boundingBox(page.locator('.app-canvas'));
+  const press = { x: panel.x + 10, y: panel.y + panel.height - 10 };
   await page.keyboard.down('Space');
   await expect(page.locator('.app-canvas.is-space-held')).toHaveCount(1);
+  await page.mouse.move(press.x, press.y);
   await page.mouse.down();
-  await page.mouse.move(start.x + 70, start.y + 50, { steps: 5 });
+  await page.mouse.move(press.x + 50, press.y - 30, { steps: 5 });
   await page.mouse.up();
   await page.keyboard.up('Space');
   const dragged = await artboard(page);
   expect(dragged.x).toBeCloseTo(scrolled.x + 50, 0);
-  expect(dragged.y).toBeCloseTo(scrolled.y + 30, 0);
+  expect(dragged.y).toBeCloseTo(scrolled.y - 30, 0);
 
   // Releasing the space bar after panning doesn't play the animation, and the click at the end
   // of the drag doesn't clear the selection.
   expect(await getState(page, s => s.playback.isPlaying)).toBe(false);
   expect(await getState(page, s => s.layers.selectedLayerIds.size)).toBe(1);
-  // Tapping it does.
+  // Tapping it does. The demo is only 300ms long, so it repeats, or it could end before the check.
+  await page.keyboard.press('r');
+  await expect.poll(() => getState(page, s => s.playback.isRepeating)).toBe(true);
   await page.keyboard.press('Space');
   await expect.poll(() => getState(page, s => s.playback.isPlaying)).toBe(true);
 });
@@ -124,8 +130,9 @@ test('clicks the right subpath in action mode after zooming', async ({ page, mod
     .evaluateAll(elements => elements.map(e => Math.round(e.getBoundingClientRect().width)));
   expect(new Set(widths).size).toBe(1);
 
-  // The top half of the triangle, whose points are at (8, 5), (8, 12), and (19, 12).
-  const point = await artboardPoint(page.locator('.app-canvas.start'), 10, 9);
+  // The top half of the triangle, whose points are at (8, 5), (8, 12), and (19, 12). Without the
+  // zoom, the click would land to the right of it.
+  const point = await artboardPoint(page.locator('.app-canvas.start'), 15, 10);
   await page.mouse.click(point.x, point.y);
   const selections = await getState(page, s => s.actionmode.selections);
   // SelectionType.SubPath, ActionSource.From

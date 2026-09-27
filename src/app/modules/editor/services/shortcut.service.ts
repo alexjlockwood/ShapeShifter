@@ -234,10 +234,18 @@ export class ShortcutService {
   }
 
   private onKeyUp(event: KeyboardEvent) {
-    if (event.keyCode !== 32) {
+    if (event.key === 'Meta' && ShortcutService.isMac()) {
+      // macOS doesn't send the release of a key that comes up while Cmd is held, so a space bar
+      // that was let go while zooming with Cmd would otherwise stay held.
+      this.canvasViewportService.cancelSpace();
       return undefined;
     }
-    // A tap plays or pauses, unless the press was ignored (e.g. typing a space in a text field).
+    // Only the presses that were taken here, so that the space bar still presses a focused button
+    // or checkbox, e.g. in a dialog.
+    if (event.keyCode !== 32 || !this.canvasViewportService.isSpaceHeld()) {
+      return undefined;
+    }
+    // A tap plays or pauses, unless the canvas panned in between.
     if (this.canvasViewportService.releaseSpace()) {
       this.playbackService.toggleIsPlaying();
     }
