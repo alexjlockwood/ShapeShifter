@@ -238,7 +238,7 @@ while held and plays or pauses when tapped. Repeat and slow motion keep their to
 ## Roadmap
 
 Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395), phase 1 (#396 to #399),
-phase 2 (#400), phase 3 (#402), phase 4 (#403), phase 5 (#404), and phase 6 (PHASE_6_PR). Phase 1's snapping covers the artboard,
+phase 2 (#400), phase 3 (#402), phase 4 (#403), phase 5 (#404), and phase 6 (#405). Phase 1's snapping covers the artboard,
 other paths' bounds, and the pixel grid, and phase 4 added the guides. In phase 2, points snap to
 those, to the path's other points, and onto the closest curve. Editing a path has no cursors of its own yet, so
 hovering a segment or holding Cmd over one looks the same as anywhere else.
