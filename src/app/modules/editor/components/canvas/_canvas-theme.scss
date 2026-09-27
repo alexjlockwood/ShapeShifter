@@ -18,11 +18,22 @@
         background-color: mat-color($background, base100);
         color: mat-color($foreground, secondary-text);
     }
+    .app-canvas .canvas-editor-toolbar-separator {
+        background-color: mat-color($foreground, divider);
+    }
     .app-canvas .canvas-editor-tool:hover {
         background-color: mat-color($foreground, divider);
     }
     .app-canvas .canvas-editor-tool[aria-pressed='true'] {
         background-color: #0d99ff;
         color: #fff;
+    }
+    // A setting that's on is blue, but lighter than the tool in use.
+    .app-canvas .canvas-editor-tool[data-setting][aria-pressed='true'] {
+        background-color: transparent;
+        color: #0d99ff;
+    }
+    .app-canvas .canvas-editor-tool[data-setting][aria-pressed='true']:hover {
+        background-color: mat-color($foreground, divider);
     }
 }

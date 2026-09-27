@@ -5,15 +5,19 @@ import type {
   CanvasEditorContext,
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
 import type { CanvasPreview } from 'app/modules/editor/components/canvas/CanvasPreview';
-import { hitTestLayer } from 'app/modules/editor/components/canvas/LayerGeometry';
+import { getRulerLayout } from 'app/modules/editor/components/canvas/CanvasRuler';
+import { getLayersBounds, hitTestLayer } from 'app/modules/editor/components/canvas/LayerGeometry';
+import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { on } from 'app/modules/editor/scripts/dom';
+import type { CanvasSettings } from 'app/modules/editor/services/canvassettings.service';
 import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
+import { getGuides } from 'app/modules/editor/store/guides/selectors';
 import { getHiddenLayerIds, getSelectedLayerIds } from 'app/modules/editor/store/layers/selectors';
 import {
   getAnimatedVectorLayer,
@@ -26,11 +30,14 @@ import { startWith } from 'rxjs/operators';
 import type { DrawToolContext } from './drawTools';
 import { EditorRenderer } from './EditorRenderer';
 import { EditorToolbar, ToolName } from './EditorToolbar';
+import { GuideTool } from './GuideTool';
+import { getMeasurements } from './measuring';
 import { getLayerPath, PathEditTool } from './PathEditTool';
 import { PencilTool } from './PencilTool';
 import { PenTool } from './PenTool';
 import { ShapeTool } from './ShapeTool';
 import { Modifiers, SelectTool } from './SelectTool';
+import type { SnapThresholds } from './snapping';
 import { duplicateLayers, getTopmostLayerIds, translateLayers } from './transformLayers';
 
 // How far the arrow keys move the selection, in viewport units, and with Shift held.
@@ -84,8 +91,16 @@ class Editor implements CanvasEditor {
   private hiddenLayerIds: ReadonlySet<string> = new Set();
   private selectedLayerIds: ReadonlySet<string> = new Set();
   private isActionMode = false;
+  private guides: ReadonlyArray<Guide> = [];
+  private settings: CanvasSettings;
   private readonly renderer: EditorRenderer;
   private readonly selectTool: SelectTool;
+  // Drags the guides, before the other tools get the pointer.
+  private readonly guideTool: GuideTool;
+  // Where the pointer last hovered, and whether Alt is held there, to measure distances.
+  private hoverPoint: Point | undefined;
+  private isAltHeld = false;
+  private isOverRuler = false;
   // The path whose points are being edited, if any. The select tool is used otherwise.
   private pathEdit: PathEditTool | undefined;
   // The drawing tool picked in the toolbar, which gets the pointer before the others.
@@ -105,6 +120,17 @@ class Editor implements CanvasEditor {
     const { store, services, preview } = context;
     this.renderer = new EditorRenderer(context.canvas);
     this.vectorLayer = getAnimatedVectorLayer(store.getState()).vl;
+    this.settings = services.canvasSettingsService.getSettings();
+    this.guideTool = new GuideTool({
+      getGuides: () => this.getVisibleGuides(),
+      setGuides: guides => services.guideService.setGuides(guides),
+      getVectorLayer: () => this.vectorLayer,
+      getHiddenLayerIds: () => this.hiddenLayerIds,
+      toViewportLength: length => this.toViewportLength(length),
+      getSnapThresholds: () => this.getSnapThresholds(),
+      isRemoving: (axis, point) => this.isRemovingGuide(axis, point),
+      redraw: () => this.draw(),
+    });
     this.selectTool = new SelectTool({
       getVectorLayer: () => this.vectorLayer,
       getHiddenLayerIds: () => this.hiddenLayerIds,
@@ -116,6 +142,8 @@ class Editor implements CanvasEditor {
       preview,
       redraw: () => this.draw(),
       editPath: layerId => this.startPathEdit(layerId),
+      getSnapThresholds: () => this.getSnapThresholds(),
+      getGuides: () => this.getVisibleGuides(),
     });
   }
 
@@ -157,15 +185,36 @@ class Editor implements CanvasEditor {
       }
       this.draw();
     });
+    this.subscription.add(
+      store.select(getGuides).subscribe(guides => {
+        this.guides = guides;
+        this.draw();
+      }),
+    );
+    this.subscription.add(
+      this.context.services.canvasSettingsService.asObservable().subscribe(settings => {
+        this.settings = settings;
+        this.toolbar?.setSettings(settings);
+        if (!settings.showRulers) {
+          // The guides are hidden with the rulers.
+          this.guideTool.onLeave();
+        }
+        this.draw();
+      }),
+    );
     // Before the keyboard shortcuts, so that the arrow keys nudge instead of rewinding.
     const removeListeners = [
       on(window, 'keydown', event => this.onKeyDown(event), { capture: true }),
       on(window, 'keyup', event => this.onKeyUp(event), { capture: true }),
-      on(window, 'blur', () => this.endNudge()),
+      on(window, 'blur', () => {
+        this.endNudge();
+        this.setAltHeld(false);
+      }),
     ];
     this.removeKeyListeners = () => removeListeners.forEach(remove => remove());
     this.toolbar = new EditorToolbar(this.context.root, {
       onSelect: tool => this.setTool(tool),
+      onToggle: setting => this.context.services.canvasSettingsService.toggle(setting),
       // The pointer is over the toolbar, rather than over what's under it.
       onHover: () => {
         if (!this.isPressing) {
@@ -174,6 +223,7 @@ class Editor implements CanvasEditor {
       },
     });
     this.toolbar.setHidden(this.isActionMode);
+    this.toolbar.setSettings(this.settings);
     this.removeTestHooks = environment.production ? undefined : addTestHooks(preview, this);
   }
 
@@ -196,6 +246,21 @@ class Editor implements CanvasEditor {
   onPress(event: PointerEvent, point: Point) {
     this.isPressing = true;
     this.endNudge();
+    const ruler = getRuler(event);
+    if (ruler) {
+      // Dragging out of a ruler adds a guide, whatever the tool.
+      this.guideTool.setHoveredGuide(undefined);
+      if (ruler !== 'corner' && this.showsGuides()) {
+        this.getTool().onLeave();
+        this.guideTool.startNew(ruler === 'horizontal' ? 'y' : 'x', point, getModifiers(event));
+      }
+      return;
+    }
+    const guide = this.getGuideAt(point);
+    if (guide) {
+      this.guideTool.startMove(guide, point);
+      return;
+    }
     const clickCount = this.countClicks(event, point);
     const { pathEdit } = this;
     if (pathEdit && !this.drawTool && !pathEdit.isOverPath(point)) {
@@ -216,17 +281,140 @@ class Editor implements CanvasEditor {
   }
 
   onMove(event: PointerEvent, point: Point) {
+    this.hoverPoint = point;
+    this.setAltHeld(event.altKey);
+    if (this.guideTool.isDragging()) {
+      this.guideTool.onMove(point, getModifiers(event));
+      return;
+    }
+    if (this.isPressing) {
+      this.getTool().onMove(point, getModifiers(event));
+      return;
+    }
+    const isOverRuler = !!getRuler(event);
+    if (isOverRuler !== this.isOverRuler) {
+      this.isOverRuler = isOverRuler;
+      this.draw();
+    }
+    if (isOverRuler) {
+      // The ruler is over the canvas, so nothing under it is hovered.
+      this.guideTool.setHoveredGuide(undefined);
+      this.getTool().onLeave();
+      return;
+    }
+    const guide = this.getGuideAt(point);
+    this.guideTool.setHoveredGuide(guide);
+    if (guide) {
+      this.selectTool.onLeave();
+      return;
+    }
     this.getTool().onMove(point, getModifiers(event));
   }
 
   onRelease(_: PointerEvent, point: Point) {
     this.isPressing = false;
+    if (this.guideTool.isDragging()) {
+      this.guideTool.onRelease();
+      return;
+    }
     this.getTool().onRelease(point);
   }
 
   onLeave() {
     this.isPressing = false;
+    this.hoverPoint = undefined;
+    this.isOverRuler = false;
+    this.guideTool.onLeave();
     this.getTool().onLeave();
+  }
+
+  /** The guides, unless they're hidden with the rulers, or in action mode. */
+  private getVisibleGuides() {
+    return this.showsGuides() ? this.guides : [];
+  }
+
+  private showsGuides() {
+    return this.settings.showRulers && !this.isActionMode;
+  }
+
+  /**
+   * Returns the guide under the point that a press would drag. The guides are only for the select
+   * tool, and the selection's handles win over them.
+   */
+  private getGuideAt(point: Point) {
+    if (
+      !this.showsGuides() ||
+      this.drawTool ||
+      this.pathEdit ||
+      this.selectTool.isOverHandle(point)
+    ) {
+      return undefined;
+    }
+    return this.guideTool.hitTest(point);
+  }
+
+  /** Whether a guide dragged to the point is dropped on its ruler, or off of the panel. */
+  private isRemovingGuide(axis: Guide['axis'], point: Point) {
+    const { camera } = this;
+    if (!camera) {
+      return false;
+    }
+    const { x, y } = camera.viewportToPanel(point);
+    if (x < 0 || y < 0 || x > camera.panel.w || y > camera.panel.h) {
+      return true;
+    }
+    const { rect } = getRulerLayout(camera, axis === 'x' ? 'vertical' : 'horizontal');
+    return axis === 'x' ? x <= rect.x + rect.w : y <= rect.y + rect.h;
+  }
+
+  private toViewportLength(length: number) {
+    return this.camera?.toViewportLength(length) ?? length;
+  }
+
+  /** How close things snap, with the pixel grid left out if its snapping is off. */
+  private getSnapThresholds(): SnapThresholds {
+    return {
+      lines: this.toViewportLength(SNAP_THRESHOLD),
+      grid: this.settings.snapToPixelGrid ? this.toViewportLength(GRID_SNAP_THRESHOLD) : 0,
+    };
+  }
+
+  private setAltHeld(isAltHeld: boolean) {
+    if (this.isAltHeld !== isAltHeld) {
+      this.isAltHeld = isAltHeld;
+      this.draw();
+    }
+  }
+
+  /**
+   * The distances from the selection to the path under the pointer, or else to the artboard, while
+   * Alt is held, as in Figma.
+   */
+  private getMeasurements() {
+    const { vectorLayer: vl, selectedLayerIds, hoverPoint } = this;
+    if (
+      !this.isAltHeld ||
+      this.isPressing ||
+      this.isOverRuler ||
+      !hoverPoint ||
+      this.drawTool ||
+      this.pathEdit ||
+      this.guideTool.isDragging() ||
+      !selectedLayerIds.size
+    ) {
+      return undefined;
+    }
+    const selection = getLayersBounds(vl, selectedLayerIds);
+    if (!selection) {
+      return undefined;
+    }
+    const hoveredLayerId = this.selectTool.getHoveredLayerId();
+    const hovered =
+      hoveredLayerId && !selectedLayerIds.has(hoveredLayerId)
+        ? getLayersBounds(vl, [hoveredLayerId])
+        : undefined;
+    const target = hovered ?? { l: 0, t: 0, r: vl.width, b: vl.height };
+    return { target, items: getMeasurements(selection, target) };
   }
 
   dispose() {
@@ -280,16 +468,13 @@ class Editor implements CanvasEditor {
   }
 
   private createDrawTool(name: ToolName) {
-    const toViewportLength = (length: number) => this.camera?.toViewportLength(length) ?? length;
     const context: DrawToolContext = {
       getVectorLayer: () => this.vectorLayer,
       getHiddenLayerIds: () => this.hiddenLayerIds,
       getSelectedLayerIds: () => this.selectedLayerIds,
-      toViewportLength,
-      getSnapThresholds: () => ({
-        lines: toViewportLength(SNAP_THRESHOLD),
-        grid: toViewportLength(GRID_SNAP_THRESHOLD),
-      }),
+      toViewportLength: length => this.toViewportLength(length),
+      getSnapThresholds: () => this.getSnapThresholds(),
+      getGuides: () => this.getVisibleGuides(),
       render: document => this.render(document),
       canEditPath: layerId => this.context.preview.canEditPath(layerId),
       preview: this.context.preview,
@@ -345,9 +530,11 @@ class Editor implements CanvasEditor {
       layerId,
       getVectorLayer: () => this.vectorLayer,
       getHiddenLayerIds: () => this.hiddenLayerIds,
-      toViewportLength: length => this.camera?.toViewportLength(length) ?? length,
+      toViewportLength: length => this.toViewportLength(length),
       preview,
       redraw: () => this.draw(),
+      getSnapThresholds: () => this.getSnapThresholds(),
+      getGuides: () => this.getVisibleGuides(),
     });
     this.draw();
     return true;
@@ -383,6 +570,8 @@ class Editor implements CanvasEditor {
 
   private onKeyDown(event: KeyboardEvent) {
     if (MODIFIER_KEYS.has(event.key)) {
+      this.setAltHeld(event.altKey);
+      this.guideTool.onModifiersChange(getModifiers(event));
       this.getTool().onModifiersChange(getModifiers(event));
       return undefined;
     }
@@ -397,6 +586,13 @@ class Editor implements CanvasEditor {
       document.activeElement?.matches('input, textarea, [contenteditable]')
     ) {
       return undefined;
+    }
+    const setting = getSettingShortcut(event);
+    if (setting) {
+      if (!event.repeat) {
+        this.context.services.canvasSettingsService.toggle(setting);
+      }
+      return false;
     }
     const tool = getToolShortcut(event);
     if (tool) {
@@ -544,6 +740,8 @@ class Editor implements CanvasEditor {
 
   private onKeyUp(event: KeyboardEvent) {
     if (MODIFIER_KEYS.has(event.key)) {
+      this.setAltHeld(event.altKey);
+      this.guideTool.onModifiersChange(getModifiers(event));
       this.getTool().onModifiersChange(getModifiers(event));
     }
     if (ARROWS[event.key]) {
@@ -624,23 +822,33 @@ class Editor implements CanvasEditor {
       guides: overlay?.guides ?? pathEdit?.guides ?? this.selectTool.getGuides(),
       pathEdit,
       overlay,
+      rulerGuides: this.showsGuides() ? this.guideTool.getDrawing() : undefined,
+      measurements: this.getMeasurements(),
+      showsPixelGrid: this.settings.showPixelGrid,
     });
-    // The panel's styles turn this into a cursor (components/canvas/canvas.scss).
-    const cursor =
-      drawTool instanceof PenTool
-        ? drawTool.getCursor()
-        : drawTool instanceof PencilTool
-          ? 'pencil'
-          : drawTool
-            ? 'crosshair'
-            : this.pathEdit
-              ? undefined
-              : this.selectTool.getCursor();
+    // The panel's styles turn this into a cursor (components/canvas/canvas.scss). The rulers have
+    // their own.
+    const cursor = this.isOverRuler
+      ? undefined
+      : (this.guideTool.getCursor() ?? this.getToolCursor());
     if (cursor) {
       this.context.root.dataset.editorCursor = cursor;
     } else {
       delete this.context.root.dataset.editorCursor;
     }
+  }
+
+  private getToolCursor() {
+    const { drawTool } = this;
+    return drawTool instanceof PenTool
+      ? drawTool.getCursor()
+      : drawTool instanceof PencilTool
+        ? 'pencil'
+        : drawTool
+          ? 'crosshair'
+          : this.pathEdit
+            ? undefined
+            : this.selectTool.getCursor();
   }
 }
 
@@ -652,18 +860,12 @@ function getToolShortcut(event: KeyboardEvent): ToolName | undefined {
   if (event.altKey || event.metaKey || event.ctrlKey) {
     return undefined;
   }
-  // By the key's position on layouts without Latin letters, e.g. Cyrillic, like the app's other
-  // shortcuts, which use keyCode.
-  const key = /^[a-z]$/i.test(event.key)
-    ? event.key.toLowerCase()
-    : /^Key[A-Z]$/.test(event.code)
-      ? event.code.slice(3).toLowerCase()
-      : '';
+  const key = getLetter(event);
   if (key === 'p') {
     return event.shiftKey ? 'pencil' : 'pen';
   }
   if (event.shiftKey) {
-    // E.g. Shift+R, which is for the rulers (docs/canvas-editor.md, phase 4).
+    // E.g. Shift+R, which is for the rulers (getSettingShortcut).
     return undefined;
   }
   const tools: Record<string, ToolName> = {
@@ -673,6 +875,51 @@ function getToolShortcut(event: KeyboardEvent): ToolName | undefined {
     l: 'line',
   };
   return tools[key];
+}
+
+/**
+ * Returns the setting that the key toggles, as in Figma: Shift+R for the rulers, Shift+' for the
+ * pixel grid, and Cmd+Shift+' (Ctrl+Shift+' outside of Macs) for snapping to it.
+ */
+function getSettingShortcut(event: KeyboardEvent): keyof CanvasSettings | undefined {
+  if (!event.shiftKey || event.altKey) {
+    return undefined;
+  }
+  const isCommand = ShortcutService.isOsDependentModifierKey(event);
+  // The other of Cmd and Ctrl isn't part of any of them.
+  const hasOtherModifier = ShortcutService.isMac() ? event.ctrlKey : event.metaKey;
+  if (hasOtherModifier) {
+    return undefined;
+  }
+  if (event.code === 'Quote') {
+    return isCommand ? 'snapToPixelGrid' : 'showPixelGrid';
+  }
+  return !isCommand && getLetter(event) === 'r' ? 'showRulers' : undefined;
+}
+
+/**
+ * Returns the letter key that was pressed, in lower case. It goes by the key's position on
+ * layouts without Latin letters, e.g. Cyrillic, like the app's other shortcuts, which use keyCode.
+ */
+function getLetter(event: KeyboardEvent) {
+  return /^[a-z]$/i.test(event.key)
+    ? event.key.toLowerCase()
+    : /^Key[A-Z]$/.test(event.code)
+      ? event.code.slice(3).toLowerCase()
+      : '';
+}
+
+/** Returns the ruler that the pointer event is over, if any. */
+function getRuler(event: PointerEvent) {
+  const ruler = event.target instanceof Element ? event.target.closest('.canvas-ruler') : null;
+  if (!ruler) {
+    return undefined;
+  }
+  return ruler.classList.contains('orientation-horizontal')
+    ? 'horizontal'
+    : ruler.classList.contains('orientation-vertical')
+      ? 'vertical'
+      : 'corner';
 }
 
 /** Whether a control that Enter and Tab work in has the focus, e.g. a button. */

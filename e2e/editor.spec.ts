@@ -358,3 +358,76 @@ test('draws freehand with the pencil', async ({ page }) => {
   // The pencil stays on for the next stroke.
   expect(await getToolName(page)).toBe('pencil');
 });
+
+function getGuides(page: Page) {
+  return getState(page, s =>
+    s.guides.guides.map((guide: { axis: string; value: number }) => `${guide.axis} ${guide.value}`),
+  );
+}
+
+/** Drags a new guide out of a ruler to a point on the artboard. */
+async function dragFromRuler(
+  page: Page,
+  orientation: 'horizontal' | 'vertical',
+  to: [number, number],
+) {
+  const ruler = await boundingBox(page.locator(`.canvas-ruler.orientation-${orientation}`));
+  const end = await artboardPoint(page.locator('.app-canvas'), ...to);
+  const start =
+    orientation === 'horizontal'
+      ? { x: end.x, y: ruler.y + ruler.height / 2 }
+      : { x: ruler.x + ruler.width / 2, y: end.y };
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(end.x, end.y, { steps: 10 });
+  await page.mouse.up();
+}
+
+test('drags guides out of the rulers, and back onto them to remove them', async ({
+  page,
+  modifier,
+}) => {
+  await openSquares(page);
+  // They snap to c's top edge, and to the pixel grid.
+  await dragFromRuler(page, 'horizontal', [16, 9.8]);
+  await expect.poll(() => getGuides(page)).toEqual(['y 10']);
+  await dragFromRuler(page, 'vertical', [17.1, 20]);
+  await expect.poll(() => getGuides(page)).toEqual(['y 10', 'x 17']);
+
+  // Moves snap to them.
+  await drag(page, [12, 4], [15.1, 4.1]);
+  await expect.poll(() => getPathData(page, 'b')).toBe('M 13 2 L 17 2 L 17 6 L 13 6 Z');
+
+  // Dragging a guide back onto its ruler removes it, as an undo step.
+  const guide = await artboardPoint(page.locator('.app-canvas'), 20, 10);
+  const ruler = await boundingBox(page.locator('.canvas-ruler.orientation-horizontal'));
+  await page.mouse.move(guide.x, guide.y);
+  await page.mouse.down();
+  await page.mouse.move(guide.x, ruler.y + ruler.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(() => getGuides(page)).toEqual(['x 17']);
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getGuides(page)).toEqual(['y 10', 'x 17']);
+});
+
+test('hides the rulers and guides with Shift+R', async ({ page }) => {
+  await openSquares(page);
+  const ruler = page.locator('.canvas-ruler.orientation-horizontal');
+  const button = page.getByRole('button', { name: 'Rulers', exact: true });
+  await expect(ruler).toBeVisible();
+  await expect(button).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Shift+R');
+  await expect(ruler).toBeHidden();
+  await expect(button).toHaveAttribute('aria-pressed', 'false');
+  // Shift+R doesn't toggle repeating too.
+  expect(await getState(page, s => s.playback.isRepeating)).toBe(false);
+  await button.click();
+  await expect(ruler).toBeVisible();
+});
+
+test('snaps moves to space layers out evenly', async ({ page }) => {
+  await openSquares(page);
+  // a and b are 4 units apart, so c goes 4 units past b.
+  await drag(page, [4, 12], [20.2, 4.3]);
+  await expect.poll(() => getPathData(page, 'c')).toBe('M 18 2 L 22 2 L 22 6 L 18 6 Z');
+});

@@ -1,3 +1,4 @@
+import type { Guide } from 'app/modules/editor/model/guides';
 import { VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation } from 'app/modules/editor/model/timeline';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
@@ -8,6 +9,7 @@ interface Project {
   readonly vectorLayer: VectorLayer;
   readonly animation: Animation;
   readonly hiddenLayerIds: ReadonlySet<string>;
+  readonly guides: ReadonlyArray<Guide>;
 }
 
 export class ProjectService {
@@ -21,7 +23,10 @@ export class ProjectService {
       throw new Error(`Failed to fetch ${url} (${response.status})`);
     }
     const jsonObj = await response.json();
-    const { vectorLayer, animation, hiddenLayerIds } = FileExportService.fromJSON(jsonObj);
-    return ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds) as Project;
+    const { vectorLayer, animation, hiddenLayerIds, guides } = FileExportService.fromJSON(jsonObj);
+    return {
+      ...ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds),
+      guides,
+    } as Project;
   }
 }

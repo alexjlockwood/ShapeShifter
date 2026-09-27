@@ -43,7 +43,8 @@ zooms and pans with the wheel, pinches, and drags with the space bar or middle b
 keyboard shortcuts in `services/shortcut.service.ts` zoom through the viewport service (holding the
 space bar pans, and tapping it plays). The white artboard is a div under the canvases, which ignore
 the mouse, so mouse events go to it and clicks around it reach the workspace. The rulers are inside
-of it too, so hovering over it shows them.
+of it too, so hovering over it shows them. With the canvas editor on, the main canvas's rulers show
+all the time instead, unless its settings hide them (`services/canvassettings.service.ts`).
 
 The new canvas editor is in `components/canvaseditor/`. `docs/canvas-editor.md` has its design
 and roadmap. It's only downloaded when its feature is on (`src/environments/features.ts`).
@@ -75,7 +76,11 @@ than the store. Only the canvas editor imports `PathEdit`, so that it stays in t
 `components/canvaseditor/EditorToolbar.ts` adds the tools' buttons to the panel, as plain DOM. The
 drawing tools (`components/canvaseditor/PenTool.ts`, `components/canvaseditor/PencilTool.ts`, and
 `components/canvaseditor/ShapeTool.ts`) get the pointer before the others, and put new layers where
-`components/canvaseditor/newLayers.ts` says.
+`components/canvaseditor/newLayers.ts` says. Presses on a ruler, and on a guide with the select
+tool, go to `components/canvaseditor/GuideTool.ts` first. The guides are part of the document, in
+the store (`store/guides/`, saved with the project), and the editor's settings (the rulers, the
+pixel grid, and snapping to it) are preferences in `services/canvassettings.service.ts`. Alt
+measures distances (`components/canvaseditor/measuring.ts`).
 
 ## Styling
 

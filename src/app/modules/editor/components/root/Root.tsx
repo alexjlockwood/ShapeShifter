@@ -89,8 +89,8 @@ function Workspace() {
     const controller = new AbortController();
     projectService
       .getProject(projectUrl, controller.signal)
-      .then(({ vectorLayer, animation, hiddenLayerIds }) => {
-        store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
+      .then(({ vectorLayer, animation, hiddenLayerIds, guides }) => {
+        store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds, guides));
       })
       .catch(() => {
         if (!controller.signal.aborted) {

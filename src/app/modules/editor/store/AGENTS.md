@@ -9,7 +9,10 @@ was ported from ngrx. `store/createEditorStore.ts` builds it.
 
 - `store.getState()` returns redux-undo's history: `{ past, present, future, timestamp }`. The
   editor state is `present`, with one slice per directory: `layers`, `timeline`, `playback`,
-  `actionmode`, `reset`, `theme`, and `paper` (`store/reducer.ts`).
+  `actionmode`, `reset`, `theme`, `paper`, and `guides` (`store/reducer.ts`).
+- `guides` holds the canvas editor's guides (`model/guides/`). They're saved in the
+  `.shapeshifter` file and loaded with `ResetWorkspace`, and changing them is an undo step
+  (`services/guide.service.ts`).
 - `paper` was the old paper.js beta editor's state (its tool, cursor, and hover). That editor has
   been removed (`docs/canvas-editor.md`), so nothing writes to it, but `components/root/Root.tsx`
   (the cursor) and `store/common/selectors.ts` (hovered rows in the layer list) still read it. Replace it with the canvas editor's own state rather than adding to it.

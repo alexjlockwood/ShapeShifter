@@ -10,7 +10,7 @@ export function metaReducer(reducer: ActionReducer<EditorState>): ActionReducer<
     }
     state = reducer(state, action);
     if (action.type === ResetActionTypes.ResetWorkspace) {
-      const { vectorLayer, animation, hiddenLayerIds } = (action as ResetWorkspace).payload;
+      const { vectorLayer, animation, hiddenLayerIds, guides } = (action as ResetWorkspace).payload;
       if (vectorLayer) {
         const { layers } = state;
         state = {
@@ -21,6 +21,9 @@ export function metaReducer(reducer: ActionReducer<EditorState>): ActionReducer<
             hiddenLayerIds: hiddenLayerIds ?? new Set<string>(),
           },
         };
+      }
+      if (guides) {
+        state = { ...state, guides: { ...state.guides, guides } };
       }
       if (animation) {
         const { timeline } = state;

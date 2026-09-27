@@ -234,9 +234,9 @@ while held and plays or pauses when tapped. Repeat and slow motion keep their to
 ## Roadmap
 
 Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395), phase 1 (#396 to #399),
-phase 2 (#400), and phase 3 (#402). Phase 1's snapping only covers the artboard, other paths'
-bounds, and the pixel grid; guides come in phase 4. In phase 2, points snap to those, to the
-path's other points, and onto the closest curve. Editing a path has no cursors of its own yet, so
+phase 2 (#400), phase 3 (#402), and phase 4 (#403). Phase 1's snapping covers the artboard,
+other paths' bounds, and the pixel grid, and phase 4 added the guides. In phase 2, points snap to
+those, to the path's other points, and onto the closest curve. Editing a path has no cursors of its own yet, so
 hovering a segment or holding Cmd over one looks the same as anywhere else.
 
 Phase 3 put the tools in a toolbar over the canvas panel's top left, with Figma's shortcuts. The
@@ -253,6 +253,21 @@ are left for later:
   width, since the fit leaves a margin narrower than the toolbar.
 - Undo can go back to before a pen path's second point, which leaves a layer that's only its
   first point, like any path whose last subpath is a lone move.
+
+Phase 4 shows the main canvas's rulers all the time with the editor on, rather than only while the
+pointer is over the artboard, since guides are dragged out of them. A guide is dragged back onto
+its ruler to remove it, and Shift+R hides the rulers and the guides together. The toolbar has
+toggles for the rulers, the pixel grid (drawn once a unit is 8 CSS pixels wide), and snapping to
+it, which are remembered in the browser rather than saved with the project. Moves snap to space
+paths out evenly along a row or a column, and Alt measures from the selection to the path under
+the pointer, or to the artboard. Some gaps are left for later:
+
+- Guides can't be selected, deleted with a key, or locked, and the rulers don't mark where they
+  are.
+- Only moves snap to even spacing. Scaling and dragging points don't.
+- Alt measures to the artboard rather than to the group a layer is in, and the rulers hug the
+  artboard rather than the panel's edges, so a guide dropped above the horizontal ruler (or left of
+  the vertical one) is removed too.
 
 Phase 0 is the foundation, and it's split into small pull requests:
 

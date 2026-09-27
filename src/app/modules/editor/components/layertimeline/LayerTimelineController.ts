@@ -204,8 +204,8 @@ export class LayerTimelineController extends DestroyableMixin() {
       }
       trackEvent('select_demo', { demo_title: selectedDemoInfo.title });
       this.services.projectService.getProject(`demos/${selectedDemoInfo.id}.shapeshifter`).then(
-        ({ vectorLayer, animation, hiddenLayerIds }) => {
-          this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
+        ({ vectorLayer, animation, hiddenLayerIds, guides }) => {
+          this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds, guides));
         },
         // Only fetch failures are handled here, so that errors from opening the demo are still
         // reported. navigator.serviceWorker is undefined in some embedded browsers.

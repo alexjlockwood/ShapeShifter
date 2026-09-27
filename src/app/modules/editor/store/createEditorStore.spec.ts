@@ -4,6 +4,8 @@ import { ActionCreators } from 'redux-undo';
 
 import { createEditorStore } from '.';
 import { BatchAction } from './batch/actions';
+import { SetGuides } from './guides/actions';
+import { getGuides } from './guides/selectors';
 import { SetSelectedLayers, SetVectorLayer } from './layers/actions';
 import { getHiddenLayerIds, getSelectedLayerIds, getVectorLayer } from './layers/selectors';
 import { SetHoveredLayerId, SetZoomPanInfo } from './paper/actions';
@@ -213,6 +215,25 @@ describe('createEditorStore', () => {
     expect(isBeingReset(store.getState())).toBe(true);
     store.dispatch(new SetCurrentTime(10));
     expect(isBeingReset(store.getState())).toBe(false);
+  });
+
+  it('loads the guides with a project, and starts a new one without any', () => {
+    const store = createEditorStore();
+    const guides = [{ id: 'g', axis: 'x' as const, value: 4 }];
+    store.dispatch(new ResetWorkspace(new VectorLayer(), new Animation(), new Set(), guides));
+    expect(getGuides(store.getState())).toBe(guides);
+    store.dispatch(new ResetWorkspace());
+    expect(getGuides(store.getState())).toEqual([]);
+  });
+
+  it('undoes changes to the guides', () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    store.dispatch(
+      new BatchAction(new IsolateUndoStep(), new SetGuides([{ id: 'g', axis: 'y', value: 1 }])),
+    );
+    store.dispatch(ActionCreators.undo());
+    expect(getGuides(store.getState())).toEqual([]);
   });
 
   it('notifies every subscriber of a state before handling actions they dispatch', () => {

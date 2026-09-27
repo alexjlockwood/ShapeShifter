@@ -206,6 +206,6 @@ export class ShapeTool implements CanvasTool {
   }
 
   private getTargets(vl: Parameters<typeof getSnapTargets>[0]) {
-    return getSnapTargets(vl, [], this.context.getHiddenLayerIds());
+    return getSnapTargets(vl, [], this.context.getHiddenLayerIds(), this.context.getGuides());
   }
 }

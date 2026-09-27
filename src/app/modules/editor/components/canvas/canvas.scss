@@ -38,10 +38,18 @@
         visibility: hidden;
     }
     .canvas-artboard:hover .canvas-ruler,
-    &.is-pressing-artboard .canvas-ruler {
+    &.is-pressing-artboard .canvas-ruler,
+    &.shows-rulers .canvas-ruler {
         transition: opacity 0.15s ease;
         opacity: 1;
         visibility: visible;
+    }
+    // The canvas editor's settings (CanvasController).
+    &.hides-rulers .canvas-ruler {
+        display: none;
+    }
+    &.has-canvas-editor .canvas-ruler {
+        cursor: default;
     }
     &.has-canvas-editor {
         touch-action: none;
@@ -58,6 +66,13 @@
     }
     &[data-editor-cursor='ew-resize'] {
         cursor: ew-resize;
+    }
+    // Over a guide.
+    &[data-editor-cursor='col-resize'] {
+        cursor: col-resize;
+    }
+    &[data-editor-cursor='row-resize'] {
+        cursor: row-resize;
     }
     &[data-editor-cursor='rotate-nw'] {
         cursor:
@@ -115,6 +130,10 @@
         &[hidden] {
             display: none;
         }
+    }
+    .canvas-editor-toolbar-separator {
+        height: 1px;
+        margin: 2px 4px;
     }
     .canvas-editor-tool {
         display: flex;

@@ -80,6 +80,7 @@ describe('drawing tools', () => {
       getSelectedLayerIds: () => getSelectedLayerIds(store.getState()),
       toViewportLength: length => length / 10,
       getSnapThresholds: () => ({ lines: 0.8, grid: 0.4 }),
+      getGuides: () => [],
       canEditPath: layerId => preview.canEditPath(layerId),
       render: document =>
         new AnimationRenderer(document.vectorLayer, document.animation).setCurrentTime(

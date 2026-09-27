@@ -7,11 +7,19 @@ import {
   getPathLayerBounds,
   hitTestLayer,
 } from 'app/modules/editor/components/canvas/LayerGeometry';
+import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { MathUtil, Matrix, Point, Rect } from 'app/modules/editor/scripts/common';
 import { isEqual } from 'lodash-es';
 
-import { getSnapTargets, snapBounds, SnapGuide, snapPoint, SnapTargets } from './snapping';
+import {
+  getSnapTargets,
+  snapBounds,
+  SnapGuide,
+  snapPoint,
+  SnapTargets,
+  SnapThresholds,
+} from './snapping';
 import {
   CornerName,
   getHandleCursor,
@@ -54,6 +62,10 @@ export interface SelectToolContext {
   redraw(): void;
   /** Starts editing the path's points, e.g. on a double-click, and returns whether it did. */
   editPath?(layerId: string): boolean;
+  /** How close things snap, which is 8 CSS pixels (4 to the pixel grid) without it. */
+  getSnapThresholds?(): SnapThresholds;
+  /** The guides that moves and handles snap to, if any. */
+  getGuides?(): ReadonlyArray<Guide>;
 }
 
 /** The keys held with a press or a move. What they mean depends on the gesture. */
@@ -184,6 +196,12 @@ export class SelectTool {
     return state.type === 'idle' ? this.hoveredCursor : undefined;
   }
 
+  /** Whether the point is on one of the selection's handles, which a press there would drag. */
+  isOverHandle(point: Point) {
+    const bounds = this.getSelectionBounds();
+    return !!bounds && !!this.hitTestHandles(bounds, point, this.hitTest(point)?.id);
+  }
+
   /** The marquee's corners in viewport coordinates, while one is being drawn. */
   getMarquee(): Rect | undefined {
     if (this.state.type !== 'marquee') {
@@ -293,7 +311,9 @@ export class SelectTool {
         if (state.bounds && !modifiers.ctrl) {
           const { l, t, r, b } = state.bounds;
           const moved = { l: l + dx, t: t + dy, r: r + dx, b: b + dy };
-          const snap = snapBounds(moved, state.targets, this.getSnapThresholds(), axes);
+          const snap = snapBounds(moved, state.targets, this.getSnapThresholds(), axes, {
+            gaps: true,
+          });
           dx += snap.dx;
           dy += snap.dy;
           this.guides = snap.guides;
@@ -406,7 +426,7 @@ export class SelectTool {
       layerStates,
       bounds: getLayersBounds(rendered, layerIds),
       // Copies snap to their originals.
-      targets: getSnapTargets(rendered, layerIds, this.context.getHiddenLayerIds()),
+      targets: this.getSnapTargets(rendered, layerIds),
     };
   }
 
@@ -429,7 +449,7 @@ export class SelectTool {
       document,
       rendered,
       layerIds,
-      targets: getSnapTargets(rendered, layerIds, this.context.getHiddenLayerIds()),
+      targets: this.getSnapTargets(rendered, layerIds),
     };
     this.state =
       handle.type === 'scale'
@@ -468,10 +488,21 @@ export class SelectTool {
   }
 
   private getSnapThresholds() {
-    return {
-      lines: this.toViewportLength(SNAP_THRESHOLD),
-      grid: this.toViewportLength(GRID_SNAP_THRESHOLD),
-    };
+    return (
+      this.context.getSnapThresholds?.() ?? {
+        lines: this.toViewportLength(SNAP_THRESHOLD),
+        grid: this.toViewportLength(GRID_SNAP_THRESHOLD),
+      }
+    );
+  }
+
+  private getSnapTargets(rendered: VectorLayer, layerIds: ReadonlyArray<string>) {
+    return getSnapTargets(
+      rendered,
+      layerIds,
+      this.context.getHiddenLayerIds(),
+      this.context.getGuides?.(),
+    );
   }
 
   private getSelectionBounds() {

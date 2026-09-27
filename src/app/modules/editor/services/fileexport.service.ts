@@ -1,8 +1,10 @@
+import { guidesToJSON, parseGuides } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation } from 'app/modules/editor/model/timeline';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { AvdSerializer, SpriteSerializer, SvgSerializer } from 'app/modules/editor/scripts/export';
 import { State, Store } from 'app/modules/editor/store';
+import { getGuides } from 'app/modules/editor/store/guides/selectors';
 import { getHiddenLayerIds, getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import JSZip from 'jszip';
@@ -22,7 +24,9 @@ export class FileExportService {
     const hiddenLayerIds = new Set<string>(layers.hiddenLayerIds);
     const animation = new Animation(timeline.animation);
     animation.blocks = animation.blocks.filter(b => ModelUtil.canAnimate(vectorLayer, b));
-    return { vectorLayer, hiddenLayerIds, animation };
+    // Only projects saved with the canvas editor's guides have them.
+    const guides = parseGuides(jsonObj.guides);
+    return { vectorLayer, hiddenLayerIds, animation, guides };
   }
 
   constructor(private readonly store: Store<State>) {}
@@ -30,6 +34,7 @@ export class FileExportService {
   exportJSON() {
     const vl = this.getVectorLayer();
     const anim = this.getAnimation();
+    const guides = getGuides(this.store.getState());
     const jsonStr = JSON.stringify(
       {
         version: IMPORT_EXPORT_VERSION,
@@ -40,6 +45,8 @@ export class FileExportService {
         timeline: {
           animation: anim.toJSON(),
         },
+        // Left out without any, so that projects that don't use them stay the same.
+        ...(guides.length ? { guides: guidesToJSON(guides) } : {}),
       },
       undefined,
       2,
