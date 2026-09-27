@@ -8,6 +8,7 @@ const {
   bendSegment,
   closeSubPath,
   deleteAnchors,
+  duplicateAnchor,
   getAdjacentAnchorId,
   getAnchorCount,
   getAnchors,
@@ -15,8 +16,10 @@ const {
   getSubPathEnds,
   getSegments,
   insertAnchor,
+  isSubPathClosed,
   moveAnchors,
   moveHandle,
+  openSubPath,
   projectOntoSegments,
   reverseSubPath,
   setPointType,
@@ -178,31 +181,47 @@ describe('PathEdit', () => {
     const path = new Path('M 0 0 C 0 5 5 10 10 10 C 15 10 20 5 20 0');
     const middle = () => getAnchors(path)[1].id;
 
-    it('mirrors the other handle', () => {
-      const moved = moveHandle(path, middle(), 'out', { x: 10, y: 14 }, 'mirrored');
+    it('moves the handle on its own', () => {
+      // Even though the point's handles are mirrored.
+      const circle = new Path(CIRCLE);
+      const moved = moveHandle(circle, ids(circle)[1], 'out', { x: 9, y: -1 });
+      expect(getAnchors(moved)[1].in).toEqual({ x: 2.239, y: 0 });
+      expect(getAnchors(moved)[1].out).toEqual({ x: 9, y: -1 });
+      const other = moveHandle(path, middle(), 'in', { x: 10, y: 0 });
+      expect(getAnchors(other)[1].out).toEqual({ x: 15, y: 10 });
+    });
+
+    it('mirrors the other handle, with the same length in the opposite direction', () => {
+      const moved = moveHandle(path, middle(), 'out', { x: 10, y: 14 }, true);
       expect(getAnchors(moved)[1].in).toEqual({ x: 10, y: 6 });
       expect(getAnchors(moved)[1].out).toEqual({ x: 10, y: 14 });
-    });
-
-    it('keeps the length of an asymmetric one', () => {
-      const moved = moveHandle(path, middle(), 'in', { x: 10, y: 0 }, 'asymmetric');
-      expect(getAnchors(moved)[1].out).toEqual({ x: 10, y: 15 });
-    });
-
-    it("leaves a disconnected one's other handle alone", () => {
-      const moved = moveHandle(path, middle(), 'in', { x: 10, y: 0 }, 'disconnected');
-      expect(getAnchors(moved)[1].out).toEqual({ x: 15, y: 10 });
+      // The handles weren't lined up before, and they are now.
+      const turned = moveHandle(path, middle(), 'in', { x: 7, y: 6 }, true);
+      expect(getAnchors(turned)[1].out).toEqual({ x: 13, y: 14 });
+      expect(getAnchors(turned)[1].type).toBe('mirrored');
     });
 
     it("moves a closed curve's handles across the start", () => {
       const circle = new Path(CIRCLE);
-      const moved = moveHandle(circle, ids(circle)[0], 'in', { x: 0, y: 9 }, 'mirrored');
+      const moved = moveHandle(circle, ids(circle)[0], 'in', { x: 0, y: 9 }, true);
       expect(getAnchors(moved)[0].out).toEqual({ x: 0, y: 1 });
+      expect(moveHandle(circle, ids(circle)[0], 'in', { x: 0, y: 9 }).getPathString()).toBe(
+        CIRCLE.replace('2.239 10 0 7.761', '2.239 10 0 9'),
+      );
+    });
+
+    it("doesn't turn a quadratic curve's control point, which the next point shares", () => {
+      const quadratic = new Path('M 0 0 Q 5 5 10 0 C 12 -2 18 -2 20 0');
+      const moved = moveHandle(quadratic, ids(quadratic)[1], 'out', { x: 12, y: 2 }, true);
+      expect(moved.getPathString()).toBe('M 0 0 Q 5 5 10 0 C 12 2 18 -2 20 0');
+      // The curve after it still mirrors a quadratic curve's control point.
+      const back = moveHandle(quadratic, ids(quadratic)[1], 'in', { x: 6, y: 6 }, true);
+      expect(back.getPathString()).toBe('M 0 0 Q 6 6 10 0 C 14 -6 18 -2 20 0');
     });
 
     it("throws for a handle that a line doesn't have", () => {
       const line = new Path('M 0 0 L 10 0');
-      expect(() => moveHandle(line, ids(line)[1], 'in', { x: 0, y: 0 }, 'mirrored')).toThrow();
+      expect(() => moveHandle(line, ids(line)[1], 'in', { x: 0, y: 0 }, true)).toThrow();
     });
   });
 
@@ -245,6 +264,79 @@ describe('PathEdit', () => {
       );
       // Half of a quarter circle is symmetrical, so the new anchor is too.
       expect(anchor?.type).toBe('mirrored');
+    });
+  });
+
+  describe('duplicateAnchor', () => {
+    it('puts a copy after a point, which takes its out handle and keeps the ids', () => {
+      const path = new Path('M 0 0 C 0 5 5 10 10 10 C 15 10 20 5 20 0');
+      const [a, b, c] = ids(path);
+      const { path: copied, anchorId } = duplicateAnchor(path, b);
+      expect(copied.getPathString()).toBe('M 0 0 C 0 5 5 10 10 10 L 10 10 C 15 10 20 5 20 0');
+      expect(ids(copied)).toEqual([a, b, anchorId, c]);
+      const [, original, copy] = getAnchors(copied);
+      expect(original.in).toEqual({ x: 5, y: 10 });
+      expect(original.out).toBeUndefined();
+      expect(copy.in).toBeUndefined();
+      expect(copy.out).toEqual({ x: 15, y: 10 });
+      // Moving the copy moves the handle it took.
+      const moved = moveAnchors(copied, new Set([anchorId]), { x: 0, y: 5 });
+      expect(moved.getPathString()).toBe('M 0 0 C 0 5 5 10 10 10 L 10 15 C 15 15 20 5 20 0');
+    });
+
+    it('keeps quadratic curves', () => {
+      const path = new Path('M 0 0 Q 5 5 10 0 Q 15 -5 20 0');
+      const { path: copied } = duplicateAnchor(path, ids(path)[1]);
+      expect(copied.getPathString()).toBe('M 0 0 Q 5 5 10 0 L 10 0 Q 15 -5 20 0');
+    });
+
+    it('keeps the Z of a closed subpath', () => {
+      const path = new Path('M 0 0 L 10 0 L 10 10 Z');
+      const [a, b, c] = ids(path);
+      const z = path.getCommands()[3].id;
+      const last = duplicateAnchor(path, c);
+      expect(last.path.getPathString()).toBe('M 0 0 L 10 0 L 10 10 L 10 10 Z');
+      expect(ids(last.path)).toEqual([a, b, c, last.anchorId]);
+      expect(last.path.getCommands()[4].id).toBe(z);
+      const first = duplicateAnchor(path, a);
+      expect(first.path.getPathString()).toBe('M 0 0 L 0 0 L 10 0 L 10 10 Z');
+      expect(ids(first.path)).toEqual([a, first.anchorId, b, c]);
+      expect(isSubPathClosed(first.path, 0)).toBe(true);
+    });
+
+    it("keeps the closing curve of a closed subpath, and its first point's in handle", () => {
+      const path = new Path(CIRCLE);
+      const { path: copied, anchorId } = duplicateAnchor(path, ids(path)[0]);
+      expect(copied.getCommands().map(c => c.type)).toEqual(['M', 'L', 'C', 'C', 'C', 'C', 'Z']);
+      const [first, copy] = getAnchors(copied);
+      expect(first.in).toEqual({ x: 0, y: 7.761 });
+      expect(copy.id).toBe(anchorId);
+      expect(copy.out).toEqual({ x: 0, y: 2.239 });
+      expect(ids(copied)).toEqual([ids(path)[0], anchorId, ...ids(path).slice(1)]);
+    });
+
+    it('extends the last point of an open subpath', () => {
+      const path = new Path('M 0 0 L 10 0 C 12 2 12 8 10 10');
+      const { path: copied, anchorId } = duplicateAnchor(path, ids(path)[2]);
+      expect(copied.getPathString()).toBe('M 0 0 L 10 0 C 12 2 12 8 10 10 L 10 10');
+      expect(ids(copied)).toEqual([...ids(path), anchorId]);
+      expect(getAnchors(copied)[2].in).toEqual({ x: 12, y: 8 });
+    });
+
+    it('puts a copy before the first point of an open subpath, as its new start', () => {
+      const path = new Path('M 0 0 C 2 2 8 2 10 0 L 20 0 M 30 0 L 40 0');
+      const { path: copied, anchorId } = duplicateAnchor(path, ids(path)[0]);
+      expect(copied.getPathString()).toBe('M 0 0 L 0 0 C 2 2 8 2 10 0 L 20 0 M 30 0 L 40 0');
+      expect(ids(copied)).toEqual([anchorId, ...ids(path)]);
+      // The original keeps its handle.
+      expect(getAnchors(copied)[1].out).toEqual({ x: 2, y: 2 });
+      // Also in a later subpath, and for a subpath that's one point.
+      const second = duplicateAnchor(path, ids(path)[3]);
+      expect(second.path.getPathString()).toBe('M 0 0 C 2 2 8 2 10 0 L 20 0 M 30 0 L 30 0 L 40 0');
+      const dot = new Path('M 5 5');
+      const copiedDot = duplicateAnchor(dot, ids(dot)[0]);
+      expect(copiedDot.path.getPathString()).toBe('M 5 5 L 5 5');
+      expect(ids(copiedDot.path)).toEqual([ids(dot)[0], copiedDot.anchorId]);
     });
   });
 
@@ -503,6 +595,62 @@ describe('PathEdit', () => {
       expect(closeSubPath(path, 0, { c2: { x: -2, y: 4 } }, { x: 2, y: -4 }).getPathString()).toBe(
         'M 0 0 C 2 -4 6.667 0 10 0 L 10 10 C 10 10 -2 4 0 0 Z',
       );
+    });
+
+    it('merges a last point on top of the first one when it closes, but not for the pen', () => {
+      const path = new Path('M 0 0 L 10 0 L 10 10 L 0 0');
+      expect(closeSubPath(path, 0).getPathString()).toBe('M 0 0 L 10 0 L 10 10 Z');
+      const curve = new Path('M 0 0 L 10 0 C 10 5 5 5 0 0');
+      expect(closeSubPath(curve, 0).getPathString()).toBe('M 0 0 L 10 0 C 10 5 5 5 0 0 Z');
+      expect(getAnchors(closeSubPath(curve, 0))).toHaveLength(2);
+      // A curve back from the pen is its own segment.
+      expect(closeSubPath(path, 0, { c2: { x: 2, y: 2 } }).getPathString()).toBe(
+        'M 0 0 L 10 0 L 10 10 L 0 0 C 0 0 2 2 0 0 Z',
+      );
+      // Two points in the same place still make a subpath.
+      expect(closeSubPath(new Path('M 0 0 L 0 0'), 0).getPathString()).toBe('M 0 0 L 0 0 Z');
+    });
+
+    it('opens a closed subpath at its first point, keeping the shape and the ids', () => {
+      const path = new Path('M 0 0 L 10 0 L 10 10 Z M 20 20 L 30 20 L 30 30 Z');
+      const opened = openSubPath(path, 0);
+      expect(opened.getPathString()).toBe('M 0 0 L 10 0 L 10 10 L 0 0 M 20 20 L 30 20 L 30 30 Z');
+      expect(opened.getCommands().map(c => c.id)).toEqual(path.getCommands().map(c => c.id));
+      expect(isSubPathClosed(opened, 0)).toBe(false);
+      expect(isSubPathClosed(opened, 1)).toBe(true);
+      // The first point and the new last one are the ends.
+      expect(getSubPathEnds(opened).map(end => end.point)).toEqual([
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+      ]);
+      // Close undoes it.
+      const closed = closeSubPath(opened, 0);
+      expect(closed.getPathString()).toBe(path.getPathString());
+      expect(closed.getCommands().map(c => c.id)).toEqual(path.getCommands().map(c => c.id));
+      expect(openSubPath(path, 1).getPathString()).toBe(
+        'M 0 0 L 10 0 L 10 10 Z M 20 20 L 30 20 L 30 30 L 20 20',
+      );
+    });
+
+    it('opens a subpath whose last segment goes back to the start by dropping the Z', () => {
+      const path = new Path(CIRCLE);
+      const opened = openSubPath(path, 0);
+      expect(opened.getPathString()).toBe(CIRCLE.slice(0, -2));
+      expect(ids(opened)).toEqual([...ids(path), path.getCommands()[4].id]);
+      expect(getAnchors(opened)[4].in).toEqual({ x: 0, y: 7.761 });
+      expect(closeSubPath(opened, 0).getPathString()).toBe(CIRCLE);
+      const line = new Path('M 0 0 L 10 0 L 10 10 L 0 0 Z');
+      expect(openSubPath(line, 0).getPathString()).toBe('M 0 0 L 10 0 L 10 10 L 0 0');
+    });
+
+    it("doesn't open a subpath that isn't closed", () => {
+      expect(() => openSubPath(new Path('M 0 0 L 10 0 L 0 0'), 0)).toThrow();
+      expect(() => openSubPath(new Path('M 0 0 L 10 0 Z'), 1)).toThrow();
+    });
+
+    it('tells a subpath closed by a Z from one that only ends where it starts', () => {
+      const path = new Path('M 0 0 L 10 0 L 0 0 M 20 20 L 30 30 Z M 40 40 Z');
+      expect([0, 1, 2, 3].map(i => isSubPathClosed(path, i))).toEqual([false, true, true, false]);
     });
 
     it('reverses an open subpath, keeping the ids of its anchors', () => {
