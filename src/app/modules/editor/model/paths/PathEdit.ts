@@ -313,6 +313,132 @@ export function getAdjacentAnchorId(path: Path, anchorId: string, direction: 1 |
   return ids[MathUtil.floorMod(index + direction, ids.length)];
 }
 
+/** The control points of a new segment, which is a line without them. */
+export interface NewSegmentControls {
+  /** The control point after the segment's start. */
+  readonly c1?: Point;
+  /** The control point before the segment's end. */
+  readonly c2?: Point;
+}
+
+/** An end of an open subpath, which the pen can go on drawing from. */
+export interface SubPathEnd {
+  readonly subIdx: number;
+  readonly anchorId: string;
+  readonly point: Point;
+  readonly isStart: boolean;
+}
+
+/**
+ * Adds a subpath with one anchor at the point, to the end of the path or to a new path. Returns
+ * the path, the new subpath's index, and the anchor's id.
+ */
+export function addSubPath(path: Path | undefined, point: Point) {
+  const subPaths = path ? toSubPaths(path) : [];
+  const moveId = uniqueId();
+  subPaths.push({ moveId, anchors: [point], segments: [], closed: false, closeId: undefined });
+  return { path: toPath(subPaths), subIdx: subPaths.length - 1, anchorId: moveId };
+}
+
+/**
+ * Adds an anchor at the end of an open subpath, joined to the last one by a line, or by a cubic
+ * curve if a control point is given (the other one defaults to its end of the segment). Returns
+ * the path and the anchor's id.
+ */
+export function appendAnchor(
+  path: Path,
+  subIdx: number,
+  point: Point,
+  controls: NewSegmentControls = {},
+  // For redoing an append as a drag moves its handles, so that the anchor keeps its id.
+  id = uniqueId(),
+) {
+  const subPaths = toSubPaths(path);
+  const subPath = getOpenSubPath(subPaths, subIdx);
+  subPath.segments.push(
+    newSegment(id, subPath.anchors[subPath.anchors.length - 1], point, controls),
+  );
+  subPath.anchors.push(point);
+  return { path: toPath(subPaths), anchorId: id };
+}
+
+/**
+ * Closes an open subpath, with a line back to its first anchor or a curve (see appendAnchor). The
+ * first anchor's out handle is moved to firstOut, if it's given, turning the segment after it into
+ * a cubic curve.
+ */
+export function closeSubPath(
+  path: Path,
+  subIdx: number,
+  controls: NewSegmentControls = {},
+  firstOut?: Point,
+) {
+  const subPaths = toSubPaths(path);
+  const subPath = getOpenSubPath(subPaths, subIdx);
+  const { anchors } = subPath;
+  if (firstOut && subPath.segments.length) {
+    toCubic(subPath, 0);
+    subPath.segments[0].controls[0] = firstOut;
+  }
+  const segment = newSegment(uniqueId(), anchors[anchors.length - 1], anchors[0], controls);
+  // A line back is the Z itself, and a curve is followed by a Z with no length.
+  subPath.segments.push(segment.type === 'L' ? { ...segment, type: 'Z' } : segment);
+  subPath.closed = true;
+  return toPath(subPaths);
+}
+
+/** Reverses an open subpath, keeping its anchors' ids. */
+export function reverseSubPath(path: Path, subIdx: number) {
+  const subPaths = toSubPaths(path);
+  const subPath = getOpenSubPath(subPaths, subIdx);
+  const ids = subPath.anchors.map((_, i) => getAnchorId(subPath, i)).reverse();
+  subPath.anchors.reverse();
+  // Each segment keeps the id of the anchor it ends at, which has moved to the other end.
+  subPath.segments = subPath.segments.reverse().map((segment, i) => ({
+    type: segment.type,
+    id: ids[i + 1],
+    controls: [...segment.controls].reverse(),
+  }));
+  subPath.moveId = ids[0];
+  return toPath(subPaths);
+}
+
+/** Returns the ends of the path's open subpaths with more than one anchor. */
+export function getSubPathEnds(path: Path): SubPathEnd[] {
+  return toSubPaths(path).flatMap((subPath, subIdx) => {
+    const { anchors, closed } = subPath;
+    if (closed || anchors.length < 2) {
+      return anchors.length === 1 && !closed
+        ? [{ subIdx, anchorId: subPath.moveId, point: anchors[0], isStart: false }]
+        : [];
+    }
+    const last = anchors.length - 1;
+    return [
+      { subIdx, anchorId: subPath.moveId, point: anchors[0], isStart: true },
+      { subIdx, anchorId: getAnchorId(subPath, last), point: anchors[last], isStart: false },
+    ];
+  });
+}
+
+/** Returns the number of anchors in the subpath. */
+export function getAnchorCount(path: Path, subIdx: number) {
+  return toSubPaths(path)[subIdx]?.anchors.length ?? 0;
+}
+
+function getOpenSubPath(subPaths: ReadonlyArray<EditSubPath>, subIdx: number) {
+  const subPath = subPaths[subIdx];
+  if (!subPath || subPath.closed) {
+    throw new Error(`No open subpath at ${subIdx}`);
+  }
+  return subPath;
+}
+
+function newSegment(id: string, start: Point, end: Point, { c1, c2 }: NewSegmentControls) {
+  return c1 || c2
+    ? { type: 'C' as const, id, controls: [c1 ?? start, c2 ?? end] }
+    : { type: 'L' as const, id, controls: [] };
+}
+
 function toSubPaths(path: Path): EditSubPath[] {
   return path.getSubPaths().map(subPath => {
     const [move, ...rest] = subPath.getCommands();

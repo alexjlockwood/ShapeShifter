@@ -2,7 +2,13 @@ import { PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { describe, expect, it } from 'vitest';
 
-import { getSnapTargets, snapBounds, snapPoint, SnapTargets } from './snapping';
+import {
+  getSnapTargets,
+  snapAlongLineToGrid,
+  snapBounds,
+  snapPoint,
+  SnapTargets,
+} from './snapping';
 
 function square(name: string, l: number, t: number, size = 4) {
   return new PathLayer({
@@ -98,5 +104,23 @@ describe('getSnapTargets', () => {
     expect(x.map(line => line.value)).toEqual([0, 12, 24, 10, 12, 14]);
     expect(y.map(line => line.value)).toEqual([0, 12, 24, 2, 4, 6]);
     expect(x[3]).toEqual({ value: 10, from: 2, to: 6 });
+  });
+});
+
+describe('snapAlongLineToGrid', () => {
+  it('rounds the free coordinate of a horizontal or vertical line', () => {
+    expect(snapAlongLineToGrid({ x: 2, y: 2.5 }, { x: 6.3, y: 2.5 }, 0.4)).toEqual({
+      x: 6,
+      y: 2.5,
+    });
+    expect(snapAlongLineToGrid({ x: 2, y: 2 }, { x: 2, y: 5.2 }, 0.4)).toEqual({ x: 2, y: 5 });
+  });
+
+  it('slides along a diagonal to a whole x, within the threshold', () => {
+    expect(snapAlongLineToGrid({ x: 2, y: 2 }, { x: 6.05, y: 6.05 }, 0.4)).toEqual({ x: 6, y: 6 });
+    expect(snapAlongLineToGrid({ x: 2, y: 2 }, { x: 6.5, y: 6.5 }, 0.4)).toEqual({
+      x: 6.5,
+      y: 6.5,
+    });
   });
 });

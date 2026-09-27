@@ -68,7 +68,9 @@ Where to start for common changes:
 - **Playback:** `services/playback.service.ts` and `scripts/animator/AnimationRenderer.ts`.
 - **The layer list and timeline:** `components/layertimeline/LayerTimelineController.ts` and
   `services/layertimeline.service.ts`.
-- **Keyboard shortcuts:** `services/shortcut.service.ts`.
+- **Keyboard shortcuts:** `services/shortcut.service.ts`. The canvas editor's shortcuts (tools,
+  nudging, and editing points) are in `components/canvaseditor/CanvasEditor.ts`, which gets keys
+  first.
 - **Copy and paste:** `services/clipboard.service.ts`.
 - **Undo:** `store/undoredo/metareducer.ts`.
 - **Error reports and analytics:** `scripts/bugsnag/` and `scripts/analytics/`. Google Analytics

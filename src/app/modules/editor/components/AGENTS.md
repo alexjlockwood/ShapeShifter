@@ -46,7 +46,8 @@ the mouse, so mouse events go to it and clicks around it reach the workspace. Th
 of it too, so hovering over it shows them.
 
 The new canvas editor is in `components/canvaseditor/`. `docs/canvas-editor.md` has its design
-and roadmap. It's only downloaded when its feature is on (`src/environments/features.ts`). `components/canvas/CanvasController.ts` loads it through
+and roadmap. It's only downloaded when its feature is on (`src/environments/features.ts`).
+`components/canvas/CanvasController.ts` loads it through
 `components/canvas/loadCanvasEditor.ts` and talks to it through the types in
 `components/canvas/CanvasEditorApi.ts`. Nothing else may import it, or it would be bundled with the
 rest of the app (`src/test/lazyChunks.spec.ts` checks this). Its gestures show their edits through
@@ -71,6 +72,10 @@ Double-clicking a path, or Enter, switches from the select tool to
 anything that makes the path uneditable (e.g. selecting something else, hiding it, or moving the
 time into one of its path blocks). Its point selection is kept by anchor id, in the tool rather
 than the store. Only the canvas editor imports `PathEdit`, so that it stays in the lazy chunk.
+`components/canvaseditor/EditorToolbar.ts` adds the tools' buttons to the panel, as plain DOM. The
+drawing tools (`components/canvaseditor/PenTool.ts`, `components/canvaseditor/PencilTool.ts`, and
+`components/canvaseditor/ShapeTool.ts`) get the pointer before the others, and put new layers where
+`components/canvaseditor/newLayers.ts` says.
 
 ## Styling
 

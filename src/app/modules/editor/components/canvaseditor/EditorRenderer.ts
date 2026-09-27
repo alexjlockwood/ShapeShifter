@@ -8,6 +8,7 @@ import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Rect } from 'app/modules/editor/scripts/common';
 import { getContext2d } from 'app/modules/editor/scripts/dom';
 
+import type { ToolOverlay } from './drawTools';
 import type { PathEditDrawing } from './PathEditTool';
 import { getHandlePoint, getVisibleHandles, HANDLE_SIZE } from './selectionHandles';
 import type { SnapGuide } from './snapping';
@@ -38,6 +39,8 @@ export interface EditorDrawing {
   readonly guides: ReadonlyArray<SnapGuide>;
   /** The points of the path being edited, which replace the selection's bounds. */
   readonly pathEdit?: PathEditDrawing;
+  /** What a drawing tool shows while it draws. */
+  readonly overlay?: ToolOverlay;
 }
 
 /** Draws the editor's outlines, bounds, and marquee on its own canvas, over the others. */
@@ -69,6 +72,7 @@ export class EditorRenderer {
       marquee,
       guides,
       pathEdit,
+      overlay,
     } = drawing;
     const outline = (layerId: string, lineWidth: number) => {
       const layer = vectorLayer.findLayerById(layerId);
@@ -85,9 +89,13 @@ export class EditorRenderer {
       outline(hoveredLayerId, HOVER_LINE_WIDTH);
     }
 
-    const bounds = pathEdit ? undefined : getLayersBounds(vectorLayer, selectedLayerIds);
+    // The points being edited, or a drawing tool's overlay, replace the selection's bounds.
+    const bounds = pathEdit || overlay ? undefined : getLayersBounds(vectorLayer, selectedLayerIds);
     if (pathEdit) {
       drawPathEdit(ctx, pathEdit, toViewport);
+    }
+    if (overlay) {
+      drawOverlay(ctx, overlay, toViewport);
     }
     if (bounds) {
       ctx.beginPath();
@@ -205,6 +213,49 @@ function drawPathEdit(
     ctx.lineTo(x + size, y - size);
     ctx.strokeStyle = GUIDE_COLOR;
     ctx.lineWidth = toViewport(GUIDE_LINE_WIDTH);
+    ctx.stroke();
+  }
+}
+
+function drawOverlay(
+  ctx: CanvasRenderingContext2D,
+  overlay: ToolOverlay,
+  toViewport: (length: number) => number,
+) {
+  ctx.strokeStyle = EDITOR_COLOR;
+  ctx.lineWidth = toViewport(SELECTED_LINE_WIDTH);
+  for (const [start, ...rest] of overlay.curves) {
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    if (rest.length === 3) {
+      ctx.bezierCurveTo(rest[0].x, rest[0].y, rest[1].x, rest[1].y, rest[2].x, rest[2].y);
+    } else {
+      rest.forEach(p => ctx.lineTo(p.x, p.y));
+    }
+    ctx.stroke();
+  }
+  for (const { anchor, handle } of overlay.handles) {
+    ctx.beginPath();
+    ctx.moveTo(anchor.x, anchor.y);
+    ctx.lineTo(handle.x, handle.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(handle.x, handle.y, toViewport(CONTROL_RADIUS), 0, 2 * Math.PI);
+    ctx.fillStyle = HANDLE_FILL;
+    ctx.fill();
+    ctx.stroke();
+  }
+  for (const { point, isHovered } of overlay.anchors) {
+    ctx.beginPath();
+    ctx.arc(
+      point.x,
+      point.y,
+      toViewport(isHovered ? HOVERED_ANCHOR_RADIUS : ANCHOR_RADIUS),
+      0,
+      2 * Math.PI,
+    );
+    ctx.fillStyle = isHovered ? EDITOR_COLOR : HANDLE_FILL;
+    ctx.fill();
     ctx.stroke();
   }
 }

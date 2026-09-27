@@ -70,7 +70,8 @@ test('pans by scrolling, and by dragging with the space bar held', async ({ page
   expect(await getState(page, s => s.playback.isPlaying)).toBe(false);
   expect(await getState(page, s => s.layers.selectedLayerIds.size)).toBe(1);
   // Tapping it does. The demo is only 300ms long, so it repeats, or it could end before the check.
-  await page.keyboard.press('r');
+  // With the canvas editor on, R picks the rectangle tool, so this uses the button.
+  await page.getByRole('button', { name: 'Repeat', exact: true }).click();
   await expect.poll(() => getState(page, s => s.playback.isRepeating)).toBe(true);
   await page.keyboard.press('Space');
   await expect.poll(() => getState(page, s => s.playback.isPlaying)).toBe(true);

@@ -10,7 +10,7 @@ import type { MouseEvent } from 'react';
 import './playback.scss';
 
 export function Playback() {
-  const { playbackService } = useServices();
+  const { playbackService, features } = useServices();
   const { isSlowMotion, isPlaying, isRepeating } = useAppSelector(getPlaybackControlsState);
 
   const onClick = (fn: () => void) => (event: MouseEvent) => {
@@ -48,7 +48,8 @@ export function Playback() {
           <Icon name="skip_next" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Repeat (R)">
+      {/* With the canvas editor on, R picks its rectangle tool. */}
+      <Tooltip title={features.canvasEditor ? 'Repeat' : 'Repeat (R)'}>
         <IconButton
           className="repeating-button"
           onClick={onClick(() => playbackService.toggleIsRepeating())}

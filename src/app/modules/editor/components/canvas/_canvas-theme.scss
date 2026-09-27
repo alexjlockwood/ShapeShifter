@@ -3,6 +3,7 @@
 
 @mixin ss-canvas-theme($theme) {
     $background: map.get($theme, ss-background);
+    $foreground: map.get($theme, ss-foreground);
     .app-canvas .canvas-artboard {
         // background-color: mat-color($background, base);
         background-color: #fff;
@@ -11,5 +12,17 @@
     .app-canvas .canvas-ruler.is-pinned,
     .app-canvas .canvas-ruler-corner {
         background-color: mat-color($background, base300);
+    }
+    // The canvas editor's toolbar.
+    .app-canvas .canvas-editor-toolbar {
+        background-color: mat-color($background, base100);
+        color: mat-color($foreground, secondary-text);
+    }
+    .app-canvas .canvas-editor-tool:hover {
+        background-color: mat-color($foreground, divider);
+    }
+    .app-canvas .canvas-editor-tool[aria-pressed='true'] {
+        background-color: #0d99ff;
+        color: #fff;
     }
 }

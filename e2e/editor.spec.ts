@@ -282,3 +282,79 @@ test('stops editing points on a click on another layer, or on nothing', async ({
   await expect.poll(() => isEditingPath(page)).toBe(false);
   await expect.poll(() => getSelectedNames(page)).toEqual([]);
 });
+
+function getToolName(page: Page) {
+  return page.evaluate(() => (window as any).shapeshifter.canvasEditor.getToolName() as string);
+}
+
+test('draws a rectangle with the R shortcut, and goes back to the select tool', async ({
+  page,
+  modifier,
+}) => {
+  await openSquares(page);
+  const toolbar = page.getByRole('toolbar', { name: 'Tools' });
+  await expect(toolbar.getByRole('button', { name: 'Move' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.keyboard.press('r');
+  await expect(toolbar.getByRole('button', { name: 'Rectangle' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  // R doesn't toggle repeating while the canvas editor is on.
+  expect(await getState(page, s => s.playback.isRepeating)).toBe(false);
+  await drag(page, [16.1, 16.05], [21.95, 20.1]);
+  await expect.poll(() => getPathData(page, 'rectangle')).toBe('M 16 16 L 22 16 L 22 20 L 16 20 Z');
+  await expect.poll(() => getSelectedNames(page)).toEqual(['rectangle']);
+  await expect.poll(() => getToolName(page)).toBe('select');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'rectangle')).toBeUndefined();
+});
+
+test('draws a path with the pen, one undo step per point', async ({ page, modifier }) => {
+  await openSquares(page);
+  await page
+    .getByRole('toolbar', { name: 'Tools' })
+    .getByRole('button', { name: 'Pen', exact: true })
+    .click();
+  await expect.poll(() => getToolName(page)).toBe('pen');
+  await click(page, 16, 16);
+  await click(page, 22, 16);
+  await click(page, 22, 22);
+  // Clicking the first point closes the path.
+  await click(page, 16, 16);
+  await expect.poll(() => getPathData(page, 'path')).toBe('M 16 16 L 22 16 L 22 22 Z');
+  await expect.poll(() => getToolName(page)).toBe('select');
+  await page.keyboard.press(`${modifier}+z`);
+  await expect.poll(() => getPathData(page, 'path')).toBe('M 16 16 L 22 16 L 22 22');
+
+  // Escape finishes a path without closing it.
+  await page.keyboard.press('p');
+  await click(page, 16, 2);
+  await click(page, 20, 2);
+  await page.keyboard.press('Escape');
+  await expect.poll(() => getToolName(page)).toBe('select');
+  await expect.poll(() => getPathData(page, 'path_1')).toBe('M 16 2 L 20 2');
+});
+
+test('draws freehand with the pencil', async ({ page }) => {
+  await openSquares(page);
+  await page.keyboard.press('Shift+P');
+  await expect.poll(() => getToolName(page)).toBe('pencil');
+  const canvas = page.locator('.app-canvas');
+  const start = await artboardPoint(canvas, 14, 18);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  for (let x = 14; x <= 22; x += 0.5) {
+    const point = await artboardPoint(canvas, x, 18 + 2 * Math.sin(x));
+    await page.mouse.move(point.x, point.y);
+  }
+  await page.mouse.up();
+  // Pointer moves don't land on exact coordinates, so this only checks that it's made of curves.
+  await expect
+    .poll(async () => rounded(await getPathData(page, 'path'))?.split(' C ')[0])
+    .toBe('M 14 18');
+  // The pencil stays on for the next stroke.
+  expect(await getToolName(page)).toBe('pencil');
+});
