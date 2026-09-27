@@ -199,6 +199,12 @@ supported one subpath per layer, and its round trips through paper.js broke morp
 a new editor built on the current canvas and path model, behind a feature flag, with a phased
 roadmap.
 
+- **Outline stroke gaps.** Outline stroke already turns a stroked path into an identical filled one
+  (`outlineStrokes` in `components/canvaseditor/pathOps.ts`, Cmd+Alt+O). But it needs the canvas
+  editor, refuses animated layers, and turns round caps and joins into many short quadratic curves
+  (`docs/canvas-editor.md`, phase 6). The follow-up is making it work with the editor off and on
+  animated paths, and fitting the rounds as cubics.
+
 ## Planned features
 
 Export formats the maintainer wants to add, decided while triaging the GitHub issues on
@@ -220,6 +226,20 @@ Export formats the maintainer wants to add, decided while triaging the GitHub is
 ## Feature requests
 
 Ideas under consideration, not yet scoped or scheduled:
+
+- **A pivot relative to the layer's bounds, as a percentage.** New groups pivot at the canvas's
+  center (`getCenterPivot` in `model/layers/LayerUtil.ts`), but pivots are absolute, so the pivot
+  stays put when the layer's contents move or the canvas is resized. Three options were weighed:
+  - edit it as a percentage in the inspector but store it absolute (about 2 days, no format
+    change);
+  - store a fraction of the bounds at the start of the animation (about 1 week, with a version
+    bump and conversions for old files and VectorDrawable imports);
+  - store a fraction of the bounds on every frame, like CSS `transform-origin` (1 to 2 weeks, and
+    animated content needs sampled pivot keyframes in the AVD).
+
+  For reference, Compose's `ImageVector` groups are absolute with a default of 0
+  (`compose/ui/ui/.../graphics/vector/Vector.kt:50-51`), `DrawScope.rotate` and `scale` default
+  to the center, and only `graphicsLayer`'s `TransformOrigin` uses fractions.
 
 - **Fix AnimatedVectorDrawable import.** `scripts/import/VectorDrawableLoader.ts` doesn't
   special-case the `animated-vector` root tag, so an AVD's

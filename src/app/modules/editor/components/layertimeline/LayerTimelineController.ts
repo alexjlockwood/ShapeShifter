@@ -283,7 +283,8 @@ export class LayerTimelineController extends DestroyableMixin() {
   onAddGroupLayerClick() {
     const vl = getVectorLayer(this.store.getState());
     const name = LayerUtil.getUniqueLayerName([vl], 'group');
-    const layer = new GroupLayer({ name, children: [] });
+    const parentId = this.services.layerTimelineService.getParentIdForNewLayer();
+    const layer = new GroupLayer({ name, children: [], ...LayerUtil.getCenterPivot(vl, parentId) });
     this.services.layerTimelineService.addLayer(layer);
   }
 
