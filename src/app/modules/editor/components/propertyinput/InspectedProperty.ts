@@ -2,7 +2,9 @@ import { Property } from 'app/modules/editor/model/properties';
 
 /**
  * Shows values without saving them as undo steps, e.g. while a color or a curve is dragged (see
- * LayerTimelineService.previewLayer).
+ * LayerTimelineService.previewLayer). Whatever shows the previews must commit or cancel them when
+ * the drag ends, and also when it unmounts or loses focus, or the previewed value stays on screen
+ * and the next edit's undo step saves it.
  */
 export interface ValuePreview<V> {
   // Shows the value without an undo step.
@@ -75,7 +77,8 @@ export class InspectedProperty<V> {
 
   /**
    * Shows the value without an undo step, e.g. on every move of a drag. Call commitPreview when
-   * the drag ends, or cancelPreview to go back. Without a preview, it sets the value.
+   * the drag ends, or cancelPreview to go back, and one of them on unmount or blur too. Without a
+   * preview, it sets the value.
    */
   previewValue(value: V) {
     this.setEnteredValue(undefined);
