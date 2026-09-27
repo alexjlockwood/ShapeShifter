@@ -79,6 +79,8 @@ describe('buildInspectorSections', () => {
     const path = newPath({ strokeLinejoin: 'miter' });
     expect(summarize(buildInspectorSections(inspect(path), optionsFor(path)))).toEqual([
       ['name', ['Name']],
+      // A path's transform has the same properties as a group's.
+      ['transform', ['Rotation', 'Scale', 'Pivot', 'Translate']],
       ['fill', ['Color', 'Alpha', 'Rule']],
       ['stroke', ['Color', 'Alpha', 'Width', 'Cap', 'Join', 'Miter limit']],
       ['trimPath', ['Start', 'End', 'Offset']],

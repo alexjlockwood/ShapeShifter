@@ -206,6 +206,7 @@ describe('buildContextMenu', () => {
       expect(ids(menu)).toEqual([
         ['deletePoints', 'pointType', 'toggleClosed', 'setFirstPoint'],
         ['duplicate', 'group', 'convert'],
+        ['morphInto'],
         ['animate'],
       ]);
       expect(find(menu, 'deletePoints')?.label).toBe('Delete point');
