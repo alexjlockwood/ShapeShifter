@@ -15,6 +15,7 @@ import { isBeingReset } from './reset/selectors';
 import { SetTheme } from './theme/actions';
 import { getThemeType } from './theme/selectors';
 import { getAnimation } from './timeline/selectors';
+import { IsolateUndoStep } from './undoredo/actions';
 
 describe('createEditorStore', () => {
   beforeEach(() => {
@@ -154,6 +155,25 @@ describe('createEditorStore', () => {
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set());
     store.dispatch(ActionCreators.undo());
     expect(getVectorLayer(store.getState())).toBe(vl);
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
+  });
+
+  it('gives a batch with IsolateUndoStep an undo step of its own', () => {
+    const store = createEditorStore();
+    vi.advanceTimersByTime(2000);
+    store.dispatch(new SetSelectedLayers(new Set(['a'])));
+    vi.advanceTimersByTime(100);
+    // E.g. the end of a drag on the canvas.
+    const editedVl = new VectorLayer();
+    store.dispatch(new BatchAction(new IsolateUndoStep(), new SetVectorLayer(editedVl)));
+    vi.advanceTimersByTime(100);
+    store.dispatch(new SetSelectedLayers(new Set(['b'])));
+
+    store.dispatch(ActionCreators.undo());
+    expect(getVectorLayer(store.getState())).toBe(editedVl);
+    expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
+    store.dispatch(ActionCreators.undo());
+    expect(getVectorLayer(store.getState())).not.toBe(editedVl);
     expect(getSelectedLayerIds(store.getState())).toEqual(new Set(['a']));
   });
 

@@ -49,7 +49,11 @@ The new canvas editor is in `components/canvaseditor/`, and it's only downloaded
 is on (`src/environments/features.ts`). `components/canvas/CanvasController.ts` loads it through
 `components/canvas/loadCanvasEditor.ts` and talks to it through the types in
 `components/canvas/CanvasEditorApi.ts`. Nothing else may import it, or it would be bundled with the
-rest of the app (`src/test/lazyChunks.spec.ts` checks this).
+rest of the app (`src/test/lazyChunks.spec.ts` checks this). Its gestures show their edits through
+`components/canvas/CanvasPreview.ts`, which the main canvas draws and hit tests, rather than
+dispatching on every pointer move. A gesture commits once, as its own undo step, and anything else
+that changes the document or the time cancels it. It edits the layers' own paths, so a path that an
+animation block sets at the current time can't be edited yet (`canEditPath`).
 
 ## Styling
 

@@ -2,6 +2,7 @@ import { ActionSource } from 'app/modules/editor/model/actionmode';
 import { PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { getContext2d } from 'app/modules/editor/scripts/dom';
+import { createEditorServices } from 'app/modules/editor/services/createEditorServices';
 import { FileExportService } from 'app/modules/editor/services/fileexport.service';
 import { createEditorStore, type State, type Store } from 'app/modules/editor/store';
 import { SetVectorLayer } from 'app/modules/editor/store/layers/actions';
@@ -10,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CanvasCamera } from './CanvasCamera';
 import { CanvasLayers } from './CanvasLayers';
+import { CanvasPreview } from './CanvasPreview';
 
 const demos = import.meta.glob('/public/demos/*.shapeshifter', {
   query: '?raw',
@@ -99,6 +101,46 @@ describe('CanvasLayers', () => {
     ]) {
       expect(getPixel(image, px, py), `(${px}, ${py})`).toEqual([0, 0, 0, 0]);
     }
+  });
+
+  it('draws edits in progress', () => {
+    const store = createEditorStore({ logActions: false });
+    const services = createEditorServices(store);
+    const path = new PathLayer({
+      name: 'path',
+      children: [],
+      pathData: new Path('M 0 0 L 4 0 L 4 4 Z'),
+      fillColor: '#000',
+    });
+    services.layerTimelineService.setVectorLayer(
+      new VectorLayer({ name: 'vector', children: [path], width: 24, height: 24 }),
+    );
+    const preview = new CanvasPreview(store, services.layerTimelineService);
+    preview.init();
+    const canvas = document.createElement('canvas');
+    const canvasLayers = new CanvasLayers(canvas, ActionSource.Animated, store, preview);
+    canvasLayers.init();
+    canvasLayers.setCamera(
+      CanvasCamera.fit({
+        panel: { w: 240, h: 240 },
+        viewport: { w: 24, h: 24 },
+        pixelRatio: 1,
+        margin: 0,
+      }),
+    );
+    // (20, 20) in the viewport.
+    const isDrawn = () => getContext2d(canvas).getImageData(200, 200, 1, 1).data[3] > 0;
+    expect(isDrawn()).toBe(false);
+
+    preview.begin();
+    preview.setPath(path.id, new Path('M 0 0 L 24 0 L 24 24 L 0 24 Z'));
+    expect(isDrawn()).toBe(true);
+    preview.cancel();
+    expect(isDrawn()).toBe(false);
+
+    canvasLayers.dispose();
+    preview.dispose();
+    services.dispose();
   });
 
   // The canvas used to be the size of the artboard. It now covers the panel, and has to draw the

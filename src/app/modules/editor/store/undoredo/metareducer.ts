@@ -6,6 +6,7 @@ import { PlaybackActionTypes } from 'app/modules/editor/store/playback/actions';
 import { EditorState } from 'app/modules/editor/store/reducer';
 import { ResetActionTypes } from 'app/modules/editor/store/reset/actions';
 import { ThemeActionTypes } from 'app/modules/editor/store/theme/actions';
+import { UndoRedoActionTypes } from 'app/modules/editor/store/undoredo/actions';
 import type { UnknownAction } from 'redux';
 import undoable, {
   ActionTypes as UndoActionTypes,
@@ -46,8 +47,11 @@ type EditorStateReducer = ActionReducer<EditorState>;
 
 // Actions that always get an undo step of their own, however soon they come after the last one.
 // Loading a project replaces everything, so undoing an edit made right after it shouldn't undo
-// the load too.
-const UNDO_ISOLATED_ACTIONS: ReadonlySet<string> = new Set([ResetActionTypes.ResetWorkspace]);
+// the load too. IsolateUndoStep gives any batch it's in the same treatment.
+const UNDO_ISOLATED_ACTIONS: ReadonlySet<string> = new Set([
+  ResetActionTypes.ResetWorkspace,
+  UndoRedoActionTypes.IsolateUndoStep,
+]);
 
 function unbatch(action: Action) {
   return action.type === BatchActionTypes.BatchAction ? (action as BatchAction).payload : [action];

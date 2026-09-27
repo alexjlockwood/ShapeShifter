@@ -34,6 +34,7 @@ import {
   getSelectedBlockIds,
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
+import { IsolateUndoStep } from 'app/modules/editor/store/undoredo/actions';
 import { difference, find, findIndex, isEqual, uniqueId } from 'lodash-es';
 
 /**
@@ -228,6 +229,14 @@ export class LayerTimelineService {
    */
   setVectorLayer(vl: VectorLayer) {
     this.store.dispatch(new SetVectorLayer(vl));
+  }
+
+  /**
+   * Saves an edit made on the canvas as its own undo step, even if another edit came right before
+   * it, since a gesture is one thing to undo.
+   */
+  commitCanvasEdit(vl: VectorLayer) {
+    this.store.dispatch(new BatchAction(new IsolateUndoStep(), new SetVectorLayer(vl)));
   }
 
   /**

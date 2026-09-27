@@ -16,10 +16,11 @@ import {
 } from 'app/modules/editor/store/actionmode/selectors';
 import { getHiddenLayerIds } from 'app/modules/editor/store/layers/selectors';
 import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
-import { combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { combineLatest, of } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 import { CanvasCamera } from './CanvasCamera';
+import type { CanvasPreview } from './CanvasPreview';
 import * as CanvasUtil from './CanvasUtil';
 
 type Context = CanvasRenderingContext2D;
@@ -37,6 +38,8 @@ export class CanvasLayers extends DestroyableMixin() {
     private readonly renderingCanvas: HTMLCanvasElement,
     private readonly actionSource: ActionSource,
     private readonly store: Store<State>,
+    // Edits in progress, which only the animated canvas shows.
+    private readonly preview?: CanvasPreview,
   ) {
     super();
   }
@@ -44,12 +47,14 @@ export class CanvasLayers extends DestroyableMixin() {
   init() {
     if (this.actionSource === ActionSource.Animated) {
       // Preview canvas specific setup.
+      const { preview } = this;
       this.registerSubscription(
         combineLatest([
-          this.store.select(getAnimatedVectorLayer).pipe(map(event => event.vl)),
+          this.store.select(getAnimatedVectorLayer),
           this.store.select(getHiddenLayerIds),
-        ]).subscribe(([vectorLayer, hiddenLayerIds]) => {
-          this.vectorLayer = vectorLayer;
+          preview ? preview.asObservable().pipe(startWith(undefined)) : of(undefined),
+        ]).subscribe(([{ vl, currentTime }, hiddenLayerIds]) => {
+          this.vectorLayer = preview ? preview.apply(vl, currentTime) : vl;
           this.hiddenLayerIds = hiddenLayerIds;
           this.draw();
         }),

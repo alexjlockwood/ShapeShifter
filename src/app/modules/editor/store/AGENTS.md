@@ -36,7 +36,9 @@ From the outside in: the action logger (dev only), freeze (dev and tests), undo,
   it. Actions in `UNDO_EXCLUDED_ACTIONS` (the playback actions, `SetActionMode`,
   `SetActionModeHover`, `SetTheme`, and every `paper` action) update the state without recording a
   step. Everything else is recorded, including selections, hidden and collapsed layers, and action
-  mode selections and pairings. `ResetWorkspace` always gets a step of its own. Undo and redo keep
+  mode selections and pairings. `ResetWorkspace` always gets a step of its own, and so does a batch
+  with an `IsolateUndoStep` (`store/undoredo/actions.ts`) in it, which is how
+  `layerTimelineService.commitCanvasEdit` saves a gesture on the canvas. Undo and redo keep
   the current theme and the `paper` slice's view (zoom, cursor, and tool mode), and clear the rest
   of that slice, since it refers to layers and points.
 - **Batch:** `new BatchAction(a, b)` applies several actions as one undo step. Only one level is
