@@ -84,8 +84,8 @@ below. The `paper`,
   simpler update that behaves better near the ends).
 - The cursor images in `public/assets/cursor/`.
 - The compiled `store/paper/` slice, whose shape (tool mode, selection box, edit path info, snap
-  guides, cursor) fits the new editor's transient state. Its zoom and pan field won't be used,
-  since the camera's state lives outside the store (see below).
+  guides, cursor) fit the new editor's transient state. In the end, the editor's tools kept that
+  state themselves, outside the store, and the slice was removed (see "Removing the old editor").
 
 ## Is paper.js the right library?
 
@@ -352,13 +352,13 @@ deleted the uncompiled code (`components/canvas/canvaspaper.directive.ts`,
 `components/toolpanel/`, `scripts/paper/`, `services/paper.service.ts`, and `src/typings/paper/`),
 its exclusions from `tsconfig.json`, `.oxlintrc.json`, and `.prettierignore`, the test that kept
 them in step, the notes telling agents to leave it alone, the "Beta only" bug entries, and the
-images that only it used (`public/assets/paper/` and `public/assets/tools/`). The cursors in
-`public/assets/cursor/` stay: the pen, pencil, and crosshair cursors are the drawing tools', and
-`pen-add.png` and `point-select.png` aren't used yet.
+images that only it used (`public/assets/paper/` and `public/assets/tools/`).
 
-The compiled `model/paper/` and `store/paper/` stay, since `components/root/Root.tsx` and the
-canvas read them, but they should be renamed or replaced by the new editor's own state as it
-grows.
+After phase 6, the compiled parts went too: `model/paper/` and the `paper` store slice (the old
+editor's tool, cursor, hovered layer, and zoom, which nothing wrote to anymore), the cursor classes
+in `components/root/root.scss` that only it set, the layer list's highlight for the layer hovered
+on the canvas, and the cursor images that nothing used. The canvas editor keeps its own state out
+of the store, and its cursors are in `components/canvas/canvas.scss`.
 
 ## Risks and edge cases
 

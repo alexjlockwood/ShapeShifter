@@ -28,7 +28,6 @@ function buildLayerModel(
     selectedLayerIds,
     collapsedLayerIds,
     hiddenLayerIds,
-    hoveredLayerId,
     isActionMode,
   }: ReturnType<typeof getLayerListTreeState>,
 ) {
@@ -61,7 +60,6 @@ function buildLayerModel(
     });
   return {
     isSelected: selectedLayerIds.has(layer.id),
-    isHovered: hoveredLayerId === layer.id,
     isExpandable,
     isExpanded: !collapsedLayerIds.has(layer.id),
     isVisible: !hiddenLayerIds.has(layer.id),
@@ -109,7 +107,6 @@ export const LayerListTree = memo(function LayerListTree({ layer }: { layer: Lay
     'fx-row',
     'fx-align-start-center',
     model.isSelected && 'is-selected',
-    model.isHovered && 'is-hovered',
     isActionMode && 'is-disabled',
   ];
 
