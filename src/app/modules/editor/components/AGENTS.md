@@ -99,8 +99,6 @@ than the store. Only the canvas editor imports `PathEdit`, so that it stays in t
   replaces that panel (with a "Try again" button) and is reported to Bugsnag.
 - Dialogs (`components/dialogs/dialog.service.ts`) and the snackbar (`services/snackbar.service.ts`)
   have small stores of their own, outside Redux. Dialog methods return promises.
-- `components/canvas/canvaspaper.directive.ts` and `components/toolpanel/` belong to the paper.js
-  beta editor, which isn't compiled. Ignore them when looking for usages.
 
 ## Tests
 

@@ -1,1 +1,0 @@
-export { Gesture } from './Gesture';

@@ -1,1 +1,0 @@
-export { ClickDetector } from './ClickDetector';

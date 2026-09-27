@@ -23,9 +23,9 @@ a feature flag so it can be developed on master and deployed switched off.
 The old editor was written in 2017-18 (262 commits, the last feature in June 2018) and only
 shipped as a separate beta build at beta.shapeshifter.design, which has since been retired. It was
 mounted only outside action mode, and it only ever edited the static layer tree, never animation
-blocks. Its code is still in the repo but isn't compiled (see "Code to leave alone" in the root
-`AGENTS.md`). The `paper`, `jquery`, and `@angular/core` packages it needs were uninstalled
-during the React migration.
+blocks. Its code was never ported to React, and it was removed after phase 2. The last commit that
+has it is 28992d59, so `git show 28992d59:<path>` shows the files named below. The `paper`,
+`jquery`, and `@angular/core` packages it needed were uninstalled during the React migration.
 
 ### What it had
 
@@ -78,9 +78,9 @@ during the React migration.
   hovering.
 - The catalog of gestures and their modifier keys, which already follow Sketch closely.
 - The snapping math in `scripts/paper/util/snap/SnapUtil.ts` and `SnapBounds.ts`, and the curve
-  bending math in `scripts/paper/gesture/edit/MouldCurveGesture.ts`.
-- The cursor images in `public/assets/cursor/` and `public/assets/paper/`, and the tool icons in
-  `public/assets/tools/`.
+  bending math in `scripts/paper/gesture/edit/MouldCurveGesture.ts` (phase 2 bends curves with a
+  simpler update that behaves better near the ends).
+- The cursor images in `public/assets/cursor/`.
 - The compiled `store/paper/` slice, whose shape (tool mode, selection box, edit path info, snap
   guides, cursor) fits the new editor's transient state. Its zoom and pan field won't be used,
   since the camera's state lives outside the store (see below).
@@ -269,22 +269,14 @@ After that:
 
 ### Removing the old editor
 
-The old code only matters as a reference, and git history keeps it, so it can go once the parts
-worth keeping have been ported: the snapping math in phase 1, the curve bending and point editing
-in phase 2, and the cursors and icons as each tool lands. That's after phase 2, not after the
-whole roadmap, and it stops agents from reading notes about code to leave alone. Removing it
-means:
-
-- Deleting `components/canvas/canvaspaper.directive.ts` (which still imports the canvas layout
-  mixin that the camera replaced), `components/toolpanel/`, `scripts/paper/`,
-  `services/paper.service.ts`, and `src/typings/paper/`.
-- Removing their exclusions from `tsconfig.json`, `.oxlintrc.json`, and `.prettierignore`, and
-  deleting `src/test/paperExclusions.spec.ts`, which only keeps those lists in step.
-- Removing "Code to leave alone" from the root `AGENTS.md`, and the notes about the old editor in
-  `components/AGENTS.md` and `store/AGENTS.md`.
-- Removing the "Beta only" entries from `BUGS.md` and `docs/bugs/bugsnag.md`.
-- Deleting the images in `public/assets/paper/` and `public/assets/tools/` that the new editor
-  doesn't use, and their `globIgnores` in `vite.config.ts`.
+The old code only mattered as a reference, so it was removed once the parts worth keeping had been
+ported: the snapping math in phase 1, and the curve bending and point editing in phase 2. That
+deleted the uncompiled code (`components/canvas/canvaspaper.directive.ts`,
+`components/toolpanel/`, `scripts/paper/`, `services/paper.service.ts`, and `src/typings/paper/`),
+its exclusions from `tsconfig.json`, `.oxlintrc.json`, and `.prettierignore` and the test that kept
+them in step, the notes telling agents to leave it alone, the "Beta only" bug entries, and the
+images that only it used (`public/assets/paper/` and `public/assets/tools/`). The cursors in
+`public/assets/cursor/` stay for the tools that come next.
 
 The compiled `model/paper/` and `store/paper/` stay, since `components/root/Root.tsx` and the
 canvas read them, but they should be renamed or replaced by the new editor's own state as it
