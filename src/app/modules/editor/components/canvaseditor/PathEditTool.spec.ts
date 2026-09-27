@@ -230,8 +230,7 @@ describe('PathEditTool', () => {
       const { tool, click, preview, pathData } = setUp('scaled');
       click(10, 2);
       preview.begin();
-      const base = preview.getBase();
-      const move = base && tool.getPointsMove(base);
+      const move = tool.getPointsMove();
       preview.setPath(tool.layerId, move?.move(2, 0) ?? new Path(''));
       preview.commit();
       expect(pathData()).toBe('M 1 1 L 6 1');

@@ -169,7 +169,7 @@ describe('CanvasPreview', () => {
     expect(store.getState().past.length).toBe(numPastStates);
   });
 
-  it('only edits the paths of path layers that no animation block sets at the time', () => {
+  it("edits an animated path's keyframes, but not while it's morphing", () => {
     const { store, services, preview, path, other, group } = setUp();
     services.layerTimelineService.addBlocks([
       {
@@ -181,16 +181,44 @@ describe('CanvasPreview', () => {
         duration: 100,
       },
     ]);
-    // Before the block starts, the layer's own path shows.
-    expect(preview.canEditPath(path.id)).toBe(true);
-    store.dispatch(new SetCurrentTime(100));
-    expect(preview.canEditPath(path.id)).toBe(false);
-    store.dispatch(new SetCurrentTime(250));
-    expect(preview.canEditPath(path.id)).toBe(false);
+    const pathBlock = () => getAnimation(store.getState()).blocks[0];
+    const layerPath = () =>
+      (getVectorLayer(store.getState()).findLayerById(path.id) as PathLayer).pathData;
+    const edit = (pathData: string) => {
+      preview.begin();
+      preview.setPath(path.id, new Path(pathData));
+      preview.commit();
+      vi.advanceTimersByTime(2000);
+    };
     expect(preview.canEditPath(other.id)).toBe(true);
     expect(preview.canEditPath(group.id)).toBe(false);
+
+    // Before the block, the layer's own path shows. The block starts from the same path, so it
+    // changes too, and they still meet.
+    const moved = 'M 5 4 L 20 4 L 20 20 L 4 20 Z';
+    edit(moved);
+    expect(layerPath()?.getPathString()).toBe(moved);
+    expect(pathBlock().fromValue.getPathString()).toBe(moved);
+
+    // At the end, and after it, the block's end shows.
+    store.dispatch(new SetCurrentTime(250));
+    const tipped = 'M 4 20 L 13 4 L 20 20 Z';
+    edit(tipped);
+    expect(pathBlock().toValue.getPathString()).toBe(tipped);
+    expect(layerPath()?.getPathString()).toBe(moved);
+
+    // While it morphs, it can't be edited.
+    store.dispatch(new SetCurrentTime(150));
+    expect(preview.canEditPath(path.id)).toBe(false);
     preview.begin();
     expect(() => preview.setPath(path.id, new Path(TRIANGLE))).toThrow();
+    preview.cancel();
+
+    // At the start, the block's start shows.
+    store.dispatch(new SetCurrentTime(100));
+    expect(preview.canEditPath(path.id)).toBe(true);
+    preview.begin();
+    expect(preview.getBasePath(path.id)?.getPathString()).toBe(moved);
   });
 
   it('is canceled when the animation changes, e.g. by deleting a block', () => {

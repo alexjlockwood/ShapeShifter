@@ -50,6 +50,8 @@ export interface DrawToolContext {
   readonly preview: {
     begin(onCancel: () => void): void;
     getBase(): CanvasDocument | undefined;
+    /** The path that the edit starts from, which is a path block's value if one sets it. */
+    getBasePath(layerId: string): Path | undefined;
     setDocument(document: CanvasDocument, layerIds?: CanvasEditLayerIds): void;
     setPath(layerId: string, path: Path): void;
     commit(): void;

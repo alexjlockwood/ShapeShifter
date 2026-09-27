@@ -6,15 +6,21 @@ import type {
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
 import type { CanvasPreview } from 'app/modules/editor/components/canvas/CanvasPreview';
 import { getRulerLayout } from 'app/modules/editor/components/canvas/CanvasRuler';
+import {
+  autoFixPathBlocks,
+  getPathKeyframe,
+} from 'app/modules/editor/components/canvas/pathKeyframes';
 import { getLayersBounds, hitTestLayer } from 'app/modules/editor/components/canvas/LayerGeometry';
 import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
+import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { on } from 'app/modules/editor/scripts/dom';
 import type { CanvasSettings } from 'app/modules/editor/services/canvassettings.service';
+import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 import { isActionMode } from 'app/modules/editor/store/actionmode/selectors';
 import { getGuides } from 'app/modules/editor/store/guides/selectors';
@@ -22,6 +28,7 @@ import { getHiddenLayerIds, getSelectedLayerIds } from 'app/modules/editor/store
 import {
   getAnimatedVectorLayer,
   getCurrentTime,
+  getIsPlaying,
 } from 'app/modules/editor/store/playback/selectors';
 import { environment } from 'environments/environment';
 import { combineLatest, Subscription } from 'rxjs';
@@ -31,6 +38,7 @@ import type { DrawToolContext } from './drawTools';
 import { EditorRenderer } from './EditorRenderer';
 import { EditorToolbar, ToolName } from './EditorToolbar';
 import { GuideTool } from './GuideTool';
+import { getKeyframeStatus, KeyframeBadge } from './KeyframeBadge';
 import { getMeasurements } from './measuring';
 import { getLayerPath, PathEditTool } from './PathEditTool';
 import { PencilTool } from './PencilTool';
@@ -107,6 +115,8 @@ class Editor implements CanvasEditor {
   private drawTool: PenTool | PencilTool | ShapeTool | undefined;
   private toolName: ToolName = 'select';
   private toolbar: EditorToolbar | undefined;
+  // Says whether the selected path still morphs while it's edited at a keyframe.
+  private keyframeBadge: KeyframeBadge | undefined;
   // Whether the pointer is pressed, so that tools don't change in the middle of a gesture.
   private isPressing = false;
   private lastPress: { readonly time: number; readonly point: Point; count: number } | undefined;
@@ -155,6 +165,7 @@ class Editor implements CanvasEditor {
       store.select(getHiddenLayerIds),
       store.select(getSelectedLayerIds),
       store.select(isActionMode),
+      store.select(getIsPlaying),
     ]).subscribe(([{ vl, currentTime }, , hiddenLayerIds, selectedLayerIds, actionMode]) => {
       this.vectorLayer = preview.apply(vl, currentTime);
       this.hiddenLayerIds = hiddenLayerIds;
@@ -183,6 +194,9 @@ class Editor implements CanvasEditor {
         // moved into one of its path blocks.
         this.stopPathEdit();
       }
+      // Here rather than in draw, since it only changes with the document, the time, and the
+      // selection, and drawing happens on every hover too.
+      this.keyframeBadge?.show(this.getKeyframeStatus());
       this.draw();
     });
     this.subscription.add(
@@ -224,6 +238,11 @@ class Editor implements CanvasEditor {
     });
     this.toolbar.setHidden(this.isActionMode);
     this.toolbar.setSettings(this.settings);
+    const { playbackService } = this.context.services;
+    this.keyframeBadge = new KeyframeBadge(this.context.root, {
+      onAutoFix: blockIds => this.autoFix(blockIds),
+      onSeek: time => playbackService.setCurrentTime(time),
+    });
     this.removeTestHooks = environment.production ? undefined : addTestHooks(preview, this);
   }
 
@@ -424,6 +443,7 @@ class Editor implements CanvasEditor {
     this.pathEdit = undefined;
     this.drawTool = undefined;
     this.toolbar?.dispose();
+    this.keyframeBadge?.dispose();
     this.removeTestHooks?.();
     this.renderer.clear();
     delete this.context.root.dataset.editorCursor;
@@ -682,6 +702,26 @@ class Editor implements CanvasEditor {
     return false;
   }
 
+  /** Auto fixes the blocks, and the rest of the chain of morphs they're in, as one undo step. */
+  private autoFix(blockIds: ReadonlyArray<string>) {
+    this.endNudge();
+    const { preview, services } = this.context;
+    preview.begin();
+    const base = preview.getBase();
+    if (!base) {
+      return;
+    }
+    try {
+      preview.setDocument(autoFixPathBlocks(base, new Set(blockIds)));
+    } catch (e) {
+      preview.cancel();
+      bugsnagClient.notify(e instanceof Error ? e : String(e));
+      services.snackBarService.show("Couldn't auto fix these paths", 'Dismiss', Duration.Long);
+      return;
+    }
+    preview.commit();
+  }
+
   private onPathEditKeyDown(event: KeyboardEvent, pathEdit: PathEditTool) {
     const { key } = event;
     const isCommand = ShortcutService.isOsDependentModifierKey(event);
@@ -777,7 +817,7 @@ class Editor implements CanvasEditor {
     const { preview } = this.context;
     const { pathEdit } = this;
     if (pathEdit) {
-      const move = pathEdit.getPointsMove(base);
+      const move = pathEdit.getPointsMove();
       return move && ((x: number, y: number) => preview.setPath(pathEdit.layerId, move.move(x, y)));
     }
     const layerIds = getTopmostLayerIds(base.vectorLayer, this.selectedLayerIds);
@@ -836,6 +876,18 @@ class Editor implements CanvasEditor {
     } else {
       delete this.context.root.dataset.editorCursor;
     }
+  }
+
+  /** What the badge says about the one path that's selected, which is the one being edited. */
+  private getKeyframeStatus() {
+    const { store, preview } = this.context;
+    const state = store.getState();
+    const [layerId] = this.selectedLayerIds;
+    if (this.isActionMode || this.selectedLayerIds.size !== 1 || getIsPlaying(state)) {
+      return undefined;
+    }
+    const time = getCurrentTime(state);
+    return getKeyframeStatus(getPathKeyframe(preview.getDocument(), layerId, time), time);
   }
 
   private getToolCursor() {

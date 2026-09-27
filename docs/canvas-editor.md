@@ -182,8 +182,7 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
    handles, indexed by subpath and command, for drawing and hit testing. Multiple subpaths are
    supported from the start. Moving points and handles never changes a path's structure, so it
    can't break a morph. The operations that do (adding or deleting points, and turning a line
-   into a curve) are to be checked against the other end of the morph in phase 5. Until then,
-   a path that a path block sets at the current time can't be edited at all.
+   into a curve) are checked against the other end of the morph as they happen (phase 5).
 
 6. **Tools as state machines,** ported from `GestureTool` and kept in the lazy chunk. They get the
    first chance at pointer events when the flag is on and action mode is off.
@@ -234,7 +233,7 @@ while held and plays or pauses when tapped. Repeat and slow motion keep their to
 ## Roadmap
 
 Done so far: phase 0 (#384, #385, #387, #388, #390, and #392 to #395), phase 1 (#396 to #399),
-phase 2 (#400), phase 3 (#402), and phase 4 (#403). Phase 1's snapping covers the artboard,
+phase 2 (#400), phase 3 (#402), phase 4 (#403), and phase 5 (#404). Phase 1's snapping covers the artboard,
 other paths' bounds, and the pixel grid, and phase 4 added the guides. In phase 2, points snap to
 those, to the path's other points, and onto the closest curve. Editing a path has no cursors of its own yet, so
 hovering a segment or holding Cmd over one looks the same as anywhere else.
@@ -268,6 +267,20 @@ the pointer, or to the artboard. Some gaps are left for later:
 - Alt measures to the artboard rather than to the group a layer is in, and the rulers hug the
   artboard rather than the panel's edges, so a guide dropped above the horizontal ruler (or left of
   the vertical one) is removed too.
+
+Phase 5 edits an animated path where its keyframe is saved (`components/canvas/pathKeyframes.ts`):
+at the start or end of one of its path blocks, the edit changes that end of the morph, and while
+the path holds still before, between, or after its blocks, it changes the value that shows. The
+value on the other side of the hold changes too when it's the same path, e.g. the start of the next
+block, or the layer's own path before the first one, so that a chain of morphs stays connected.
+While the path is morphing, it can't be edited. A badge at the bottom of the canvas panel says
+which end an edit changes and whether the morph still works, with a button that auto fixes it, or
+that the path is morphing, with buttons that go to either end. Auto fix changes both ends of the
+block, so it changes the values linked to them too, and fixes the linked blocks that stop morphing
+because of it, unlike auto fix in action mode. Some gaps are left for later:
+
+- The property inspector still shows the layer's own path rather than the one at the current time.
+- There's no way to jump to the next or previous keyframe from the keyboard.
 
 Phase 0 is the foundation, and it's split into small pull requests:
 

@@ -31,6 +31,8 @@ export interface PathEditToolContext {
   readonly preview: {
     begin(onCancel: () => void): void;
     getBase(): CanvasDocument | undefined;
+    /** The path that the edit starts from, which is a path block's value if one sets it. */
+    getBasePath(layerId: string): Path | undefined;
     setPath(layerId: string, path: Path): void;
     commit(): void;
     cancel(): void;
@@ -245,10 +247,13 @@ export class PathEditTool {
     return 'deleted';
   }
 
-  /** Returns a move of the selected points, for nudging them, if any are selected. */
-  getPointsMove(base: CanvasDocument): PointsMove | undefined {
+  /**
+   * Returns a move of the selected points, for nudging them, if any are selected. An edit has to
+   * have begun.
+   */
+  getPointsMove(): PointsMove | undefined {
     const selection = this.getSelectedAnchorIds();
-    const basePath = getLayerPath(base.vectorLayer, this.layerId);
+    const basePath = this.getBasePath();
     if (!selection.size || !basePath) {
       return undefined;
     }
@@ -676,8 +681,7 @@ export class PathEditTool {
   }
 
   private getBasePath() {
-    const base = this.context.preview.getBase();
-    return base && getLayerPath(base.vectorLayer, this.layerId);
+    return this.context.preview.getBasePath(this.layerId);
   }
 
   /** The path as it's drawn. */

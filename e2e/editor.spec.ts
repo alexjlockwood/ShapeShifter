@@ -431,3 +431,39 @@ test('snaps moves to space layers out evenly', async ({ page }) => {
   await drag(page, [4, 12], [20.2, 4.3]);
   await expect.poll(() => getPathData(page, 'c')).toBe('M 18 2 L 22 2 L 22 6 L 18 6 Z');
 });
+
+test('edits an animated path at the ends of its morph, and auto fixes it', async ({ page }) => {
+  await page.goto('/?editor=1&project=demos/playtopause.shapeshifter');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
+  await page.evaluate(() => {
+    const { services, store } = (window as any).shapeshifter;
+    const block = store
+      .getState()
+      .present.timeline.animation.blocks.find((b: any) => b.propertyName === 'pathData');
+    services.layerTimelineService.setSelectedLayers(new Set([block.layerId]));
+    services.playbackService.setCurrentTime(150);
+  });
+  const badge = page.locator('.canvas-editor-keyframe');
+  // In the middle of the morph, the path can't be edited.
+  await expect(badge).toContainText('Morphing from 0 to 300 ms');
+  await page.keyboard.press('Enter');
+  expect(await isEditingPath(page)).toBe(false);
+
+  await page.getByRole('button', { name: 'Go to end' }).click();
+  await expect(badge).toContainText('End of the morph, at 300 ms');
+  await expect(badge).toContainText('Morphs');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => isEditingPath(page)).toBe(true);
+  // Adding a point to the end of the morph means it no longer morphs.
+  await click(page, 6, 12);
+  await expect(badge).toContainText("Doesn't morph");
+  await page.getByRole('button', { name: 'Auto fix' }).click();
+  await expect(badge).toContainText('Morphs');
+  await expect(badge).not.toContainText("Doesn't morph");
+  expect(
+    await getState(page, s =>
+      s.timeline.animation.blocks.find((b: any) => b.propertyName === 'pathData').isAnimatable(),
+    ),
+  ).toBe(true);
+});

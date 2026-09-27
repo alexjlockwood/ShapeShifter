@@ -135,6 +135,50 @@
         height: 1px;
         margin: 2px 4px;
     }
+    // The canvas editor's note about editing an animated path, at the bottom of the panel, where the
+    // fit leaves a margin (FIT_MARGIN in CanvasCamera.ts).
+    .canvas-editor-keyframe {
+        position: absolute;
+        z-index: 4;
+        bottom: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: calc(100% - 96px);
+        padding: 4px 8px;
+        border-radius: 6px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+        font-size: 12px;
+        white-space: nowrap;
+        &[hidden] {
+            display: none;
+        }
+        .is-morphable,
+        .is-broken {
+            font-weight: 500;
+        }
+        .is-morphable {
+            color: #14ae5c;
+        }
+        .is-broken {
+            color: #f24822;
+        }
+        button {
+            padding: 2px 8px;
+            border: none;
+            border-radius: 4px;
+            background-color: #0d99ff;
+            color: #fff;
+            font: inherit;
+            cursor: pointer;
+            &:focus-visible {
+                outline: 2px solid #0d99ff;
+                outline-offset: 2px;
+            }
+        }
+    }
     .canvas-editor-tool {
         display: flex;
         align-items: center;

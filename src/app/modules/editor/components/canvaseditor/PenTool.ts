@@ -293,13 +293,13 @@ export class PenTool implements CanvasTool {
     if (!drawing?.isNew) {
       return;
     }
-    // From the document rather than as it's drawn, since the time may have moved into one of the
-    // layer's path blocks, which is why the pen stopped. The point is gone either way.
+    // From the document rather than as it's drawn. If the pen stopped because the time moved into
+    // the middle of one of the layer's morphs, the point stays, since that can't be edited.
     const { preview } = this.context;
     preview.begin(() => {});
     const base = preview.getBase();
     const layer = base?.vectorLayer.findLayerById(drawing.layerId);
-    const path = isMorphableLayer(layer) ? layer.pathData : undefined;
+    const path = preview.getBasePath(drawing.layerId);
     const found = path && this.findDrawing({ ...drawing, path });
     if (
       !base ||
@@ -313,12 +313,7 @@ export class PenTool implements CanvasTool {
     }
     const remaining = PathEdit.deleteAnchors(path, new Set([found.lastAnchorId]));
     if (remaining) {
-      const clone = layer.clone();
-      clone.pathData = remaining;
-      preview.setDocument({
-        vectorLayer: LayerUtil.replaceLayer(base.vectorLayer, layer.id, clone),
-        animation: base.animation,
-      });
+      preview.setPath(layer.id, remaining);
     } else {
       // The layer only had the point, so it goes, with any animation blocks it was given since.
       const selected = this.context.getSelectedLayerIds();
@@ -410,22 +405,13 @@ export class PenTool implements CanvasTool {
     }
     const { preview } = this.context;
     preview.begin(() => {});
-    const base = preview.getBase();
-    const layer = base?.vectorLayer.findLayerById(drawing.layerId);
-    const remaining =
-      isMorphableLayer(layer) && layer.pathData
-        ? PathEdit.deleteAnchors(layer.pathData, new Set([found.lastAnchorId]))
-        : undefined;
-    if (!base || !isMorphableLayer(layer) || !remaining) {
+    const path = preview.getBasePath(drawing.layerId);
+    const remaining = path && PathEdit.deleteAnchors(path, new Set([found.lastAnchorId]));
+    if (!remaining) {
       preview.cancel();
       return false;
     }
-    const clone = layer.clone();
-    clone.pathData = remaining;
-    preview.setDocument({
-      vectorLayer: LayerUtil.replaceLayer(base.vectorLayer, layer.id, clone),
-      animation: base.animation,
-    });
+    preview.setPath(drawing.layerId, remaining);
     preview.commit();
     // The next point goes on from the one before, which sync finds from the subpath's first one.
     this.sync();
@@ -443,7 +429,7 @@ export class PenTool implements CanvasTool {
     if (!base) {
       return undefined;
     }
-    const targetPath = targetLayerId && getLayerPath(base.vectorLayer, targetLayerId);
+    const targetPath = targetLayerId && preview.getBasePath(targetLayerId);
     if (targetLayerId && targetPath) {
       if (!this.context.canEditPath(targetLayerId)) {
         return undefined;
