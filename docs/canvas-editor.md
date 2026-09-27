@@ -161,7 +161,9 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
 3. **Pointer input.** Pointer events with pointer capture replace the React mouse handlers, so a
    drag keeps going when the pointer leaves the canvas, and touch and pen input can work later. A
    small router decides who gets each gesture: panning, the editor's tools, or the existing
-   action mode helpers.
+   action mode helpers. A mouse event that shows the main button is already up, before the
+   release arrives (a macOS trackpad can send a move like that, and Chrome takes the capture away
+   for it), ends the gesture as the release would, so that the edit is kept.
 4. **Previewing edits.** A gesture keeps a working copy of the paths it changes, and the canvases
    draw that copy until the gesture ends. The edit is dispatched once, on pointer up, as its own
    undo step. Dispatching on every pointer move would rebuild the animation renderer each time
@@ -210,6 +212,7 @@ Figma's mapping is the default, since it's also a web app and avoids shortcuts t
 | Zoom to fit, zoom to 100%  | Shift+1, Shift+0                                    |
 | Pan                        | Hold Space and drag, or drag with the middle button |
 | Duplicate                  | Alt-drag, Cmd+D                                     |
+| Select all                 | Cmd+A (every point while editing a path)            |
 | Nudge                      | Arrow keys (1 unit), Shift+arrow keys (10 units)    |
 | Edit a path, stop editing  | Enter or double-click, Enter or Esc                 |
 | Point types                | 1 to 4, as in Sketch                                |
