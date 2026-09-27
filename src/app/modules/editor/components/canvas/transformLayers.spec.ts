@@ -129,6 +129,69 @@ describe('translateLayers', () => {
     expect([movedGroup.translateX, movedGroup.translateY]).toEqual([0.707, -0.707]);
   });
 
+  it("moves a path that uses its transform by its translation, in its parent's coordinates", () => {
+    const square = new PathLayer({
+      name: 'square',
+      children: [],
+      pathData: new Path('M 0 0 L 4 0 L 4 4 Z'),
+      rotation: 90,
+      pivotX: 2,
+      pivotY: 2,
+    });
+    // A quarter turn clockwise, so right on the screen is up in the group, but the path's own
+    // rotation doesn't change which way its translation goes.
+    const group = new GroupLayer({ name: 'group', children: [square], rotation: 90 });
+    const vl = new VectorLayer({ name: 'vector', children: [group] });
+    const block = AnimationBlock.from({
+      type: 'number',
+      layerId: square.id,
+      propertyName: 'translateY',
+      fromValue: 0,
+      toValue: 10,
+    });
+    const moved = translateLayers(
+      { vectorLayer: vl, animation: withBlocks(block) },
+      vl,
+      [square.id],
+      3,
+      0,
+    );
+    const movedSquare = moved.vectorLayer.findLayerById(square.id) as PathLayer;
+    expect([movedSquare.translateX, movedSquare.translateY]).toEqual([0, -3]);
+    expect(movedSquare.pathData?.getPathString()).toBe('M 0 0 L 4 0 L 4 4 Z');
+    const [movedBlock] = moved.animation.blocks;
+    expect([movedBlock.fromValue, movedBlock.toValue]).toEqual([-3, 7]);
+  });
+
+  it('moves a path with only a pivot, or an animated one, like other paths', () => {
+    const pivoted = new PathLayer({
+      name: 'pivoted',
+      children: [],
+      pathData: new Path('M 0 0 L 4 0'),
+      pivotX: 12,
+      pivotY: 12,
+    });
+    const animated = new PathLayer({
+      name: 'animated',
+      children: [],
+      pathData: new Path('M 0 0 L 4 0'),
+    });
+    const vl = new VectorLayer({ name: 'vector', children: [pivoted, animated] });
+    const block = AnimationBlock.from({
+      type: 'number',
+      layerId: animated.id,
+      propertyName: 'rotation',
+      fromValue: 0,
+      toValue: 90,
+    });
+    const document = { vectorLayer: vl, animation: withBlocks(block) };
+    const moved = translateLayers(document, vl, [pivoted.id, animated.id], 1, 2);
+    expect(pathDataOf(moved.vectorLayer, pivoted.id)).toBe('M 1 2 L 5 2');
+    const movedAnimated = moved.vectorLayer.findLayerById(animated.id) as PathLayer;
+    expect(movedAnimated.pathData?.getPathString()).toBe('M 0 0 L 4 0');
+    expect([movedAnimated.translateX, movedAnimated.translateY]).toEqual([1, 2]);
+  });
+
   it("doesn't change anything for no distance", () => {
     const vl = new VectorLayer({ name: 'vector', children: [path('a', 'M 0 0 L 1 1')] });
     const document = { vectorLayer: vl, animation: new Animation() };
@@ -259,6 +322,24 @@ describe('transformLayers', () => {
     // Twice as wide on the screen, from its left edge.
     const scaled = transformLayers(document, vl, [square.id], scalingAround({ x: 6, y: 0 }, 2, 1));
     expect(pathDataOf(scaled.vectorLayer, square.id)).toBe('M 0 -4 L 4 -4 L 4 4 L 0 4 Z');
+  });
+
+  it('transforms a path inside its own transform, which it keeps', () => {
+    // The same square and turn as above, on the path itself.
+    const square = new PathLayer({
+      name: 'square',
+      children: [],
+      pathData: new Path('M 0 0 L 4 0 L 4 4 L 0 4 Z'),
+      fillColor: '#000',
+      rotation: 90,
+      translateX: 10,
+    });
+    const vl = new VectorLayer({ name: 'vector', children: [square] });
+    const document = { vectorLayer: vl, animation: new Animation() };
+    const scaled = transformLayers(document, vl, [square.id], scalingAround({ x: 6, y: 0 }, 2, 1));
+    expect(pathDataOf(scaled.vectorLayer, square.id)).toBe('M 0 -4 L 4 -4 L 4 4 L 0 4 Z');
+    const scaledSquare = scaled.vectorLayer.findLayerById(square.id) as PathLayer;
+    expect([scaledSquare.rotation, scaledSquare.translateX]).toEqual([90, 10]);
   });
 
   it("doesn't change anything for the identity matrix", () => {

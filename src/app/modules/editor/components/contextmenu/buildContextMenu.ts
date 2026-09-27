@@ -4,6 +4,7 @@ import type {
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
 import {
   ClipPathLayer,
+  getTransformMatrix,
   GroupLayer,
   Layer,
   LayerUtil,
@@ -415,7 +416,8 @@ export const BLOCK_CONTEXT_MENU_SECTIONS: ReadonlyArray<ContextMenuSectionBuilde
 
 /**
  * Returns why the group can't be flattened, or undefined if it can. Its children take its
- * transform, which only works if neither it nor the groups in it are animated.
+ * transform, which only works if neither it nor the groups and path transforms in it are animated,
+ * and if it doesn't skew a group in it, which a group's transform can't do.
  */
 export function getFlattenRefusal(group: GroupLayer, animation: Animation) {
   if (!group.children.length) {
@@ -424,10 +426,21 @@ export function getFlattenRefusal(group: GroupLayer, animation: Animation) {
   if (hasBlocks(animation, group.id)) {
     return "The group's transform is animated";
   }
-  const animatedChild = group.children.find(
-    child => child instanceof GroupLayer && hasBlocks(animation, child.id),
+  const animatedChild = group.children.find(child =>
+    child instanceof GroupLayer
+      ? hasBlocks(animation, child.id)
+      : LayerUtil.hasTransformBlocks(animation, child.id),
   );
-  return animatedChild ? `${animatedChild.name}'s transform is animated` : undefined;
+  if (animatedChild) {
+    return `${animatedChild.name}'s transform is animated`;
+  }
+  const groupTransform = getTransformMatrix(group);
+  const skewedChild = group.children.find(
+    child =>
+      child instanceof GroupLayer &&
+      LayerUtil.isSkewed(groupTransform.dot(getTransformMatrix(child))),
+  );
+  return skewedChild ? `Flattening would skew ${skewedChild.name}` : undefined;
 }
 
 /**

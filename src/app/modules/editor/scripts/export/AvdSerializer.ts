@@ -8,6 +8,7 @@ import {
 } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { isNil } from 'lodash-es';
+import { wrapPathTransforms } from './wrapPathTransforms';
 import * as XmlSerializer from './XmlSerializer';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
@@ -18,6 +19,7 @@ const AAPT_NS = 'http://schemas.android.com/aapt';
  * Serializes a VectorLayer to a vector drawable XML string.
  */
 export function toVectorDrawableXmlString(vl: VectorLayer) {
+  vl = wrapPathTransforms(vl);
   const xmlDoc = document.implementation.createDocument(null, 'vector', null);
   const rootNode = xmlDoc.documentElement;
   vectorLayerToXmlNode(vl, rootNode, xmlDoc);
@@ -28,6 +30,7 @@ export function toVectorDrawableXmlString(vl: VectorLayer) {
  * Serializes a given VectorLayer and Animation to an animatedvector drawable XML file.
  */
 export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: Animation) {
+  ({ vectorLayer: vl, animation } = wrapPathTransforms(vl, animation));
   const xmlDoc = document.implementation.createDocument(null, 'animated-vector', null);
   const rootNode = xmlDoc.documentElement;
   rootNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);

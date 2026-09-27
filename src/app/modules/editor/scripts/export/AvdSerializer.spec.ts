@@ -97,4 +97,74 @@ describe('AvdSerializer', () => {
       expect(pathInterpolator.hasAttributeNS(android, 'controlX1')).toBe(false);
     });
   });
+
+  describe('transforms on paths', () => {
+    const android = 'http://schemas.android.com/apk/res/android';
+
+    function rotatedPath() {
+      return new PathLayer({
+        name: 'arrow',
+        children: [],
+        pathData: new Path('M 0 0 L 10 10'),
+        fillColor: '#000000',
+        rotation: 30,
+        pivotX: 12,
+        pivotY: 12,
+      });
+    }
+
+    it('wraps a transformed path in a group, since paths have no transform', () => {
+      const vl = new VectorLayer({ name: 'vector', children: [rotatedPath()] });
+      const doc = new DOMParser().parseFromString(
+        AvdSerializer.toVectorDrawableXmlString(vl),
+        'application/xml',
+      );
+      const group = doc.getElementsByTagName('group')[0];
+      expect(group.getAttributeNS(android, 'name')).toBe('arrow_transform');
+      expect(group.getAttributeNS(android, 'rotation')).toBe('30');
+      expect(group.getAttributeNS(android, 'pivotX')).toBe('12');
+      const path = group.getElementsByTagName('path')[0];
+      expect(path.getAttributeNS(android, 'name')).toBe('arrow');
+      expect(path.hasAttributeNS(android, 'rotation')).toBe(false);
+    });
+
+    it("targets the group with the path's transform animations, and the path with its others", () => {
+      const layer = rotatedPath();
+      const vl = new VectorLayer({ name: 'vector', children: [layer] });
+      const animation = new Animation({ duration: 300 });
+      animation.blocks = [
+        AnimationBlock.from({
+          type: 'number',
+          layerId: layer.id,
+          propertyName: 'rotation',
+          fromValue: 30,
+          toValue: 90,
+        }),
+        AnimationBlock.from({
+          type: 'number',
+          layerId: layer.id,
+          propertyName: 'fillAlpha',
+          fromValue: 0,
+          toValue: 1,
+        }),
+      ];
+      const doc = new DOMParser().parseFromString(
+        AvdSerializer.toAnimatedVectorDrawableXmlString(vl, animation),
+        'application/xml',
+      );
+      const targets = Array.from(doc.getElementsByTagName('target')).map(target => [
+        target.getAttributeNS(android, 'name'),
+        Array.from(target.getElementsByTagName('objectAnimator')).map(a =>
+          a.getAttributeNS(android, 'propertyName'),
+        ),
+      ]);
+      expect(targets).toEqual(
+        expect.arrayContaining([
+          ['arrow_transform', ['rotation']],
+          ['arrow', ['fillAlpha']],
+        ]),
+      );
+      expect(targets.length).toBe(2);
+    });
+  });
 });

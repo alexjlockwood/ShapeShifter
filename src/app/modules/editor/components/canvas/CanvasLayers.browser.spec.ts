@@ -1,5 +1,5 @@
 import { ActionSource } from 'app/modules/editor/model/actionmode';
-import { PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { getContext2d } from 'app/modules/editor/scripts/dom';
 import { createEditorServices } from 'app/modules/editor/services/createEditorServices';
@@ -141,6 +141,57 @@ describe('CanvasLayers', () => {
     canvasLayers.dispose();
     preview.dispose();
     services.dispose();
+  });
+
+  it('draws a transformed path like the same path in a group with its transform', () => {
+    const transform = {
+      rotation: 30,
+      scaleX: 1.5,
+      scaleY: 0.75,
+      pivotX: 12,
+      pivotY: 12,
+      translateX: 2,
+      translateY: -1,
+    };
+    const style = {
+      pathData: new Path('M 4 4 L 18 6 L 12 20 Z M 8 10 L 12 10 L 12 13 Z'),
+      fillColor: '#ff0000',
+      fillType: 'evenOdd' as const,
+      strokeColor: '#0000ff',
+      strokeWidth: 1.5,
+      strokeLinejoin: 'round' as const,
+      trimPathEnd: 0.8,
+    };
+    const camera = CanvasCamera.fit({
+      panel: { w: 240, h: 240 },
+      viewport: { w: 24, h: 24 },
+      pixelRatio: 1,
+      margin: 0,
+    });
+    const renderLayer = (layer: PathLayer | GroupLayer) => {
+      const store = createEditorStore({ logActions: false });
+      store.dispatch(
+        new SetVectorLayer(
+          new VectorLayer({ name: 'vector', children: [layer], width: 24, height: 24 }),
+        ),
+      );
+      return render(store, camera);
+    };
+    const transformed = renderLayer(
+      new PathLayer({ name: 'path', children: [], ...style, ...transform }),
+    );
+    const wrapped = renderLayer(
+      new GroupLayer({
+        name: 'group',
+        children: [new PathLayer({ name: 'path', children: [], ...style })],
+        ...transform,
+      }),
+    );
+    expect(transformed.data.some(v => v > 0)).toBe(true);
+    expect(Array.from(transformed.data)).toEqual(Array.from(wrapped.data));
+    // And not like the path without its transform.
+    const plain = renderLayer(new PathLayer({ name: 'path', children: [], ...style }));
+    expect(Array.from(transformed.data)).not.toEqual(Array.from(plain.data));
   });
 
   // The canvas used to be the size of the artboard. It now covers the panel, and has to draw the

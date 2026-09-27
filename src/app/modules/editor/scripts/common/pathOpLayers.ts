@@ -20,9 +20,10 @@ export type LayerIdsOrReason =
 /**
  * Returns the paths that merging the selection into one path merges, bottom first, or why it
  * can't. The result replaces them with the bottom one, which keeps its style and its animations,
- * in its own coordinates. So every layer has to be a path (not a clip path or a group) with a
- * path, none of their paths can be animated, the others can't have animations that would be lost,
- * and the groups they're in can't be animated unless the bottom one is in them too. Returns
+ * in its own coordinates (inside its own transform). So every layer has to be a path (not a clip
+ * path or a group) with a path, none of their paths or transforms can be animated, the others
+ * can't have animations that would be lost, and the groups they're in can't be animated unless
+ * the bottom one is in them too. Returns
  * undefined if fewer than two layers are selected, when there's nothing to merge.
  */
 export function getMergedLayerIds(
@@ -47,6 +48,12 @@ export function getMergedLayerIds(
   const morphing = paths.find(path => isPathAnimated(animation, path.id));
   if (morphing) {
     return { reason: `${morphing.name}'s path is animated` };
+  }
+  // The others would start moving with the bottom one's animated transform, and theirs would be
+  // lost.
+  const transformed = paths.find(path => LayerUtil.hasTransformBlocks(animation, path.id));
+  if (transformed) {
+    return { reason: `${transformed.name}'s transform is animated` };
   }
   const [bottomId, ...otherIds] = layerIds;
   const animated = paths.slice(1).find(path => hasBlocks(animation, path.id));

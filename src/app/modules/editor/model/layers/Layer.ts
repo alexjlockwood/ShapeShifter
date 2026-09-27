@@ -198,11 +198,7 @@ export class VectorLayer extends Layer {
       alpha: this.alpha,
       children: this.children.map(child => child.toJSON()),
     });
-    Object.entries(VECTOR_DEFAULTS).forEach(([key, value]) => {
-      if ((obj as any)[key] === value) {
-        delete (obj as any)[key];
-      }
-    });
+    deleteDefaults(obj, VECTOR_DEFAULTS);
     return obj;
   }
 }
@@ -223,7 +219,21 @@ interface VectorLayerArgs {
 export interface VectorLayer extends Layer, Required<VectorLayerArgs> {}
 export interface VectorConstructorArgs extends LayerConstructorArgs, VectorLayerArgs {}
 
-const GROUP_DEFAULTS = {
+/**
+ * The transform that groups have, and paths too, in the coordinates of the layer's parent.
+ */
+export interface Transform {
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
+  pivotX: number;
+  pivotY: number;
+  translateX: number;
+  translateY: number;
+}
+
+/** A transform that changes nothing. */
+export const TRANSFORM_DEFAULTS: Readonly<Transform> = {
   rotation: 0,
   scaleX: 1,
   scaleY: 1,
@@ -232,6 +242,94 @@ const GROUP_DEFAULTS = {
   translateX: 0,
   translateY: 0,
 };
+
+/** The names of a transform's properties, which groups and paths share. */
+export const TRANSFORM_PROPERTY_NAMES = Object.keys(TRANSFORM_DEFAULTS) as ReadonlyArray<
+  keyof Transform
+>;
+
+/** The transform's properties, to register on a layer type that has them. */
+function transformProperties() {
+  return [
+    new NumberProperty('rotation', { isAnimatable: true }),
+    new NumberProperty('scaleX', { isAnimatable: true }),
+    new NumberProperty('scaleY', { isAnimatable: true }),
+    new NumberProperty('pivotX', { isAnimatable: true }),
+    new NumberProperty('pivotY', { isAnimatable: true }),
+    new NumberProperty('translateX', { isAnimatable: true }),
+    new NumberProperty('translateY', { isAnimatable: true }),
+  ];
+}
+
+/**
+ * Sets the layer's transform from its constructor's arguments, with defaults for what's missing or
+ * isn't a number (e.g. in a hand-edited file), since one bad value would hide the whole layer.
+ */
+function initTransform(layer: Transform, obj: Partial<Transform>) {
+  for (const key of TRANSFORM_PROPERTY_NAMES) {
+    layer[key] = obj[key] ?? TRANSFORM_DEFAULTS[key];
+    if (!Number.isFinite(layer[key])) {
+      layer[key] = TRANSFORM_DEFAULTS[key];
+    }
+  }
+}
+
+/**
+ * Returns the transform's matrices, which map the layer's coordinates to its parent's, in the order
+ * they're multiplied: first the negative pivot, then the scale, the rotation, the translation, and
+ * the pivot. A point is transformed by the last one first, which is why they appear reversed.
+ */
+export function getTransformMatrices(t: Readonly<Transform>) {
+  return [
+    Matrix.translation(t.pivotX, t.pivotY),
+    Matrix.translation(t.translateX, t.translateY),
+    Matrix.rotation(t.rotation),
+    Matrix.scaling(t.scaleX, t.scaleY),
+    Matrix.translation(-t.pivotX, -t.pivotY),
+  ];
+}
+
+/** Returns the matrix that maps the layer's coordinates to its parent's. */
+export function getTransformMatrix(t: Readonly<Transform>) {
+  return Matrix.flatten(getTransformMatrices(t));
+}
+
+/**
+ * Returns whether the transform's values move anything: its rotation, scale, or translation isn't
+ * the default. A pivot alone doesn't, since it only says where the others happen.
+ */
+export function isTransformed(t: Readonly<Transform>) {
+  return (
+    t.rotation !== TRANSFORM_DEFAULTS.rotation ||
+    t.scaleX !== TRANSFORM_DEFAULTS.scaleX ||
+    t.scaleY !== TRANSFORM_DEFAULTS.scaleY ||
+    t.translateX !== TRANSFORM_DEFAULTS.translateX ||
+    t.translateY !== TRANSFORM_DEFAULTS.translateY
+  );
+}
+
+/** Returns the box around the rect's corners, transformed by the matrix. */
+function transformRect({ l, t, r, b }: Rect, matrix: Matrix): Rect {
+  // All four corners, since a rotated box's extremes can be at any of them.
+  const corners = [
+    { x: l, y: t },
+    { x: r, y: t },
+    { x: r, y: b },
+    { x: l, y: b },
+  ].map(corner => MathUtil.transformPoint(corner, matrix));
+  const xs = corners.map(c => c.x);
+  const ys = corners.map(c => c.y);
+  return { l: Math.min(...xs), t: Math.min(...ys), r: Math.max(...xs), b: Math.max(...ys) };
+}
+
+/** Removes the values that are the defaults from a layer's JSON, since loading puts them back. */
+function deleteDefaults(obj: object, defaults: object) {
+  Object.entries(defaults).forEach(([key, value]) => {
+    if ((obj as any)[key] === value) {
+      delete (obj as any)[key];
+    }
+  });
+}
 
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
@@ -242,14 +340,7 @@ export class GroupLayer extends Layer {
 
   constructor(obj: GroupConstructorArgs) {
     super(obj);
-    const setterFn = (num: number | undefined, def: number) => (isNil(num) ? def : num);
-    this.pivotX = setterFn(obj.pivotX, GROUP_DEFAULTS.pivotX);
-    this.pivotY = setterFn(obj.pivotY, GROUP_DEFAULTS.pivotY);
-    this.rotation = setterFn(obj.rotation, GROUP_DEFAULTS.rotation);
-    this.scaleX = setterFn(obj.scaleX, GROUP_DEFAULTS.scaleX);
-    this.scaleY = setterFn(obj.scaleY, GROUP_DEFAULTS.scaleY);
-    this.translateX = setterFn(obj.translateX, GROUP_DEFAULTS.translateX);
-    this.translateY = setterFn(obj.translateY, GROUP_DEFAULTS.translateY);
+    initTransform(this, obj);
   }
 
   // @Override
@@ -269,34 +360,7 @@ export class GroupLayer extends Layer {
         bounds = { ...childBounds };
       }
     });
-    if (!bounds) {
-      return undefined;
-    }
-    bounds.l -= this.pivotX;
-    bounds.t -= this.pivotY;
-    bounds.r -= this.pivotX;
-    bounds.b -= this.pivotY;
-    const transforms = [
-      Matrix.scaling(this.scaleX, this.scaleY),
-      Matrix.rotation(this.rotation),
-      Matrix.translation(this.translateX, this.translateY),
-    ];
-    // All four corners, since a rotated box's extremes can be at any of them.
-    const { l, t, r, b } = bounds;
-    const corners = [
-      { x: l, y: t },
-      { x: r, y: t },
-      { x: r, y: b },
-      { x: l, y: b },
-    ].map(corner => MathUtil.transformPoint(corner, ...transforms));
-    const xs = corners.map(c => c.x);
-    const ys = corners.map(c => c.y);
-    return {
-      l: Math.min(...xs) + this.pivotX,
-      t: Math.min(...ys) + this.pivotY,
-      r: Math.max(...xs) + this.pivotX,
-      b: Math.max(...ys) + this.pivotY,
-    };
+    return bounds && transformRect(bounds, getTransformMatrix(this));
   }
 
   // @Override
@@ -325,36 +389,14 @@ export class GroupLayer extends Layer {
       translateY: this.translateY,
       children: this.children.map(child => child.toJSON()),
     });
-    Object.entries(GROUP_DEFAULTS).forEach(([key, value]) => {
-      if ((obj as any)[key] === value) {
-        delete (obj as any)[key];
-      }
-    });
+    deleteDefaults(obj, TRANSFORM_DEFAULTS);
     return obj;
   }
 }
-Property.register(
-  new NumberProperty('rotation', { isAnimatable: true }),
-  new NumberProperty('scaleX', { isAnimatable: true }),
-  new NumberProperty('scaleY', { isAnimatable: true }),
-  new NumberProperty('pivotX', { isAnimatable: true }),
-  new NumberProperty('pivotY', { isAnimatable: true }),
-  new NumberProperty('translateX', { isAnimatable: true }),
-  new NumberProperty('translateY', { isAnimatable: true }),
-)(GroupLayer);
+Property.register(...transformProperties())(GroupLayer);
 
-interface GroupLayerArgs {
-  pivotX?: number;
-  pivotY?: number;
-  rotation?: number;
-  scaleX?: number;
-  scaleY?: number;
-  translateX?: number;
-  translateY?: number;
-}
-
-export interface GroupLayer extends Layer, Required<GroupLayerArgs> {}
-export interface GroupConstructorArgs extends LayerConstructorArgs, GroupLayerArgs {}
+export interface GroupLayer extends Layer, Transform {}
+export interface GroupConstructorArgs extends LayerConstructorArgs, Partial<Transform> {}
 
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.
@@ -439,6 +481,7 @@ const PATH_DEFAULTS = {
   trimPathEnd: 1,
   trimPathOffset: 0,
   fillType: 'nonZero' as FillType,
+  ...TRANSFORM_DEFAULTS,
 };
 
 /**
@@ -464,11 +507,19 @@ export class PathLayer extends Layer implements MorphableLayer {
     this.trimPathEnd = setterFn(obj.trimPathEnd, PATH_DEFAULTS.trimPathEnd);
     this.trimPathOffset = setterFn(obj.trimPathOffset, PATH_DEFAULTS.trimPathOffset);
     this.fillType = obj.fillType || PATH_DEFAULTS.fillType;
+    initTransform(this, obj);
   }
 
   // @Override
   get bounds() {
-    return this.pathData ? this.pathData.getBoundingBox() : undefined;
+    if (!this.pathData) {
+      return undefined;
+    }
+    const matrix = getTransformMatrix(this);
+    // Tight, even for rotated curves, unlike the box around the path's own bounds.
+    return matrix.equals(Matrix.identity())
+      ? this.pathData.getBoundingBox()
+      : this.pathData.mutate().transform(matrix).build().getBoundingBox();
   }
 
   // @Override
@@ -497,12 +548,15 @@ export class PathLayer extends Layer implements MorphableLayer {
       trimPathEnd: this.trimPathEnd,
       trimPathOffset: this.trimPathOffset,
       fillType: this.fillType,
+      rotation: this.rotation,
+      scaleX: this.scaleX,
+      scaleY: this.scaleY,
+      pivotX: this.pivotX,
+      pivotY: this.pivotY,
+      translateX: this.translateX,
+      translateY: this.translateY,
     });
-    Object.entries(PATH_DEFAULTS).forEach(([key, value]) => {
-      if ((obj as any)[key] === value) {
-        delete (obj as any)[key];
-      }
-    });
+    deleteDefaults(obj, PATH_DEFAULTS);
     return obj;
   }
 
@@ -529,6 +583,9 @@ Property.register(
   new FractionProperty('trimPathEnd', { isAnimatable: true }),
   new FractionProperty('trimPathOffset', { isAnimatable: true }),
   new EnumProperty('fillType', ENUM_FILLTYPE_OPTIONS),
+  // Like a group's, so that a path can rotate and scale without being wrapped in one. The exports
+  // wrap a path that uses them in a group (scripts/export/wrapPathTransforms.ts).
+  ...transformProperties(),
 )(PathLayer);
 
 interface PathLayerArgs {
@@ -548,8 +605,9 @@ interface PathLayerArgs {
   fillType?: FillType;
 }
 
-export interface PathLayer extends Layer, Required<PathLayerArgs> {}
-export interface PathConstructorArgs extends LayerConstructorArgs, PathLayerArgs {}
+export interface PathLayer extends Layer, Required<PathLayerArgs>, Transform {}
+export interface PathConstructorArgs
+  extends LayerConstructorArgs, PathLayerArgs, Partial<Transform> {}
 
 export type StrokeLineCap = 'butt' | 'square' | 'round';
 export type StrokeLineJoin = 'miter' | 'round' | 'bevel';

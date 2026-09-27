@@ -1,5 +1,5 @@
 import { ActionMode, ActionSource, SelectionType } from 'app/modules/editor/model/actionmode';
-import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
+import { GroupLayer, LayerUtil, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { CURRENT_PROJECT_VERSION } from 'app/modules/editor/model/projectVersion';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
@@ -113,6 +113,24 @@ describe('createEditorServices', () => {
     const exported = FileExportService.fromJSON(rawExported);
     expect(exported.newerVersion).toBe(false);
     expect(exported.animation.blocks.find(b => b.id === block.id)?.interpolator).toBe(curve);
+  });
+
+  it('saves a project with a transformed path as version 3, and loads it back', async () => {
+    const { vectorLayer } = loadDemo(demos['/public/demos/playtopause.shapeshifter']);
+    const path = (
+      LayerUtil.runPreorderTraversal(vectorLayer).find(l => l instanceof PathLayer) as PathLayer
+    ).clone();
+    path.rotation = 45;
+    path.pivotX = 12;
+    services.layerTimelineService.updateLayer(path);
+
+    services.fileExportService.exportJSON();
+    const rawExported = JSON.parse(await downloads[0].text());
+    expect(rawExported.version).toBe(3);
+    const exported = FileExportService.fromJSON(rawExported);
+    expect(exported.newerVersion).toBe(false);
+    const loaded = exported.vectorLayer.findLayerById(path.id) as PathLayer;
+    expect([loaded.rotation, loaded.pivotX, loaded.scaleX]).toEqual([45, 12, 1]);
   });
 
   it('can undo setting the paths of the selected block in action mode', () => {

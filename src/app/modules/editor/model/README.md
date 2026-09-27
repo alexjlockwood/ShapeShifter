@@ -95,9 +95,11 @@ A `PathLayer` allows us to draw filled and/or stroked shapes to the canvas. Simi
 
 - `fillType` - (string enum) - An enum value of either `nonZero` or `evenOdd` describing the path's fill type. Similar to the `fill-rule` attribute of an SVG and/or the `android:fillType` attribute in a `VectorDrawable`. Default value is `nonZero`.
 
+- `rotation`, `scaleX`, `scaleY`, `pivotX`, `pivotY`, `translateX`, and `translateY` (float, animatable) - The same transform as a `GroupLayer`'s, with the same names, defaults, and matrix, so a path can be rotated, scaled, and moved without being wrapped in a group. It maps the path's coordinates to its parent's, and scales its stroke too, exactly as a group around it would. Paths added in the app pivot at the center of the canvas, like new groups, and imported ones at `0`. A path "uses its transform" when its rotation, scale, or translation isn't the default, or it has a transform block (`LayerUtil.pathUsesTransform`); a pivot alone doesn't count. `VectorDrawable` and SVG paths can't be transformed, so the exports replace such a path with a group named `${name}_transform` that has its transform and its transform blocks, around the path without one ([`wrapPathTransforms.ts`](../scripts/export/wrapPathTransforms.ts)). Importing that file back gives the group, not the path's transform. Transforms on paths need version 3 (see below).
+
 ### `ClipPathLayer`
 
-A `ClipPathLayer` defines an area in which subsequent `Layer`s can be drawn. Note that the clip path only affects its subsequent sibling `Layer`s (i.e. if the `ClipPathLayer` is the 3rd child `Layer` in a `GroupLayer` with 5 total children, then the `ClipPathLayer` will only affect the 4th and 5th child `Layer`s in that group. Similar to the `<clipPath>` node of a `VectorDrawable`.
+A `ClipPathLayer` defines an area in which subsequent `Layer`s can be drawn. Note that the clip path only affects its subsequent sibling `Layer`s (i.e. if the `ClipPathLayer` is the 3rd child `Layer` in a `GroupLayer` with 5 total children, then the `ClipPathLayer` will only affect the 4th and 5th child `Layer`s in that group. Similar to the `<clipPath>` node of a `VectorDrawable`. Unlike a path, a clip path has no transform of its own (a `VectorDrawable` clip path can't be transformed, and a group around it would clip nothing), so a transformed clip path still needs a group, and converting a path to a clip path bakes its transform into its path.
 
 #### Properties
 
@@ -160,6 +162,11 @@ The versions so far:
 - 1: every project without the features below.
 - 2: a block's `interpolator` is a custom curve rather than a preset's name. React builds before
   it replace a curve with the default preset.
+- 3: a path uses its transform: its `rotation`, `scaleX`, `scaleY`, `translateX`, or `translateY`
+  isn't the default, or it has a block for one of the transform properties. A pivot alone
+  doesn't count, since it moves nothing, so a path added in the app stays at version 1. React
+  builds before it ignore the transform and drop the blocks, so the path is drawn where its path
+  data is.
 
 ### Format-change rules
 

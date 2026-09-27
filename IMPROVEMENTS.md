@@ -229,9 +229,10 @@ Export formats the maintainer wants to add, decided while triaging the GitHub is
 
 Ideas under consideration, not yet scoped or scheduled:
 
-- **A pivot relative to the layer's bounds, as a percentage.** New groups pivot at the canvas's
-  center (`getCenterPivot` in `model/layers/LayerUtil.ts`), but pivots are absolute, so the pivot
-  stays put when the layer's contents move or the canvas is resized. Three options were weighed:
+- **A pivot relative to the layer's bounds, as a percentage.** New groups and paths pivot at the
+  canvas's center (`getCenterPivot` in `model/layers/LayerUtil.ts`), but pivots are absolute, so
+  the pivot stays put when the layer's contents move or the canvas is resized. Three options were
+  weighed:
   - edit it as a percentage in the inspector but store it absolute (about 2 days, no format
     change);
   - store a fraction of the bounds at the start of the animation (about 1 week, with a version

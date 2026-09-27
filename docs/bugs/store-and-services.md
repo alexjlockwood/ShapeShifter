@@ -15,7 +15,7 @@
   Ungrouping a translated, rotated, or scaled group moves its children without the transform, so
   the artwork jumps. The group's blocks are orphaned, and its id stays in the hidden set, so
   ungrouping a hidden group shows its children. Apply the transform to the children (as
-  `flattenGroupLayer` does, which has its own problems in MODEL-1 and STORE-14), run
+  `flattenGroupLayer` does), run
   `buildCleanupLayerIdActions`, and hide the children instead
   (`services/layertimeline.service.ts`, `groupOrUngroupSelectedLayers`). (STORE-5, medium,
   confirmed by a test)
@@ -53,10 +53,6 @@
   to fit again. redux-undo doesn't run the slice reducers on undo, so clear the flag in the undo
   meta reducer, next to the theme, or remove it as its TODO in `store/reset/reducer.ts` suggests
   (`store/undoredo/metareducer.ts`). (STORE-13, low, confirmed by a test)
-- **Flattening a group doesn't scale stroke width blocks.** Flattening a scaled group scales a
-  child path's stroke width but not its `strokeWidth` blocks, so the animated width changes. Scale
-  the block values by the same factor (`services/layertimeline.service.ts`, `flattenGroupLayer`).
-  (STORE-14, low, confirmed by reading)
 - **Importing into an empty workspace loses per-layer state.** Importing into an empty workspace
   replaces the root's id, which orphans blocks on the root. Carry the old id over
   (`services/layertimeline.service.ts`, `importLayers`). Converting to or from a clip path keeps

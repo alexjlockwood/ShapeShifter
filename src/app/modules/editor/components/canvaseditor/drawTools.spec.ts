@@ -211,6 +211,15 @@ describe('drawing tools', () => {
         0.5,
       );
     });
+
+    it("pivots new paths at the canvas's center, like new groups", () => {
+      const vl = new VectorLayer({ name: 'vector', children: [], width: 409, height: 300 });
+      const top = { parentId: vl.id, index: 0, toLocal: Matrix.identity() };
+      const layer = createPathLayer(vl, 'a', new Path('M 0 0 L 1 1'), 'filled', top);
+      expect([layer.pivotX, layer.pivotY]).toEqual([204.5, 150]);
+      // A pivot alone doesn't make it a transformed path.
+      expect([layer.rotation, layer.scaleX, layer.translateX]).toEqual([0, 1, 0]);
+    });
   });
 
   describe('ShapeTool', () => {

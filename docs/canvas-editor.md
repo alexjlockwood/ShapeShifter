@@ -389,13 +389,18 @@ of the store, and its cursors are in `components/canvas/canvas.scss`.
 - **Morph compatibility.** Structural edits to one end of a morph break the pairing. Show that as
   it happens, never run auto fix without asking, and keep action mode as the place to fix morphs.
   The editor is off in action mode.
-- **Animated layers.** Paths have no position of their own, so moving a path layer transforms its
-  `pathData`. Its path animation blocks have to be transformed too, or the morph jumps, as
-  `LayerTimelineService.flattenGroupLayer` already does for groups. Don't allow edits in the middle
-  of an interpolation, and never write animated values into the base layers.
-- **Transforms.** Pointer positions are mapped into a layer's own coordinates with the inverse of
-  `LayerUtil.getCanvasTransformForLayer`. Group bounds have to transform all four corners (which
-  fixed MODEL-9). Decide how stroke widths behave when scaling
+- **Animated layers.** Moving a path that doesn't use its transform transforms its `pathData`. Its
+  path animation blocks have to be transformed too, or the morph jumps, as
+  `LayerTimelineService.flattenGroupLayer` already does for groups. A path that uses its transform
+  (`LayerUtil.pathUsesTransform`) moves by its translation and its blocks instead, like a group
+  (`components/canvas/transformLayers.ts`). Don't allow edits in the middle of an interpolation,
+  and never write animated values into the base layers.
+- **Transforms.** Paths have a group's transform too, so a path can rotate and scale without being
+  wrapped in a group, and the exports wrap it in one (`scripts/export/wrapPathTransforms.ts`).
+  Clip paths still need a group. Pointer positions are mapped into a layer's own coordinates with
+  the inverse of `LayerUtil.getCanvasTransformForLayer`, which includes a path's own transform.
+  Group bounds have to transform all four corners (which fixed MODEL-9). Decide how stroke widths
+  behave when scaling
   (the scaled group stroke width entry in `BUGS.md`), and scale trim paths the same way (CANVAS-4
   in `docs/bugs/canvas.md`).
 - **Path invariants.** The first `M` has no start point, each command starts where the previous

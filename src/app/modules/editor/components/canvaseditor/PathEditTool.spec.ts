@@ -48,6 +48,17 @@ describe('PathEditTool', () => {
       pathLayer('diagonal', 'M 30 0 L 50 20'),
       // A square with a square hole, far from the others, so that they don't snap to it.
       pathLayer('holes', 'M 60 60 L 80 60 L 80 80 L 60 80 Z M 64 64 L 64 76 L 76 76 L 76 64 Z'),
+      // Turned a quarter turn clockwise around its start by its own transform, so it's drawn from
+      // (200, 200) down to (200, 210).
+      new PathLayer({
+        name: 'turned',
+        children: [],
+        pathData: new Path('M 200 200 L 210 200'),
+        strokeColor: '#000',
+        rotation: 90,
+        pivotX: 200,
+        pivotY: 200,
+      }),
       new GroupLayer({
         name: 'group',
         children: [pathLayer('scaled', 'M 1 1 L 5 1')],
@@ -211,6 +222,15 @@ describe('PathEditTool', () => {
       // (5, 1) is drawn at (10, 2).
       drag([10, 2], [12, 2], CTRL);
       expect(pathData()).toBe('M 1 1 L 6 1');
+    });
+
+    it("finds and moves points through the path's own transform", () => {
+      const { click, drag, pathData, selected } = setUp('turned');
+      click(200, 210);
+      expect(selected()).toEqual([1]);
+      // Right on the screen is up in the path's coordinates.
+      drag([200, 210], [202, 210], CTRL);
+      expect(pathData()).toBe('M 200 200 L 210 198');
     });
 
     it('stops when the edit is canceled', () => {
