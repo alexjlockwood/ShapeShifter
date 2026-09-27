@@ -16,8 +16,11 @@ import {
   getHandleCursor,
   getHandlePoint,
   getOppositeHandle,
+  HandleHit,
   HandleName,
   hitTestHandles,
+  isInside,
+  isSmall,
 } from './selectionHandles';
 import {
   duplicateLayers,
@@ -69,6 +72,8 @@ const MIN_SCALE = 1e-3;
 /** What a scale or rotation starts from. */
 interface Transforming {
   readonly start: Point;
+  // Whether the pointer has moved far enough to start transforming.
+  readonly isDragging: boolean;
   readonly bounds: Rect;
   readonly document: CanvasDocument;
   readonly rendered: VectorLayer;
@@ -119,13 +124,17 @@ type State =
  *   it instead. Shift keeps the move horizontal or vertical.
  * - Dragging a handle on the selection's bounds scales it from the handle across from it, or from
  *   the middle with Alt held, and Shift keeps its proportions. Dragging just outside of a corner
- *   rotates it around its middle, and Shift turns it in steps of 15 degrees.
+ *   rotates it around its middle, and Shift turns it in steps of 15 degrees. A path under the
+ *   pointer wins over the rotation zones, and over the handles of a selection too small for all
+ *   of them, so that it can still be moved.
  * - Hovering outlines the path under the pointer.
  */
 export class SelectTool {
   private state: State = { type: 'idle' };
   private hoveredLayerId: string | undefined;
   private hoveredCursor: string | undefined;
+  // Where the pointer last moved, to redo the gesture when a modifier key changes.
+  private lastPoint: Point | undefined;
 
   constructor(private readonly context: SelectToolContext) {}
 
@@ -163,14 +172,14 @@ export class SelectTool {
   }
 
   onPress(point: Point, modifiers: Modifiers) {
-    // The handles come first, even over a path.
+    this.lastPoint = point;
+    const hitLayerId = this.hitTest(point)?.id;
     const bounds = this.getSelectionBounds();
-    const handle = bounds && hitTestHandles(bounds, point, this.toViewportLength);
+    const handle = bounds && this.hitTestHandles(bounds, point, hitLayerId);
     if (bounds && handle) {
       this.startTransform(point, bounds, handle);
       return;
     }
-    const hitLayerId = this.hitTest(point)?.id;
     let didSelect = false;
     if (hitLayerId && !isAdding(modifiers) && !this.isInSelection(hitLayerId)) {
       // Selects on the press, so that a drag moves what's under the pointer.
@@ -181,17 +190,20 @@ export class SelectTool {
   }
 
   onMove(point: Point, modifiers: Modifiers) {
+    this.lastPoint = point;
     const { state } = this;
     switch (state.type) {
-      case 'idle': {
-        const bounds = this.getSelectionBounds();
-        const handle = bounds && hitTestHandles(bounds, point, this.toViewportLength);
-        this.hoveredCursor = handle ? getHandleCursor(handle) : undefined;
-        this.setHoveredLayerId(handle ? undefined : this.hitTest(point)?.id);
+      case 'idle':
+        this.hover(point);
         return;
-      }
       case 'scaling':
       case 'rotating': {
+        if (!state.isDragging) {
+          if (MathUtil.distance(state.start, point) <= this.toViewportLength(DRAG_SLOP)) {
+            return;
+          }
+          this.state = { ...state, isDragging: true };
+        }
         const matrix =
           state.type === 'scaling'
             ? getScaling(state.bounds, state.handle, state.start, point, modifiers)
@@ -258,8 +270,20 @@ export class SelectTool {
     } else if (state.type === 'moving' || state.type === 'scaling' || state.type === 'rotating') {
       this.context.preview.commit();
     }
-    this.setHoveredLayerId(this.hitTest(point)?.id);
+    // The selection's handles may have moved under the pointer.
+    this.hover(point);
     this.context.redraw();
+  }
+
+  /** Redoes the gesture in progress when a modifier key is pressed or released. */
+  onModifiersChange(modifiers: Modifiers) {
+    const { state, lastPoint } = this;
+    if (
+      lastPoint &&
+      (state.type === 'moving' || state.type === 'scaling' || state.type === 'rotating')
+    ) {
+      this.onMove(lastPoint, modifiers);
+    }
   }
 
   /** Ends the gesture where it is, e.g. when it's canceled or the pointer leaves the canvas. */
@@ -268,6 +292,7 @@ export class SelectTool {
     this.state = { type: 'idle' };
     this.hoveredLayerId = undefined;
     this.hoveredCursor = undefined;
+    this.lastPoint = undefined;
     if (state.type === 'moving' || state.type === 'scaling' || state.type === 'rotating') {
       this.context.preview.cancel();
     }
@@ -321,11 +346,7 @@ export class SelectTool {
     };
   }
 
-  private startTransform(
-    start: Point,
-    bounds: Rect,
-    handle: NonNullable<ReturnType<typeof hitTestHandles>>,
-  ) {
+  private startTransform(start: Point, bounds: Rect, handle: HandleHit) {
     const { preview } = this.context;
     preview.begin(() => {
       this.state = { type: 'idle' };
@@ -337,6 +358,7 @@ export class SelectTool {
     }
     const transforming: Transforming = {
       start,
+      isDragging: false,
       bounds,
       document,
       rendered: this.context.render(document),
@@ -347,6 +369,35 @@ export class SelectTool {
         ? { type: 'scaling', handle: handle.handle, ...transforming }
         : { type: 'rotating', corner: handle.corner, ...transforming };
     this.context.redraw();
+  }
+
+  /** Returns the handle at the point, unless the path under it wins. */
+  private hitTestHandles(bounds: Rect, point: Point, hitLayerId: string | undefined) {
+    const handle = hitTestHandles(bounds, point, this.toViewportLength);
+    if (!handle || !hitLayerId) {
+      return handle;
+    }
+    if (handle.type === 'rotate') {
+      return undefined;
+    }
+    const isMovable =
+      this.isInSelection(hitLayerId) &&
+      isSmall(bounds, this.toViewportLength) &&
+      isInside(bounds, point);
+    return isMovable ? undefined : handle;
+  }
+
+  /** Updates the path and the handle under the pointer, when nothing is pressed. */
+  private hover(point: Point) {
+    const hitLayerId = this.hitTest(point)?.id;
+    const bounds = this.getSelectionBounds();
+    const handle = bounds && this.hitTestHandles(bounds, point, hitLayerId);
+    const cursor = handle ? getHandleCursor(handle) : undefined;
+    if (this.hoveredCursor !== cursor) {
+      this.hoveredCursor = cursor;
+      this.context.redraw();
+    }
+    this.setHoveredLayerId(handle ? undefined : hitLayerId);
   }
 
   private getSelectionBounds() {
@@ -410,7 +461,7 @@ function isAdding(modifiers: Modifiers) {
   return modifiers.shift || modifiers.command;
 }
 
-/** Returns the scale for dragging the handle from start to point. */
+/** Returns the scale for dragging the handle, pressed at start, to point. */
 function getScaling(
   bounds: Rect,
   handle: HandleName,
@@ -421,9 +472,14 @@ function getScaling(
   const anchor = alt
     ? { x: (bounds.l + bounds.r) / 2, y: (bounds.t + bounds.b) / 2 }
     : getHandlePoint(bounds, getOppositeHandle(handle));
-  // How far the handle was from the anchor, and is now. An edge handle only scales across it.
-  const from = { x: start.x - anchor.x, y: start.y - anchor.y };
-  const to = { x: point.x - anchor.x, y: point.y - anchor.y };
+  // How far the handle was from the anchor, and is now that it's moved with the pointer, which
+  // may have pressed a little way from it. An edge handle only scales across it.
+  const handlePoint = getHandlePoint(bounds, handle);
+  const from = { x: handlePoint.x - anchor.x, y: handlePoint.y - anchor.y };
+  const to = {
+    x: from.x + point.x - start.x,
+    y: from.y + point.y - start.y,
+  };
   const isVerticalEdge = handle === 'e' || handle === 'w';
   const isHorizontalEdge = handle === 'n' || handle === 's';
   let sx = isHorizontalEdge || !from.x ? 1 : to.x / from.x;

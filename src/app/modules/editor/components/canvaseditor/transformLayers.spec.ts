@@ -1,6 +1,7 @@
 import { GroupLayer, Layer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { Matrix } from 'app/modules/editor/scripts/common';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -241,6 +242,29 @@ describe('transformLayers', () => {
     const document = { vectorLayer: vl, animation: new Animation() };
     const rotated = transformLayers(document, vl, [line.id], rotationAround({ x: 12, y: 12 }, 90));
     expect(pathDataOf(rotated.vectorLayer, line.id)).toBe('M 12 12 L 12 16');
+  });
+
+  it('transforms around a point in viewport coordinates, through a rotated group', () => {
+    const square = path('square', 'M 0 0 L 4 0 L 4 4 L 0 4 Z');
+    // Turned a quarter turn clockwise and moved right, so the square covers 6 to 10 by 0 to 4 on
+    // the screen, and right on the screen is up in the group.
+    const group = new GroupLayer({
+      name: 'group',
+      children: [square],
+      rotation: 90,
+      translateX: 10,
+    });
+    const vl = new VectorLayer({ name: 'vector', children: [group] });
+    const document = { vectorLayer: vl, animation: new Animation() };
+    // Twice as wide on the screen, from its left edge.
+    const scaled = transformLayers(document, vl, [square.id], scalingAround({ x: 6, y: 0 }, 2, 1));
+    expect(pathDataOf(scaled.vectorLayer, square.id)).toBe('M 0 -4 L 4 -4 L 4 4 L 0 4 Z');
+  });
+
+  it("doesn't change anything for the identity matrix", () => {
+    const vl = new VectorLayer({ name: 'vector', children: [path('a', 'M 0 0 L 1 1')] });
+    const document = { vectorLayer: vl, animation: new Animation() };
+    expect(transformLayers(document, vl, [vl.children[0].id], Matrix.identity())).toBe(document);
   });
 });
 

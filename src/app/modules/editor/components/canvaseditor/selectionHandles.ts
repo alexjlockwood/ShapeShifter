@@ -38,15 +38,26 @@ export function getOppositeHandle(handle: HandleName): HandleName {
 }
 
 /**
- * Returns the handles to draw. Edge handles are left out when the bounds are too small on the
- * screen to tell them from the corners, like in Figma.
+ * Returns the handles to draw. The edge handles along a side are left out when the side is too
+ * short on the screen to tell them from the corners, like in Figma.
  *
  * @param toViewportLength Converts CSS pixels to viewport units.
  */
 export function getVisibleHandles(bounds: Rect, toViewportLength: (length: number) => number) {
   const minSize = toViewportLength(HANDLE_SIZE * 4);
-  const hasEdges = bounds.r - bounds.l >= minSize && bounds.b - bounds.t >= minSize;
-  return hasEdges ? [...CORNERS, ...EDGES] : [...CORNERS];
+  const handles: HandleName[] = [...CORNERS];
+  if (bounds.r - bounds.l >= minSize) {
+    handles.push('n', 's');
+  }
+  if (bounds.b - bounds.t >= minSize) {
+    handles.push('e', 'w');
+  }
+  return handles;
+}
+
+/** Whether the bounds are too small on the screen for all of their handles. */
+export function isSmall(bounds: Rect, toViewportLength: (length: number) => number) {
+  return getVisibleHandles(bounds, toViewportLength).length < CORNERS.length + EDGES.length;
 }
 
 /**
@@ -65,9 +76,7 @@ export function hitTestHandles(
       return { type: 'scale', handle };
     }
   }
-  const isInside =
-    bounds.l <= point.x && point.x <= bounds.r && bounds.t <= point.y && point.y <= bounds.b;
-  if (isInside) {
+  if (isInside(bounds, point)) {
     return undefined;
   }
   const rotateZone = toViewportLength(ROTATE_ZONE);
@@ -78,6 +87,10 @@ export function hitTestHandles(
     }
   }
   return undefined;
+}
+
+export function isInside(bounds: Rect, point: Point) {
+  return bounds.l <= point.x && point.x <= bounds.r && bounds.t <= point.y && point.y <= bounds.b;
 }
 
 /** The CSS cursor for the handle, as the editor's cursor attribute. */

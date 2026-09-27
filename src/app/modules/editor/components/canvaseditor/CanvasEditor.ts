@@ -35,6 +35,9 @@ const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
   ArrowDown: [0, 1],
 };
 
+// Pressing or releasing these during a drag changes what it does, e.g. Shift keeps a move straight.
+const MODIFIER_KEYS: ReadonlySet<string> = new Set(['Shift', 'Alt', 'Meta', 'Control']);
+
 interface Nudge {
   readonly base: CanvasDocument;
   readonly rendered: VectorLayer;
@@ -159,6 +162,10 @@ class Editor implements CanvasEditor {
   }
 
   private onKeyDown(event: KeyboardEvent) {
+    if (MODIFIER_KEYS.has(event.key)) {
+      this.selectTool.onModifiersChange(getModifiers(event));
+      return undefined;
+    }
     const target = event.target instanceof Element ? event.target : undefined;
     if (
       this.isActionMode ||
@@ -206,6 +213,9 @@ class Editor implements CanvasEditor {
   }
 
   private onKeyUp(event: KeyboardEvent) {
+    if (MODIFIER_KEYS.has(event.key)) {
+      this.selectTool.onModifiersChange(getModifiers(event));
+    }
     if (ARROWS[event.key]) {
       this.endNudge();
     }
@@ -272,7 +282,7 @@ class Editor implements CanvasEditor {
   }
 }
 
-function getModifiers(event: PointerEvent): Modifiers {
+function getModifiers(event: MouseEvent | KeyboardEvent): Modifiers {
   return {
     shift: event.shiftKey,
     alt: event.altKey,

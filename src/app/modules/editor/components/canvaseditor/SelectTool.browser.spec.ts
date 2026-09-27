@@ -44,7 +44,8 @@ describe('SelectTool', () => {
     vi.useRealTimers();
   });
 
-  function setUp() {
+  /** @param pixelsPerUnit How many CSS pixels a viewport unit is on the screen. */
+  function setUp({ pixelsPerUnit = 10 } = {}) {
     const store = createEditorStore({ logActions: false });
     const services = createEditorServices(store);
     const a = square('a', 2, 2);
@@ -75,8 +76,7 @@ describe('SelectTool', () => {
       getHiddenLayerIds: () => getHiddenLayerIds(store.getState()),
       getSelectedLayerIds: () => getSelectedLayerIds(store.getState()),
       setSelectedLayerIds: ids => services.layerTimelineService.setSelectedLayers(new Set(ids)),
-      // Ten CSS pixels per viewport unit.
-      toViewportLength: length => length / 10,
+      toViewportLength: length => length / pixelsPerUnit,
       render: document =>
         new AnimationRenderer(document.vectorLayer, document.animation).setCurrentTime(
           getCurrentTime(store.getState()),
@@ -300,11 +300,64 @@ describe('SelectTool', () => {
     it('rotates around the middle from just outside of a corner, in steps with Shift', () => {
       const { a, click, drag, pathDataOf } = setUp();
       selectA(click);
-      // From just outside the top right corner to just outside the bottom right one, around the
-      // middle at (4, 4): a quarter turn clockwise.
-      drag([7, 1], [7, 7], SHIFT);
-      const rounded = pathDataOf(a.id)?.replace(/-?\d+(\.\d+)?/g, n => `${Math.round(Number(n))}`);
-      expect(rounded).toBe('M 6 2 L 6 6 L 2 6 L 2 2 Z');
+      // From just outside the top right corner, at -45 degrees around the middle at (4, 4), to 43
+      // degrees, which turns to a quarter turn clockwise.
+      drag([7, 1], [7.1, 6.9], SHIFT);
+      expect(pathDataOf(a.id)).toBe('M 6 2 L 6 6 L 2 6 L 2 2 Z');
+    });
+
+    it('scales by how far the pointer moves, when it presses a little way from the handle', () => {
+      const { a, click, drag, pathDataOf } = setUp();
+      selectA(click);
+      drag([6.3, 6.3], [10.3, 8.3]);
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 10 2 L 10 8 L 2 8 Z');
+    });
+
+    it("doesn't scale until the pointer moves a few pixels", () => {
+      const { store, tool, preview, a, click, pathDataOf } = setUp();
+      selectA(click);
+      tool.onPress({ x: 6, y: 6 }, NONE);
+      // Three CSS pixels.
+      tool.onMove({ x: 6.3, y: 6 }, NONE);
+      // Nothing is drawn differently.
+      const { vl, currentTime } = getAnimatedVectorLayer(store.getState());
+      expect(preview.apply(vl, currentTime)).toBe(vl);
+      tool.onRelease({ x: 6.3, y: 6 });
+      expect(pathDataOf(a.id)).toBe('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+    });
+
+    it('redoes a drag when a modifier key changes', () => {
+      const { tool, a, click, pathDataOf } = setUp();
+      selectA(click);
+      tool.onPress({ x: 4, y: 4 }, NONE);
+      tool.onMove({ x: 7, y: 5 }, NONE);
+      tool.onModifiersChange(SHIFT);
+      tool.onRelease({ x: 7, y: 5 });
+      expect(pathDataOf(a.id)).toBe('M 5 2 L 9 2 L 9 6 L 5 6 Z');
+    });
+
+    it('moves a small selection that is pressed inside of its handles', () => {
+      // Square a is 20 pixels wide.
+      const { a, click, drag, pathDataOf } = setUp({ pixelsPerUnit: 5 });
+      selectA(click);
+      // On the bottom right handle, but inside of the square.
+      drag([5.8, 5.8], [7.8, 5.8]);
+      expect(pathDataOf(a.id)).toBe('M 4 2 L 8 2 L 8 6 L 4 6 Z');
+      // Outside of it, the handle scales.
+      drag([8.5, 6.5], [10.5, 6.5]);
+      expect(pathDataOf(a.id)).toBe('M 4 2 L 10 2 L 10 6 L 4 6 Z');
+    });
+
+    it('hovers and presses a path in a rotation zone, rather than rotating', () => {
+      const { tool, b, click, drag, selected, pathDataOf } = setUp({ pixelsPerUnit: 5 });
+      selectA(click);
+      // Near b's left edge, and within 20 pixels of a's top right corner.
+      tool.onMove({ x: 9.5, y: 3 }, NONE);
+      expect(tool.getCursor()).toBeUndefined();
+      expect(tool.getHoveredLayerId()).toBe(b.id);
+      drag([9.5, 3], [9.5, 5]);
+      expect(selected()).toEqual([b.id]);
+      expect(pathDataOf(b.id)).toBe('M 10 4 L 14 4 L 14 8 L 10 8 Z');
     });
 
     it('scales with a handle that is over a path', () => {
@@ -320,7 +373,8 @@ describe('SelectTool', () => {
       selectA(click);
       tool.onMove({ x: 6, y: 6 }, NONE);
       expect(tool.getCursor()).toBe('nwse-resize');
-      tool.onMove({ x: 7, y: 1 }, NONE);
+      // 1.2 units, or 12 pixels, from the top right corner.
+      tool.onMove({ x: 6.85, y: 1.15 }, NONE);
       expect(tool.getCursor()).toBe('rotate-ne');
       tool.onMove({ x: 4, y: 4 }, NONE);
       expect(tool.getCursor()).toBeUndefined();

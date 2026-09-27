@@ -6,6 +6,7 @@ import {
   getOppositeHandle,
   getVisibleHandles,
   hitTestHandles,
+  isSmall,
 } from './selectionHandles';
 
 const BOUNDS = { l: 4, t: 4, r: 20, b: 16 };
@@ -22,8 +23,19 @@ describe('selectionHandles', () => {
     expect(getOppositeHandle('e')).toBe('w');
   });
 
-  it('leaves out the edge handles when the bounds are small on the screen', () => {
+  it('leaves out the edge handles along the sides that are short on the screen', () => {
     expect(getVisibleHandles(BOUNDS, toViewportLength)).toHaveLength(8);
+    expect(isSmall(BOUNDS, toViewportLength)).toBe(false);
+    // The bounds are 16 wide and 12 tall, and edge handles need sides of 16.
+    expect(getVisibleHandles(BOUNDS, length => length / 2)).toEqual([
+      'nw',
+      'ne',
+      'se',
+      'sw',
+      'n',
+      's',
+    ]);
+    expect(isSmall(BOUNDS, length => length / 2)).toBe(true);
     expect(getVisibleHandles(BOUNDS, length => length)).toEqual(['nw', 'ne', 'se', 'sw']);
   });
 

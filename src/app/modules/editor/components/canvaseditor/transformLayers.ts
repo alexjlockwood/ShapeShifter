@@ -227,32 +227,39 @@ export function transformLayers(
   layerIds: Iterable<string>,
   matrix: Matrix,
 ): CanvasDocument {
-  let { vectorLayer, animation } = document;
-  for (const layerId of getTopmostLayerIds(vectorLayer, layerIds)) {
-    const layer = vectorLayer.findLayerById(layerId);
-    if (!layer) {
-      continue;
-    }
-    for (const current of LayerUtil.runPreorderTraversal(layer)) {
+  if (matrix.equals(Matrix.identity())) {
+    return document;
+  }
+  // Every path in the layers, and the matrix in its coordinates.
+  const transforms = new Map<string, Matrix>();
+  for (const layerId of getTopmostLayerIds(document.vectorLayer, layerIds)) {
+    const layer = document.vectorLayer.findLayerById(layerId);
+    for (const current of layer ? LayerUtil.runPreorderTraversal(layer) : []) {
       if (!(current instanceof PathLayer || current instanceof ClipPathLayer)) {
         continue;
       }
       const toViewport = LayerUtil.getCanvasTransformForLayer(rendered, current.id);
       const fromViewport = toViewport.invert();
-      if (!fromViewport) {
-        continue;
+      if (fromViewport) {
+        // Into viewport coordinates, through the matrix, and back.
+        transforms.set(current.id, fromViewport.dot(matrix).dot(toViewport));
       }
-      // Into viewport coordinates, through the matrix, and back.
-      const local = fromViewport.dot(matrix).dot(toViewport);
-      const transform = (path: Path) => path.transform(local);
-      const clone = current.clone();
-      if (clone.pathData) {
-        clone.pathData = transform(clone.pathData);
-      }
-      vectorLayer = LayerUtil.replaceLayer(vectorLayer, current.id, clone);
-      animation = mapBlocks(animation, current.id, 'pathData', transform);
     }
   }
+  let { animation } = document;
+  const vectorLayer = mapLayers(document.vectorLayer, layer => {
+    const local = transforms.get(layer.id);
+    if (!local || !(layer instanceof PathLayer || layer instanceof ClipPathLayer)) {
+      return layer;
+    }
+    const transform = (path: Path) => path.mutate().transform(local).build();
+    animation = mapBlocks(animation, layer.id, 'pathData', transform);
+    const clone = layer.clone();
+    if (clone.pathData) {
+      clone.pathData = transform(clone.pathData);
+    }
+    return clone;
+  });
   return { vectorLayer, animation };
 }
 
