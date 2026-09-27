@@ -16,13 +16,16 @@ export interface CanvasInputHandler {
 
 /**
  * Turns the element's pointer events into gestures and hovers. A gesture captures the pointer, so
- * a drag keeps going outside of the element and ends wherever the pointer is released. It's
- * canceled if the browser takes the pointer away, the window loses focus, a context menu opens,
- * or Escape is pressed.
+ * a drag keeps going outside of the element and ends wherever the pointer is released, or as soon
+ * as an event shows that the mouse's button is already up. It's canceled if the browser takes the
+ * pointer away, the window loses focus, a context menu opens, or Escape is pressed.
  */
 export class CanvasInput {
   private readonly router = new CanvasGestureRouter(ShortcutService.isMac());
   private removeListeners: ReadonlyArray<() => void> = [];
+  // The gesture's press, or its last move: where it ends if the mouse's button comes up before
+  // its release.
+  private lastGestureEvent: PointerEvent | undefined;
 
   constructor(
     private readonly element: HTMLElement,
@@ -47,23 +50,32 @@ export class CanvasInput {
         } catch {
           // The pointer is already gone, e.g. for a synthetic event.
         }
+        this.lastGestureEvent = event;
         handler.onPress(event);
       }),
       on(element, 'pointermove', event => {
-        if (router.isReleaseMissed(event)) {
-          this.cancel(event.pointerId);
-        } else if (router.move(event)) {
+        // The move itself is a hover if it ended the gesture.
+        this.releaseIfButtonUp(event);
+        if (router.move(event)) {
+          if (router.isActive()) {
+            this.lastGestureEvent = event;
+          }
           handler.onMove(event);
         }
       }),
       on(element, 'pointerup', event => {
         if (router.up(event)) {
+          this.lastGestureEvent = undefined;
           handler.onRelease(event);
         }
       }),
       // A release also loses the capture, but the gesture has already ended by then.
       on(element, 'pointercancel', event => this.cancel(event.pointerId)),
-      on(element, 'lostpointercapture', event => this.cancel(event.pointerId)),
+      on(element, 'lostpointercapture', event => {
+        if (!this.releaseIfButtonUp(event)) {
+          this.cancel(event.pointerId);
+        }
+      }),
       on(element, 'pointerleave', () => {
         if (router.leave()) {
           handler.onLeave();
@@ -98,11 +110,34 @@ export class CanvasInput {
     if (!this.router.cancel(pointerId) || gesturePointerId === undefined) {
       return false;
     }
-    // Otherwise the element keeps getting the pointer's moves, as hovers, until it's released.
-    if (this.element.hasPointerCapture(gesturePointerId)) {
-      this.element.releasePointerCapture(gesturePointerId);
-    }
+    this.endGesture(gesturePointerId);
     this.handler.onLeave();
     return true;
+  }
+
+  /**
+   * Ends the gesture as its release would, if the event shows that the mouse's main button is
+   * already up, and returns whether it did. A macOS trackpad can send a move like that right
+   * before the release, which Chrome takes the capture away for first. Canceling would throw away
+   * e.g. the pen's new point. The gesture ends where it last was, rather than where the event is,
+   * and the release that follows is ignored.
+   */
+  private releaseIfButtonUp(event: PointerEvent) {
+    const { lastGestureEvent } = this;
+    if (!this.router.upWithoutRelease(event)) {
+      return false;
+    }
+    this.endGesture(event.pointerId);
+    this.handler.onRelease(lastGestureEvent ?? event);
+    return true;
+  }
+
+  /** Cleans up after a gesture that ended without the pointer's release. */
+  private endGesture(pointerId: number) {
+    this.lastGestureEvent = undefined;
+    // Otherwise the element keeps getting the pointer's moves, as hovers, until it's released.
+    if (this.element.hasPointerCapture(pointerId)) {
+      this.element.releasePointerCapture(pointerId);
+    }
   }
 }

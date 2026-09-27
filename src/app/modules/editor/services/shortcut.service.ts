@@ -130,6 +130,18 @@ export class ShortcutService {
         this.shortcutSubject.next(Shortcut.ZoomToFit);
         return false;
       }
+      if (
+        event.keyCode === 'A'.charCodeAt(0) &&
+        !event.shiftKey &&
+        !event.altKey &&
+        !document.activeElement?.matches(TEXT_FIELD_SELECTOR) &&
+        !this.actionModeService.isActionMode()
+      ) {
+        // Selects every visible layer rather than the page's text. The canvas editor handles this
+        // first when it's on, e.g. to select every point of the path being edited.
+        this.layerTimelineService.selectAllLayers();
+        return false;
+      }
     }
     if (event.ctrlKey || event.metaKey) {
       // Do nothing if the ctrl or meta keys are pressed.

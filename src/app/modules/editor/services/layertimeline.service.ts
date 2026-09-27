@@ -95,6 +95,18 @@ export class LayerTimelineService {
   }
 
   /**
+   * Selects every visible layer at the top of the tree, like Cmd+A in Figma: groups as a whole,
+   * so that grouping, deleting, and moving apply to everything.
+   */
+  selectAllLayers() {
+    const hiddenLayerIds = this.getHiddenLayerIds();
+    const layerIds = this.getVectorLayer()
+      .children.map(layer => layer.id)
+      .filter(id => !hiddenLayerIds.has(id));
+    this.setSelectedLayers(new Set(layerIds));
+  }
+
+  /**
    * Clears all animation/block/layer selections.
    */
   clearSelections() {
