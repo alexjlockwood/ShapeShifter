@@ -34,7 +34,8 @@ import {
   getSelectedBlockIds,
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
-import { IsolateUndoStep } from 'app/modules/editor/store/undoredo/actions';
+import { IsolateUndoStep, SkipUndoStep } from 'app/modules/editor/store/undoredo/actions';
+import { getLastRecordedState } from 'app/modules/editor/store/undoredo/metareducer';
 import { difference, find, findIndex, isEqual, uniqueId } from 'lodash-es';
 
 /**
@@ -263,6 +264,61 @@ export class LayerTimelineService {
    */
   updateLayer(layer: Layer) {
     this.store.dispatch(new SetVectorLayer(LayerUtil.updateLayer(this.getVectorLayer(), layer)));
+  }
+
+  /**
+   * Shows an edit to an existing layer without an undo step, e.g. on every move of a drag. Call
+   * commitPreview when it ends, or cancelPreview to go back.
+   */
+  previewLayer(layer: Layer) {
+    const vl = LayerUtil.updateLayer(this.getVectorLayer(), layer);
+    this.store.dispatch(new BatchAction(new SkipUndoStep(), new SetVectorLayer(vl)));
+  }
+
+  /**
+   * Shows edits to existing blocks without an undo step, like previewLayer.
+   */
+  previewBlocks(blocks: ReadonlyArray<AnimationBlock>) {
+    if (!blocks.length) {
+      return;
+    }
+    const animation = this.getAnimationWithBlocks(blocks);
+    this.store.dispatch(new BatchAction(new SkipUndoStep(), new SetAnimation(animation)));
+  }
+
+  /**
+   * Saves the previewed layers and blocks as one undo step, however long the previews took and
+   * however soon they came after another edit. It does nothing if nothing was previewed.
+   */
+  commitPreview() {
+    const vl = this.getVectorLayer();
+    const animation = this.getAnimation();
+    const recorded = getLastRecordedState(this.store.getState());
+    if (recorded.layers.vectorLayer === vl && recorded.timeline.animation === animation) {
+      return;
+    }
+    this.store.dispatch(
+      new BatchAction(new IsolateUndoStep(), new SetVectorLayer(vl), new SetAnimation(animation)),
+    );
+  }
+
+  /**
+   * Shows the layers and blocks from before the previews again, without an undo step.
+   */
+  cancelPreview() {
+    const recorded = getLastRecordedState(this.store.getState());
+    const { vectorLayer } = recorded.layers;
+    const { animation } = recorded.timeline;
+    if (vectorLayer === this.getVectorLayer() && animation === this.getAnimation()) {
+      return;
+    }
+    this.store.dispatch(
+      new BatchAction(
+        new SkipUndoStep(),
+        new SetVectorLayer(vectorLayer),
+        new SetAnimation(animation),
+      ),
+    );
   }
 
   /**
@@ -566,12 +622,16 @@ export class LayerTimelineService {
     if (!blocks.length) {
       return;
     }
+    this.store.dispatch(new SetAnimation(this.getAnimationWithBlocks(blocks)));
+  }
+
+  private getAnimationWithBlocks(blocks: ReadonlyArray<AnimationBlock>) {
     const animation = this.getAnimation().clone();
     animation.blocks = animation.blocks.map(block => {
       const newBlock = find(blocks, b => block.id === b.id);
       return newBlock ? newBlock : block;
     });
-    this.store.dispatch(new SetAnimation(animation));
+    return animation;
   }
 
   addBlocks(
