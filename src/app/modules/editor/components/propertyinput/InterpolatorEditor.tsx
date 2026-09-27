@@ -331,7 +331,12 @@ export function InterpolatorEditor({ ip }: { ip: InspectedProperty<string> }) {
   const path = curveToViewPath(layout, curve);
   return (
     <div className="spi-interpolator-editor fx-column">
-      <button className="spi-property-value-menu-target" onClick={menu.openMenu}>
+      <button
+        className="spi-property-value-menu-target"
+        aria-haspopup="menu"
+        aria-expanded={menu.open}
+        onClick={menu.openMenu}
+      >
         <span className="spi-property-value-menu-current-value">{ip.getDisplayValue()}</span>
         <Icon className="spi-property-value-menu-arrow" name="arrow_drop_down" />
       </button>

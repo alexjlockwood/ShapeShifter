@@ -100,6 +100,15 @@ $dark-theme: (
     @include build-custom-theme($dark-theme);
 }
 
+// MUI's snackbar is the opposite of the theme's background, so its button takes the other
+// theme's accent-text.
+.app-snackbar-action.MuiButton-root {
+    color: map.get($dark-theme, accent-text);
+}
+.ss-dark-theme .app-snackbar-action.MuiButton-root {
+    color: map.get($light-theme, accent-text);
+}
+
 // Fades between background colors when the theme changes (or action mode is toggled).
 .ss-theme-transition {
     transition: background-color 200ms ease-out;

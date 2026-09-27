@@ -82,13 +82,13 @@ const pairs: Array<{ name: string; a: string; b: string; min: number }> = [
     min: TEXT,
   },
   {
-    name: 'snackbar action, light theme (components/snackbar/SnackbarHost.tsx)',
+    name: 'snackbar action, light theme (styles/theme.scss)',
     a: '#64b5f6',
     b: SNACKBAR_BG_LIGHT_THEME,
     min: TEXT,
   },
   {
-    name: 'snackbar action, dark theme (components/snackbar/SnackbarHost.tsx)',
+    name: 'snackbar action, dark theme (styles/theme.scss)',
     a: '#2962ff',
     b: SNACKBAR_BG_DARK_THEME,
     min: TEXT,

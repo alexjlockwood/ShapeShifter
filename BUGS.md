@@ -32,13 +32,6 @@ These existed before the migration and are still there.
   (`components/canvas/CanvasLayers.ts`). (GitHub #186, #292, and #308)
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
-- **Other menu-target buttons keep a stuck focus ring the same way the File/Import/Export buttons
-  did.** `EnumPropertyEditor`'s dropdown button (`components/propertyinput/PropertyInput.tsx`,
-  `.spi-property-value-menu-target`) opens an MUI `Menu` and gets its `:focus` box-shadow back
-  from `_propertyinput-theme.scss:48-50` once the menu closes and MUI returns focus to it, same as
-  the layer timeline's header buttons before this sweep. Not fixed here since `PropertyInput.tsx`
-  is shared with the color picker and interpolator editor PRs in this wave; needs the same
-  `:focus-visible` plus `aria-haspopup`/`aria-expanded` treatment as `LayerTimeline.tsx`.
 
 ## Found by the 2026-09-25 bug sweep
 

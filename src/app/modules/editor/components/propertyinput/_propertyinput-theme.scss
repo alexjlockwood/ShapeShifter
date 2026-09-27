@@ -45,9 +45,12 @@
         .spi-property-value-menu-target {
             background-color: mat-color($background, base);
             color: mat-color($foreground, primary-text);
-            &:focus {
-                box-shadow: 0 0 0 1px mat-color($accent) inset;
-            }
+        }
+        .spi-property-value-editor input:focus,
+        // Only for the keyboard, since a menu gives the focus back to its button when it closes.
+        .spi-property-value-menu-target:focus-visible,
+        .spi-property-value-menu-target[aria-expanded='true'] {
+            box-shadow: 0 0 0 1px mat-color($accent) inset;
         }
         .spi-property-value-menu-target {
             .spi-property-value-menu-arrow {

@@ -291,7 +291,12 @@ function EnumPropertyEditor({ ip }: { ip: InspectedProperty<any> }) {
   const { options } = ip.property as EnumProperty;
   return (
     <>
-      <button className="spi-property-value-menu-target" onClick={enumMenu.openMenu}>
+      <button
+        className="spi-property-value-menu-target"
+        aria-haspopup="menu"
+        aria-expanded={enumMenu.open}
+        onClick={enumMenu.openMenu}
+      >
         <span className="spi-property-value-menu-current-value">{ip.getDisplayValue()}</span>
         <Icon className="spi-property-value-menu-arrow" name="arrow_drop_down" />
       </button>

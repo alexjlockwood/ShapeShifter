@@ -27,12 +27,7 @@ export function SnackbarHost() {
         shownSnackBar.action && (
           <Button
             size="small"
-            // MUI's Snackbar always uses the opposite of the app's background (see
-            // SnackbarContent's use of emphasize()), so it needs the other theme's accent-text
-            // token rather than the current theme's secondary color: theme.palette.secondary.main
-            // (blue.A700 in light, blue[300] in dark; see styles/muiTheme.ts) is only 2.62:1 /
-            // 2.12:1 against the snackbar's own inverted background.
-            sx={{ color: theme => (theme.palette.mode === 'light' ? '#64B5F6' : '#2962FF') }}
+            className="app-snackbar-action"
             onClick={() => snackBarService.clickAction(shownSnackBar)}
           >
             {shownSnackBar.action}
