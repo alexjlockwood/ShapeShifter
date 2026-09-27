@@ -2,7 +2,9 @@ import type { CanvasCamera } from 'app/modules/editor/components/canvas/CanvasCa
 import type { CanvasDocument } from 'app/modules/editor/components/canvas/CanvasPreview';
 import type {
   CanvasEditor,
+  CanvasEditorCommand,
   CanvasEditorContext,
+  CanvasEditorMenuState,
 } from 'app/modules/editor/components/canvas/CanvasEditorApi';
 import type { CanvasPreview } from 'app/modules/editor/components/canvas/CanvasPreview';
 import { getRulerLayout } from 'app/modules/editor/components/canvas/CanvasRuler';
@@ -23,6 +25,10 @@ import * as PathEdit from 'app/modules/editor/model/paths/PathEdit';
 import { AnimationRenderer } from 'app/modules/editor/scripts/animator';
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
+import {
+  getBooleanLayerIds,
+  getOutlineLayerIds,
+} from 'app/modules/editor/scripts/common/pathOpLayers';
 import { on } from 'app/modules/editor/scripts/dom';
 import type { CanvasSettings } from 'app/modules/editor/services/canvassettings.service';
 import {
@@ -49,13 +55,7 @@ import { EditorToolbar, ToolName } from './EditorToolbar';
 import { GuideTool } from './GuideTool';
 import { getKeyframeStatus, KeyframeBadge } from './KeyframeBadge';
 import { getMeasurements } from './measuring';
-import {
-  combinePaths,
-  getBooleanLayerIds,
-  getOutlineLayerIds,
-  loadPathKit,
-  outlineStrokes,
-} from './pathOps';
+import { combinePaths, loadPathKit, outlineStrokes } from './pathOps';
 import {
   AvailablePathOps,
   getPathOpShortcut,
@@ -758,8 +758,13 @@ class Editor implements CanvasEditor {
       this.nudgeBy(arrow[0] * distance, arrow[1] * distance);
       return false;
     }
-    // Duplicates in place, and selects the copies. It keeps the browser from bookmarking the page
-    // too.
+    // It keeps the browser from bookmarking the page too.
+    this.duplicateSelection();
+    return false;
+  }
+
+  /** Duplicates the selected layers in place, and selects the copies. */
+  private duplicateSelection() {
     this.endNudge();
     const { preview } = this.context;
     preview.begin();
@@ -776,7 +781,46 @@ class Editor implements CanvasEditor {
       });
     }
     preview.commit();
-    return false;
+  }
+
+  getLayerAt(point: Point) {
+    if (this.isActionMode || this.getMenuState().busyReason) {
+      return undefined;
+    }
+    return hitTestLayer(this.vectorLayer, point, {
+      hiddenLayerIds: this.hiddenLayerIds,
+      tolerance: this.toViewportLength(LAYER_HIT_TOLERANCE),
+    })?.id;
+  }
+
+  getMenuState(): CanvasEditorMenuState {
+    const { drawTool } = this;
+    // E.g. the pen drawing a path, which a new selection or edit would throw away. The right-click
+    // has already canceled drags.
+    const isBusy = this.isPressing || (this.context.preview.isEditing() && !this.nudge);
+    const busyReason = !isBusy
+      ? undefined
+      : drawTool instanceof PenTool
+        ? "Finish the path you're drawing first"
+        : 'Finish editing first';
+    return { busyReason, editingLayerId: this.pathEdit?.layerId };
+  }
+
+  runCommand(command: CanvasEditorCommand) {
+    if (this.isDisposed || this.isActionMode || this.getMenuState().busyReason) {
+      return;
+    }
+    this.endNudge();
+    // As if Enter or V was pressed first.
+    this.stopPathEdit();
+    if (this.drawTool) {
+      this.setTool('select');
+    }
+    if (command === 'duplicate') {
+      this.duplicateSelection();
+    } else {
+      void this.runPathOp(command);
+    }
   }
 
   /**

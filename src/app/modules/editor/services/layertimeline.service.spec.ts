@@ -307,8 +307,8 @@ describe('LayerTimelineService', () => {
     });
   });
 
-  describe('swapLayers', () => {
-    it('converts paths to clip paths and back, keeping the animations that still apply', () => {
+  describe('convertLayer', () => {
+    it('converts paths to clip paths and back, keeping the id and the animations that apply', () => {
       const path = newPath('path');
       load(
         [newPath('before'), path, newPath('after')],
@@ -329,22 +329,85 @@ describe('LayerTimelineService', () => {
           }),
         ],
       );
+      services.layerTimelineService.setSelectedLayers(new Set([path.id]));
+      services.layerTimelineService.toggleVisibleLayer(path.id);
 
-      // This is how the layer list's "Convert to clip path" menu item builds the new layer.
-      const clipPath = new ClipPathLayer(path);
-      clipPath.id = 'clip';
-      services.layerTimelineService.swapLayers(path.id, clipPath);
+      services.layerTimelineService.convertLayer(path.id);
       expect(getTree()).toEqual({ vector: ['before', 'path', 'after'] });
       expect(getLayer('path')).toBeInstanceOf(ClipPathLayer);
-      expect(getLayer('path').id).toBe('clip');
+      expect(getLayer('path').id).toBe(path.id);
       // Clip paths can't be filled.
-      expect(getBlocks().map(b => [b.layerId, b.propertyName])).toEqual([['clip', 'pathData']]);
+      expect(getBlocks().map(b => [b.layerId, b.propertyName])).toEqual([[path.id, 'pathData']]);
+      // It's still selected and hidden, since it's the same layer.
+      expect(services.layerTimelineService.getSelectedLayerIds()).toEqual(new Set([path.id]));
+      expect(store.getState().present.layers.hiddenLayerIds).toEqual(new Set([path.id]));
 
-      const convertedPath = new PathLayer(getLayer<ClipPathLayer>('path'));
-      convertedPath.id = 'path';
-      services.layerTimelineService.swapLayers('clip', convertedPath);
+      services.layerTimelineService.convertLayer(path.id);
       expect(getLayer('path')).toBeInstanceOf(PathLayer);
-      expect(getBlocks().map(b => [b.layerId, b.propertyName])).toEqual([['path', 'pathData']]);
+      expect(getLayer<PathLayer>('path').pathData?.getPathString()).toBe('M 1 1 L 5 1');
+      expect(getBlocks().map(b => [b.layerId, b.propertyName])).toEqual([[path.id, 'pathData']]);
+    });
+  });
+
+  describe('combineSelectedLayers and breakApartSelectedLayers', () => {
+    it('combines the selected paths into the bottom one, and breaks it apart again', () => {
+      const a = newPath('a', 'M 1 1 L 5 1 L 5 5 Z');
+      const b = newPath('b', 'M 10 10 L 15 10 L 15 15 Z');
+      load([a, newGroup('g', [b], { translateX: 2 })]);
+      services.layerTimelineService.setSelectedLayers(new Set([a.id, b.id]));
+      services.layerTimelineService.toggleVisibleLayer(b.id);
+
+      expect(services.layerTimelineService.combineSelectedLayers()).toBeUndefined();
+      expect(getTree()).toEqual({ vector: ['a', { g: [] }] });
+      expect(getLayer<PathLayer>('a').pathData?.getPathString()).toBe(
+        'M 1 1 L 5 1 L 5 5 Z M 12 10 L 17 10 L 17 15 Z',
+      );
+      expect(services.layerTimelineService.getSelectedLayerIds()).toEqual(new Set([a.id]));
+      // The removed path's state goes with it.
+      expect(store.getState().present.layers.hiddenLayerIds).toEqual(new Set());
+
+      expect(services.layerTimelineService.breakApartSelectedLayers()).toBeUndefined();
+      expect(getTree()).toEqual({ vector: ['a', 'a_1', { g: [] }] });
+      expect(getLayer<PathLayer>('a_1').pathData?.getPathString()).toBe(
+        'M 12 10 L 17 10 L 17 15 Z',
+      );
+      expect(services.layerTimelineService.getSelectedLayerIds()).toEqual(
+        new Set([a.id, getLayer('a_1').id]),
+      );
+    });
+
+    it("says why it can't", () => {
+      const a = newPath('a');
+      load([a, newGroup('g', [])]);
+      services.layerTimelineService.setSelectedLayers(new Set([a.id, getLayer('g').id]));
+      expect(services.layerTimelineService.combineSelectedLayers()).toBe(
+        'Only paths can be combined',
+      );
+      expect(services.layerTimelineService.breakApartSelectedLayers()).toBe(
+        'Select a path with more than one subpath',
+      );
+      expect(getTree()).toEqual({ vector: ['a', { g: [] }] });
+    });
+  });
+
+  describe('addBlockForProperty', () => {
+    it("adds a block from the layer's value to itself at the current time, and selects it", () => {
+      const path = newPath('path', undefined, 3);
+      load([path]);
+      services.playbackService.setCurrentTime(150);
+      services.layerTimelineService.addBlockForProperty(path.id, 'strokeWidth');
+      const [block] = getBlocks();
+      expect(block).toMatchObject({
+        layerId: path.id,
+        propertyName: 'strokeWidth',
+        fromValue: 3,
+        toValue: 3,
+        startTime: 150,
+      });
+      expect(services.layerTimelineService.getSelectedBlocks()).toEqual([block]);
+      // Properties the layer doesn't have are ignored.
+      services.layerTimelineService.addBlockForProperty(path.id, 'rotation');
+      expect(getBlocks()).toHaveLength(1);
     });
   });
 

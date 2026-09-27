@@ -195,8 +195,9 @@ a new editor built on the current canvas and path model, behind a feature flag, 
 roadmap.
 
 - **Outline stroke gaps.** Outline stroke already turns a stroked path into an identical filled one
-  (`outlineStrokes` in `components/canvaseditor/pathOps.ts`, Cmd+Alt+O). But it needs the canvas
-  editor, refuses animated layers, and turns round caps and joins into many short quadratic curves
+  (`outlineStrokes` in `components/canvaseditor/pathOps.ts`, Cmd+Alt+O, and in the context
+  menu). But it needs the canvas editor, so the context menu leaves it out on the live site, refuses
+  animated layers, and turns round caps and joins into many short quadratic curves
   (`docs/canvas-editor.md`, phase 6). The follow-up is making it work with the editor off and on
   animated paths, and fitting the rounds as cubics.
 

@@ -9,7 +9,9 @@ import {
 } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { MathUtil, Matrix } from 'app/modules/editor/scripts/common';
+import { breakApartLayers, combineLayers } from 'app/modules/editor/scripts/common/combineLayers';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
+import type { LayerDocument } from 'app/modules/editor/scripts/common/pathOpLayers';
 import { Action, State, Store } from 'app/modules/editor/store';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import {
@@ -24,6 +26,7 @@ import {
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/modules/editor/store/layers/selectors';
+import { getCurrentTime } from 'app/modules/editor/store/playback/selectors';
 import {
   SelectAnimation,
   SetAnimation,
@@ -370,45 +373,82 @@ export class LayerTimelineService {
   }
 
   /**
-   * Replaces an existing layer in the tree with a new layer. Note that
-   * this method assumes that both layers still have the same children layers.
+   * Turns a path into a clip path, or a clip path into a path. It keeps the layer's id, so that
+   * it stays selected, hidden, and animated. Blocks that the new type can't animate are dropped,
+   * which the context menu avoids by only offering it without them (getConvertRefusal).
    */
-  swapLayers(layerId: string, newLayer: Layer) {
-    if (layerId === newLayer.id) {
-      this.updateLayer(newLayer);
-      return;
-    }
+  convertLayer(layerId: string) {
     const vl = this.getVectorLayer();
-    const parent = LayerUtil.findParent(vl, layerId)?.clone();
-    if (!parent) {
+    const layer = vl.findLayerById(layerId);
+    let converted: Layer;
+    if (layer instanceof PathLayer) {
+      converted = new ClipPathLayer(layer);
+    } else if (layer instanceof ClipPathLayer) {
+      converted = new PathLayer(layer);
+    } else {
       return;
     }
-    const layerIndex = findIndex(parent.children, l => l.id === layerId);
-    const children = [...parent.children];
-    children.splice(layerIndex, 1, newLayer);
-    parent.children = children;
-    const actions: Action[] = [
-      new SetVectorLayer(LayerUtil.updateLayer(vl, parent)),
-      ...this.buildCleanupLayerIdActions(layerId),
-    ];
+    const actions: Action[] = [new SetVectorLayer(LayerUtil.replaceLayer(vl, layerId, converted))];
     const animation = this.getAnimation();
-    const oldLayerBlocks = animation.blocks.filter(b => b.layerId === layerId);
-    const newAnimatableProperties = new Set(newLayer.animatableProperties.keys());
-    // Preserve any blocks that are still animatable with the new layer.
-    const newLayerBlocks = oldLayerBlocks
-      .filter(b => newAnimatableProperties.has(b.propertyName))
-      .map(b => {
-        b = b.clone();
-        b.layerId = newLayer.id;
-        return b;
-      });
-    const newAnimation = animation.clone();
-    newAnimation.blocks = [
-      ...animation.blocks.filter(b => b.layerId !== layerId),
-      ...newLayerBlocks,
-    ];
-    actions.push(new SetAnimation(newAnimation));
+    const blocks = animation.blocks.filter(
+      b => b.layerId !== layerId || converted.animatableProperties.has(b.propertyName),
+    );
+    if (blocks.length !== animation.blocks.length) {
+      const newAnimation = animation.clone();
+      newAnimation.blocks = blocks;
+      actions.push(new SetAnimation(newAnimation));
+    }
     this.store.dispatch(new BatchAction(...actions));
+  }
+
+  /**
+   * Combines the selected paths into the bottom one, and selects it (scripts/common/combineLayers.ts).
+   * Returns why it can't, if it can't.
+   */
+  combineSelectedLayers() {
+    const combined = combineLayers(this.getDocument(), this.getSelectedLayerIds());
+    if (!('layerId' in combined)) {
+      return combined.reason;
+    }
+    const { vectorLayer, animation } = combined.document;
+    const removedIds = LayerUtil.runPreorderTraversal(this.getVectorLayer())
+      .map(l => l.id)
+      .filter(id => !vectorLayer.findLayerById(id));
+    this.store.dispatch(
+      new BatchAction(
+        new SetVectorLayer(vectorLayer),
+        new SetAnimation(animation),
+        ...this.buildCleanupLayerIdActions(...removedIds),
+        new SetSelectedLayers(new Set([combined.layerId])),
+      ),
+    );
+    return undefined;
+  }
+
+  /**
+   * Splits each of the selected paths into a path for each of its subpaths, and selects them
+   * (scripts/common/combineLayers.ts). Returns why it can't, if it can't.
+   */
+  breakApartSelectedLayers() {
+    const brokenApart = breakApartLayers(
+      this.getDocument(),
+      this.getSelectedLayerIds(),
+      this.queryStore(getHiddenLayerIds),
+    );
+    if (!('layerIds' in brokenApart)) {
+      return brokenApart.reason;
+    }
+    const { vectorLayer, animation } = brokenApart.document;
+    const actions: Action[] = [
+      new SetVectorLayer(vectorLayer),
+      new SetAnimation(animation),
+      new SetSelectedLayers(new Set(brokenApart.layerIds)),
+    ];
+    if (brokenApart.hiddenLayerIds !== this.queryStore(getHiddenLayerIds)) {
+      actions.push(new SetHiddenLayers(brokenApart.hiddenLayerIds));
+    }
+    this.store.dispatch(new BatchAction(...actions));
+    return undefined;
   }
 
   /**
@@ -684,6 +724,28 @@ export class LayerTimelineService {
   }
 
   /**
+   * Adds a block for the property that starts and ends at the layer's current value, in the gap
+   * closest to the current time, and selects it.
+   */
+  addBlockForProperty(layerId: string, propertyName: string) {
+    const layer = this.getVectorLayer().findLayerById(layerId);
+    const property = layer?.inspectableProperties.get(propertyName);
+    if (!layer || !property) {
+      return;
+    }
+    const value = property.cloneValue((layer as unknown as Record<string, unknown>)[propertyName]);
+    this.addBlocks([
+      {
+        layerId,
+        propertyName,
+        fromValue: value,
+        toValue: value,
+        currentTime: this.queryStore(getCurrentTime),
+      },
+    ]);
+  }
+
+  /**
    * Adds blocks in the gaps closest to their current times. With autoSelectBlocks, the added
    * blocks become the selection. Otherwise the selection stays as it is.
    */
@@ -850,6 +912,11 @@ export class LayerTimelineService {
 
   getAnimation() {
     return this.queryStore(getAnimation);
+  }
+
+  /** The layers and the animation, as they're saved. */
+  getDocument(): LayerDocument {
+    return { vectorLayer: this.getVectorLayer(), animation: this.getAnimation() };
   }
 
   isAnimationSelected() {

@@ -52,6 +52,10 @@ export function Splitter({ edge, min = 100, persistId }: SplitterProps) {
   useLayoutEffect(() => restoreSize(), []);
 
   const onMouseDown = (event: MouseEvent) => {
+    if (event.button !== 0) {
+      // E.g. a right-click, whose context menu could swallow the release and leave it dragging.
+      return;
+    }
     const downSize = getContentSize(getParent(), dimension);
     event.preventDefault();
     new Dragger({
