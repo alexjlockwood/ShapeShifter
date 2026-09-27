@@ -14,7 +14,7 @@ import {
   getIsSlowMotion,
 } from 'app/modules/editor/store/playback/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
-import _ from 'lodash';
+import { clamp } from 'lodash-es';
 import { Subscription } from 'rxjs';
 
 /** A simple service that provides an interface for making playback changes. */
@@ -178,7 +178,7 @@ class Animator {
       } else {
         this.pause(true);
       }
-      const fraction = _.clamp(progress / (duration * playbackSpeed), 0, 1);
+      const fraction = clamp(progress / (duration * playbackSpeed), 0, 1);
       this.callback.onAnimationUpdate(fraction * duration);
     };
     this.animationFrameId = window.requestAnimationFrame(onAnimationFrameFn);

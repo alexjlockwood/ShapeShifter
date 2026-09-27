@@ -1,5 +1,5 @@
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
+import { flatMap, range, round } from 'lodash-es';
 import * as PathUtil from 'test/PathUtil';
 
 import { newCalculator } from './calculators';
@@ -80,7 +80,7 @@ describe('Path', () => {
     for (const test of TESTS) {
       it(test.desc, () => {
         const actualPath = buildPath(test.actual);
-        const actualSvgChars = _.flatMap(actualPath.getSubPaths(), subPath => {
+        const actualSvgChars = flatMap(actualPath.getSubPaths(), subPath => {
           return subPath.getCommands().map(cmd => cmd.type);
         }).join('');
         expect(actualSvgChars).toEqual(test.expected[0] as string);
@@ -867,7 +867,7 @@ describe('Path', () => {
         point.y
       })' onto '${path.getPathString()}' yields ${JSON.stringify(a.proj)}`, () => {
         const result = path.project(point, a.subIdx)!;
-        result.projection.t = _.round(result.projection.t, 10);
+        result.projection.t = round(result.projection.t, 10);
         expect(result).toEqual(a.proj as ProjectionOntoPath);
       });
     });
@@ -972,7 +972,7 @@ describe('Path', () => {
   });
 
   describe('#unsplitCommand in reversed and shifted subpaths', () => {
-    const key = (p: Point) => `${_.round(p.x, 3)},${_.round(p.y, 3)}`;
+    const key = (p: Point) => `${round(p.x, 3)},${round(p.y, 3)}`;
     const points = (path: Path) =>
       path
         .getSubPath(0)
@@ -1018,9 +1018,7 @@ describe('Path', () => {
             const cmdIdx = 1 + Math.floor(random() * (numCommands - 1));
             path = pm.splitCommand(0, cmdIdx, 0.2 + random() * 0.6).build();
           } else {
-            const splitIdxs = _.range(numCommands).filter(i =>
-              path.getCommand(0, i).isSplitPoint(),
-            );
+            const splitIdxs = range(numCommands).filter(i => path.getCommand(0, i).isSplitPoint());
             if (splitIdxs.length) {
               path = unsplitAndCheck(path, splitIdxs[Math.floor(random() * splitIdxs.length)]);
             }
@@ -1106,8 +1104,8 @@ function checkCommandsEqual(actual: ReadonlyArray<Command>, expected: ReadonlyAr
         expect(ap).toEqual(undefined);
         expect(ep).toEqual(undefined);
       } else {
-        expect(_.round(ap.x, 8)).toEqual(ep.x);
-        expect(_.round(ap.y, 8)).toEqual(ep.y);
+        expect(round(ap.x, 8)).toEqual(ep.x);
+        expect(round(ap.y, 8)).toEqual(ep.y);
       }
     }
   }

@@ -1,8 +1,7 @@
 import { ActionMode, ActionSource, HoverType } from 'app/modules/editor/model/actionmode';
 import { Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
-import _ from 'lodash';
-
+import { findLastIndex } from 'lodash-es';
 import type { CanvasOverlay } from './CanvasOverlay';
 
 // TODO: clean up this class' messy communication w/ the overlay directive
@@ -74,7 +73,7 @@ export class PairSubPathHelper {
       const { subIdx } = index;
       return { subIdx, subPath: activePath.getSubPath(subIdx) };
     });
-    const lastSplitIndex = _.findLastIndex(infos, info => info.subPath.isSplit());
+    const lastSplitIndex = findLastIndex(infos, info => info.subPath.isSplit());
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 }

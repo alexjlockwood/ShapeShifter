@@ -13,8 +13,7 @@ import type { LayerTimelineService } from 'app/modules/editor/services';
 import type { State, Store } from 'app/modules/editor/store';
 import type { getPropertyInputState } from 'app/modules/editor/store/common/selectors';
 import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
-import _ from 'lodash';
-
+import { find } from 'lodash-es';
 import { InspectedProperty } from './InspectedProperty';
 
 export interface PropertyInputModel {
@@ -178,7 +177,7 @@ function buildInspectedBlockProperties(
 ) {
   const numSelections = selectedBlockIds.size;
   const selectedBlocks = Array.from(selectedBlockIds).map(id => {
-    return _.find(animation.blocks, b => b.id === id);
+    return find(animation.blocks, b => b.id === id);
   });
   if (numSelections > 1) {
     return {

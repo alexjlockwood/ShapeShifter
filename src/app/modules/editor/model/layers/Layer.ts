@@ -11,8 +11,7 @@ import {
   Property,
 } from 'app/modules/editor/model/properties';
 import { MathUtil, Matrix, Rect } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { isNil, uniqueId } from 'lodash-es';
 type Type = 'vector' | 'group' | 'mask' | 'path';
 
 /**
@@ -47,7 +46,7 @@ export abstract class Layer implements Inspectable, Animatable {
   abstract bounds: Rect | undefined;
 
   constructor(obj: LayerConstructorArgs) {
-    this.id = obj.id || _.uniqueId();
+    this.id = obj.id || uniqueId();
     this.name = obj.name || '';
     this.children = (obj.children || []).map(child => load(child));
   }
@@ -164,7 +163,7 @@ export class VectorLayer extends Layer {
 
   constructor(obj = { children: [], name: 'vector' } as VectorConstructorArgs) {
     super(obj);
-    const setterFn = (num: number | undefined, def: number) => (_.isNil(num) ? def : num);
+    const setterFn = (num: number | undefined, def: number) => (isNil(num) ? def : num);
     this.canvasColor = obj.canvasColor || VECTOR_DEFAULTS.canvasColor;
     this.width = setterFn(obj.width, 24);
     this.height = setterFn(obj.height, 24);
@@ -243,7 +242,7 @@ export class GroupLayer extends Layer {
 
   constructor(obj: GroupConstructorArgs) {
     super(obj);
-    const setterFn = (num: number | undefined, def: number) => (_.isNil(num) ? def : num);
+    const setterFn = (num: number | undefined, def: number) => (isNil(num) ? def : num);
     this.pivotX = setterFn(obj.pivotX, GROUP_DEFAULTS.pivotX);
     this.pivotY = setterFn(obj.pivotY, GROUP_DEFAULTS.pivotY);
     this.rotation = setterFn(obj.rotation, GROUP_DEFAULTS.rotation);
@@ -443,7 +442,7 @@ export class PathLayer extends Layer implements MorphableLayer {
 
   constructor(obj: PathConstructorArgs) {
     super(obj);
-    const setterFn = (num: number | undefined, def: number) => (_.isNil(num) ? def : num);
+    const setterFn = (num: number | undefined, def: number) => (isNil(num) ? def : num);
     this.pathData = obj.pathData;
     this.fillColor = obj.fillColor || PATH_DEFAULTS.fillColor;
     this.fillAlpha = setterFn(obj.fillAlpha, PATH_DEFAULTS.fillAlpha);

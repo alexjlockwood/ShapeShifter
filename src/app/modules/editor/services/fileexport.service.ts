@@ -6,8 +6,7 @@ import { State, Store } from 'app/modules/editor/store';
 import { getHiddenLayerIds, getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import JSZip from 'jszip';
-import _ from 'lodash';
-
+import { padStart } from 'lodash-es';
 // Store a version number just in case we ever change the export format...
 const IMPORT_EXPORT_VERSION = 1;
 
@@ -66,7 +65,7 @@ export class FileExportService {
       const length = (numSteps - 1).toString().length;
       const fpsFolder = getFolder(zip, `${fps}fps`);
       svgs.forEach((s, i) => {
-        fpsFolder.file(`frame${_.padStart(i.toString(), length, '0')}.svg`, s);
+        fpsFolder.file(`frame${padStart(i.toString(), length, '0')}.svg`, s);
       });
     });
     void zip.generateAsync({ type: 'blob' }).then((content: Blob) => {

@@ -1,5 +1,5 @@
 import { MathUtil, Point, Rect } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
+import { flatMap, sum, sumBy } from 'lodash-es';
 import polylabel from 'polylabel';
 
 import { isPoint } from './Command';
@@ -57,7 +57,7 @@ export class PathState {
         .setIsUnsplittable(isUnsplittable)
         .build();
     });
-    this.commands = _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);
+    this.commands = flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);
   }
 
   getPathLength() {
@@ -70,7 +70,7 @@ export class PathState {
 
   getSubPathLength(subIdx: number) {
     const sps = this.findSubPathState(subIdx);
-    return _.sumBy(sps.getCommandStates(), cs => cs.getPathLength());
+    return sumBy(sps.getCommandStates(), cs => cs.getPathLength());
   }
 
   getPointAtLength(distance: number) {
@@ -95,7 +95,7 @@ export class PathState {
       readonly splitIdx: number;
       readonly projection: Projection;
     }
-    const minProjectionResultInfo = _(this.subPaths as SubPath[])
+    const minProjectionResultInfo = (this.subPaths as SubPath[])
       .map((subPath, subIdx) => ({ subPath, subIdx }))
       .filter(
         ({ subPath, subIdx }) =>
@@ -147,7 +147,7 @@ export class PathState {
 
     if (isPointInRangeFn) {
       endPointHits.push(
-        ..._(this.subPaths as SubPath[])
+        ...(this.subPaths as SubPath[])
           .map((subPath, subIdx) => ({ subPath, subIdx }))
           .filter(obj => {
             const { subPath, subIdx } = obj;
@@ -168,8 +168,7 @@ export class PathState {
           .map(pointInfo => {
             const { subIdx, cmdIdx, projection } = pointInfo;
             return { subIdx, cmdIdx, projection };
-          })
-          .value(),
+          }),
       );
     }
 
@@ -177,7 +176,7 @@ export class PathState {
       // TODO: also check to see if the hit occurred at a stroke-linejoin vertex
       // TODO: take stroke width scaling into account as well?
       segmentHits.push(
-        ..._(this.subPaths as SubPath[])
+        ...(this.subPaths as SubPath[])
           .map((subPath, subIdx) => ({ subPath, subIdx }))
           .filter(obj => {
             const { subPath, subIdx } = obj;
@@ -189,7 +188,7 @@ export class PathState {
             const sps = this.findSubPathState(subIdx);
             // We iterate by csIdx here to improve performance (since cmdIdx
             // values can be split points).
-            return _.flatMap(sps.getCommandStates(), (cs, csIdx) => {
+            return flatMap(sps.getCommandStates(), (cs, csIdx) => {
               const projectionWithSplitIdx = cs.project(point);
               if (!projectionWithSplitIdx) {
                 return [] as ProjectionOntoPath[];
@@ -205,14 +204,13 @@ export class PathState {
           .filter(obj => {
             const cmd = this.subPaths[obj.subIdx].getCommands()[obj.cmdIdx];
             return isSegmentInRangeFn(obj.projection.d, cmd);
-          })
-          .value(),
+          }),
       );
     }
 
     if (opts.findShapesInRange) {
       shapeHits.push(
-        ..._(this.subPaths as SubPath[])
+        ...(this.subPaths as SubPath[])
           .map((subPath, subIdx) => ({ subPath, subIdx }))
           .filter(obj => {
             const { subPath, subIdx } = obj;
@@ -234,14 +232,13 @@ export class PathState {
             // intersections between the line and the path is odd.
             const line = { p1: point, p2: { x: bounds.r + 1, y: bounds.b + 1 } };
             const intersectionResults = css.map(cs => cs.intersects(line));
-            const numIntersections = _.sumBy(intersectionResults, ts => ts.length);
+            const numIntersections = sumBy(intersectionResults, ts => ts.length);
             if (numIntersections % 2 === 0) {
               // Nothing to see here. Check the next subpath.
               return [] as Array<{ readonly subIdx: number }>;
             }
             return [{ subIdx }];
-          })
-          .value(),
+          }),
       );
     }
     const isEndPointHit = !!endPointHits.length;
@@ -270,7 +267,7 @@ export class PathState {
     }
     const cmds = subPathCmds.slice(1);
     // Only the first command is missing its start point, and it's been removed.
-    const polygon = _.flatMap(cmds, cmd => {
+    const polygon = flatMap(cmds, cmd => {
       const { x: p1x, y: p1y } = cmd.start ?? cmd.end;
       const { x: p2x, y: p2y } = cmd.end;
       return [
@@ -294,13 +291,13 @@ export class PathState {
 
   // TODO: cache this?
   getBoundingBox() {
-    const css = _.flatMap(this.subPathStateMap, sps => sps.getCommandStates() as CommandState[]);
+    const css = flatMap(this.subPathStateMap, sps => sps.getCommandStates() as CommandState[]);
     return createBoundingBox(css);
   }
 
   isClockwise(subIdx: number) {
     const cmds = this.subPaths[subIdx].getCommands();
-    return _.sumBy(cmds, cmd => getArea(cmd)) >= 0;
+    return sumBy(cmds, cmd => getArea(cmd)) >= 0;
   }
 
   private findSubPathState(subIdx: number) {
@@ -309,7 +306,7 @@ export class PathState {
 
   private findCommandStateInfo(subIdx: number, cmdIdx: number) {
     const sps = this.findSubPathState(subIdx);
-    const numCommandsInSubPath = _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
+    const numCommandsInSubPath = sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
     if (cmdIdx && sps.isReversed()) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
@@ -332,9 +329,9 @@ export class PathState {
   private toCmdIdx(spsIdx: number, csIdx: number, splitIdx: number) {
     const sps = this.findSubPathState(this.subPathOrdering.indexOf(spsIdx));
     const commandStates = sps.getCommandStates();
-    const numCmds = _.sumBy(commandStates, cs => cs.getCommands().length);
+    const numCmds = sumBy(commandStates, cs => cs.getCommands().length);
     let cmdIdx =
-      splitIdx + _.sum(commandStates.map((cs, i) => (i < csIdx ? cs.getCommands().length : 0)));
+      splitIdx + sum(commandStates.map((cs, i) => (i < csIdx ? cs.getCommands().length : 0)));
     let shiftOffset = sps.getShiftOffset();
     if (sps.isReversed()) {
       cmdIdx = numCmds - cmdIdx;

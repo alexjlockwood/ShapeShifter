@@ -4,8 +4,7 @@ import {
   NumberProperty,
   Property,
 } from 'app/modules/editor/model/properties';
-import _ from 'lodash';
-
+import { uniqueId } from 'lodash-es';
 import { AnimationBlock } from './AnimationBlock';
 
 /**
@@ -16,7 +15,7 @@ import { AnimationBlock } from './AnimationBlock';
  */
 export class Animation {
   constructor(obj = {} as ConstructorArgs) {
-    this.id = obj.id || _.uniqueId();
+    this.id = obj.id || uniqueId();
     this.name = obj.name || 'anim';
     this.blocks = (obj.blocks || []).map(block => AnimationBlock.from(block));
     this.duration = obj.duration || 300;

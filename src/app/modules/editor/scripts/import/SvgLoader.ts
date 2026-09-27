@@ -13,8 +13,7 @@ import { Path } from 'app/modules/editor/model/paths';
 import { NameProperty } from 'app/modules/editor/model/properties';
 import { ColorUtil, MathUtil, Matrix } from 'app/modules/editor/scripts/common';
 import { optimizeSvg } from 'app/modules/editor/scripts/svgo';
-import _ from 'lodash';
-
+import { mapValues, uniqueId } from 'lodash-es';
 // TODO: trim ids/strings?
 // TODO: check for invalid enum values
 
@@ -74,7 +73,7 @@ export function loadVectorLayerFromSvgStringInternal(
   // TODO: handle clipPaths that have children path elements with clip-path attributes
   // TODO: handle clipPaths with clipPathUnits="objectBoundingBox"
   // TODO: confirm that clipPath transforms (and any referenced transforms) are handled correctly
-  const clipPathMap = _.mapValues(buildPathInfosMap(documentElement), infos => {
+  const clipPathMap = mapValues(buildPathInfosMap(documentElement), infos => {
     return infos.map(info => info.path);
   });
 
@@ -185,7 +184,7 @@ export function loadVectorLayerFromSvgStringInternal(
       // TODO: make best effort attempt to restore trimPath{Start,End,Offset}
       return maybeWrapClipPathInGroupFn(
         new PathLayer({
-          id: _.uniqueId(),
+          id: uniqueId(),
           name: makeFinalNodeIdFn(node.getAttribute('id'), 'path'),
           children: [],
           pathData,
@@ -214,7 +213,7 @@ export function loadVectorLayerFromSvgStringInternal(
       }
       return maybeWrapClipPathInGroupFn(
         new GroupLayer({
-          id: _.uniqueId(),
+          id: uniqueId(),
           name: makeFinalNodeIdFn(node.getAttribute('id'), 'group'),
           children,
         }),
@@ -239,7 +238,7 @@ export function loadVectorLayerFromSvgStringInternal(
   }
   const rootLayer = nodeToLayerFn(documentElement, rootTransforms);
   return new VectorLayer({
-    id: _.uniqueId(),
+    id: uniqueId(),
     name: makeFinalNodeIdFn(documentElement.getAttribute('id'), 'vector'),
     children: rootLayer ? rootLayer.children : [],
     width,
@@ -384,7 +383,7 @@ function buildPathInfosForClipPath(node: SVGClipPathElement) {
  * Builds a map of clip path IDs to their corresponding path info objects.
  */
 function buildPathInfosMap(root: Element) {
-  const clipPathInfoMap = _.mapValues(buildClipPathIdMap(root), n => {
+  const clipPathInfoMap = mapValues(buildClipPathIdMap(root), n => {
     const pathInfos = buildPathInfosForClipPath(n);
     const refClipPathId = getReferencedClipPathId(n);
     return { pathInfos, refClipPathId } as ClipPathInfo;

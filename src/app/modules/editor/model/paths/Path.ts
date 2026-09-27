@@ -1,8 +1,19 @@
 import { bugsnagClient } from 'app/modules/editor/scripts/bugsnag';
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
 import { environment } from 'environments/environment';
-import _ from 'lodash';
-
+import {
+  compact,
+  difference,
+  find,
+  findIndex,
+  findLastIndex,
+  flatMap,
+  flatten,
+  sumBy,
+  times,
+  uniq,
+  uniqueId,
+} from 'lodash-es';
 import { Projection } from './calculators';
 import { Command } from './Command';
 import { CommandState } from './CommandState';
@@ -48,7 +59,7 @@ export class Path {
             };
           });
         });
-        console.warn('duplicate IDs found!', this, _.flatten(dumpInfo));
+        console.warn('duplicate IDs found!', this, flatten(dumpInfo));
       }
     }
   }
@@ -283,7 +294,7 @@ export class PathMutator {
 
   private shift(subIdx: number, calcOffsetFn: (offset: number, numCommands: number) => number) {
     const sps = this.findSubPathStateLeaf(subIdx);
-    const numCmdsInSubPath = _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
+    const numCmdsInSubPath = sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
     if (numCmdsInSubPath <= 1) {
       return this;
     }
@@ -407,7 +418,7 @@ export class PathMutator {
       shiftOffset--;
     }
     // A closed subpath with n commands has n - 1 points to start from.
-    const numCmdsInSubPath = _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
+    const numCmdsInSubPath = sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
     shiftOffset = MathUtil.floorMod(shiftOffset, Math.max(1, numCmdsInSubPath - 1));
     if (shiftOffset !== sps.getShiftOffset()) {
       this.setSubPathStateLeaf(subIdx, sps.mutate().setShiftOffset(shiftOffset).build());
@@ -607,7 +618,7 @@ export class PathMutator {
 
     // Give both line segments the same unique ID so that we can later identify which
     // split segments were added together during the deletion phase.
-    const splitSegmentId = _.uniqueId();
+    const splitSegmentId = uniqueId();
     const endLine = new CommandState(new Command('L', [endSplitPoint, startSplitPoint]))
       .mutate()
       .setSplitSegmentInfo(secondLeft, splitSegmentId)
@@ -661,17 +672,15 @@ export class PathMutator {
     const parent = this.findSubPathStateParent(subIdx);
 
     // Find the backing IDs for each parent command state that is a split segment.
-    const parentSplitBackingIds = _((parent ? parent.getCommandStates() : []) as CommandState[])
+    const parentSplitBackingIds = ((parent ? parent.getCommandStates() : []) as CommandState[])
       .filter(cs => !!cs.getSplitSegmentId())
-      .map(cs => cs.getBackingId())
-      .value();
+      .map(cs => cs.getBackingId());
 
     // Find the backing IDs for each sibling command state that is a split segment,
     // not including split segments that were inherited from the parent.
-    const siblingSplitBackingIds = _(targetSps.getCommandStates() as CommandState[])
+    const siblingSplitBackingIds = (targetSps.getCommandStates() as CommandState[])
       .filter(cs => !!cs.getSplitSegmentId() && !parentSplitBackingIds.includes(cs.getBackingId()))
-      .map(cs => cs.getBackingId())
-      .value();
+      .map(cs => cs.getBackingId());
 
     // Checking for the existence of 'firstRight' and 'secondRight' ensures that
     // paths connected to the end point of a deleted split segment will still be kept.
@@ -711,27 +720,23 @@ export class PathMutator {
       return this;
     }
     // Get the list of parent split segment IDs.
-    const parentSplitSegIds = _(parent.getCommandStates() as CommandState[])
-      .map(cs => cs.getSplitSegmentId())
-      .compact()
-      .uniq()
-      .value();
+    const parentSplitSegIds = uniq(
+      compact((parent.getCommandStates() as CommandState[]).map(cs => cs.getSplitSegmentId())),
+    );
     // Get the list of sibling split segment IDs, not including split segment
     // IDs inherited from the parent.
-    const siblingSplitSegIds = _(targetCss as CommandState[])
-      .map(cs => cs.getSplitSegmentId())
-      .compact()
-      .uniq()
-      .difference(parentSplitSegIds)
-      .value();
+    const siblingSplitSegIds = difference(
+      uniq(compact((targetCss as CommandState[]).map(cs => cs.getSplitSegmentId()))),
+      parentSplitSegIds,
+    );
     siblingSplitSegIds.forEach(id => {
-      const targetCs = _.find(targetCss, cs => cs.getSplitSegmentId() === id);
+      const targetCs = find(targetCss, cs => cs.getSplitSegmentId() === id);
       if (!targetCs) {
         return;
       }
       const deletedSubIdxs = this.calculateDeletedSubIdxs(subIdx, targetCs);
       this.deleteFilledSubPathSegmentInternal(subIdx, targetCs);
-      subIdx -= _.sumBy(deletedSubIdxs, idx => (idx <= subIdx ? 1 : 0));
+      subIdx -= sumBy(deletedSubIdxs, idx => (idx <= subIdx ? 1 : 0));
     });
     return this;
   }
@@ -763,11 +768,11 @@ export class PathMutator {
     const pssps = psps.getSplitSubPaths();
     const pcss = psps.getCommandStates();
     // Find the first index of the split sub path containing the target.
-    const splitSubPathIdx1 = _.findIndex(pssps, sps => {
+    const splitSubPathIdx1 = findIndex(pssps, sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === targetSplitSegId);
     });
     // Find the second index of the split sub path containing the target.
-    const splitSubPathIdx2 = _.findLastIndex(pssps, sps => {
+    const splitSubPathIdx2 = findLastIndex(pssps, sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === targetSplitSegId);
     });
     const deletedSubIdxs = this.calculateDeletedSubIdxs(subIdx, targetCs);
@@ -812,7 +817,7 @@ export class PathMutator {
         }
         newCss.push(cs);
       }
-      i = _.findIndex(splitCss1, c => c.getBackingId() === parentBackingId2);
+      i = findIndex(splitCss1, c => c.getBackingId() === parentBackingId2);
       if (i >= 0) {
         if (cs) {
           if (splitCss1[i].getBackingId() === cs.getBackingId()) {
@@ -866,10 +871,10 @@ export class PathMutator {
       return [];
     }
     const pssps = psps.getSplitSubPaths();
-    const splitSubPathIdx1 = _.findIndex(pssps, sps => {
+    const splitSubPathIdx1 = findIndex(pssps, sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegId);
     });
-    const splitSubPathIdx2 = _.findLastIndex(pssps, sps => {
+    const splitSubPathIdx2 = findLastIndex(pssps, sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegId);
     });
     const pssp1 = pssps[splitSubPathIdx1];
@@ -951,7 +956,7 @@ export class PathMutator {
         new CommandState(
           new Command(
             svgChar,
-            _.times(numPoints[svgChar], () => end),
+            times(numPoints[svgChar], () => end),
           ),
         ),
     );
@@ -1029,7 +1034,7 @@ export class PathMutator {
     const orderedSubPathCmds = this.subPathOrdering.map(
       (unused, subIdx) => spsCmds[this.subPathOrdering[subIdx]],
     );
-    return _(orderedSubPathCmds)
+    return orderedSubPathCmds
       .map((cmds, subIdx) => {
         const moveCmd = cmds[0];
         if (subIdx === 0 && moveCmd.start) {
@@ -1040,8 +1045,7 @@ export class PathMutator {
         }
         return cmds;
       })
-      .flatMap(cmds => cmds)
-      .value();
+      .flatMap(cmds => cmds);
   }
 
   /**
@@ -1107,7 +1111,7 @@ export class PathMutator {
   private findReversedAndShiftedInternalIndices(subIdx: number, cmdIdx: number) {
     const sps = this.findSubPathStateLeaf(subIdx);
     const css = sps.getCommandStates();
-    const numCommandsInSubPath = _.sumBy(css, cs => cs.getCommands().length);
+    const numCommandsInSubPath = sumBy(css, cs => cs.getCommands().length);
     if (cmdIdx && sps.isReversed()) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
@@ -1216,7 +1220,7 @@ function shiftCommandStates(css: CommandState[], isReversed: boolean, shiftOffse
     return css;
   }
 
-  const numCommands = _.sumBy(css, cs => cs.getCommands().length);
+  const numCommands = sumBy(css, cs => cs.getCommands().length);
   if (isReversed) {
     shiftOffset *= -1;
     shiftOffset += numCommands - 1;
@@ -1278,11 +1282,11 @@ function reverseCommands(subPathState: SubPathState) {
   const hasOneCmd = subPathCss.length === 1 && subPathCss[0].getCommands().length === 1;
   if (hasOneCmd || !subPathState.isReversed()) {
     // Nothing to do in these two cases.
-    return _.flatMap(subPathCss, cm => cm.getCommands() as Command[]);
+    return flatMap(subPathCss, cm => cm.getCommands() as Command[]);
   }
 
   // Extract the commands from our command mutation map.
-  const cmds = _.flatMap(subPathCss, cm => {
+  const cmds = flatMap(subPathCss, cm => {
     // Consider a segment A ---- B ---- C with AB split and
     // BC non-split. When reversed, we want the user to see
     // C ---- B ---- A w/ CB split and BA non-split.

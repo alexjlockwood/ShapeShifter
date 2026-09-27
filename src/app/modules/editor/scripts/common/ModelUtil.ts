@@ -1,7 +1,6 @@
 import { Layer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
-import _ from 'lodash';
-
+import { forEach, uniqueId } from 'lodash-es';
 /**
  * Builds a map where the keys are layer IDs and the values are
  * maps of property names to their corresponding animation blocks.
@@ -20,8 +19,8 @@ export function getOrderedBlocksByPropertyByLayer(animation: Animation) {
     blocksByProperty[propertyName].push(block);
   });
 
-  _.forEach(blocksByPropertyByLayer, blocksByProperty => {
-    _.forEach(blocksByProperty, blocks => {
+  forEach(blocksByPropertyByLayer, blocksByProperty => {
+    forEach(blocksByProperty, blocks => {
       blocks.sort((a, b) => a.startTime - b.startTime);
     });
   });
@@ -65,7 +64,7 @@ export function regenerateModelIds(
 ) {
   // Create a map of old IDs to new IDs.
   const layerIdMap: Dictionary<string> = {};
-  vectorLayer.walk(layer => (layerIdMap[layer.id] = _.uniqueId()));
+  vectorLayer.walk(layer => (layerIdMap[layer.id] = uniqueId()));
 
   vectorLayer = <VectorLayer>(function recurseFn<T extends Layer>(layer: T) {
     const clone = layer.clone();
@@ -75,10 +74,10 @@ export function regenerateModelIds(
   })(vectorLayer);
 
   const clonedAnim = animation.clone();
-  clonedAnim.id = _.uniqueId();
+  clonedAnim.id = uniqueId();
   clonedAnim.blocks = clonedAnim.blocks.map(block => {
     const clonedBlock = block.clone();
-    clonedBlock.id = _.uniqueId();
+    clonedBlock.id = uniqueId();
     clonedBlock.layerId = layerIdMap[clonedBlock.layerId];
     return clonedBlock;
   });

@@ -1,6 +1,5 @@
 import { MathUtil } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { clamp } from 'lodash-es';
 import { Config, Property } from './Property';
 
 export class NumberProperty extends Property<number> {
@@ -23,7 +22,7 @@ export class NumberProperty extends Property<number> {
     if (isNaN(value)) {
       return;
     }
-    value = _.clamp(value, this.min, this.max);
+    value = clamp(value, this.min, this.max);
     if (this.isInteger) {
       value = Math.floor(value);
     }
@@ -37,7 +36,7 @@ export class NumberProperty extends Property<number> {
     }
     if (typeof value === 'number') {
       if (!isNaN(value)) {
-        value = _.clamp(value, this.min, this.max);
+        value = clamp(value, this.min, this.max);
         if (this.isInteger) {
           value = Math.floor(value);
         }

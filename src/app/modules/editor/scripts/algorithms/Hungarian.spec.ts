@@ -1,10 +1,9 @@
-import _ from 'lodash';
-
+import { sum, times } from 'lodash-es';
 import { assign } from './Hungarian';
 
 describe('assign', () => {
   const totalCost = (costs: number[][], cols: number[]) =>
-    _.sum(cols.map((col, row) => costs[row][col]));
+    sum(cols.map((col, row) => costs[row][col]));
 
   /** Tries every assignment, which is only fast enough for small tables. */
   function bruteForceCost(costs: number[][]) {
@@ -63,7 +62,7 @@ describe('assign', () => {
     for (let i = 0; i < 200; i++) {
       const numRows = 1 + Math.floor(random() * 5);
       const numCols = numRows + Math.floor(random() * 3);
-      const costs = _.times(numRows, () => _.times(numCols, () => Math.round(random() * 20)));
+      const costs = times(numRows, () => times(numCols, () => Math.round(random() * 20)));
       const cols = assign(costs);
       expect(new Set(cols).size).toBe(numRows);
       expect(totalCost(costs, cols)).toBeCloseTo(bruteForceCost(costs));

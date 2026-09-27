@@ -1,5 +1,4 @@
-import _ from 'lodash';
-
+import { uniqueId } from 'lodash-es';
 import { CommandState } from './CommandState';
 
 /**
@@ -10,7 +9,7 @@ export class SubPathState {
     private readonly commandStates: ReadonlyArray<CommandState>,
     private readonly isReversed_ = false,
     private readonly shiftOffset = 0,
-    private readonly id = _.uniqueId(),
+    private readonly id = uniqueId(),
     // Either empty if this sub path is not split, or an array
     // containing this sub path's split children.
     private readonly splitSubPaths: ReadonlyArray<SubPathState> = [],

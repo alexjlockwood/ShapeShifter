@@ -3,8 +3,7 @@ import { LayerUtil } from 'app/modules/editor/model/layers';
 import { ProjectionOntoPath } from 'app/modules/editor/model/paths';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import { ActionModeService } from 'app/modules/editor/services';
-import _ from 'lodash';
-
+import { findLastIndex } from 'lodash-es';
 import type { CanvasOverlay } from './CanvasOverlay';
 
 // TODO: use the 'Dragger' to drag points to different locations
@@ -268,7 +267,7 @@ export class SelectionHelper {
       const { subIdx } = index;
       return { subIdx, subPath: activePath.getSubPath(subIdx) };
     });
-    const lastSplitIndex = _.findLastIndex(infos, info => info.subPath.isSplit());
+    const lastSplitIndex = findLastIndex(infos, info => info.subPath.isSplit());
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 
@@ -281,7 +280,7 @@ export class SelectionHelper {
       const { subIdx, cmdIdx } = index;
       return { subIdx, cmdIdx, cmd: activePath.getCommand(subIdx, cmdIdx) };
     });
-    const lastSplitIndex = _.findLastIndex(infos, info => info.cmd.isSplitSegment());
+    const lastSplitIndex = findLastIndex(infos, info => info.cmd.isSplitSegment());
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 
@@ -294,7 +293,7 @@ export class SelectionHelper {
       const { subIdx, cmdIdx } = index;
       return { subIdx, cmdIdx, cmd: activePath.getCommand(subIdx, cmdIdx) };
     });
-    const lastSplitIndex = _.findLastIndex(infos, info => info.cmd.isSplitPoint());
+    const lastSplitIndex = findLastIndex(infos, info => info.cmd.isSplitPoint());
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 

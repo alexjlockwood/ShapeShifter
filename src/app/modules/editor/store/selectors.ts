@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
   createSelectorCreator,
   createStructuredSelector as createStructuredSelectorWithCreator,
@@ -18,7 +18,7 @@ export const createSelector = createSelectorCreator({
 
 export const createDeepEqualSelector = createSelectorCreator({
   memoize: lruMemoize,
-  memoizeOptions: { equalityCheck: (a: unknown, b: unknown) => _.isEqual(a, b) },
+  memoizeOptions: { equalityCheck: (a: unknown, b: unknown) => isEqual(a, b) },
   argsMemoize: lruMemoize,
 });
 

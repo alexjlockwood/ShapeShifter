@@ -8,8 +8,7 @@ import {
   PathProperty,
   Property,
 } from 'app/modules/editor/model/properties';
-import _ from 'lodash';
-
+import { isFinite, uniqueId } from 'lodash-es';
 type AnimationBlockType = 'path' | 'color' | 'number';
 
 /**
@@ -30,7 +29,7 @@ export abstract class AnimationBlock {
   }
 
   protected constructor(obj: ConstructorArgs) {
-    this.id = obj.id || _.uniqueId();
+    this.id = obj.id || uniqueId();
     this.layerId = obj.layerId;
     this.propertyName = obj.propertyName;
     this.startTime = obj.startTime || 0;
@@ -114,7 +113,7 @@ Property.register(
 export class NumberAnimationBlock extends AnimationBlock {
   // @Override
   isAnimatable() {
-    return _.isFinite(this.fromValue) && _.isFinite(this.toValue);
+    return isFinite(this.fromValue) && isFinite(this.toValue);
   }
 }
 Property.register(

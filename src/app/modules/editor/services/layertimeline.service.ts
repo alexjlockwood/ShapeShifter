@@ -35,8 +35,7 @@ import {
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
 import { environment } from 'environments/environment';
-import _ from 'lodash';
-
+import { difference, find, findIndex, isEqual, uniqueId } from 'lodash-es';
 import * as StoreUtil from './StoreUtil';
 
 /**
@@ -134,10 +133,10 @@ export class LayerTimelineService {
     if (this.isAnimationSelected() !== isAnimSelected) {
       actions.push(new SelectAnimation(isAnimSelected));
     }
-    if (!_.isEqual(this.getSelectedBlockIds(), selectedBlockIds)) {
+    if (!isEqual(this.getSelectedBlockIds(), selectedBlockIds)) {
       actions.push(new SetSelectedBlocks(selectedBlockIds));
     }
-    if (!_.isEqual(this.getSelectedLayerIds(), selectedLayerIds)) {
+    if (!isEqual(this.getSelectedLayerIds(), selectedLayerIds)) {
       actions.push(new SetSelectedLayers(selectedLayerIds));
       // TODO: improve this design somehow (probably best not to have this service depend on paper ops?)
       // TODO: figure out which selection-changed cases should force you into default mode
@@ -260,7 +259,7 @@ export class LayerTimelineService {
     if (!parent) {
       return;
     }
-    const layerIndex = _.findIndex(parent.children, l => l.id === layerId);
+    const layerIndex = findIndex(parent.children, l => l.id === layerId);
     const children = [...parent.children];
     children.splice(layerIndex, 1, newLayer);
     parent.children = children;
@@ -340,7 +339,7 @@ export class LayerTimelineService {
     }
     const children = [...parent.children];
     children.splice(
-      _.findIndex(parent.children, l => l.id === layerId),
+      findIndex(parent.children, l => l.id === layerId),
       1,
       ...layerChildren,
     );
@@ -375,7 +374,7 @@ export class LayerTimelineService {
     const hiddenLayerIds = this.getHiddenLayerIds();
     const selectedLayerIds = this.getSelectedLayerIds();
     const differenceFn = (s: ReadonlySet<string>, a: string[]) =>
-      new Set(_.difference(Array.from(s), a));
+      new Set(difference(Array.from(s), a));
     const actions: Action[] = [];
     if (deletedLayerIds.some(id => collapsedLayerIds.has(id))) {
       actions.push(new SetCollapsedLayers(differenceFn(collapsedLayerIds, deletedLayerIds)));
@@ -406,7 +405,7 @@ export class LayerTimelineService {
     const selLayerOrdersMap: Dictionary<number> = {};
     let n = 0;
     vl.walk(layer => {
-      if (_.find(tempSelLayers, l => l.id === layer.id)) {
+      if (find(tempSelLayers, l => l.id === layer.id)) {
         selLayerOrdersMap[layer.id] = n;
         n++;
       }
@@ -440,7 +439,7 @@ export class LayerTimelineService {
       if (!firstSelectedLayerParent) {
         return;
       }
-      const firstSelectedLayerIndexInParent = _.findIndex(
+      const firstSelectedLayerIndexInParent = findIndex(
         firstSelectedLayerParent.children,
         l => l.id === tempSelLayers[0].id,
       );
@@ -475,7 +474,7 @@ export class LayerTimelineService {
           }
           const indexInParent = Math.max(
             0,
-            _.findIndex(parent.children, l => l.id === groupLayer.id),
+            findIndex(parent.children, l => l.id === groupLayer.id),
           );
           const newChildren = [...parent.children];
           newChildren.splice(indexInParent, 0, ...groupLayer.children);
@@ -549,7 +548,7 @@ export class LayerTimelineService {
     }
     const animation = this.getAnimation().clone();
     animation.blocks = animation.blocks.map(block => {
-      const newBlock = _.find(blocks, b => block.id === b.id);
+      const newBlock = find(blocks, b => block.id === b.id);
       return newBlock ? newBlock : block;
     });
     this.store.dispatch(new SetAnimation(animation));
@@ -570,7 +569,7 @@ export class LayerTimelineService {
   ) {
     let animation = this.getAnimation();
     const addedBlocks: { id: string }[] = [];
-    for (const block of blocks.map(b => ({ ...b, id: b.id || _.uniqueId() }))) {
+    for (const block of blocks.map(b => ({ ...b, id: b.id || uniqueId() }))) {
       const anim = this.addBlockToAnimation(animation, block);
       if (animation !== anim) {
         animation = anim;
@@ -708,7 +707,7 @@ export class LayerTimelineService {
     const anim = this.getAnimation();
     const blockIds = this.getSelectedBlockIds();
     return Array.from(blockIds)
-      .map(id => _.find(anim.blocks, b => b.id === id))
+      .map(id => find(anim.blocks, b => b.id === id))
       .filter((b): b is AnimationBlock => !!b);
   }
 

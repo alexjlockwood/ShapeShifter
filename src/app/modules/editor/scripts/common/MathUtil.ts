@@ -1,5 +1,4 @@
-import _ from 'lodash';
-
+import { round as lodashRound } from 'lodash-es';
 import { Matrix } from './Matrix';
 import { Point } from './Point';
 
@@ -51,7 +50,7 @@ export function arePointsEqual(p1: Point, p2: Point) {
 
 /** Rounds the number to a prespecified precision. */
 export function round(n: number) {
-  return _.round(n, 9);
+  return lodashRound(n, 9);
 }
 
 /** Snaps a directional vector to the specified angle. */

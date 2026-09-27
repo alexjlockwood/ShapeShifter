@@ -1,6 +1,5 @@
 import { MathUtil, Matrix, Point } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { first, round, uniqWith, uniqueId } from 'lodash-es';
 import { SvgChar } from '.';
 
 /**
@@ -12,7 +11,7 @@ export class Command {
     private readonly _type: SvgChar,
     private readonly _points: ReadonlyArray<Point | undefined>,
     private readonly _isSplitPoint = false,
-    private readonly _id = _.uniqueId(),
+    private readonly _id = uniqueId(),
     private readonly _isSplitSegment = false,
   ) {
     if (_type === undefined) {
@@ -62,7 +61,7 @@ export class Command {
    * command of the first subpath will be undefined.
    */
   get start() {
-    return _.first(this._points);
+    return first(this._points);
   }
 
   /**
@@ -91,11 +90,11 @@ export class Command {
       case 'Z':
         return ch === 'L' || ch === 'Q' || ch === 'C';
       case 'Q': {
-        const uniquePoints = _.uniqWith(this._points.filter(isPoint), MathUtil.arePointsEqual);
+        const uniquePoints = uniqWith(this._points.filter(isPoint), MathUtil.arePointsEqual);
         return ch === 'C' || (ch === 'L' && uniquePoints.length <= 2);
       }
       case 'C': {
-        const uniquePoints = _.uniqWith(this._points.filter(isPoint), MathUtil.arePointsEqual);
+        const uniquePoints = uniqWith(this._points.filter(isPoint), MathUtil.arePointsEqual);
         return ch === 'L' && uniquePoints.length <= 2;
       }
     }
@@ -120,8 +119,8 @@ export class Command {
       return `${this._type}`;
     } else {
       const p = this.end;
-      const x = _.round(p.x, 3);
-      const y = _.round(p.y, 3);
+      const x = round(p.x, 3);
+      const y = round(p.y, 3);
       return `${this._type} ${x}, ${y}`;
     }
   }
@@ -186,7 +185,7 @@ export class CommandBuilder {
       this.svgChar,
       this.points.map(p => (p ? MathUtil.transformPoint(p, this.matrix) : p)),
       this.isSplitPoint,
-      this.id || _.uniqueId(),
+      this.id || uniqueId(),
       this.isSplitSegment,
     );
   }

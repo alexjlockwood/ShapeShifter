@@ -12,8 +12,7 @@ import {
 import { Path } from 'app/modules/editor/model/paths';
 import { NameProperty } from 'app/modules/editor/model/properties';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
-import _ from 'lodash';
-
+import { find, isElement as lodashIsElement, uniqueId } from 'lodash-es';
 // import { INTERPOLATORS } from 'app/modules/editor/model/interpolators';
 // import { AnimationBlock } from 'app/modules/editor/model/timeline';
 
@@ -50,7 +49,7 @@ function loadVectorLayerFromElement(
 
     if (node.tagName === 'path') {
       return new PathLayer({
-        id: _.uniqueId(),
+        id: uniqueId(),
         name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'path'),
         children: [],
         pathData: getPath(node),
@@ -71,7 +70,7 @@ function loadVectorLayerFromElement(
 
     if (node.tagName === 'clip-path') {
       return new ClipPathLayer({
-        id: _.uniqueId(),
+        id: uniqueId(),
         name: makeFinalNodeIdFn(get(node, 'name', ''), 'clip-path'),
         children: [],
         pathData: getPath(node),
@@ -84,7 +83,7 @@ function loadVectorLayerFromElement(
         .filter((child): child is Layer => !!child);
       if (children && children.length) {
         return new GroupLayer({
-          id: _.uniqueId(),
+          id: uniqueId(),
           name: makeFinalNodeIdFn(get(node, 'name', ''), 'group'),
           children,
           pivotX: getNumber(node, 'pivotX', '0'),
@@ -108,7 +107,7 @@ function loadVectorLayerFromElement(
   const height = getNumber(docEl, 'viewportHeight', '24');
   const alpha = getNumber(docEl, 'alpha', '1');
   return new VectorLayer({
-    id: _.uniqueId(),
+    id: uniqueId(),
     name,
     children: rootLayer ? rootLayer.children : [],
     width,
@@ -180,7 +179,7 @@ function loadVectorLayerFromElement(
 //         // TODO: @android:interpolator/linear doesn't work
 //         const interpolatorRef =
 //           get(animElem, 'interpolator', '@android:anim/accelerate_decelerate_interpolator');
-//         const interpolator = _.find(INTERPOLATORS, i => i.androidRef === interpolatorRef).value;
+//         const interpolator = find(INTERPOLATORS, i => i.androidRef === interpolatorRef).value;
 //         const startTime = Number(get(animElem, 'startOffset'));
 //         const endTime = startTime + Number(get(animElem, 'duration'));
 //         if (get(animElem, 'valueType') === 'pathType' && propertyName === 'pathData') {
@@ -221,7 +220,7 @@ function isElement(node: Node): node is HTMLElement {
     node &&
     node.nodeType !== Node.TEXT_NODE &&
     node.nodeType !== Node.COMMENT_NODE &&
-    _.isElement(node)
+    lodashIsElement(node)
   );
 }
 

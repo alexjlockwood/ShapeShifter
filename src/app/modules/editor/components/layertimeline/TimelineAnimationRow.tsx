@@ -2,7 +2,7 @@ import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import type { Layer } from 'app/modules/editor/model/layers';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { getTimelineAnimationRowState } from 'app/modules/editor/store/common/selectors';
-import _ from 'lodash';
+import { values } from 'lodash-es';
 import { memo, useMemo } from 'react';
 
 import { useLayerTimelineController } from './LayerTimelineContext';
@@ -23,7 +23,7 @@ export const TimelineAnimationRow = memo(function TimelineAnimationRow({
   // A list of animation block lists. Each animation block list corresponds to
   // a property name displayed in the layer list tree.
   const blocksByPropertyNameValues = useMemo(
-    () => _.values(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layer.id]),
+    () => values(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layer.id]),
     [animation, layer.id],
   );
   const isExpanded = !collapsedLayerIds.has(layer.id);

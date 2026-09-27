@@ -15,7 +15,7 @@ import {
 import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { getLayerListTreeState } from 'app/modules/editor/store/common/selectors';
-import _ from 'lodash';
+import { keys } from 'lodash-es';
 import { memo, type MouseEvent, useMemo } from 'react';
 
 import './layerlisttree.scss';
@@ -37,7 +37,7 @@ function buildLayerModel(
     ModelUtil.getAvailablePropertyNamesForLayer(layer, animation),
   );
   const getExistingPropertyNamesFn = (layerId: string) => {
-    return _.keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layerId]);
+    return keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layerId]);
   };
   const existingPropertyNames = getExistingPropertyNamesFn(layer.id);
   const canBeConvertedToPath = layer instanceof ClipPathLayer;

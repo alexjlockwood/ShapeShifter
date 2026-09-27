@@ -3,8 +3,7 @@ import { CommandBuilder } from 'app/modules/editor/model/paths/Command';
 import { MathUtil, Point } from 'app/modules/editor/scripts/common';
 import BezierJs from 'bezier-js';
 import { environment } from 'environments/environment';
-import _ from 'lodash';
-
+import { clamp, uniqWith } from 'lodash-es';
 import { BBox, Calculator, Line } from '.';
 import { LineCalculator } from './LineCalculator';
 import { PointCalculator } from './PointCalculator';
@@ -63,7 +62,7 @@ export class BezierCalculator implements Calculator {
       return new PointCalculator(this.id, this.svgChar, this.bezierJs.get(t1) as Point);
     }
     const points: ReadonlyArray<Point> = this.bezierJs.split(t1, t2).points;
-    const uniquePoints: Point[] = _.uniqWith(points, MathUtil.arePointsEqual);
+    const uniquePoints: Point[] = uniqWith(points, MathUtil.arePointsEqual);
     if (uniquePoints.length === 2) {
       return new LineCalculator(this.id, this.svgChar, points[0], points[points.length - 1]);
     }
@@ -101,7 +100,7 @@ export class BezierCalculator implements Calculator {
     }
     if (distance <= 0 || distance >= 1 || !this.getPathLength()) {
       // A curve with no length is at its start and end at every time.
-      return _.clamp(distance, 0, 1);
+      return clamp(distance, 0, 1);
     }
     // The length covered only grows with time, so bisect. (Searching outward from t = distance,
     // as this used to, couldn't reach times more than a quarter away, which curves that speed up

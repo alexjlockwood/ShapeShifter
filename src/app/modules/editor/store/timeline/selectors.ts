@@ -4,8 +4,7 @@ import {
   createSelector,
   getEditorState,
 } from 'app/modules/editor/store/selectors';
-import _ from 'lodash';
-
+import { find } from 'lodash-es';
 const getTimelineState = createSelector(getEditorState, s => s.timeline);
 export const getAnimation = createSelector(getTimelineState, t => t.animation);
 export const isAnimationSelected = createSelector(getTimelineState, t => t.isAnimationSelected);
@@ -22,7 +21,7 @@ export const getSingleSelectedPathBlock = createSelector(
     if (!blockId) {
       return undefined;
     }
-    return _.find(
+    return find(
       anim.blocks,
       (b): b is PathAnimationBlock => b.id === blockId && b instanceof PathAnimationBlock,
     );

@@ -7,8 +7,7 @@ import {
   VectorLayer,
 } from 'app/modules/editor/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
-import _ from 'lodash';
-
+import { find, isNil } from 'lodash-es';
 import * as XmlSerializer from './XmlSerializer';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
@@ -93,7 +92,7 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
       }
       conditionalAttrFn(blockNode, 'android:valueType', property.getAnimatorValueType());
       const interpolator =
-        _.find(INTERPOLATORS, i => i.value === block.interpolator) ?? INTERPOLATORS[0];
+        find(INTERPOLATORS, i => i.value === block.interpolator) ?? INTERPOLATORS[0];
       conditionalAttrFn(blockNode, 'android:interpolator', interpolator.androidRef);
       blockContainerNode.appendChild(blockNode);
     });
@@ -171,7 +170,7 @@ function vectorLayerToXmlNode(
 }
 
 function conditionalAttrFn(node: any, attr: any, value: any, skipValue?: any) {
-  if (!_.isNil(value) && (skipValue === undefined || value !== skipValue)) {
+  if (!isNil(value) && (skipValue === undefined || value !== skipValue)) {
     node.setAttributeNS(ANDROID_NS, attr, value);
   }
 }
