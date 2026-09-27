@@ -4,6 +4,7 @@ import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
 import {
   CURRENT_PROJECT_VERSION,
   getRequiredVersion,
+  ProjectFormatError,
 } from 'app/modules/editor/model/projectVersion';
 import { Animation } from 'app/modules/editor/model/timeline';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
@@ -15,8 +16,7 @@ import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import JSZip from 'jszip';
 import { padStart } from 'lodash-es';
 
-// Re-exported so 0C's other PRs (and tests) can reference the version this build saves without
-// importing model/projectVersion directly, matching how IMPORT_EXPORT_VERSION lived here before.
+// Re-exported so that code saving projects can read the version from the service that saves them.
 export { CURRENT_PROJECT_VERSION } from 'app/modules/editor/model/projectVersion';
 
 const EXPORTED_FPS = [30, 60];
@@ -45,11 +45,11 @@ export class FileExportService {
       if (jsonObj?.vectorLayer || jsonObj?.animations) {
         // Shape Shifter before 1.0 (the Angular app) saved the vector layer and the animations
         // at the top level, with no version field at all.
-        throw new Error(
+        throw new ProjectFormatError(
           "This project was saved by a version of Shape Shifter older than 1.0, whose format isn't supported anymore.",
         );
       }
-      throw new Error("This doesn't look like a Shape Shifter project.");
+      throw new ProjectFormatError("This doesn't look like a Shape Shifter project.");
     }
     const { version } = jsonObj;
     const newerVersion =

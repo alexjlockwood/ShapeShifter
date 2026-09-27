@@ -7,7 +7,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
-import { NEWER_VERSION_WARNING } from 'app/modules/editor/model/projectVersion';
+import { NEWER_VERSION_WARNING, ProjectFormatError } from 'app/modules/editor/model/projectVersion';
 import { Animation, AnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
@@ -211,12 +211,16 @@ export class LayerTimelineController extends DestroyableMixin() {
             this.services.snackBarService.show(NEWER_VERSION_WARNING, 'Dismiss', Duration.Long);
           }
         },
-        // Only fetch failures are handled here, so that errors from opening the demo are still
-        // reported. navigator.serviceWorker is undefined in some embedded browsers.
-        () => {
-          const msg = navigator.serviceWorker?.controller
-            ? 'Demo not available offline'
-            : `Couldn't fetch demo`;
+        // Only failures to fetch and parse the demo are handled here, so that errors from
+        // opening it are still reported. navigator.serviceWorker is undefined in some embedded
+        // browsers.
+        error => {
+          const msg =
+            error instanceof ProjectFormatError
+              ? error.message
+              : navigator.serviceWorker?.controller
+                ? 'Demo not available offline'
+                : `Couldn't fetch demo`;
           this.services.snackBarService.show(msg, 'Dismiss', Duration.Long);
         },
       );

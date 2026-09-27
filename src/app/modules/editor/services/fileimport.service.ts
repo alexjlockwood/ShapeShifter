@@ -1,6 +1,6 @@
 import type { Guide } from 'app/modules/editor/model/guides';
 import { LayerUtil, VectorLayer } from 'app/modules/editor/model/layers';
-import { NEWER_VERSION_WARNING } from 'app/modules/editor/model/projectVersion';
+import { NEWER_VERSION_WARNING, ProjectFormatError } from 'app/modules/editor/model/projectVersion';
 import { Animation } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
@@ -122,7 +122,7 @@ export class FileImportService {
             hiddenLayerIds = regeneratedModels.hiddenLayerIds;
           } catch (e) {
             console.warn('Failed to parse the file', e);
-            this.onFailure();
+            this.onFailure(e instanceof ProjectFormatError ? e.message : undefined);
             return;
           }
           this.onSuccess(
@@ -204,7 +204,7 @@ export class FileImportService {
     }
   }
 
-  private onFailure() {
-    this.snackBarService.show(`Couldn't import layers from file`, 'Dismiss', Duration.Long);
+  private onFailure(message = `Couldn't import layers from file`) {
+    this.snackBarService.show(message, 'Dismiss', Duration.Long);
   }
 }

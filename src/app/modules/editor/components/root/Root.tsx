@@ -8,7 +8,7 @@ import { Toolbar } from 'app/modules/editor/components/toolbar/Toolbar';
 import { useEditorStore, useServices } from 'app/modules/editor/context/EditorContext';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { ActionMode, ActionSource } from 'app/modules/editor/model/actionmode';
-import { NEWER_VERSION_WARNING } from 'app/modules/editor/model/projectVersion';
+import { NEWER_VERSION_WARNING, ProjectFormatError } from 'app/modules/editor/model/projectVersion';
 import { on } from 'app/modules/editor/scripts/dom';
 import { Duration } from 'app/modules/editor/services/snackbar.service';
 import {
@@ -90,10 +90,12 @@ function Workspace() {
           snackBarService.show(NEWER_VERSION_WARNING, 'Dismiss', Duration.Long);
         }
       })
-      .catch(() => {
+      .catch(error => {
         if (!controller.signal.aborted) {
           snackBarService.show(
-            `There was a problem loading the Shape Shifter project`,
+            error instanceof ProjectFormatError
+              ? error.message
+              : `There was a problem loading the Shape Shifter project`,
             'Dismiss',
             Duration.Long,
           );
