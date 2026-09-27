@@ -8,27 +8,26 @@
   (`scripts/svgo/plugins/replaceUseElems.ts`). (IMP-1, high, confirmed by a test)
 - **SVG `opacity` on paths and groups is ignored.** Only the root's `opacity` is read, so Material
   two-tone icons (`<path opacity=".3">`) and groups with an opacity from Figma and Sketch import
-  fully opaque. Multiply the element's and its ancestors' opacity into `fillAlpha` and
-  `strokeAlpha` (`scripts/import/SvgLoader.ts`). (IMP-2, medium, confirmed by a test)
+  fully opaque. Multiply the element's and its ancestors' opacity into `fillAlpha` and `strokeAlpha`
+  (`scripts/import/SvgLoader.ts`). (IMP-2, GitHub #181, medium, confirmed by a test)
 - **VectorDrawable color references are dropped, so Android Studio icons import with no fill.**
   Vector Asset Studio icons use `android:fillColor="@android:color/white"`, and `getColor` returns
   `''` for anything that isn't a hex color, so they import invisible and report success. Map the
   common `@android:color/` values, and fall back to an opaque color for other references
   (`scripts/import/VectorDrawableLoader.ts`, `getColor`). (IMP-3, medium, confirmed by a test)
-- **Unrendered SVG elements outside `<defs>` become layers.** A `<clipPath>`, `<mask>`,
-  `<symbol>`, gradient, or `<text>` outside `<defs>`, which Illustrator writes, imports as layers:
-  clip path, mask, and symbol content as visible paths, and the rest as empty groups. Skip every
-  element that isn't a group or a shape (`scripts/import/SvgLoader.ts`). (IMP-4, medium, confirmed
+- **Unrendered SVG elements outside `<defs>` become layers.** A `<clipPath>`, `<mask>`, `<symbol>`,
+  gradient, or `<text>` outside `<defs>`, which Illustrator writes, imports as layers: clip path,
+  mask, and symbol content as visible paths, and the rest as empty groups. Skip every element that
+  isn't a group or a shape (`scripts/import/SvgLoader.ts`). (IMP-4, GitHub #297, medium, confirmed
   by a test)
-- **Fractional viewBox sizes are truncated, cropping the content.** Inkscape's millimeter
-  documents have viewBoxes like `0 0 16.933333 16.933333`, which import as 16x16 and cut off about
-  6% at the right and bottom. Round the size up, or scale the content to fit
-  (`scripts/import/SvgLoader.ts`, `scripts/import/VectorDrawableLoader.ts`). (IMP-5, low,
-  confirmed by a test)
+- **Fractional viewBox sizes are truncated, cropping the content.** Inkscape's millimeter documents
+  have viewBoxes like `0 0 16.933333 16.933333`, which import as 16x16 and cut off about 6% at the
+  right and bottom. Round the size up, or scale the content to fit (`scripts/import/SvgLoader.ts`,
+  `scripts/import/VectorDrawableLoader.ts`). (IMP-5, GitHub #305, low, confirmed by a test)
 - **SVGs without `xmlns` import as empty groups and report success.** SVG copied from a web page,
-  for example with DevTools' "Copy element", often has no `xmlns`, so paths become empty groups,
-  the viewBox is ignored, and the import still reports success. Add the namespace before parsing
-  when it's missing (`scripts/import/SvgLoader.ts`). (IMP-6, low, confirmed by a test)
+  for example with DevTools' "Copy element", often has no `xmlns`, so paths become empty groups, the
+  viewBox is ignored, and the import still reports success. Add the namespace before parsing when
+  it's missing (`scripts/import/SvgLoader.ts`). (IMP-6, GitHub #118, low, confirmed by a test)
 - **Imported clip path transforms are composed in the wrong order.** A clip path's own transform
   and its child's transform are reversed and concatenated child-first, so anything but a
   translation (which commutes) lands in the wrong place
@@ -40,12 +39,12 @@
   path, or clip paths that reference each other, fail the whole import, and a quoted `url('#c')`
   is ignored. Ignore unresolved references, guard against cycles, and accept quotes
   (`scripts/import/SvgLoader.ts`, `getReferencedClipPathId`). (IMP-8, low, confirmed by a test)
-- **`<use>` outside `<defs>`, `<symbol>`, and nested `<svg>` positioning are mishandled.** A
-  `<use>` of an element outside `<defs>` loses its copy, a used `<symbol>` imports nothing, and a
-  nested `<svg>` with a position and a viewBox imports as a plain group, in the wrong place and at
-  the wrong size. Resolve `<use>` against any id, and treat symbols and nested SVGs as viewports
-  (`scripts/svgo/plugins/replaceUseElems.ts`, `scripts/import/SvgLoader.ts`). (IMP-9, low,
-  confirmed by a test)
+- **`<use>` outside `<defs>`, `<symbol>`, and nested `<svg>` positioning are mishandled.** A `<use>`
+  of an element outside `<defs>` loses its copy, a used `<symbol>` imports nothing, and a nested
+  `<svg>` with a position and a viewBox imports as a plain group, in the wrong place and at the
+  wrong size. Resolve `<use>` against any id, and treat symbols and nested SVGs as viewports
+  (`scripts/svgo/plugins/replaceUseElems.ts`, `scripts/import/SvgLoader.ts`). (IMP-9, GitHub #297,
+  low, confirmed by a test)
 - **Non-ASCII ids give layers empty names.** `sanitize` strips every character of an id like
   Chinese, Japanese, or Russian Illustrator and Sketch exports use, and the prefix fallback isn't
   applied afterward, so layers are named `""`, `"_1"`, `"_2"`, and exports write
@@ -67,12 +66,12 @@
   export's clip path id scheme (see EXP-3 in `docs/bugs/export.md`) assumes names are already
   sanitized (`services/fileexport.service.ts`). (found reviewing the quick-wins fixes, not fixed;
   only affects hand-edited project files)
-- **Some files in a multi-file import silently stall the batch.** If one of several dropped files
-  is a type no branch handles, or a `.shapeshifter` file, the batch never finishes and the other
-  files are silently dropped. The VectorDrawable loader also accepts any XML, so an AVD or a layout
-  file "imports" as groups. Count unsupported files as errors, and require a `<vector>` root
-  (`services/fileimport.service.ts`, `scripts/import/VectorDrawableLoader.ts`). (IMP-13, low,
-  confirmed by reading, and the XML cases by a test)
+- **Some files in a multi-file import silently stall the batch.** If one of several dropped files is
+  a type no branch handles, or a `.shapeshifter` file, the batch never finishes and the other files
+  are silently dropped. The VectorDrawable loader also accepts any XML, so an AVD or a layout file
+  "imports" as groups. Count unsupported files as errors, and require a `<vector>` root
+  (`services/fileimport.service.ts`, `scripts/import/VectorDrawableLoader.ts`). (IMP-13, GitHub #8
+  and #347, low, confirmed by reading, and the XML cases by a test)
 - **A slow `?project=` fetch can overwrite work done in the meantime.** On a slow connection, if
   you open `/?project=...` and then open a file or a demo before it loads, the late project
   replaces your work without a prompt, since the fetch is only aborted on unmount. Abort it, or

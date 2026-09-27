@@ -7,10 +7,9 @@
 ---
 
 [Shape Shifter](https://shapeshifter.design) is a web-app that simplifies
-the creation of [icon animations][adp-icon-animations] for Android, iOS, and the web.
+the creation of [icon animations][adp-icon-animations] for Android and the web.
 
-This tool currently exports to standalone SVGs, SVG spritesheets,
-and CSS keyframe animations for the web, as well as to
+This tool currently exports to standalone SVGs and SVG spritesheets for the web, as well as to
 [`AnimatedVectorDrawable`](https://developer.android.com/reference/android/graphics/drawable/AnimatedVectorDrawable.html)
 format for Android. I am totally open to adding support for other export formats as well, so
 if you have a format that you'd like to see added in the future,
@@ -81,10 +80,9 @@ To address these problems, Shape Shifter provides the following features:
   paths and attempts to make them compatible in an optimal way._ Depending on the complexity
   of the paths, auto fix may or may not generate a satisfying final result, so further
   modification may be necessary in order to achieve the animation you're looking for.
-- _The ability to export the results to SVG spritesheets, CSS keyframes, and
-  `AnimatedVectorDrawable` format for use on
-  the web and in Android applications._ I'm open to adding support for other export formats
-  as well, so feel free to file a [feature request][report-feature-request]!
+- _The ability to export the results to SVG spritesheets and `AnimatedVectorDrawable` format
+  for use on the web and in Android applications._ I'm open to adding support for other export
+  formats as well, so feel free to file a [feature request][report-feature-request]!
 
 ## How does it work?
 

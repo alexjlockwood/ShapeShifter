@@ -29,7 +29,7 @@ These existed before the migration and are still there.
   the stroke width by the scale of the canvas-to-layer matrix instead of the layer-to-canvas
   one, so a stroke of width 2 in a group scaled by 2 is drawn 1 unit wide, but Android (and the
   exported SVGs) draw it 4 units wide. The exports and flattening scale strokes the Android way
-  (`components/canvas/CanvasLayers.ts`).
+  (`components/canvas/CanvasLayers.ts`). (GitHub #186, #292, and #308)
 - **Test gaps.** `SvgLoader`'s clip path test asserts nothing (`expect(true).toBe(true)`), and
   the layer and VectorDrawable loader specs were entirely commented out (and have been deleted).
 - **Beta only (paper.js, not yet migrated):**
@@ -69,6 +69,14 @@ against the current code on 2026-09-26: `docs/bugs/bugsnag.md`. It ranks the mos
 lists which are fixed, including the ones that were still present when it was written, some of
 them sweep bugs that turned out to be far more common than their rating. The top one was auto fix
 throwing on a subpath that's only a move (PATH-9, 13,000 events).
+
+## Found in the GitHub issues
+
+All 184 open GitHub issues were triaged against the current code on 2026-09-26:
+`docs/bugs/github-issues.md`. It lists the 19 that are still bugs and aren't covered elsewhere,
+which issues the entries here and in `docs/bugs/` already cover, which are fixed (almost all only
+on `master`, since the site was last deployed in 2018, so close them after the next deploy), and
+the feature requests.
 
 ## Fixed during the migration
 
