@@ -4,7 +4,7 @@ import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/edito
 import { describe, expect, it } from 'vitest';
 
 import type { CanvasDocument } from './CanvasPreview';
-import { getPathKeyframe, setKeyframePath } from './pathKeyframes';
+import { autoFixPathBlocks, getPathKeyframe, setKeyframePath } from './pathKeyframes';
 
 const A = 'M 0 0 L 10 0 L 10 10 Z';
 const B = 'M 0 0 L 12 0 L 12 12 Z';
@@ -91,5 +91,43 @@ describe('setKeyframePath', () => {
     expect(first.fromValue?.getPathString()).toBe(A);
     // The document it came from is left as it was.
     expect((doc.animation.blocks[0] as PathAnimationBlock).toValue?.getPathString()).toBe(B);
+  });
+});
+
+describe('autoFixPathBlocks', () => {
+  const SQUARE = 'M 0 0 L 12 0 L 12 12 L 0 12 Z';
+
+  function paths(doc: CanvasDocument) {
+    const [first, second] = doc.animation.blocks as PathAnimationBlock[];
+    const layer = doc.vectorLayer.findLayerById('p') as PathLayer;
+    return {
+      base: layer.pathData?.getPathString(),
+      first: [first.fromValue?.getPathString(), first.toValue?.getPathString()],
+      second: [second.fromValue?.getPathString(), second.toValue?.getPathString()],
+      morphs: [first.isAnimatable(), second.isAnimatable()],
+    };
+  }
+
+  it('keeps the values linked to the ends it fixes the same, and fixes the blocks that breaks', () => {
+    // A triangle that grows, and then morphs into a square, which doesn't work.
+    const doc = document(A, [block('1', 100, 200, A, B), block('2', 300, 400, B, SQUARE)]);
+    expect(paths(doc).morphs).toEqual([true, false]);
+    const fixed = paths(autoFixPathBlocks(doc, new Set(['2'])));
+    // The bigger triangle gets a point to morph into the square, so the first block has to change
+    // too, and so does the layer's own path, which is the same as its start.
+    expect(fixed.first[1]).not.toBe(B);
+    expect(fixed.morphs).toEqual([true, true]);
+    expect(fixed.base).toBe(fixed.first[0]);
+    expect(fixed.first[1]).toBe(fixed.second[0]);
+    expect(fixed.second[1]).toBe(SQUARE);
+  });
+
+  it("leaves values that aren't linked, and blocks that were already broken, alone", () => {
+    const doc = document(C, [block('1', 100, 200, A, SQUARE), block('2', 300, 400, B, SQUARE)]);
+    const fixed = autoFixPathBlocks(doc, new Set(['1']));
+    expect(fixed.vectorLayer).toBe(doc.vectorLayer);
+    expect(paths(fixed).morphs).toEqual([true, false]);
+    expect(paths(fixed).second).toEqual([B, SQUARE]);
+    expect(autoFixPathBlocks(doc, new Set())).toBe(doc);
   });
 });

@@ -1,6 +1,7 @@
 import { ClipPathLayer, LayerUtil, PathLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
-import { AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { AutoAwesome } from 'app/modules/editor/scripts/algorithms';
 
 import type { CanvasDocument } from './CanvasPreview';
 
@@ -135,6 +136,87 @@ export function setKeyframePath(
   return { vectorLayer, animation };
 }
 
+/**
+ * Auto fixes the blocks that don't morph (AutoAwesome.autoFix), and keeps the values linked to
+ * their ends (see getPathKeyframe) the same as them, so that a chain of morphs stays connected. A
+ * linked block that stops morphing because of it is auto fixed too, and so on down the chain.
+ * Returns the document as it was if nothing changed.
+ */
+export function autoFixPathBlocks(
+  document: CanvasDocument,
+  blockIds: ReadonlySet<string>,
+): CanvasDocument {
+  const layerIds = new Set(
+    document.animation.blocks.filter(b => blockIds.has(b.id)).map(b => b.layerId),
+  );
+  let result = document;
+  for (const layerId of layerIds) {
+    result = autoFixLayer(result, layerId, blockIds);
+  }
+  return result;
+}
+
+// Fixing a block changes its neighbors, which can change it back, so this stops after a while.
+const MAX_FIXES_PER_BLOCK = 4;
+
+function autoFixLayer(document: CanvasDocument, layerId: string, blockIds: ReadonlySet<string>) {
+  const blocks = getPathBlocks(document, layerId);
+  // The path at each keyframe. Values that are linked share one, so fixing one end of a block
+  // changes the values linked to it too.
+  const base = { path: getTargetPath(document, layerId, { kind: 'base' }) };
+  const froms: Array<{ path: Path | undefined }> = [];
+  const tos: Array<{ path: Path | undefined }> = [];
+  let before = base;
+  for (const block of blocks) {
+    const from = isSamePath(before.path, block.fromValue) ? before : { path: block.fromValue };
+    before = { path: block.toValue };
+    froms.push(from);
+    tos.push(before);
+  }
+  const morphs = (i: number) => {
+    const from = froms[i].path;
+    const to = tos[i].path;
+    return !from || !to || from.isMorphableWith(to);
+  };
+  const wasMorphing = blocks.map((_, i) => morphs(i));
+  for (let fixes = 0; fixes < MAX_FIXES_PER_BLOCK * blocks.length; fixes++) {
+    const i = blocks.findIndex((b, j) => !morphs(j) && (blockIds.has(b.id) || wasMorphing[j]));
+    const from = froms[i]?.path;
+    const to = tos[i]?.path;
+    if (!from || !to) {
+      break;
+    }
+    [froms[i].path, tos[i].path] = AutoAwesome.autoFix(from, to);
+  }
+  let { vectorLayer, animation } = document;
+  const layer = vectorLayer.findLayerById(layerId);
+  if (
+    (layer instanceof PathLayer || layer instanceof ClipPathLayer) &&
+    base.path &&
+    base.path !== layer.pathData
+  ) {
+    const clone = layer.clone();
+    clone.pathData = base.path;
+    vectorLayer = LayerUtil.replaceLayer(vectorLayer, layerId, clone);
+  }
+  const fixed = new Map<string, PathAnimationBlock>();
+  blocks.forEach((block, i) => {
+    if (froms[i].path !== block.fromValue || tos[i].path !== block.toValue) {
+      const clone = block.clone();
+      clone.fromValue = froms[i].path;
+      clone.toValue = tos[i].path;
+      fixed.set(block.id, clone);
+    }
+  });
+  if (fixed.size) {
+    animation = animation.clone();
+    animation.blocks = animation.blocks.map(block => fixed.get(block.id) ?? block);
+  }
+  return vectorLayer === document.vectorLayer && animation === document.animation
+    ? document
+    : { vectorLayer, animation };
+}
+
 function getTargetPath(document: CanvasDocument, layerId: string, target: PathTarget) {
   if (target.kind === 'base') {
     const layer = document.vectorLayer.findLayerById(layerId);
@@ -148,9 +230,4 @@ function getTargetPath(document: CanvasDocument, layerId: string, target: PathTa
 
 function isSamePath(a: Path | undefined, b: Path | undefined) {
   return !!a && !!b && (a === b || a.getPathString() === b.getPathString());
-}
-
-/** Whether a block's ends morph into each other, which paths need the same commands for. */
-export function isMorphable(block: AnimationBlock) {
-  return block instanceof PathAnimationBlock && block.isAnimatable();
 }

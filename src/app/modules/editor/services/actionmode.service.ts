@@ -29,8 +29,6 @@ import {
 } from 'app/modules/editor/store/actionmode/selectors';
 import { BatchAction } from 'app/modules/editor/store/batch/actions';
 import { SetAnimation } from 'app/modules/editor/store/timeline/actions';
-import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
-import { IsolateUndoStep } from 'app/modules/editor/store/undoredo/actions';
 import { findIndex, isEqual, remove } from 'lodash-es';
 import { LayerTimelineService } from './layertimeline.service';
 import { Duration, SnackBarService } from './snackbar.service';
@@ -391,41 +389,6 @@ export class ActionModeService {
         new SetPairedSubPaths(new Set()),
       ),
     );
-  }
-
-  /**
-   * Auto fixes path blocks, so that their ends morph, as one undo step. The canvas editor offers it
-   * when an edit leaves a morph broken, outside of action mode.
-   */
-  autoFixPathBlocks(blockIds: ReadonlySet<string>) {
-    const animation = this.queryStore(getAnimation).clone();
-    let isChanged = false;
-    try {
-      animation.blocks = animation.blocks.map(block => {
-        if (
-          !blockIds.has(block.id) ||
-          !(block instanceof PathAnimationBlock) ||
-          !block.fromValue ||
-          !block.toValue ||
-          block.isAnimatable()
-        ) {
-          return block;
-        }
-        const [from, to] = AutoAwesome.autoFix(block.fromValue, block.toValue);
-        const clone = block.clone();
-        clone.fromValue = from;
-        clone.toValue = to;
-        isChanged = true;
-        return clone;
-      });
-    } catch (e) {
-      bugsnagClient.notify(e instanceof Error ? e : String(e));
-      this.snackBarService.show("Couldn't auto fix these paths", 'Dismiss', Duration.Long);
-      return;
-    }
-    if (isChanged) {
-      this.store.dispatch(new BatchAction(new IsolateUndoStep(), new SetAnimation(animation)));
-    }
   }
 
   // Delete selected action mode models.

@@ -329,33 +329,3 @@ describe('createEditorServices', () => {
     });
   });
 });
-
-describe('actionModeService.autoFixPathBlocks', () => {
-  it("auto fixes the blocks that don't morph, as an undo step", () => {
-    vi.useFakeTimers();
-    const store = createEditorStore();
-    const services = createEditorServices(store);
-    const layer = new PathLayer({ name: 'p', children: [], pathData: new Path('M 0 0 L 4 4') });
-    services.layerTimelineService.setVectorLayer(
-      new VectorLayer({ name: 'vl', children: [layer] }),
-    );
-    services.layerTimelineService.addBlocks([
-      {
-        layerId: layer.id,
-        propertyName: 'pathData',
-        fromValue: new Path('M 0 0 L 4 4'),
-        toValue: new Path('M 0 0 L 4 0 L 4 4 Z'),
-        currentTime: 0,
-      },
-    ]);
-    vi.advanceTimersByTime(2000);
-    const [block] = services.layerTimelineService.getAnimation().blocks;
-    expect(block.isAnimatable()).toBe(false);
-    services.actionModeService.autoFixPathBlocks(new Set([block.id]));
-    expect(services.layerTimelineService.getAnimation().blocks[0].isAnimatable()).toBe(true);
-    store.dispatch(ActionCreators.undo());
-    expect(services.layerTimelineService.getAnimation().blocks[0].isAnimatable()).toBe(false);
-    services.dispose();
-    vi.useRealTimers();
-  });
-});
