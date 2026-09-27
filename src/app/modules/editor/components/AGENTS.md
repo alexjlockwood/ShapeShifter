@@ -45,8 +45,8 @@ space bar pans, and tapping it plays). The white artboard is a div under the can
 the mouse, so mouse events go to it and clicks around it reach the workspace. The rulers are inside
 of it too, so hovering over it shows them.
 
-The new canvas editor is in `components/canvaseditor/`, and it's only downloaded when its feature
-is on (`src/environments/features.ts`). `components/canvas/CanvasController.ts` loads it through
+The new canvas editor is in `components/canvaseditor/`. `docs/canvas-editor.md` has its design
+and roadmap. It's only downloaded when its feature is on (`src/environments/features.ts`). `components/canvas/CanvasController.ts` loads it through
 `components/canvas/loadCanvasEditor.ts` and talks to it through the types in
 `components/canvas/CanvasEditorApi.ts`. Nothing else may import it, or it would be bundled with the
 rest of the app (`src/test/lazyChunks.spec.ts` checks this). Its gestures show their edits through

@@ -24,7 +24,8 @@ The old editor was written in 2017-18 (262 commits, the last feature in June 201
 shipped as a separate beta build at beta.shapeshifter.design, which has since been retired. It was
 mounted only outside action mode, and it only ever edited the static layer tree, never animation
 blocks. Its code was never ported to React, and it was removed after phase 2. The last commit that
-has it is 28992d59, so `git show 28992d59:<path>` shows the files named below. The `paper`,
+has it is 28992d59, so `git show 28992d59:src/app/modules/editor/<path>` shows the files named
+below. The `paper`,
 `jquery`, and `@angular/core` packages it needed were uninstalled during the React migration.
 
 ### What it had
@@ -69,7 +70,8 @@ has it is 28992d59, so `git show 28992d59:<path>` shows the files named below. T
   distort bends every handle wrongly, the vector tool treats a selected group as a path, and hit
   tests prefer the bottom layer when shapes overlap. There are 106 TODOs and no tests.
 - Crash reports from the beta site add more: its most common error came from the paper.js tool
-  outliving its canvas ("Beta only" in `docs/bugs/bugsnag.md`).
+  outliving its canvas (the `_matrix` row in `docs/bugs/bugsnag.md`, and its "Beta only" notes as of
+  28992d59).
 
 ### What's worth keeping
 
@@ -273,7 +275,7 @@ The old code only mattered as a reference, so it was removed once the parts wort
 ported: the snapping math in phase 1, and the curve bending and point editing in phase 2. That
 deleted the uncompiled code (`components/canvas/canvaspaper.directive.ts`,
 `components/toolpanel/`, `scripts/paper/`, `services/paper.service.ts`, and `src/typings/paper/`),
-its exclusions from `tsconfig.json`, `.oxlintrc.json`, and `.prettierignore` and the test that kept
+its exclusions from `tsconfig.json`, `.oxlintrc.json`, and `.prettierignore`, the test that kept
 them in step, the notes telling agents to leave it alone, the "Beta only" bug entries, and the
 images that only it used (`public/assets/paper/` and `public/assets/tools/`). The cursors in
 `public/assets/cursor/` stay for the tools that come next.

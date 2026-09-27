@@ -12,7 +12,7 @@ was ported from ngrx. `store/createEditorStore.ts` builds it.
   `actionmode`, `reset`, `theme`, and `paper` (`store/reducer.ts`).
 - `paper` was the old paper.js beta editor's state (its tool, cursor, and hover). That editor has
   been removed (`docs/canvas-editor.md`), so nothing writes to it, but `components/root/Root.tsx`
-  still reads it. Replace it with the canvas editor's own state rather than adding to it.
+  (the cursor) and `store/common/selectors.ts` (hovered rows in the layer list) still read it. Replace it with the canvas editor's own state rather than adding to it.
 - `store.select(selector)` returns an rxjs observable that emits the current value right away and
   then each change (by reference). Services and imperative controllers subscribe with it. There's
   no `store.subscribe`.
