@@ -179,8 +179,8 @@ Export formats the maintainer wants to add, decided while triaging the GitHub is
 Ideas under consideration, not yet scoped or scheduled:
 
 - **Fix AnimatedVectorDrawable import.** `scripts/import/VectorDrawableLoader.ts` doesn't
-  special-case the `animated-vector` root tag, so an AVD's `<aapt:attr
-name="android:drawable"><vector>` wrapper produces an extra nested `GroupLayer`, and
+  special-case the `animated-vector` root tag, so an AVD's
+  `<aapt:attr name="android:drawable"><vector>` wrapper produces an extra nested `GroupLayer`, and
   `viewportWidth`/`viewportHeight`/`alpha` are read off the `animated-vector` root instead of the
   nested `vector`, silently falling back to defaults. `<target>`/`<objectAnimator>` content is
   dropped entirely rather than becoming animation blocks. A more complete parser
