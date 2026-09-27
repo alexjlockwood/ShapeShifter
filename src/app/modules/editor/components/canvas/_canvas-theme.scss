@@ -4,6 +4,18 @@
 @mixin ss-canvas-theme($theme) {
     $background: map.get($theme, ss-background);
     $foreground: map.get($theme, ss-foreground);
+    $accent-text: map.get($theme, accent-text);
+    $is-dark: map.get($theme, is-dark);
+    // A foreground color needs a lighter shade on the dark theme's darker panels, so these can't
+    // share one value with the light theme like accent-fill does.
+    $morphable-color: mat-color(mat-palette($mat-green, 800));
+    $broken-color: mat-color(mat-palette($mat-deep-orange, 900));
+    $setting-color: mat-color(mat-palette($mat-blue, 800));
+    @if $is-dark {
+        $morphable-color: mat-color(mat-palette($mat-green, A200));
+        $broken-color: mat-color(mat-palette($mat-deep-orange, 200));
+        $setting-color: $accent-text;
+    }
     .app-canvas .canvas-artboard {
         // background-color: mat-color($background, base);
         background-color: #fff;
@@ -19,6 +31,14 @@
     .app-canvas .canvas-editor-keyframe {
         background-color: mat-color($background, base100);
         color: mat-color($foreground, secondary-text);
+        // Whether the morph still works, from KeyframeBadge. White text needs 4.5:1: see
+        // styles/contrastRatio.spec.ts.
+        .is-morphable {
+            color: $morphable-color;
+        }
+        .is-broken {
+            color: $broken-color;
+        }
     }
     .app-canvas .canvas-editor-toolbar-separator {
         background-color: mat-color($foreground, divider);
@@ -26,14 +46,16 @@
     .app-canvas .canvas-editor-tool:hover:not(:disabled) {
         background-color: mat-color($foreground, divider);
     }
+    // Figma's blue, darkened so that the white icon reaches 4.5:1 (was 2.99:1).
     .app-canvas .canvas-editor-tool[aria-pressed='true'] {
-        background-color: #0d99ff;
+        background-color: #0a73bf;
         color: #fff;
     }
-    // A setting that's on is blue, but lighter than the tool in use.
+    // A setting that's on is blue, but lighter than the tool in use, and shown directly on the
+    // panel background rather than as a fill, so it needs a theme-appropriate shade of its own.
     .app-canvas .canvas-editor-tool[data-setting][aria-pressed='true'] {
         background-color: transparent;
-        color: #0d99ff;
+        color: $setting-color;
     }
     .app-canvas .canvas-editor-tool[data-setting][aria-pressed='true']:hover {
         background-color: mat-color($foreground, divider);

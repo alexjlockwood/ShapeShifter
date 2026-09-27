@@ -2,11 +2,13 @@
 @use '../../styles/palette' as *;
 
 @mixin ss-dialog-theme($theme) {
-    $accent: map.get($theme, accent);
+    $accent-text: map.get($theme, accent-text);
     $foreground: map.get($theme, ss-foreground);
     .MuiDialogActions-root {
         button {
-            color: mat-color($accent);
+            // accent-text passes WCAG AA against the dialog's paper background in both themes;
+            // accent was only 3.98:1 / 3.62:1.
+            color: $accent-text;
         }
     }
     .MuiDialogContent-root {

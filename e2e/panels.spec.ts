@@ -152,6 +152,36 @@ test('enters action mode from the property inspector', async ({ page }) => {
   await page.locator('.action-mode-close-icon').click();
   await expect(page.locator('.app-canvas')).toHaveCount(1);
   await expect(page.locator('.property-input')).toBeVisible();
-  await expect(page.locator('.toolbar')).toHaveCSS('background-color', 'rgb(96, 125, 139)');
+  // Blue-grey 700, not 500: white on 500 was only 4.37:1.
+  await expect(page.locator('.toolbar')).toHaveCSS('background-color', 'rgb(69, 90, 100)');
   await page.screenshot({ path: 'test-results/property-input.png' });
+});
+
+test('the File, Import, and Export buttons stop showing a gray background once their menu closes', async ({
+  page,
+}) => {
+  await page.goto('/');
+  for (const name of ['File', 'Import', 'Export']) {
+    // A CSS locator, not getByRole: MUI's Menu marks the rest of the page aria-hidden while open,
+    // so a role query can't find the button again once the menu is showing.
+    const button = page.locator('.slt-layers-menu-group-button', { hasText: name });
+    await expect(button).toHaveAttribute('aria-expanded', 'false');
+    await button.click();
+    await expect(button).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('.MuiMenu-root')).toBeVisible();
+    // Closes the menu by clicking the button again, which returns focus to it.
+    await button.click({ force: true });
+    await expect(page.locator('.MuiMenu-root')).toBeHidden();
+    await expect(button).toHaveAttribute('aria-expanded', 'false');
+    await expect(button).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  }
+
+  // Tab focus still shows a ring for keyboard users. A reload resets the input modality, since
+  // the clicks above would otherwise make a later focus() not count as keyboard focus (WebKit
+  // also doesn't put a plain button in the Tab order by default, so this checks focus()'s ring
+  // rather than relying on a real Tab press reaching the button).
+  await page.reload();
+  const fileButton = page.locator('.slt-layers-menu-group-button', { hasText: 'File' });
+  await fileButton.focus();
+  await expect(fileButton).toHaveCSS('box-shadow', 'rgb(41, 98, 255) 0px 0px 0px 2px inset');
 });

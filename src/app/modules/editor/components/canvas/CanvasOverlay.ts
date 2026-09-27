@@ -63,12 +63,17 @@ const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 const SELECTED_POINT_RADIUS_FACTOR = 1.25;
 const POINT_BORDER_FACTOR = 1.075;
 
-const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
-const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
+const NORMAL_POINT_COLOR = '#2962FF'; // Blue A700
+// Deep orange 900. Darkened from orange 900 (#E65100, 3.79:1) so the white point number reaches
+// 4.5:1 (5.60:1). Split points also get a ring (see executeLabeledPoint), so they don't rely on
+// color alone.
+const SPLIT_POINT_COLOR = '#BF360C';
 const HIGHLIGHT_COLOR = '#448AFF';
 const POINT_BORDER_COLOR = '#000';
 const POINT_TEXT_COLOR = '#fff';
-const ERROR_COLOR = '#F44336';
+// Red 800. Darkened from red 500 (#F44336, 3.68:1) so the white point number reaches 4.5:1
+// (5.62:1).
+const ERROR_COLOR = '#C62828';
 
 const NO_HIT: HitResult = {
   isHit: false,
@@ -702,7 +707,8 @@ export class CanvasOverlay extends DestroyableMixin() {
         text = (cmdIdx + 1).toString();
       }
       let color: string;
-      if (cmd.isSplitPoint()) {
+      const isSplitPoint = cmd.isSplitPoint();
+      if (isSplitPoint) {
         radius *= SPLIT_POINT_RADIUS_FACTOR;
         color = SPLIT_POINT_COLOR;
       } else {
@@ -719,6 +725,7 @@ export class CanvasOverlay extends DestroyableMixin() {
         radius,
         color,
         text,
+        isSplitPoint,
       );
     }
   }
@@ -755,7 +762,15 @@ export class CanvasOverlay extends DestroyableMixin() {
         ? applyGroupTransform(projection, flattenedTransform)
         : this.selectionHelper.getLastKnownMouseLocation();
     if (point) {
-      executeLabeledPoint(ctx, camera, point, this.splitPointRadius, SPLIT_POINT_COLOR);
+      executeLabeledPoint(
+        ctx,
+        camera,
+        point,
+        this.splitPointRadius,
+        SPLIT_POINT_COLOR,
+        undefined,
+        true,
+      );
     }
   }
 
@@ -793,6 +808,8 @@ export class CanvasOverlay extends DestroyableMixin() {
         applyGroupTransform(projection, flattenedTransform),
         this.splitPointRadius,
         SPLIT_POINT_COLOR,
+        undefined,
+        true,
       );
     }
   }
@@ -824,13 +841,23 @@ export class CanvasOverlay extends DestroyableMixin() {
         applyGroupTransform(proj1.projection, flattenedTransform),
         this.splitPointRadius,
         SPLIT_POINT_COLOR,
+        undefined,
+        true,
       );
       if (this.shapeSplitter.willFinalProjectionOntoPathCreateSplitPoint()) {
         const endPoint = proj2
           ? applyGroupTransform(proj2.projection, flattenedTransform)
           : this.shapeSplitter.getLastKnownMouseLocation();
         if (endPoint) {
-          executeLabeledPoint(ctx, camera, endPoint, this.splitPointRadius, SPLIT_POINT_COLOR);
+          executeLabeledPoint(
+            ctx,
+            camera,
+            endPoint,
+            this.splitPointRadius,
+            SPLIT_POINT_COLOR,
+            undefined,
+            true,
+          );
         }
       }
     } else {
@@ -842,6 +869,8 @@ export class CanvasOverlay extends DestroyableMixin() {
           applyGroupTransform(projection, flattenedTransform),
           this.splitPointRadius,
           SPLIT_POINT_COLOR,
+          undefined,
+          true,
         );
       }
     }
@@ -1047,7 +1076,11 @@ function executeHighlights(
   ctx.restore();
 }
 
-// Draws a labeled point with optional text.
+// A split point's ring sits this many radiuses out from its border, so it doesn't rely on
+// SPLIT_POINT_COLOR alone to read as different from a normal point.
+const RING_RADIUS_FACTOR = 1.4;
+
+// Draws a labeled point with optional text. A split point also gets a ring around it.
 function executeLabeledPoint(
   ctx: Context,
   camera: CanvasCamera,
@@ -1055,6 +1088,7 @@ function executeLabeledPoint(
   radius: number,
   color: string,
   text?: string,
+  hasRing = false,
 ) {
   // Convert the point and the radius to physical pixel coordinates.
   // We do this to avoid fractional font sizes less than 1px, which
@@ -1072,6 +1106,14 @@ function executeLabeledPoint(
   ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
   ctx.fillStyle = color;
   ctx.fill();
+
+  if (hasRing) {
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius * RING_RADIUS_FACTOR, 0, 2 * Math.PI, false);
+    ctx.strokeStyle = POINT_BORDER_COLOR;
+    ctx.lineWidth = Math.max(1, radius * 0.15);
+    ctx.stroke();
+  }
 
   if (text) {
     ctx.beginPath();

@@ -110,6 +110,8 @@ export function LayerTimeline() {
           <div className="slt-header mat-elevation-z2 fx-row fx-align-start-center">
             <button
               className="slt-layers-menu-group-button"
+              aria-haspopup="menu"
+              aria-expanded={fileMenu.open}
               onClick={onMenuButtonClick(fileMenu.openMenu)}
             >
               File
@@ -130,6 +132,8 @@ export function LayerTimeline() {
             <button
               className={`slt-layers-menu-group-button${isActionMode ? ' is-disabled' : ''}`}
               disabled={isActionMode}
+              aria-haspopup="menu"
+              aria-expanded={importMenu.open}
               onClick={onMenuButtonClick(importMenu.openMenu)}
             >
               Import
@@ -148,6 +152,8 @@ export function LayerTimeline() {
             <button
               className={`slt-layers-menu-group-button${isActionMode ? ' is-disabled' : ''}`}
               disabled={isActionMode}
+              aria-haspopup="menu"
+              aria-expanded={exportMenu.open}
               onClick={onMenuButtonClick(exportMenu.openMenu)}
             >
               Export
@@ -184,6 +190,8 @@ export function LayerTimeline() {
             <Tip title="Add layer" disabled={isActionMode}>
               <IconButton
                 aria-label="Add layer"
+                aria-haspopup="menu"
+                aria-expanded={addLayerMenu.open}
                 disabled={isActionMode}
                 onClick={onMenuButtonClick(addLayerMenu.openMenu)}
               >
