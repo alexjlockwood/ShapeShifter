@@ -77,6 +77,17 @@ export const TimelineAnimationRow = memo(function TimelineAnimationRow({
                         controller.onTimelineBlockMouseDown(event.nativeEvent, block);
                       }
                     }}
+                    onContextMenu={event => {
+                      // In action mode, the blocks can't be changed, so the browser's menu opens.
+                      if (!isActionMode) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        controller.onTimelineBlockContextMenu(block, {
+                          x: event.clientX,
+                          y: event.clientY,
+                        });
+                      }
+                    }}
                   >
                     <div className="slt-timeline-block-edge slt-timeline-block-edge-start" />
                     <div className="slt-timeline-block-edge slt-timeline-block-edge-end" />

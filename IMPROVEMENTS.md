@@ -200,6 +200,12 @@ roadmap.
   animated layers, and turns round caps and joins into many short quadratic curves
   (`docs/canvas-editor.md`, phase 6). The follow-up is making it work with the editor off and on
   animated paths, and fitting the rounds as cubics.
+- **Morph into gaps.** "Morph into" (`scripts/common/morphLayers.ts`, in the context menu and the
+  import snackbar) animates the path, the fill and stroke colors, their alphas, and the stroke
+  width. The other path's trim isn't animated, and its caps, joins, miter limit, and fill rule are
+  lost, since they can't animate. It also needs a free 300 ms at the current time or after the
+  last path block, and refuses otherwise, rather than lengthening the animation or picking a
+  shorter morph. Animating the trim, and asking before lengthening, are the obvious follow-ups.
 
 ## Planned features
 

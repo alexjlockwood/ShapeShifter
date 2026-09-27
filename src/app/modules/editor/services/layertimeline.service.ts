@@ -533,7 +533,11 @@ export class LayerTimelineService {
     this.store.dispatch(new BatchAction(...actions));
   }
 
-  private buildCleanupLayerIdActions(...deletedLayerIds: string[]) {
+  /**
+   * Returns the actions that take the deleted layers out of the collapsed, hidden, and selected
+   * layers, for a change that deletes them.
+   */
+  buildCleanupLayerIdActions(...deletedLayerIds: string[]) {
     const collapsedLayerIds = this.getCollapsedLayerIds();
     const hiddenLayerIds = this.getHiddenLayerIds();
     const selectedLayerIds = this.getSelectedLayerIds();
@@ -705,6 +709,26 @@ export class LayerTimelineService {
       new SetAnimation(animation),
       new SetSelectedBlocks(new Set()),
     ];
+  }
+
+  /** Deletes the blocks, e.g. the ones the canvas's keyframe badge is about, and deselects them. */
+  deleteBlocks(blockIds: Iterable<string>) {
+    const ids = new Set(blockIds);
+    const animation = this.getAnimation();
+    const blocks = animation.blocks.filter(b => !ids.has(b.id));
+    if (blocks.length === animation.blocks.length) {
+      return;
+    }
+    const newAnimation = animation.clone();
+    newAnimation.blocks = blocks;
+    const selectedBlockIds = this.getSelectedBlockIds();
+    const actions: Action[] = [new SetAnimation(newAnimation)];
+    if (Array.from(ids).some(id => selectedBlockIds.has(id))) {
+      actions.push(
+        new SetSelectedBlocks(new Set(difference(Array.from(selectedBlockIds), [...ids]))),
+      );
+    }
+    this.store.dispatch(new BatchAction(...actions));
   }
 
   updateBlocks(blocks: ReadonlyArray<AnimationBlock>) {

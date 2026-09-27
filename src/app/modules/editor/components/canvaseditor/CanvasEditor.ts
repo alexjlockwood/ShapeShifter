@@ -278,11 +278,15 @@ class Editor implements CanvasEditor {
     });
     this.toolbar.setHidden(this.isActionMode);
     this.toolbar.setSettings(this.settings);
-    const { actionModeService, playbackService } = this.context.services;
+    const { actionModeService, contextMenuService, playbackService } = this.context.services;
     this.keyframeBadge = new KeyframeBadge(this.context.root, {
       onAutoFix: blockIds => this.autoFix(blockIds),
       onEditMorph: blockId => actionModeService.editMorph(blockId),
       onSeek: time => playbackService.setCurrentTime(time),
+      onContextMenu: (blockIds, point) => {
+        this.endNudge();
+        contextMenuService.open(point, 'keyframeBadge', blockIds);
+      },
     });
     this.pathOpsBar = new PathOpsBar(this.context.root, op => void this.runPathOp(op));
     this.removeTestHooks = environment.production ? undefined : addTestHooks(preview, this);

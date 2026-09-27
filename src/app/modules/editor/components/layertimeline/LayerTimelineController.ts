@@ -784,6 +784,21 @@ export class LayerTimelineController extends DestroyableMixin() {
     contextMenuService.open(position, 'layerList');
   }
 
+  /**
+   * Opens the context menu for a right-click on the block, selecting it first if it isn't
+   * selected, so that the menu acts on all of the selected blocks otherwise.
+   */
+  onTimelineBlockContextMenu(
+    block: AnimationBlock,
+    position: { readonly x: number; readonly y: number },
+  ) {
+    const { layerTimelineService, contextMenuService } = this.services;
+    if (!layerTimelineService.getSelectedBlocks().some(b => b.id === block.id)) {
+      layerTimelineService.selectBlock(block.id, true);
+    }
+    contextMenuService.open(position, 'timelineBlock');
+  }
+
   onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
     const recursive = ShortcutService.isOsDependentModifierKey(event) || event.shiftKey;
     this.services.layerTimelineService.toggleExpandedLayer(layer.id, recursive);

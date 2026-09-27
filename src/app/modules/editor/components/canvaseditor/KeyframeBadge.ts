@@ -56,10 +56,22 @@ export function getKeyframeStatus(
 }
 
 /**
+ * Returns the blocks the badge is about: the one that's morphing, or those with an end at the
+ * time, in order.
+ */
+export function getKeyframeBlockIds(status: KeyframeStatus | undefined): ReadonlyArray<string> {
+  if (!status) {
+    return [];
+  }
+  return status.type === 'between' ? [status.blockId] : status.morphBlockIds;
+}
+
+/**
  * Says whether the selected path's morph still works while it's edited at one of its ends, with a
  * button that auto fixes it when it doesn't, or that it's morphing at the current time, with
  * buttons to go to either end. Either way, it has a button that edits the morph in action mode.
- * It's plain DOM at the bottom of the canvas panel, like the toolbar.
+ * Right-clicking it opens a menu for its blocks. It's plain DOM at the bottom of the canvas panel,
+ * like the toolbar.
  */
 export class KeyframeBadge {
   private readonly element: HTMLElement;
@@ -72,6 +84,14 @@ export class KeyframeBadge {
       readonly onAutoFix: (blockIds: ReadonlyArray<string>) => void;
       readonly onEditMorph: (blockId: string) => void;
       readonly onSeek: (time: number) => void;
+      /**
+       * Opens the context menu for the badge's blocks (getKeyframeBlockIds), at the point in
+       * client coordinates.
+       */
+      readonly onContextMenu: (
+        blockIds: ReadonlyArray<string>,
+        point: { readonly x: number; readonly y: number },
+      ) => void;
     },
   ) {
     this.element = document.createElement('div');
@@ -82,6 +102,14 @@ export class KeyframeBadge {
     this.removeListeners.push(
       on(this.element, 'pointerdown', event => event.stopPropagation()),
       on(this.element, 'pointermove', event => event.stopPropagation()),
+      // The canvas's own context menu leaves the badge alone (CanvasController).
+      on(this.element, 'contextmenu', event => {
+        event.preventDefault();
+        const blockIds = getKeyframeBlockIds(this.status);
+        if (blockIds.length) {
+          this.callbacks.onContextMenu(blockIds, { x: event.clientX, y: event.clientY });
+        }
+      }),
     );
     root.appendChild(this.element);
   }

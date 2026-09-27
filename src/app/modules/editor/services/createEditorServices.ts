@@ -40,7 +40,12 @@ export function createEditorServices(
   const canvasSettingsService = new CanvasSettingsService();
   const guideService = new GuideService(store);
   const fileExportService = new FileExportService(store);
-  const fileImportService = new FileImportService(store, snackBarService, layerTimelineService);
+  const fileImportService = new FileImportService(
+    store,
+    snackBarService,
+    layerTimelineService,
+    actionModeService,
+  );
   const clipboardService = new ClipboardService(
     layerTimelineService,
     playbackService,
