@@ -26,10 +26,10 @@ export interface ProjectVersionRule {
  *
  * Add a rule here (don't remove or renumber an existing one) when a format change needs one, per
  * `model/README.md`'s "Format-change rules" section:
- * - version 2 (1E, custom interpolators): true once any animation block's `interpolator` string
+ * - version 2 (custom interpolators): true once any animation block's `interpolator` string
  *   isn't one of the preset names in `INTERPOLATORS`, i.e. it's a curve written as canonical
  *   Android pathInterpolator path data.
- * - version 3 (2B, path transforms): true once any path layer "uses its transform": its rotation,
+ * - version 3 (transforms on paths): true once any path layer "uses its transform": its rotation,
  *   scale, or translate isn't the default, or it has a transform block. A pivot alone doesn't
  *   count.
  */
@@ -44,6 +44,9 @@ export const CURRENT_PROJECT_VERSION = VERSION_RULES.reduce(
   (max, rule) => Math.max(max, rule.version),
   1,
 );
+
+/** Thrown by `FileExportService.fromJSON` for JSON that isn't a project it can read. */
+export class ProjectFormatError extends Error {}
 
 /**
  * Shown by every caller of `FileExportService.fromJSON` when it returns `newerVersion: true`.
