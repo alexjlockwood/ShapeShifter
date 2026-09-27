@@ -58,8 +58,7 @@ and editing paths on the canvas. This is a survey only; nothing here has been im
    directly to the silent-import-failure findings above. About a day.
 7. **UI state lives in the undoable document state** is confirmed still true and is tracked as
    an open bug in `BUGS.md` (`store/undoredo/metareducer.ts`). 1 to 2 days.
-8. **Class-instance redux actions and imperative service construction.** `services/StoreUtil.ts`
-   has a literal `// TODO: expand on this class... possibly a better redesigned version?`, and
+8. **Class-instance redux actions and imperative service construction.**
    `services/createEditorServices.ts` wires every service together by hand. No new scope found;
    still open-ended.
 

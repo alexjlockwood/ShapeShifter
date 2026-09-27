@@ -34,9 +34,7 @@ import {
   getSelectedBlockIds,
   isAnimationSelected,
 } from 'app/modules/editor/store/timeline/selectors';
-import { environment } from 'environments/environment';
 import { difference, find, findIndex, isEqual, uniqueId } from 'lodash-es';
-import * as StoreUtil from './StoreUtil';
 
 /**
  * A simple service that provides an interface for making layer/timeline changes.
@@ -138,12 +136,6 @@ export class LayerTimelineService {
     }
     if (!isEqual(this.getSelectedLayerIds(), selectedLayerIds)) {
       actions.push(new SetSelectedLayers(selectedLayerIds));
-      // TODO: improve this design somehow (probably best not to have this service depend on paper ops?)
-      // TODO: figure out which selection-changed cases should force you into default mode
-      // TODO: i.e. should selecting a new layer in edit path mode trigger edit path mode for the new layer?
-      if (environment.beta) {
-        actions.push(...StoreUtil.getEnterDefaultModeActions());
-      }
     }
     return actions;
   }
