@@ -240,9 +240,11 @@ Phase 0 is the foundation, and it's split into small pull requests:
 5. Size the canvases to their panel and draw through a camera that only fits for now. This is the
    one change users with the flag off could notice, so a browser test checks that each demo draws
    the same pixels on the artboard as a canvas the size of the artboard, the way it used to be.
-6. Camera state, and ruler ticks that follow the zoom (CANVAS-5 in `docs/bugs/canvas.md`).
+6. Camera state, and ruler ticks that follow the zoom, which fixes CANVAS-5 (the rulers labeled
+   CSS pixels when the viewport had more units than the canvas had pixels).
 7. Pointer input (CANVAS-10, part of CANVAS-11, and UI-1 in `docs/bugs/timeline-and-ui.md`).
-8. Zoom and pan, with the flag on.
+8. Zoom and pan, with the flag on. Once the artboard can be bigger than the panel, the rulers run
+   over it along the panel's edges, so they need a background and a corner square.
 9. Previewing edits during a gesture, committed as one undo step.
 
 After that:

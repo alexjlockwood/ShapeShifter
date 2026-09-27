@@ -54,7 +54,7 @@ area, in the same style as the rest of this file:
 - **Layers and properties** (10 bugs): `docs/bugs/layers-and-properties.md`
 - **Import** (15 bugs): `docs/bugs/import.md`
 - **Export** (7 bugs): `docs/bugs/export.md`
-- **Canvas** (10 bugs): `docs/bugs/canvas.md`
+- **Canvas** (9 bugs): `docs/bugs/canvas.md`
 - **Timeline and UI** (15 bugs): `docs/bugs/timeline-and-ui.md`
 - **Build and tests** (7 bugs): `docs/bugs/build-and-tests.md`
 

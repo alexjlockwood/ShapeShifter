@@ -1,4 +1,5 @@
 export { ActionModeService } from './actionmode.service';
+export { CanvasViewportService } from './canvasviewport.service';
 export { ClipboardService } from './clipboard.service';
 export { FileExportService } from './fileexport.service';
 export { FileImportService } from './fileimport.service';

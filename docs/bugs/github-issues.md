@@ -193,7 +193,6 @@ These are still bugs, and the entry named here covers them.
 | #185  | MODEL-9 (bounds of rotated groups)                                                          |
 | #186  | `BUGS.md` "The editor draws strokes in scaled groups at the wrong width", and CANVAS-3      |
 | #224  | MODEL-5 (gradients import as black). Gradient support itself is #144.                       |
-| #249  | CANVAS-5 (rulers show CSS pixels)                                                           |
 | #257  | EXP-1 (empty `android:pathData`)                                                            |
 | #286  | CANVAS-1 (stroke drawn under the fill)                                                      |
 | #292  | `BUGS.md` stroke width entry and CANVAS-4. Its "expected" screenshot shows EXP-2.           |
@@ -215,6 +214,7 @@ These are still bugs, and the entry named here covers them.
 | #127       | Clicking empty canvas in a split or add points mode returns to selection mode               |
 | #129       | Auto fix has unit tests and a playground (`src/playground/autofix/`)                        |
 | #188       | Flattening transforms both the from and to values of path blocks                            |
+| #249       | The rulers are laid out from the canvas's camera, in viewport units (CANVAS-5)              |
 | #264       | `629387af`                                                                                  |
 | #265       | `5af30cf7` and `03d1a813`                                                                   |
 | #266, #284 | `7d0b789a`. Dropping a file in action mode (#284) now shows a message instead.              |
