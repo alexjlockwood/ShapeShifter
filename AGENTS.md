@@ -34,10 +34,10 @@ Use Node 24.15 or later (`.nvmrc`) with npm 11.10 or later. Older npm refuses to
 
 CI (`.github/workflows/ci.yml`) runs `npm run format:check`, `npm run typecheck`, `npm run lint`,
 `npm run test:run`, and `vite build` in one job, and the end-to-end tests in parallel shards. Pull
-requests only run the end-to-end tests in Chromium, and master runs them in every browser. Run the
-first four for every change, plus the end-to-end tests that cover what you changed, in every
-browser for browser-specific code. Format the files you touched with
-`npx prettier --write <files>`.
+requests only run the end-to-end tests in Chromium (and skip them if they only change Markdown),
+and master runs them in every browser. Run the first four for every change, plus the end-to-end
+tests that cover what you changed, in every browser for browser-specific code. Format the files
+you touched with `npx prettier --write <files>`.
 
 ## Where things are
 
