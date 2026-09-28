@@ -31,8 +31,30 @@ export class FileImportService {
     private readonly actionModeService: ActionModeService,
   ) {}
 
+  // Kept so that it isn't garbage collected before the picker reports the files.
+  private fileInput: HTMLInputElement | undefined;
+
   private get vectorLayer() {
     return getVectorLayer(this.store.getState());
+  }
+
+  /**
+   * Opens a file picker for SVGs or Vector Drawables, and imports the files picked. It has to be
+   * called while handling a click, or the browser won't open the picker.
+   */
+  pickFilesToImport(type: 'svg' | 'vectorDrawable') {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = type === 'svg' ? '.svg' : '.xml';
+    input.multiple = true;
+    input.addEventListener('change', () => {
+      if (input.files) {
+        this.import(input.files);
+      }
+      this.fileInput = undefined;
+    });
+    this.fileInput = input;
+    input.click();
   }
 
   import(fileList: FileList, resetWorkspace = false) {

@@ -1,5 +1,6 @@
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import { NO_AUTOFILL_PROPS } from 'app/modules/editor/components/common/noAutofill';
 import { Icon } from 'app/modules/editor/components/icons/Icon';
 import { ColorUtil } from 'app/modules/editor/scripts/common';
 import { useState } from 'react';
@@ -109,6 +110,7 @@ function HexField({ ip, isMixed }: { ip: InspectedProperty<string>; isMixed: boo
   const displayValue = draft ?? (isMixed ? '' : androidColorToHex(ip.value));
   return (
     <input
+      {...NO_AUTOFILL_PROPS}
       className="spi-color-picker-hex"
       name="colorPickerHex"
       aria-label="Hex"
@@ -134,9 +136,10 @@ function AlphaField({ ip, isMixed }: { ip: InspectedProperty<string>; isMixed: b
   const displayValue = draft ?? (isMixed ? '' : String(androidColorToAlphaPercent(ip.value)));
   return (
     <input
+      {...NO_AUTOFILL_PROPS}
       className="spi-color-picker-alpha"
       name="colorPickerAlpha"
-      aria-label="Alpha percentage"
+      aria-label="Opacity percentage"
       placeholder={isMixed && draft === undefined ? 'Mixed' : undefined}
       value={displayValue}
       onChange={event => {

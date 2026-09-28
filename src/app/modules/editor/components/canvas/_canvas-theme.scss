@@ -51,6 +51,11 @@
         background-color: #0a73bf;
         color: #fff;
     }
+    // Darker rather than the gray of the other tools' hover, which the white icon vanished into.
+    // This comes after the hover rule above, which is as specific.
+    .app-canvas .canvas-editor-tool[aria-pressed='true']:hover {
+        background-color: #085c99;
+    }
     // A setting that's on is blue, but lighter than the tool in use, and shown directly on the
     // panel background rather than as a fill, so it needs a theme-appropriate shade of its own.
     .app-canvas .canvas-editor-tool[data-setting][aria-pressed='true'] {

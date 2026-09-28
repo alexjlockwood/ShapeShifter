@@ -1,3 +1,4 @@
+import { NO_AUTOFILL_PROPS } from 'app/modules/editor/components/common/noAutofill';
 import { round } from 'lodash-es';
 import { type KeyboardEvent, useState } from 'react';
 
@@ -60,6 +61,7 @@ export function NumberField({
     <label className="spi-field">
       {label && <span className="spi-field-label">{label}</span>}
       <input
+        {...NO_AUTOFILL_PROPS}
         inputMode="decimal"
         aria-label={ariaLabel ?? label}
         disabled={disabled}

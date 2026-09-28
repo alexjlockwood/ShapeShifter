@@ -53,6 +53,7 @@ export function ContextMenuHost() {
         blockIds: request.blockIds ?? Array.from(getSelectedBlockIds(state)),
         currentTime: getCurrentTime(state),
         editor: canvasEditorBridgeService.getMenuState(),
+        isZoomedToFit: services.canvasViewportService.getView().type === 'fit',
       },
       services,
     );

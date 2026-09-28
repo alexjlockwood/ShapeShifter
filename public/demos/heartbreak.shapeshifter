@@ -37,7 +37,9 @@
               "trimPathStart": 0,
               "trimPathEnd": 1,
               "trimPathOffset": 0,
-              "fillType": "nonZero"
+              "fillType": "nonZero",
+              "pivotX": 28,
+              "pivotY": 28
             }
           ]
         },
@@ -69,7 +71,9 @@
               "trimPathStart": 0,
               "trimPathEnd": 1,
               "trimPathOffset": 0,
-              "fillType": "nonZero"
+              "fillType": "nonZero",
+              "pivotX": 28,
+              "pivotY": 28
             }
           ]
         },
@@ -89,7 +93,9 @@
           "trimPathStart": 0,
           "trimPathEnd": 0,
           "trimPathOffset": 0,
-          "fillType": "nonZero"
+          "fillType": "nonZero",
+          "pivotX": 28,
+          "pivotY": 28
         },
         {
           "id": "99",
@@ -107,7 +113,9 @@
           "trimPathStart": 0,
           "trimPathEnd": 0,
           "trimPathOffset": 0,
-          "fillType": "nonZero"
+          "fillType": "nonZero",
+          "pivotX": 28,
+          "pivotY": 28
         },
         {
           "id": "100",
@@ -116,8 +124,8 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "pivotX": 0,
-          "pivotY": 0,
+          "pivotX": 28,
+          "pivotY": 28,
           "translateX": 0,
           "translateY": 0,
           "children": [
@@ -143,7 +151,9 @@
               "trimPathStart": 0,
               "trimPathEnd": 1,
               "trimPathOffset": 0,
-              "fillType": "nonZero"
+              "fillType": "nonZero",
+              "pivotX": 28,
+              "pivotY": 28
             }
           ]
         }

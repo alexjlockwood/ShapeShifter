@@ -12,6 +12,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/modules/editor/model/layers';
+import { getPropertyLabel, getPropertyTitle } from 'app/modules/editor/model/properties';
 import { type Animation, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import {
   getBrokenApartLayerIds,
@@ -75,11 +76,18 @@ export interface ContextMenuInput {
   readonly currentTime: number;
   /** What the canvas editor reports, or undefined if it isn't loaded, as on the live site. */
   readonly editor: CanvasEditorMenuState | undefined;
+  /** Whether the canvas shows the whole artboard, which it always does without the editor. */
+  readonly isZoomedToFit: boolean;
 }
 
 export type ContextMenuServices = Pick<
   EditorServices,
-  'layerTimelineService' | 'canvasEditorBridgeService' | 'snackBarService' | 'actionModeService'
+  | 'layerTimelineService'
+  | 'canvasEditorBridgeService'
+  | 'snackBarService'
+  | 'actionModeService'
+  | 'fileImportService'
+  | 'canvasViewportService'
 >;
 
 /**
@@ -110,26 +118,48 @@ export function buildContextMenu(
   }
   const selectedLayers = getSelectedLayers(input);
   if (!isBlockTarget(input) && !selectedLayers.length) {
-    return [buildEmptySelectionSection(input, services)];
+    return EMPTY_SELECTION_SECTIONS.map(build => build(input, services)).filter(
+      section => section.length > 0,
+    );
   }
   return sectionBuilders.map(build => build(input, services)).filter(section => section.length > 0);
 }
 
-/** Select all, which is what there is to do with nothing selected. */
-function buildEmptySelectionSection(
-  { document }: ContextMenuInput,
-  { layerTimelineService }: ContextMenuServices,
-): ContextMenuSection {
-  return [
-    {
-      id: 'selectAll',
-      label: 'Select all',
-      shortcut: 'Command+A',
-      disabledReason: document.vectorLayer.children.length ? undefined : 'There are no layers',
-      run: () => layerTimelineService.selectAllLayers(),
-    },
-  ];
-}
+/** Select all, unless there's nothing to select. */
+export const buildSelectAllSection: ContextMenuSectionBuilder = (
+  { document },
+  { layerTimelineService },
+) =>
+  document.vectorLayer.children.length
+    ? [
+        {
+          id: 'selectAll',
+          label: 'Select all',
+          shortcut: 'Command+A',
+          run: () => layerTimelineService.selectAllLayers(),
+        },
+      ]
+    : [];
+
+/** Import, as in the layer list's Import menu, for when nothing is selected. */
+export const buildImportSection: ContextMenuSectionBuilder = (_input, { fileImportService }) => [
+  {
+    id: 'import',
+    label: 'Import',
+    submenu: [
+      {
+        id: 'import.svg',
+        label: 'SVG',
+        run: () => fileImportService.pickFilesToImport('svg'),
+      },
+      {
+        id: 'import.vectorDrawable',
+        label: 'Vector Drawable',
+        run: () => fileImportService.pickFilesToImport('vectorDrawable'),
+      },
+    ],
+  },
+];
 
 /**
  * The selected points' commands, while a path's points are edited: Delete, the point type, Open or
@@ -180,11 +210,13 @@ export const buildPointSection: ContextMenuSectionBuilder = (
 };
 
 /**
- * Duplicate (which only the canvas editor does), Group, Ungroup, Flatten group, and Convert to
- * clip path or path.
+ * Duplicate (which only the canvas editor does, and not for the vector layer, which has nowhere
+ * for a copy to go), Group, Ungroup, Flatten group, and Convert to clip path or path.
  */
 export const buildLayerSection: ContextMenuSectionBuilder = (input, services) => [
-  ...(input.editor ? [editorItem(services, 'duplicate', 'Duplicate', 'Command+D')] : []),
+  ...(input.editor && !getSelectedLayers(input).some(layer => layer instanceof VectorLayer)
+    ? [editorItem(services, 'duplicate', 'Duplicate', 'Command+D')]
+    : []),
   ...getGroupItems(input, services),
   ...getConvertItems(input, services),
 ];
@@ -432,8 +464,7 @@ export const buildAnimateSection: ContextMenuSectionBuilder = (input, { layerTim
       label: 'Animate',
       submenu: propertyNames.map(propertyName => ({
         id: `animate.${propertyName}`,
-        // The property's own name, as in the layer list's "Animate this layer" menu.
-        label: propertyName,
+        label: getPropertyTitle(propertyName),
         run: () => layerTimelineService.addBlockForProperty(layer.id, propertyName),
       })),
     },
@@ -455,6 +486,22 @@ export const buildDeleteSection: ContextMenuSectionBuilder = (
         },
       ];
 
+/** Zoom to fit, on the canvas, once it's zoomed or panned away from showing the whole artboard. */
+export const buildViewSection: ContextMenuSectionBuilder = (
+  { target, isZoomedToFit },
+  { canvasViewportService },
+) =>
+  target === 'canvas' && !isZoomedToFit
+    ? [
+        {
+          id: 'zoomToFit',
+          label: 'Zoom to fit',
+          shortcut: 'Shift+1',
+          run: () => canvasViewportService.fit(),
+        },
+      ]
+    : [];
+
 /** The menu's sections for layers, in order. */
 export const CONTEXT_MENU_SECTIONS: ReadonlyArray<ContextMenuSectionBuilder> = [
   buildPointSection,
@@ -463,6 +510,14 @@ export const CONTEXT_MENU_SECTIONS: ReadonlyArray<ContextMenuSectionBuilder> = [
   buildMorphSection,
   buildAnimateSection,
   buildDeleteSection,
+  buildViewSection,
+];
+
+/** The menu's sections with nothing selected, in order. */
+export const EMPTY_SELECTION_SECTIONS: ReadonlyArray<ContextMenuSectionBuilder> = [
+  buildSelectAllSection,
+  buildImportSection,
+  buildViewSection,
 ];
 
 /** The menu's sections for blocks, in the timeline or the keyframe badge, in order. */
@@ -514,7 +569,7 @@ export function getConvertRefusal(layer: PathLayer | ClipPathLayer, animation: A
   const lost = new Set(
     animation.blocks
       .filter(block => block.layerId === layer.id && !clipPathProperties.has(block.propertyName))
-      .map(block => block.propertyName),
+      .map(block => getPropertyLabel(block.propertyName)),
   );
   return lost.size ? `Clip paths can't animate ${Array.from(lost).join(', ')}` : undefined;
 }

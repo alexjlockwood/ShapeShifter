@@ -78,7 +78,7 @@ export const TimelineAnimationRow = memo(function TimelineAnimationRow({
                       }
                     }}
                     onContextMenu={event => {
-                      // In action mode, the blocks can't be changed, so the browser's menu opens.
+                      // In action mode, the blocks can't be changed, so no menu opens.
                       if (!isActionMode) {
                         event.preventDefault();
                         event.stopPropagation();

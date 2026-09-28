@@ -25,7 +25,9 @@
           "trimPathStart": 0,
           "trimPathEnd": 1,
           "trimPathOffset": 0,
-          "fillType": "nonZero"
+          "fillType": "nonZero",
+          "pivotX": 12,
+          "pivotY": 12
         },
         {
           "id": "strike_thru_mask",
@@ -49,7 +51,9 @@
           "trimPathStart": 0,
           "trimPathEnd": 1,
           "trimPathOffset": 0,
-          "fillType": "nonZero"
+          "fillType": "nonZero",
+          "pivotX": 12,
+          "pivotY": 12
         }
       ]
     },

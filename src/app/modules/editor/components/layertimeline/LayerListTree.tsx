@@ -6,6 +6,7 @@ import { Icon, type IconName } from 'app/modules/editor/components/icons/Icon';
 import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useMenu } from 'app/modules/editor/hooks/useMenu';
 import { GroupLayer, type Layer, VectorLayer } from 'app/modules/editor/model/layers';
+import { getPropertyTitle } from 'app/modules/editor/model/properties';
 import * as ModelUtil from 'app/modules/editor/scripts/common/ModelUtil';
 import { ShortcutService } from 'app/modules/editor/services/shortcut.service';
 import { getLayerListTreeState } from 'app/modules/editor/store/common/selectors';
@@ -98,7 +99,7 @@ export const LayerListTree = memo(function LayerListTree({ layer }: { layer: Lay
           }
         }}
         onContextMenu={event => {
-          // In action mode, the layers can't be changed, so the browser's menu opens as before.
+          // In action mode, the layers can't be changed, so no menu opens.
           if (!isActionMode) {
             event.preventDefault();
             controller.onLayerContextMenu(layer, { x: event.clientX, y: event.clientY });
@@ -187,7 +188,7 @@ export const LayerListTree = memo(function LayerListTree({ layer }: { layer: Lay
               }
             }}
           >
-            {propertyName}
+            {getPropertyTitle(propertyName)}
           </MenuItem>
         ))}
       </Menu>
@@ -197,7 +198,7 @@ export const LayerListTree = memo(function LayerListTree({ layer }: { layer: Lay
         <div className="slt-properties">
           {model.existingPropertyNames.map(propertyName => (
             <div className="slt-property fx-row fx-align-start-center" key={propertyName}>
-              <span className="slt-property-name">{propertyName}</span>
+              <span className="slt-property-name">{getPropertyTitle(propertyName)}</span>
               <Tip title="Add another animation" enterDelay={1000} disabled={isActionMode}>
                 <IconButton
                   className="slt-property-add-timeline-block-button"

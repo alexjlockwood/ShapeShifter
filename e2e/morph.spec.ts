@@ -98,19 +98,19 @@ async function setProperty(page: Page, name: string, value: string) {
   await input.blur();
 }
 
-async function animateSelectedLayer(page: Page, propertyName: string) {
+async function animateSelectedLayer(page: Page, label: string) {
   await page
     .locator('.app-propertyinput')
     .getByRole('button', { name: 'Animate this layer' })
     .click();
-  await page.getByRole('menuitem', { name: propertyName, exact: true }).click();
+  await page.getByRole('menuitem', { name: label, exact: true }).click();
 }
 
 /** Animates the layer's path from its current value to toPathData, and selects the block. */
 async function addPathMorph(page: Page, layerName: string, toPathData: string) {
   await page.locator('.slt-layer', { hasText: layerName }).click();
-  await animateSelectedLayer(page, 'pathData');
-  await expect(page.locator('.spi-selection-description')).toContainText('pathData');
+  await animateSelectedLayer(page, 'Path');
+  await expect(page.locator('.spi-selection-description')).toContainText('Path');
   await setProperty(page, 'toValue', toPathData);
 }
 
@@ -237,10 +237,10 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
   await page.locator('.slt-layer', { hasText: 'group' }).click();
   await expect(page.locator('.spi-property input[name="pivotX"]')).toHaveValue('12');
   await expect(page.locator('.spi-property input[name="pivotY"]')).toHaveValue('12');
-  await animateSelectedLayer(page, 'rotation');
+  await animateSelectedLayer(page, 'Rotation');
   await expect(page.locator('.slt-timeline-block')).toHaveCount(2);
   // The new block is selected.
-  await expect(page.locator('.spi-selection-description')).toContainText('rotation');
+  await expect(page.locator('.spi-selection-description')).toContainText('Rotation');
   await setProperty(page, 'toValue', '90');
 
   // The play icon morphs into a pause icon, rotated into two horizontal bars.

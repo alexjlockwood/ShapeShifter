@@ -67,7 +67,10 @@ describe('buildContextMenu', () => {
   }
 
   /** Builds the menu for the layers, with the editor loaded unless it's told otherwise. */
-  function build(selected: ReadonlyArray<Layer>, { withEditor = true } = {}) {
+  function build(
+    selected: ReadonlyArray<Layer>,
+    { withEditor = true, target = 'canvas' as ContextMenuTarget } = {},
+  ) {
     services.layerTimelineService.setSelectedLayers(new Set(selected.map(l => l.id)));
     if (withEditor) {
       services.canvasEditorBridgeService.attach(editor);
@@ -78,10 +81,11 @@ describe('buildContextMenu', () => {
       {
         document: services.layerTimelineService.getDocument(),
         selectedLayerIds: getSelectedLayerIds(store.getState()),
-        target: 'canvas',
+        target,
         blockIds: [],
         currentTime: 0,
         editor: services.canvasEditorBridgeService.getMenuState(),
+        isZoomedToFit: services.canvasViewportService.getView().type === 'fit',
       },
       services,
     );
@@ -98,6 +102,7 @@ describe('buildContextMenu', () => {
         blockIds,
         currentTime: 0,
         editor: services.canvasEditorBridgeService.getMenuState(),
+        isZoomedToFit: services.canvasViewportService.getView().type === 'fit',
       },
       services,
     );
@@ -189,6 +194,15 @@ describe('buildContextMenu', () => {
     ]);
   });
 
+  it("doesn't duplicate the vector layer, which has nowhere for a copy to go", () => {
+    const a = path('a');
+    load([a]);
+    const vectorLayer = services.layerTimelineService.getVectorLayer();
+    expect(find(build([vectorLayer]), 'duplicate')).toBeUndefined();
+    expect(find(build([vectorLayer, a]), 'duplicate')).toBeUndefined();
+    expect(find(build([vectorLayer]), 'delete')).toBeDefined();
+  });
+
   describe('points', () => {
     const points = {
       selectedCount: 1,
@@ -257,14 +271,41 @@ describe('buildContextMenu', () => {
     });
   });
 
-  it('only offers select all with nothing selected', () => {
+  it('only offers select all and import with nothing selected', () => {
     load([path('a')]);
     const menu = build([]);
-    expect(ids(menu)).toEqual([['selectAll']]);
+    expect(ids(menu)).toEqual([['selectAll'], ['import']]);
     run(find(menu, 'selectAll'));
     expect(services.layerTimelineService.getSelectedLayers().map(l => l.name)).toEqual(['a']);
+    // With no layers, there's nothing to select.
     load([]);
-    expect(find(build([]), 'selectAll')?.disabledReason).toBe('There are no layers');
+    expect(ids(build([]))).toEqual([['import']]);
+  });
+
+  it('zooms the canvas to fit, once it no longer fits', () => {
+    const a = path('a');
+    load([a]);
+    expect(find(build([]), 'zoomToFit')).toBeUndefined();
+    services.canvasViewportService.setView({ type: 'manual', scale: 4, center: { x: 12, y: 12 } });
+    expect(ids(build([]))).toEqual([['selectAll'], ['import'], ['zoomToFit']]);
+    expect(ids(build([a])).at(-1)).toEqual(['zoomToFit']);
+    // The layer list isn't the canvas.
+    expect(find(build([a], { target: 'layerList' }), 'zoomToFit')).toBeUndefined();
+    const zoomToFit = find(build([a]), 'zoomToFit');
+    expect(zoomToFit?.shortcut).toBe('Shift+1');
+    run(zoomToFit);
+    expect(services.canvasViewportService.getView()).toEqual({ type: 'fit' });
+  });
+
+  it('imports SVGs and Vector Drawables', () => {
+    load([]);
+    const pickFilesToImport = vi
+      .spyOn(services.fileImportService, 'pickFilesToImport')
+      .mockImplementation(() => {});
+    const submenu = find(build([]), 'import')?.submenu ?? [];
+    expect(submenu.map(item => item.label)).toEqual(['SVG', 'Vector Drawable']);
+    submenu.forEach(run);
+    expect(pickFilesToImport.mock.calls).toEqual([['svg'], ['vectorDrawable']]);
   });
 
   it('only says why while the editor is busy', () => {
@@ -392,7 +433,7 @@ describe('buildContextMenu', () => {
     expect(find(build([b]), 'convert')?.disabledReason).toBeUndefined();
     load([b], [block(b.id, 'fillColor', '#000000', '#ffffff'), block(b.id, 'strokeWidth', 0, 1)]);
     expect(find(build([b]), 'convert')?.disabledReason).toBe(
-      "Clip paths can't animate fillColor, strokeWidth",
+      "Clip paths can't animate fill color, stroke width",
     );
   });
 
@@ -401,9 +442,9 @@ describe('buildContextMenu', () => {
     load([a], [block(a.id, 'fillColor', '#000000', '#ffffff')]);
     const animate = find(build([a]), 'animate');
     const labels = animate?.submenu?.map(item => item.label) ?? [];
-    expect(labels).toContain('strokeWidth');
-    expect(labels).not.toContain('fillColor');
-    run(animate?.submenu?.find(item => item.label === 'strokeWidth'));
+    expect(labels).toContain('Stroke width');
+    expect(labels).not.toContain('Fill color');
+    run(animate?.submenu?.find(item => item.label === 'Stroke width'));
     expect(services.layerTimelineService.getAnimation().blocks.map(b => b.propertyName)).toEqual([
       'fillColor',
       'strokeWidth',

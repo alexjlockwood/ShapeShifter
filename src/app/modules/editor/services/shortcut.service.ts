@@ -101,6 +101,13 @@ export class ShortcutService {
     const canPan = this.features.canvasEditor;
     this.removeListeners = [
       on(window, 'keydown', event => this.onKeyDown(event)),
+      // The browser's menu is about the page, not the editor, so it only opens over text fields,
+      // for copying, pasting, and spelling. The canvas and the layer list open the app's own.
+      on(window, 'contextmenu', event => {
+        if (!(event.target instanceof Element && event.target.closest(TEXT_FIELD_SELECTOR))) {
+          event.preventDefault();
+        }
+      }),
       ...(canPan
         ? [
             on(window, 'keyup', event => this.onKeyUp(event)),

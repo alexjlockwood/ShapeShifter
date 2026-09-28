@@ -141,6 +141,12 @@ const pairs: Array<{ name: string; a: string; b: string; min: number }> = [
     min: TEXT,
   },
   {
+    name: 'hovered pressed editor tool (components/canvas/_canvas-theme.scss)',
+    a: '#ffffff',
+    b: '#085c99',
+    min: TEXT,
+  },
+  {
     name: "editor label pills (components/canvaseditor/EditorRenderer.ts's GUIDE_COLOR)",
     a: '#ffffff',
     b: '#bf360c',

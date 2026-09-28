@@ -81,8 +81,8 @@ describe('buildInspectorSections', () => {
       ['name', ['Name']],
       // A path's transform has the same properties as a group's.
       ['transform', ['Rotation', 'Scale', 'Pivot', 'Translate']],
-      ['fill', ['Color', 'Alpha', 'Rule']],
-      ['stroke', ['Color', 'Alpha', 'Width', 'Cap', 'Join', 'Miter limit']],
+      ['fill', ['Color', 'Opacity', 'Rule']],
+      ['stroke', ['Color', 'Opacity', 'Width', 'Cap', 'Join', 'Miter limit']],
       ['trimPath', ['Start', 'End', 'Offset']],
       ['path', ['Path']],
     ]);
@@ -93,7 +93,7 @@ describe('buildInspectorSections', () => {
     const stroke = buildInspectorSections(inspect(path), optionsFor(path)).find(
       s => s.id === 'stroke',
     );
-    expect(stroke?.rows.map(r => r.label)).toEqual(['Color', 'Alpha', 'Width', 'Cap', 'Join']);
+    expect(stroke?.rows.map(r => r.label)).toEqual(['Color', 'Opacity', 'Width', 'Cap', 'Join']);
   });
 
   it("shares rows between a group's x and y properties, with their own labels", () => {
@@ -175,8 +175,8 @@ describe('buildInspectorSections', () => {
       toValue: 1,
     });
     const sections = buildInspectorSections(inspect(block), optionsFor(block));
-    expect(summarize(sections)).toEqual([['keyframe', ['Time', 'Easing', 'From', 'To']]]);
-    expect(sections[0].rows.map(r => r.isWide)).toEqual([false, true, false, false]);
+    expect(summarize(sections)).toEqual([['keyframe', ['Time', 'From', 'To', 'Easing']]]);
+    expect(sections[0].rows.map(r => r.isWide)).toEqual([false, false, false, true]);
     expect(sections[0].rows.every(r => !r.animation)).toBe(true);
   });
 
@@ -212,7 +212,7 @@ describe('buildInspectorSections', () => {
     const stroke = buildInspectorSections(properties, optionsFor(path)).find(
       s => s.id === 'stroke',
     );
-    expect(stroke?.rows.map(r => r.label)).toEqual(['Color', 'Alpha', 'Width', 'Cap', 'Join']);
+    expect(stroke?.rows.map(r => r.label)).toEqual(['Color', 'Opacity', 'Width', 'Cap', 'Join']);
   });
 
   it('leaves out excluded properties, and shows properties it has no place for', () => {

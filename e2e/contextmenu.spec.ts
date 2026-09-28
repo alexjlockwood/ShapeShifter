@@ -76,6 +76,29 @@ for (const editor of [true, false]) {
     ]);
     expect(await getSelectedNames(page)).toEqual(['group']);
   });
+
+  test(`right-click on an empty canvas imports an SVG, with the editor ${
+    editor ? 'on' : 'off'
+  }`, async ({ page }) => {
+    await page.goto(editor ? '/?editor=1' : '/');
+    await expect(page.locator('.app-canvas')).toHaveAttribute(
+      'data-canvas-editor',
+      editor ? 'ready' : 'off',
+    );
+    await rightClickCanvas(page, 12, 12);
+    // There's nothing to select.
+    await expect(page.getByRole('menuitem', { name: 'Select all' })).toHaveCount(0);
+    await page.getByRole('menuitem', { name: 'Import' }).hover();
+    const fileChooserPromise = page.waitForEvent('filechooser');
+    await page.getByRole('menuitem', { name: 'SVG' }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles({
+      name: 'shapes.svg',
+      mimeType: 'image/svg+xml',
+      buffer: Buffer.from(SHAPES_SVG),
+    });
+    await expect(page.locator('.slt-layer')).toHaveText(['vector', 'outer', 'inner', 'square']);
+  });
 }
 
 test('combines two paths into a donut, and breaks it apart', async ({ page }) => {
@@ -117,13 +140,13 @@ test('right-click on a layer row selects it and opens the menu', async ({ page }
   const animate = page.getByRole('menuitem', { name: 'Animate' });
   await animate.focus();
   await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('menuitem', { name: 'pathData' })).toBeFocused();
+  await expect(page.getByRole('menuitem', { name: 'Path', exact: true })).toBeFocused();
   await page.keyboard.press('ArrowLeft');
   await expect(animate).toBeFocused();
-  await expect(page.getByRole('menuitem', { name: 'pathData' })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: 'Path', exact: true })).toHaveCount(0);
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('menuitem', { name: 'fillColor', exact: true })).toBeFocused();
+  await expect(page.getByRole('menuitem', { name: 'Fill color', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('.MuiModal-root')).toHaveCount(0);
   expect(
@@ -136,6 +159,35 @@ test('right-click on a layer row selects it and opens the menu', async ({ page }
   await expect(page.getByRole('menu')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('.MuiModal-root')).toHaveCount(0);
+});
+
+test('zooms the canvas to fit from the menu, once it no longer fits', async ({ page }) => {
+  await load(page, true);
+  const getViewType = () =>
+    page.evaluate(
+      () => (window as any).shapeshifter.services.canvasViewportService.getView().type as string,
+    );
+  await rightClickCanvas(page, 12, 23);
+  await expect(page.getByRole('menu')).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: /Zoom to fit/ })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.MuiModal-root')).toHaveCount(0);
+
+  await page.keyboard.press('Shift+Digit0');
+  await expect.poll(getViewType).toBe('manual');
+  await rightClickCanvas(page, 12, 23);
+  await chooseMenuItem(page, 'Zoom to fit');
+  await expect.poll(getViewType).toBe('fit');
+});
+
+test("the browser's menu only opens over text fields", async ({ page }) => {
+  await load(page, false);
+  await page.getByRole('button', { name: 'Import' }).click({ button: 'right' });
+  expect(await wasPrevented(page)).toBe(true);
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await page.locator('.slt-layer').filter({ hasText: 'inner' }).click();
+  await page.locator('.spi-property input[name="name"]').click({ button: 'right' });
+  expect(await wasPrevented(page)).toBe(false);
 });
 
 test("right-button drags don't move layers", async ({ page }) => {
