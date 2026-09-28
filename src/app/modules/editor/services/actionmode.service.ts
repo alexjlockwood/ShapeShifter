@@ -18,6 +18,7 @@ import {
   getMorphBlockRefusal,
   morphIntoLayer,
   morphLayerSets,
+  UnfixedMorphError,
 } from 'app/modules/editor/scripts/common/morphLayers';
 import type { LayerDocument } from 'app/modules/editor/scripts/common/pathOpLayers';
 import { Action, State, Store } from 'app/modules/editor/store';
@@ -150,8 +151,12 @@ export class ActionModeService {
       return false;
     }
     if (morphed.autoFixError) {
-      // The morph is kept as it is, and action mode says what doesn't match.
-      bugsnagClient.notify(morphed.autoFixError);
+      // The morph is kept as it is, and action mode says what doesn't match. Paths that auto fix
+      // can't match up aren't a crash, so only a thrown error is reported.
+      if (!(morphed.autoFixError instanceof UnfixedMorphError)) {
+        bugsnagClient.notify(morphed.autoFixError);
+      }
+      this.snackBarService.show("Couldn't auto fix these paths", 'Dismiss', Duration.Long);
     }
     if (this.isActionMode()) {
       // Its selections, hover, and pairings are for the other block.
@@ -572,9 +577,12 @@ export class ActionModeService {
     let animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.From, from);
     animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.To, to, animation);
     // Auto fix adds points and reorders subpaths, so the selected points, the hover, and the
-    // subpaths paired so far in pair subpaths mode may not refer to the same things anymore.
+    // subpaths paired so far in pair subpaths mode may not refer to the same things anymore. It
+    // gets an undo step of its own, or clicking it right after double-clicking the block would
+    // join the selection's step, and undoing it would deselect the block too.
     this.store.dispatch(
       new BatchAction(
+        new IsolateUndoStep(),
         new SetAnimation(animation),
         new SetActionModeSelections([]),
         new SetActionModeHover(undefined),

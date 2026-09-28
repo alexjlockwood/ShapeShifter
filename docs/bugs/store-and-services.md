@@ -3,9 +3,11 @@
 - **Undo and redo overwrite playback and action mode state.** Playback and action mode changes
   aren't undo steps, but they're part of every snapshot, so undo restores them too: it can start
   playback, turn off repeat and slow motion, move the time cursor, or enter or leave action mode.
-  Carry the playback slice over like the theme, and keep action mode only if the restored state
-  selects the same path block (`store/undoredo/metareducer.ts`). (STORE-1, medium, confirmed by a
-  test)
+  The most common case: undoing the first edit made in action mode (e.g. Auto fix, or reversing a
+  subpath) leaves action mode with the block still selected, because redux-undo saves the state as
+  of the last recorded action, from before `SetActionMode`. Carry the playback slice over like the
+  theme, and keep action mode only if the restored state selects the same path block
+  (`store/undoredo/metareducer.ts`). (STORE-1, medium, confirmed by a test)
 - **Resuming slow motion playback jumps to a fifth of the current time.** `Animator`'s resume math
   scales the whole elapsed-time-plus-start-time sum by the playback speed instead of just the
   start time, so pausing at 500ms and resuming in slow motion starts the next frame at 100ms
