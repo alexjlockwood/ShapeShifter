@@ -272,7 +272,7 @@ export function loadVectorLayerFromSvgStringInternal(
   return new VectorLayer({
     id: uniqueId(),
     // Not the root's id: editors write ids like Illustrator's Layer_1 and Inkscape's svg8 there,
-    // which mean nothing to the user, and the exported files are named after the vector layer.
+    // which mean nothing to the user.
     name: makeFinalNodeIdFn(null, 'vector'),
     children: rootLayer ? rootLayer.children : [],
     width,
