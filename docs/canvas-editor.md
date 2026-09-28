@@ -328,7 +328,8 @@ Phase 6 finishes the roadmap:
 - Right-clicking the canvas opens a context menu instead of the browser's
   (`components/contextmenu/`), with Duplicate, the booleans, and outline stroke while the editor is
   loaded, and the rest of the layer commands, including Combine and Break apart, which keep every
-  subpath as it is. The menu reaches the editor through `services/canvaseditorbridge.service.ts`.
+  subpath as it is, plus Zoom to fit once the canvas is zoomed or panned. The menu reaches the
+  editor through `services/canvaseditorbridge.service.ts`.
 - On a touch screen, two fingers pinch to zoom and drag to pan, which cancels what the first
   finger started, and the editor's tolerances are twice as big for fingers.
 
