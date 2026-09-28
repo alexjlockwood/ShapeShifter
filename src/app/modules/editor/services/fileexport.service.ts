@@ -28,8 +28,8 @@ export interface ParsedProject {
   readonly guides: ReadonlyArray<Guide>;
   /**
    * True when the project's version is higher than this build's `CURRENT_PROJECT_VERSION`, or
-   * isn't a positive integer at all. The project still loads; callers show a warning that some
-   * things may not show, and saving may drop them.
+   * isn't a positive integer at all (a missing one counts as 1). The project still loads; callers
+   * show a warning that some things may not show, and saving may drop them.
    */
   readonly newerVersion: boolean;
 }
@@ -51,7 +51,9 @@ export class FileExportService {
       }
       throw new ProjectFormatError("This doesn't look like a Shape Shifter project.");
     }
-    const { version } = jsonObj;
+    // Every build has written a version, but a hand-written or generated project may leave it
+    // out, and the only format it can mean is the first one.
+    const version = jsonObj.version ?? 1;
     const newerVersion =
       !Number.isInteger(version) || version < 1 || version > CURRENT_PROJECT_VERSION;
     const vectorLayer = new VectorLayer(layers.vectorLayer);

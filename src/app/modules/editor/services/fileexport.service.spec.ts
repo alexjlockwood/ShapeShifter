@@ -58,14 +58,17 @@ describe('FileExportService.fromJSON', () => {
     expect(parsed.vectorLayer).toBeInstanceOf(VectorLayer);
   });
 
-  it.each([0, -1, 1.5, '1', null, undefined])(
-    'flags an odd version (%p) as newer, but still loads it',
-    version => {
-      const parsed = FileExportService.fromJSON(toJSON({ version }));
-      expect(parsed.newerVersion).toBe(true);
-      expect(parsed.vectorLayer).toBeInstanceOf(VectorLayer);
-    },
-  );
+  it.each([0, -1, 1.5, '1'])('flags an odd version (%p) as newer, but still loads it', version => {
+    const parsed = FileExportService.fromJSON(toJSON({ version }));
+    expect(parsed.newerVersion).toBe(true);
+    expect(parsed.vectorLayer).toBeInstanceOf(VectorLayer);
+  });
+
+  it.each([null, undefined])('reads a missing version (%p) as version 1', version => {
+    const parsed = FileExportService.fromJSON(toJSON({ version }));
+    expect(parsed.newerVersion).toBe(false);
+    expect(parsed.vectorLayer).toBeInstanceOf(VectorLayer);
+  });
 
   it("throws a clear error for a project saved before Shape Shifter 1.0's format", () => {
     const preOneDotOh = {

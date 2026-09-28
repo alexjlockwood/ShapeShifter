@@ -57,7 +57,8 @@ export function loadVectorLayerFromSvgStringInternal(
   const usedIds = new Set<string>();
   const makeFinalNodeIdFn = (nodeId: string | null, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
-      NameProperty.sanitize(nodeId || prefix),
+      // Fall back to the prefix if sanitizing leaves nothing (e.g. an id in Chinese).
+      NameProperty.sanitize(nodeId || '') || NameProperty.sanitize(prefix),
       name => doesNameExistFn(name) || usedIds.has(name),
     );
     usedIds.add(finalName);
@@ -69,6 +70,13 @@ export function loadVectorLayerFromSvgStringInternal(
   if (!isSvgNode(documentElement)) {
     return undefined;
   }
+
+  // The elements left out because they draw nothing. svgo's removeUselessStrokeAndFill skips
+  // elements with an id and everything inside them, and Illustrator puts an id on the root <svg>,
+  // so shapes with no fill and no stroke (like Illustrator's and Sketch's bounding boxes) reach
+  // the loader. svgo 1.x removed them, and the groups they left empty, since it removed the
+  // unreferenced ids first.
+  const invisibleNodes = new Set<Node>();
 
   // TODO: handle clipPaths that have children path elements with clip-path attributes
   // TODO: handle clipPaths with clipPathUnits="objectBoundingBox"
@@ -109,6 +117,11 @@ export function loadVectorLayerFromSvgStringInternal(
     // Get the referenced clip-path ID, if one exists.
     const refClipPathId = getReferencedClipPathId(node);
 
+    // The vector layer takes the root <svg> element's place and gets its children. So the root's
+    // group and clip path wrapper are thrown away, and shouldn't take names, unless the root is
+    // clipped, which keeps its group.
+    const isRoot = node === documentElement;
+
     const maybeWrapClipPathInGroupFn = (layer: Layer) => {
       if (!refClipPathId) {
         return layer;
@@ -129,7 +142,7 @@ export function loadVectorLayerFromSvgStringInternal(
       });
       groupChildren.push(layer);
       return new GroupLayer({
-        name: makeFinalNodeIdFn('wrapper', 'group'),
+        name: isRoot ? '' : makeFinalNodeIdFn('wrapper', 'group'),
         children: groupChildren,
       });
     };
@@ -159,6 +172,12 @@ export function loadVectorLayerFromSvgStringInternal(
         'fillColor' in attrMap ? ColorUtil.svgToAndroidColor(attrMap['fillColor']) : '#000';
       const strokeColor =
         'strokeColor' in attrMap ? ColorUtil.svgToAndroidColor(attrMap['strokeColor']) : undefined;
+      if (!fillColor && !strokeColor) {
+        // Both are 'none' (or the stroke is missing). A transparent color or a zero opacity is
+        // kept, as svgo 1.x did, since the user may animate it.
+        invisibleNodes.add(node);
+        return undefined;
+      }
       const fillAlpha = 'fillAlpha' in attrMap ? Number(attrMap['fillAlpha']) : 1;
       let strokeWidth = 'strokeWidth' in attrMap ? Number(attrMap['strokeWidth']) : 1;
       const strokeAlpha = 'strokeAlpha' in attrMap ? Number(attrMap['strokeAlpha']) : 1;
@@ -204,17 +223,30 @@ export function loadVectorLayerFromSvgStringInternal(
     // TODO: we should *not* iterate over a clip path's children here...
     if (node.childNodes) {
       const children: Layer[] = [];
+      let hasInvisibleChild = false;
       for (let i = 0; i < node.childNodes.length; i++) {
         const child = node.childNodes.item(i) as Element;
         const layer = nodeToLayerFn(child, transforms, attrs);
         if (layer) {
           children.push(layer);
+        } else if (invisibleNodes.has(child)) {
+          hasInvisibleChild = true;
         }
+      }
+      if (!children.length && hasInvisibleChild) {
+        invisibleNodes.add(node);
+        return undefined;
+      }
+      let name = '';
+      if (!isRoot) {
+        name = makeFinalNodeIdFn(node.getAttribute('id'), 'group');
+      } else if (refClipPathId) {
+        name = makeFinalNodeIdFn(null, 'group');
       }
       return maybeWrapClipPathInGroupFn(
         new GroupLayer({
           id: uniqueId(),
-          name: makeFinalNodeIdFn(node.getAttribute('id'), 'group'),
+          name,
           children,
         }),
       );
@@ -239,7 +271,9 @@ export function loadVectorLayerFromSvgStringInternal(
   const rootLayer = nodeToLayerFn(documentElement, rootTransforms);
   return new VectorLayer({
     id: uniqueId(),
-    name: makeFinalNodeIdFn(documentElement.getAttribute('id'), 'vector'),
+    // Not the root's id: editors write ids like Illustrator's Layer_1 and Inkscape's svg8 there,
+    // which mean nothing to the user, and the exported files are named after the vector layer.
+    name: makeFinalNodeIdFn(null, 'vector'),
     children: rootLayer ? rootLayer.children : [],
     width,
     height,

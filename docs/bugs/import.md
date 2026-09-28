@@ -45,12 +45,6 @@
   wrong size. Resolve `<use>` against any id, and treat symbols and nested SVGs as viewports
   (`scripts/svgo/plugins/replaceUseElems.ts`, `scripts/import/SvgLoader.ts`). (IMP-9, GitHub #297,
   low, confirmed by a test)
-- **Non-ASCII ids give layers empty names.** `sanitize` strips every character of an id like
-  Chinese, Japanese, or Russian Illustrator and Sketch exports use, and the prefix fallback isn't
-  applied afterward, so layers are named `""`, `"_1"`, `"_2"`, and exports write
-  `android:name=""` (`scripts/import/SvgLoader.ts`, `scripts/import/VectorDrawableLoader.ts`,
-  `makeFinalNodeIdFn`). (IMP-10, confirmed by a test; a candidate fix exists on the unmerged
-  `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
 - **Percentage values import as NaN.** `fill-opacity="50%"` or `stroke-width="5%"` imports as
   `NaN`, which is kept and exported. Parse percentages, and use the default for values that aren't
   finite (`scripts/import/SvgLoader.ts`). (IMP-11, low, confirmed by a test)
