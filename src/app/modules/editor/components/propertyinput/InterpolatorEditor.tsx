@@ -1,6 +1,7 @@
 import Divider from '@mui/material/Divider';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import { NO_AUTOFILL_PROPS } from 'app/modules/editor/components/common/noAutofill';
 import { Icon } from 'app/modules/editor/components/icons/Icon';
 import { useMenu } from 'app/modules/editor/hooks/useMenu';
 import {
@@ -8,6 +9,7 @@ import {
   type Curve,
   curveToString,
   INTERPOLATORS,
+  parseCurve,
   resolveInterpolator,
 } from 'app/modules/editor/model/interpolators';
 import type { Point } from 'app/modules/editor/scripts/common';
@@ -111,7 +113,8 @@ interface Drag {
  * the easing curve with handles. The graph shows presets too, and editing one (dragging a handle,
  * or adding or removing a point) turns it into a custom curve, starting from the preset's shape.
  * Drags are previews saved as one undo step on release. Double-clicking the curve adds a point,
- * and double-clicking a point, or Delete with it selected, removes it.
+ * and double-clicking a point, or Delete with it selected, removes it. The curve's path data is
+ * under the graph, where it can be typed or pasted too.
  */
 export function InterpolatorEditor({
   ip,
@@ -450,6 +453,68 @@ export function InterpolatorEditor({
           }),
         )}
       </svg>
+      <CurvePathDataField
+        value={isMixed ? undefined : curveToString(curve)}
+        onCommit={next => {
+          setSelectedAnchor(undefined);
+          setCurve(next);
+        }}
+      />
     </div>
+  );
+}
+
+/**
+ * The curve as Android pathInterpolator path data, which presets show too. Typing a valid curve
+ * (see parseCurve) saves it on Enter or blur, as a custom curve, and Escape goes back. value is
+ * undefined for a batch edit whose blocks disagree.
+ */
+function CurvePathDataField({
+  value,
+  onCommit,
+}: {
+  value: string | undefined;
+  onCommit: (curve: Curve) => void;
+}) {
+  // What's being typed, until it's saved.
+  const [text, setText] = useState<string | undefined>(undefined);
+  const commit = () => {
+    if (text === undefined) {
+      return;
+    }
+    setText(undefined);
+    const next = parseCurve(text);
+    if (next && curveToString(next) !== value) {
+      onCommit(next);
+    }
+  };
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      commit();
+    } else if (event.key === 'Escape') {
+      setText(undefined);
+    } else {
+      return;
+    }
+    // So that the canvas and the timeline don't take the key too.
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  return (
+    <input
+      {...NO_AUTOFILL_PROPS}
+      className={
+        text !== undefined && !parseCurve(text)
+          ? 'spi-curve-path-data has-input-error'
+          : 'spi-curve-path-data'
+      }
+      aria-label="Easing curve path data"
+      spellCheck={false}
+      placeholder={value === undefined && text === undefined ? 'Mixed' : undefined}
+      value={text ?? value ?? ''}
+      onChange={event => setText(event.target.value)}
+      onKeyDown={onKeyDown}
+      onBlur={commit}
+    />
   );
 }

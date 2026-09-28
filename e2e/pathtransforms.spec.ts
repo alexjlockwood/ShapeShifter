@@ -87,8 +87,8 @@ test('rotates a path without a group, animates it, and exports it in a group', a
     .locator('.app-propertyinput')
     .getByRole('button', { name: 'Animate this layer' })
     .click();
-  await page.getByRole('menuitem', { name: 'rotation', exact: true }).click();
-  await expect(page.locator('.spi-selection-description')).toContainText('rotation');
+  await page.getByRole('menuitem', { name: 'Rotation', exact: true }).click();
+  await expect(page.locator('.spi-selection-description')).toContainText('Rotation');
   await setProperty(page, 'toValue', '180');
   // Shortcuts are ignored until the menu has finished closing (Safari leaves the focus in it).
   await expect(page.locator('.MuiModal-root')).toHaveCount(0);

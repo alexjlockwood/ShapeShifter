@@ -137,8 +137,8 @@ selects it the same way, and right-clicking the canvas editor's keyframe badge o
 the badge's blocks without selecting them, since that would deselect the path the badge is about
 (the request carries their ids). Its items come from
 `components/contextmenu/buildContextMenu.ts`, a plain function of the saved document, the
-selection, the blocks, the current time, and what the canvas editor reports, built as a list of
-sections. A new kind of item goes in a section builder of its own, added to
+selection, the blocks, the current time, what the canvas editor reports, and whether the canvas is
+zoomed to fit, built as a list of sections. A new kind of item goes in a section builder of its own, added to
 `CONTEXT_MENU_SECTIONS`, or `BLOCK_CONTEXT_MENU_SECTIONS` for blocks. Items that can't run say
 why, rather than being left out, and those that only the canvas editor runs (Duplicate, the
 boolean operations, and Outline stroke) are left out while it isn't loaded, as on the live site.

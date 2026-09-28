@@ -6,6 +6,7 @@ import type { PointEditState } from 'app/modules/editor/components/canvas/Canvas
 import { useCanvasEditorModule } from 'app/modules/editor/components/canvas/useCanvasEditorModule';
 import { ColorPropertyEditor } from 'app/modules/editor/components/colorpicker/ColorPropertyEditor';
 import { collectDocumentColors } from 'app/modules/editor/components/colorpicker/documentColors';
+import { NO_AUTOFILL_PROPS } from 'app/modules/editor/components/common/noAutofill';
 import { Tip } from 'app/modules/editor/components/common/Tip';
 import { Icon, type IconName } from 'app/modules/editor/components/icons/Icon';
 import { Splitter } from 'app/modules/editor/components/splitter';
@@ -14,7 +15,11 @@ import { useAppSelector } from 'app/modules/editor/hooks/useAppSelector';
 import { useMenu } from 'app/modules/editor/hooks/useMenu';
 import { ClipPathLayer, Layer, PathLayer } from 'app/modules/editor/model/layers';
 import type { Path } from 'app/modules/editor/model/paths';
-import { EnumProperty } from 'app/modules/editor/model/properties';
+import {
+  EnumProperty,
+  getPropertyLabel,
+  getPropertyTitle,
+} from 'app/modules/editor/model/properties';
 import { Animation, PathAnimationBlock } from 'app/modules/editor/model/timeline';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import { ShortcutService } from 'app/modules/editor/services';
@@ -23,6 +28,7 @@ import { getPropertyInputState } from 'app/modules/editor/store/common/selectors
 import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
 import { getAnimatedVectorLayer } from 'app/modules/editor/store/playback/selectors';
 import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
+import { upperFirst } from 'lodash-es';
 import {
   type KeyboardEvent,
   type ReactNode,
@@ -375,7 +381,7 @@ function PropertyInputHeader({
                   onAnimateLayerClick(model.model.id, propertyName);
                 }}
               >
-                {propertyName}
+                {getPropertyTitle(propertyName)}
               </MenuItem>
             ))}
           </Menu>
@@ -439,6 +445,7 @@ function PropertyField({
           <ColorPropertyEditor ip={ip} isMixed={isMixed} {...colorProps} />
         )}
         <input
+          {...NO_AUTOFILL_PROPS}
           className={hasError ? 'has-input-error' : undefined}
           name={ip.propertyName}
           aria-label={ariaLabel}
@@ -586,14 +593,15 @@ function RowAnimateButton({
   const isAnimated = animatedPropertyNames.length > 0;
   const [single] = propertyNames;
   const hasMenu = isAnimated || propertyNames.length > 1;
-  const title = isAnimated ? 'Animated' : `Animate ${propertyNames.join(' and ')}`;
+  const labels = propertyNames.map(getPropertyLabel).join(' and ');
+  const title = isAnimated ? 'Animated' : `Animate ${labels}`;
   return (
     <>
       <Tooltip title={title} placement="left">
         <button
           type="button"
           className={isAnimated ? 'spi-row-animate is-animated' : 'spi-row-animate'}
-          aria-label={isAnimated ? `${propertyNames.join(' and ')} is animated` : title}
+          aria-label={isAnimated ? `${upperFirst(labels)} is animated` : title}
           aria-haspopup={hasMenu ? 'menu' : undefined}
           onClick={event => (hasMenu ? menu.openMenu(event) : onAnimate(single))}
         >
@@ -616,9 +624,9 @@ function RowAnimateButton({
               }}
             >
               {!animatedPropertyNames.includes(propertyName)
-                ? `Animate ${propertyName}`
+                ? `Animate ${getPropertyLabel(propertyName)}`
                 : propertyNames.length > 1
-                  ? `Add another ${propertyName} keyframe`
+                  ? `Add another ${getPropertyLabel(propertyName)} keyframe`
                   : 'Add another keyframe'}
             </MenuItem>
           ))}

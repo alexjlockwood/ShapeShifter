@@ -34,7 +34,12 @@ import './contextmenu.scss';
 export function ContextMenuHost() {
   const services = useServices();
   const store = useEditorStore();
-  const { contextMenuService, layerTimelineService, canvasEditorBridgeService } = services;
+  const {
+    contextMenuService,
+    layerTimelineService,
+    canvasEditorBridgeService,
+    canvasViewportService,
+  } = services;
   const request = useSyncExternalStore(contextMenuService.subscribe, contextMenuService.getRequest);
 
   // Keep showing the last menu while it animates closed. Its items are built once, from the state
@@ -53,6 +58,7 @@ export function ContextMenuHost() {
         blockIds: request.blockIds ?? Array.from(getSelectedBlockIds(state)),
         currentTime: getCurrentTime(state),
         editor: canvasEditorBridgeService.getMenuState(),
+        isZoomedToFit: canvasViewportService.getView().type === 'fit',
       },
       services,
     );

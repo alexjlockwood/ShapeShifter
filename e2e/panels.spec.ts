@@ -271,15 +271,15 @@ test("edits a path's text under Advanced", async ({ page }) => {
 test('animates a property from its row, and marks the rows that are animated', async ({ page }) => {
   await openShapes(page, 'square');
   // Only properties that can be animated have the button.
-  await expect(page.getByRole('button', { name: 'Animate fillType' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Animate fillAlpha' }).click();
-  await expect(page.locator('.spi-selection-description')).toHaveText('fillAlpha');
+  await expect(page.getByRole('button', { name: 'Animate fill type' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Animate fill opacity' }).click();
+  await expect(page.locator('.spi-selection-description')).toHaveText('Fill opacity');
   const getBlockNames = () =>
     getState(page, s => s.timeline.animation.blocks.map((b: any) => b.propertyName));
   await expect.poll(getBlockNames).toEqual(['fillAlpha']);
 
   await selectLayer(page, 'square');
-  await page.getByRole('button', { name: 'fillAlpha is animated' }).click();
+  await page.getByRole('button', { name: 'Fill opacity is animated' }).click();
   await expect(
     page.getByRole('menuitem', { name: 'Animated: this is the value before the first keyframe' }),
   ).toBeDisabled();
@@ -345,9 +345,9 @@ test('batch edits several selected layers as one undo step, showing Mixed where 
 
 test('batch edits several selected blocks as one undo step', async ({ page, modifier }) => {
   await openShapes(page, 'square');
-  await page.getByRole('button', { name: 'Animate fillAlpha' }).click();
+  await page.getByRole('button', { name: 'Animate fill opacity' }).click();
   await selectLayer(page, 'line');
-  await page.getByRole('button', { name: 'Animate fillAlpha' }).click();
+  await page.getByRole('button', { name: 'Animate fill opacity' }).click();
 
   const blockIds = await getState(page, s =>
     s.timeline.animation.blocks.map((b: { id: string }) => b.id),

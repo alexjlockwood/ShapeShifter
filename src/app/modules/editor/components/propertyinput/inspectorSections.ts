@@ -49,10 +49,10 @@ export const PROPERTY_PLACEMENTS: Readonly<Record<string, PropertyPlacement>> = 
   // Paths and clip paths.
   pathData: { section: 'path', row: 'Path' },
   fillColor: { section: 'fill', row: 'Color' },
-  fillAlpha: { section: 'fill', row: 'Alpha' },
+  fillAlpha: { section: 'fill', row: 'Opacity' },
   fillType: { section: 'fill', row: 'Rule' },
   strokeColor: { section: 'stroke', row: 'Color' },
-  strokeAlpha: { section: 'stroke', row: 'Alpha' },
+  strokeAlpha: { section: 'stroke', row: 'Opacity' },
   strokeWidth: { section: 'stroke', row: 'Width' },
   strokeLinecap: { section: 'stroke', row: 'Cap' },
   strokeLinejoin: { section: 'stroke', row: 'Join' },
@@ -63,9 +63,9 @@ export const PROPERTY_PLACEMENTS: Readonly<Record<string, PropertyPlacement>> = 
   // Animation blocks.
   startTime: { section: 'keyframe', row: 'Time', field: 'Start' },
   endTime: { section: 'keyframe', row: 'Time', field: 'End' },
-  interpolator: { section: 'keyframe', row: 'Easing' },
   fromValue: { section: 'keyframe', row: 'From' },
   toValue: { section: 'keyframe', row: 'To' },
+  interpolator: { section: 'keyframe', row: 'Easing' },
   // Animations.
   duration: { section: 'animation', row: 'Duration' },
 };

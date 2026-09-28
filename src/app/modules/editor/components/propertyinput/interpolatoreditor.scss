@@ -34,3 +34,10 @@
         cursor: move;
     }
 }
+
+// Full width under the graph, rather than sharing a row like the inspector's other fields.
+.spi-body .spi-interpolator-editor .spi-curve-path-data {
+    flex: none;
+    width: 100%;
+    user-select: text;
+}

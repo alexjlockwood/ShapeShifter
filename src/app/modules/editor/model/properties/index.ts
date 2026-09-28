@@ -4,6 +4,7 @@ export { InterpolatorProperty } from './InterpolatorProperty';
 export { NameProperty } from './NameProperty';
 export { NumberProperty } from './NumberProperty';
 export { PathProperty } from './PathProperty';
+export { getPropertyLabel, getPropertyTitle } from './propertyLabels';
 export { Property } from './Property';
 export type { Animatable, Inspectable } from './PropertyMaps';
 export { EnumProperty } from './EnumProperty';

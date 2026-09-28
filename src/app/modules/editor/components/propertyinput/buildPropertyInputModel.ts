@@ -8,6 +8,7 @@ import {
 } from 'app/modules/editor/model/layers';
 import {
   ColorProperty,
+  getPropertyTitle,
   type Inspectable,
   InterpolatorProperty,
   NameProperty,
@@ -343,7 +344,7 @@ function buildInspectedBlockProperties(
     return NO_SELECTIONS;
   }
   const icon = 'animationblock';
-  const description = block.propertyName;
+  const description = getPropertyTitle(block.propertyName);
   const blockLayer = vl.findLayerById(block.layerId);
   const subDescription = blockLayer ? `for '${blockLayer.name}'` : undefined;
   const inspectedProperties: InspectedProperty<any>[] = [];

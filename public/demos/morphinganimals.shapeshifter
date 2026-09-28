@@ -25,7 +25,9 @@
           "trimPathStart": 0,
           "trimPathEnd": 1,
           "trimPathOffset": 0,
-          "fillType": "nonZero"
+          "fillType": "nonZero",
+          "pivotX": 204.5,
+          "pivotY": 140
         }
       ]
     },

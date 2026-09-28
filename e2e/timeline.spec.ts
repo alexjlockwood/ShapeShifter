@@ -13,7 +13,7 @@ test('lists the layers and their animations', async ({ page }) => {
   await loadDemo(page);
   const layers = page.locator('.slt-layer');
   await expect(layers).toHaveText(['playtopause', 'group', 'path']);
-  await expect(page.locator('.slt-property-name')).toHaveText(['rotation', 'pathData']);
+  await expect(page.locator('.slt-property-name')).toHaveText(['Rotation', 'Path']);
   await expect(page.locator('.slt-timeline-block')).toHaveCount(2);
   await page.screenshot({ path: 'test-results/timeline.png' });
 });
@@ -94,8 +94,10 @@ test("edits a block's easing curve", async ({ page, modifier }) => {
   const editor = page.locator('.spi-interpolator-editor');
   const menuValue = editor.locator('.spi-property-value-menu-current-value');
   await expect(menuValue).toHaveText('Fast out, slow in');
-  // Presets show their curve, with handles.
+  // Presets show their curve, with handles, and its path data.
   await expect(editor.locator('.spi-curve-control')).toHaveCount(2);
+  const pathData = editor.getByRole('textbox', { name: 'Easing curve path data' });
+  await expect(pathData).toHaveValue('M 0 0 C 0.4 0 0.2 1 1 1');
 
   // Dragging a handle turns the preset into a custom curve. The inspector scrolls, and in a short
   // window the curve is below its fold.
@@ -131,6 +133,18 @@ test("edits a block's easing curve", async ({ page, modifier }) => {
     await expect(editor.locator('.spi-curve-anchor')).toHaveCount(0);
     expect(await numBlocks()).toBe(2);
   }
+
+  // Typing path data sets the curve on Enter, and Escape throws away what isn't a curve.
+  await expect(pathData).toHaveValue(await getInterpolator());
+  await pathData.fill('M 0 0 L 1 1');
+  await pathData.press('Enter');
+  await expect.poll(getInterpolator).toBe('M 0 0 C 0.333 0.333 0.667 0.667 1 1');
+  await expect(pathData).toHaveValue('M 0 0 C 0.333 0.333 0.667 0.667 1 1');
+  await pathData.fill('M 0 0 L 2 2');
+  await expect(pathData).toHaveClass(/has-input-error/);
+  await pathData.press('Escape');
+  await expect(pathData).toHaveValue('M 0 0 C 0.333 0.333 0.667 0.667 1 1');
+  expect(await numBlocks()).toBe(2);
 });
 
 test('scrubs through the animation from the timeline header', async ({ page }) => {
