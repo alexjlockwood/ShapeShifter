@@ -317,6 +317,8 @@ test('batch edits several selected layers as one undo step, showing Mixed where 
   page,
   modifier,
 }) => {
+  // A fake clock, so the test can skip the undo-grouping window below instead of waiting it out.
+  await page.clock.install();
   await openShapes(page, 'square');
   // SVG paths default to a black fill, so both shapes start out agreeing on fillColor: give the
   // square a different one, so the batch selection below actually disagrees.
@@ -336,7 +338,7 @@ test('batch edits several selected layers as one undo step, showing Mixed where 
   const originalStrokeWidths = await getStrokeWidths(page, ['square', 'line']);
   // Past the app's 1 second undo-grouping window (metareducer.ts's UNDO_DEBOUNCE_MILLIS), so the
   // edit below gets its own undo step instead of joining the selection change above.
-  await page.waitForTimeout(1100);
+  await page.clock.fastForward(1100);
   const strokeWidthInput = page.locator('.spi-property input[name="strokeWidth"]');
   await strokeWidthInput.fill('3');
   await strokeWidthInput.press('Tab');
@@ -347,6 +349,7 @@ test('batch edits several selected layers as one undo step, showing Mixed where 
 });
 
 test('batch edits several selected blocks as one undo step', async ({ page, modifier }) => {
+  await page.clock.install();
   await openShapes(page, 'square');
   await page.getByRole('button', { name: 'Animate fill opacity' }).click();
   await selectLayer(page, 'line');
@@ -371,7 +374,7 @@ test('batch edits several selected blocks as one undo step', async ({ page, modi
   const originalToValues = await getToValues();
   // Past the app's 1 second undo-grouping window, so the edit below gets its own undo step
   // instead of joining adding the blocks and selecting them.
-  await page.waitForTimeout(1100);
+  await page.clock.fastForward(1100);
   const toValueInput = page.locator('.spi-property input[name="toValue"]');
   await toValueInput.fill('0.5');
   await toValueInput.press('Tab');

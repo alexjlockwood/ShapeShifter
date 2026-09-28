@@ -15,6 +15,10 @@ export default defineConfig({
   testDir: 'e2e',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  // Lets CI's shards split the long spec files, not just divide the files between them.
+  fullyParallel: true,
+  // The default is half the CPUs, which is only 2 on CI's 4-core runners.
+  workers: process.env.CI ? 4 : undefined,
   use: {
     trace: 'retain-on-failure',
   },

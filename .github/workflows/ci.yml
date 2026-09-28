@@ -5,8 +5,13 @@ on:
     branches: [master]
   pull_request:
 
+# A new push to a pull request cancels its older run. Runs on master always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  build:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -15,16 +20,42 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # The quick checks go first, so that they fail before the browsers are installed.
+      # The quick checks go first, so that they fail before the browser is installed.
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run lint
-      - run: npx playwright install --with-deps chromium firefox webkit
+      - uses: ./.github/actions/install-playwright
+        with:
+          browsers: chromium
       - run: npm run test:run
-      - run: npm run build
-      - run: npm run e2e
+      # Not `npm run build`, which would type check again.
+      - run: npx vite build
+
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Pull requests only test Chromium, which needs fewer shards. Master tests every browser.
+        shard: ${{ fromJSON(github.event_name == 'pull_request' && '[1, 2]' || '[1, 2, 3, 4]') }}
+    env:
+      BROWSERS: ${{ github.event_name == 'pull_request' && 'chromium' || 'chromium firefox webkit' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - uses: ./.github/actions/install-playwright
+        with:
+          browsers: ${{ env.BROWSERS }}
+      # `chromium*` matches both chromium and chromium-preview.
+      - run: >-
+          npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+          ${{ github.event_name == 'pull_request' && '"--project=chromium*"' || '' }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: test-results/
