@@ -1,0 +1,28 @@
+name: Install Playwright
+description: Installs Playwright's browsers, cached by Playwright version, and their system packages.
+inputs:
+  browsers:
+    description: Space-separated browsers to install, e.g. "chromium firefox".
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: cache-key
+      shell: bash
+      env:
+        BROWSERS: ${{ inputs.browsers }}
+      run: |
+        version=$(node -p "require('@playwright/test/package.json').version")
+        echo "prefix=playwright-${RUNNER_OS}-${version}-" >> "$GITHUB_OUTPUT"
+        echo "browsers=${BROWSERS// /-}" >> "$GITHUB_OUTPUT"
+    # A cache with other browsers still saves downloading the ones it has.
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ steps.cache-key.outputs.prefix }}${{ steps.cache-key.outputs.browsers }}
+        restore-keys: ${{ steps.cache-key.outputs.prefix }}
+    # The system packages aren't cached, so this still runs apt, but it skips cached browsers.
+    - shell: bash
+      env:
+        BROWSERS: ${{ inputs.browsers }}
+      run: npx playwright install --with-deps $BROWSERS

@@ -63,6 +63,9 @@ test('loads when localStorage is blocked', async ({ page }) => {
 test('switches between the light and dark themes', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('body')).not.toHaveClass(/ss-dark-theme/);
+  // WebKit on a busy CI runner can stall the theme's fade at its first frame for seconds, so check
+  // the colors without it.
+  await page.addStyleTag({ content: '.ss-theme-transition { transition: none !important; }' });
   await page.evaluate(() => (window as any).shapeshifter.services.themeService.toggleTheme());
   await expect(page.locator('body')).toHaveClass(/ss-dark-theme/);
   await expect(page.locator('div.display-container')).toHaveCSS(
