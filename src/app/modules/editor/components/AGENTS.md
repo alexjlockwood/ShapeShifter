@@ -150,7 +150,9 @@ points are edited, a right-click selects the point under the pointer, and the me
 selected points' commands (`buildPointSection`), from what the editor reports in `getMenuState`.
 Combine and Break apart (`scripts/common/combineLayers.ts`) and the rules for which layers the path
 operations apply to (`scripts/common/pathOpLayers.ts`) are outside of it, so they work with the
-editor off. MUI has
+editor off. Everywhere else, `services/shortcut.service.ts` keeps the browser's menu from opening,
+except over text fields and links (`shouldOpenBrowserContextMenu`), so the app's
+own menus must stop the browser's themselves. MUI has
 no submenus, so the host opens one in a `Popper` inside the menu's modal: hovering, ArrowRight,
 Enter, or Space opens it, and ArrowLeft or Escape goes back.
 

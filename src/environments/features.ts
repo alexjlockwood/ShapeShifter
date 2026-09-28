@@ -50,6 +50,53 @@ export function resolveFeatures({
   return typeof stored === 'boolean' ? { canvasEditor: stored } : buildDefault;
 }
 
+/**
+ * Returns whether the canvas editor is on only because this browser turned it on, e.g. with
+ * `?editor=1` on the live site. It's remembered for good and changes shortcuts like R, so the app
+ * offers a way back to the build's default.
+ */
+export function isCanvasEditorPreview(features: Features, buildDefault: Features) {
+  return features.canvasEditor && !buildDefault.canvasEditor;
+}
+
+/**
+ * Returns the query string that goes back to the build's default for the canvas editor, keeping
+ * the other parameters, like `?project=`, as they are.
+ */
+export function getCanvasEditorResetSearch(search: string) {
+  const params = splitParams(search).filter(
+    param => !new URLSearchParams(param).has(CANVAS_EDITOR_PARAM),
+  );
+  return joinParams([...params, `${CANVAS_EDITOR_PARAM}=default`]);
+}
+
+/**
+ * Returns the query string without `?editor=default`, which has done its job once the page has
+ * loaded, so that it doesn't end up in links and bookmarks. Anything else is left as it is.
+ */
+export function withoutCanvasEditorReset(search: string) {
+  const params = splitParams(search);
+  const kept = params.filter(
+    param => parseFlag(new URLSearchParams(param).get(CANVAS_EDITOR_PARAM)) !== 'default',
+  );
+  return kept.length === params.length ? search : joinParams(kept);
+}
+
+/**
+ * Splits a query string into its `name=value` pairs, still encoded, so that joining them again
+ * leaves the ones that weren't changed alone.
+ */
+function splitParams(search: string) {
+  return search
+    .replace(/^\?/, '')
+    .split('&')
+    .filter(param => param !== '');
+}
+
+function joinParams(params: readonly string[]) {
+  return params.length ? `?${params.join('&')}` : '';
+}
+
 /** Returns the build's default features, from the `VITE_*` environment variables. */
 export function getBuildFeatures(env: { readonly VITE_CANVAS_EDITOR?: string }): Features {
   return { canvasEditor: env.VITE_CANVAS_EDITOR === 'true' };

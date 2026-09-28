@@ -180,13 +180,18 @@ test('zooms the canvas to fit from the menu, once it no longer fits', async ({ p
   await expect.poll(getViewType).toBe('fit');
 });
 
-test("the browser's menu only opens over text fields", async ({ page }) => {
+test("the browser's menu only opens over text fields and links", async ({ page }) => {
   await load(page, false);
   await page.getByRole('button', { name: 'Import' }).click({ button: 'right' });
   expect(await wasPrevented(page)).toBe(true);
   await expect(page.getByRole('menu')).toHaveCount(0);
   await page.locator('.slt-layer').filter({ hasText: 'inner' }).click();
   await page.locator('.spi-property input[name="name"]').click({ button: 'right' });
+  expect(await wasPrevented(page)).toBe(false);
+
+  // So that a link can be opened in a new tab, or copied.
+  await page.getByRole('button', { name: 'More options' }).click();
+  await page.getByRole('menuitem', { name: 'Getting started' }).click({ button: 'right' });
   expect(await wasPrevented(page)).toBe(false);
 });
 

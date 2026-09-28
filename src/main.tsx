@@ -17,7 +17,7 @@ import { Duration } from 'app/modules/editor/services/snackbar.service';
 import { createEditorStore } from 'app/modules/editor/store';
 import { getThemeType } from 'app/modules/editor/store/theme/selectors';
 import { environment } from 'environments/environment';
-import { getBuildFeatures, resolveFeatures } from 'environments/features';
+import { getBuildFeatures, resolveFeatures, withoutCanvasEditorReset } from 'environments/features';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
@@ -27,6 +27,11 @@ const features = resolveFeatures({
   storage: { getItem: getStoredItem, setItem: setStoredItem, removeItem: removeStoredItem },
   buildDefault: getBuildFeatures(import.meta.env),
 });
+const search = withoutCanvasEditorReset(window.location.search);
+if (search !== window.location.search) {
+  const { pathname, hash } = window.location;
+  window.history.replaceState(window.history.state, '', `${pathname}${search}${hash}`);
+}
 
 startBugsnag(features);
 const bugsnagReactPlugin = Bugsnag.getPlugin('react');

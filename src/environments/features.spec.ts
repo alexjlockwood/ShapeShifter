@@ -2,7 +2,10 @@ import {
   CANVAS_EDITOR_STORAGE_KEY,
   FeatureStorage,
   getBuildFeatures,
+  getCanvasEditorResetSearch,
+  isCanvasEditorPreview,
   resolveFeatures,
+  withoutCanvasEditorReset,
 } from './features';
 
 function createStorage(values: Record<string, string> = {}): FeatureStorage & {
@@ -60,6 +63,55 @@ describe('resolveFeatures', () => {
     const storage = createStorage({ [CANVAS_EDITOR_STORAGE_KEY]: 'maybe' });
     expect(resolveFeatures({ search: '?editor=maybe', storage, buildDefault: ON })).toEqual(ON);
     expect(storage.values).toEqual({ [CANVAS_EDITOR_STORAGE_KEY]: 'maybe' });
+  });
+});
+
+describe('isCanvasEditorPreview', () => {
+  it('is only a preview when the browser turned on what the build leaves off', () => {
+    expect(isCanvasEditorPreview(ON, OFF)).toBe(true);
+    expect(isCanvasEditorPreview(ON, ON)).toBe(false);
+    expect(isCanvasEditorPreview(OFF, OFF)).toBe(false);
+    expect(isCanvasEditorPreview(OFF, ON)).toBe(false);
+  });
+
+  it('is a preview for a production build that ?editor=1 turned on, until ?editor=default', () => {
+    const storage = createStorage();
+    const turnedOn = resolveFeatures({ search: '?editor=1', storage, buildDefault: OFF });
+    expect(isCanvasEditorPreview(turnedOn, OFF)).toBe(true);
+    const later = resolveFeatures({ search: '', storage, buildDefault: OFF });
+    expect(isCanvasEditorPreview(later, OFF)).toBe(true);
+    const search = getCanvasEditorResetSearch('?editor=1');
+    const reset = resolveFeatures({ search, storage, buildDefault: OFF });
+    expect(isCanvasEditorPreview(reset, OFF)).toBe(false);
+    expect(storage.values).toEqual({});
+  });
+});
+
+describe('getCanvasEditorResetSearch', () => {
+  it('replaces the parameter, and keeps the others as they are', () => {
+    expect(getCanvasEditorResetSearch('')).toBe('?editor=default');
+    expect(getCanvasEditorResetSearch('?editor=1')).toBe('?editor=default');
+    expect(getCanvasEditorResetSearch('?project=demos/a.shapeshifter&editor=on&x=%20')).toBe(
+      '?project=demos/a.shapeshifter&x=%20&editor=default',
+    );
+    // Every copy, since the browser reads the first one.
+    expect(getCanvasEditorResetSearch('?editor&editor=1')).toBe('?editor=default');
+  });
+});
+
+describe('withoutCanvasEditorReset', () => {
+  it('removes ?editor=default, and keeps the others as they are', () => {
+    expect(withoutCanvasEditorReset('?editor=default')).toBe('');
+    expect(withoutCanvasEditorReset('?project=demos/a.shapeshifter&editor=DEFAULT')).toBe(
+      '?project=demos/a.shapeshifter',
+    );
+    expect(withoutCanvasEditorReset('?editor=default&x=%20')).toBe('?x=%20');
+  });
+
+  it('leaves the query string alone when it has nothing to remove', () => {
+    for (const search of ['', '?', '?editor=1', '?project=a%2Fb&editor=off', '?defaulteditor=1']) {
+      expect(withoutCanvasEditorReset(search)).toBe(search);
+    }
   });
 });
 
