@@ -281,3 +281,5 @@ Ideas under consideration, not yet scoped or scheduled:
 
 Best effort-to-value ratio, all low risk: bundle splitting, the import-error-swallowing fixes,
 and the path-state fuzz tests (which also de-risk any future work on design problem 4).
+
+<!-- Throwaway change to test that CI skips e2e for docs-only PRs. -->
