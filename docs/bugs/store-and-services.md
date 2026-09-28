@@ -24,8 +24,11 @@
 - **Cmd+Z and Cmd+G fire while typing in a property or name field.** The modifier shortcuts run
   before the shortcut service's text field check, so undoing or grouping while typing reverts or
   regroups behind the cursor, and the field keeps the stale typed text
-  (`services/shortcut.service.ts`). (STORE-6, confirmed by a test; a candidate fix exists on the
-  unmerged `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
+  (`services/shortcut.service.ts`). They don't exclude Alt either, and on Windows AltGr sends
+  Ctrl and Alt together, so typing characters like ż on a Polish keyboard (AltGr+Z) undoes, and
+  AltGr+O zooms the timeline to fit, even in a text field. Both were in the Angular build too.
+  (STORE-6, confirmed by a test, and the AltGr case by reading the code; a candidate fix exists
+  on the unmerged `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
 - **Clipboard handlers ignore open menus and dialogs, and block native copy.** Cmd+X deletes the
   selected block behind an open menu, and paste works behind a dialog. Cmd+C with no blocks
   selected cancels the browser's copy, so page text can't be copied. Add the checks the shortcut
