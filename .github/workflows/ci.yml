@@ -4,6 +4,8 @@ on:
   push:
     branches: [master]
   pull_request:
+  # `gh workflow run ci.yml --ref <branch>` tests a branch in every browser, like master.
+  workflow_dispatch:
 
 # A new push to a pull request cancels its older run. Runs on master always finish.
 concurrency:

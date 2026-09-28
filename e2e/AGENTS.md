@@ -16,8 +16,9 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
 - A failed test keeps a trace: `npx playwright show-trace test-results/<test>/trace.zip`.
 - CI retries a failed test once. Locally there are no retries, so flaky tests fail.
 - CI runs pull requests in Chromium only, and master in every browser, so a Firefox or WebKit
-  failure can first show up after merging. It splits the tests into shards, and tests in a file
-  run in parallel (`fullyParallel`), so a test can't rely on another one running first.
+  failure can first show up after merging. `gh workflow run ci.yml --ref <branch>` runs every
+  browser on a branch. CI splits the tests into shards, and tests in a file run in parallel
+  (`fullyParallel`), so a test can't rely on another one running first.
 - To skip the app's time-based waits, like the 1 second undo-grouping window, use a fake clock
   (`page.clock.install()` before loading the page, then `page.clock.fastForward`) rather than
   waiting.
