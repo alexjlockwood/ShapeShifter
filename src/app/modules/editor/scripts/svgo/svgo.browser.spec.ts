@@ -33,6 +33,16 @@ describe('optimizeSvg', () => {
     });
   }
 
+  it('removes <desc> elements, even ones with real text', async () => {
+    const svg = await optimizeSvg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <desc>A play button, drawn by hand.</desc>
+  <path d="M 8 5 L 8 19 L 19 12 Z"/>
+</svg>
+`);
+    expect(svg).not.toContain('desc');
+  });
+
   it('rejects malformed SVG', async () => {
     await expect(optimizeSvg('<svg><g></svg>')).rejects.toThrow();
   });

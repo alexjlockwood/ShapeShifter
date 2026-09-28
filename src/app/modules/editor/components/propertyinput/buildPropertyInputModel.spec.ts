@@ -226,13 +226,15 @@ describe('buildPropertyInputModel', () => {
       });
     }
 
-    function newNumberBlock(layerId: string) {
+    function newNumberBlock(layerId: string, startTime = 0, endTime = 100) {
       return AnimationBlock.from({
         type: 'number',
         layerId,
         propertyName: 'fillAlpha',
         fromValue: 1,
         toValue: 0,
+        startTime,
+        endTime,
       });
     }
 
@@ -268,7 +270,7 @@ describe('buildPropertyInputModel', () => {
       expect(byName.has('interpolator')).toBe(true);
     });
 
-    it('only shares startTime, endTime, and interpolator between blocks of different types', () => {
+    it('only shares the interpolator between blocks of different types', () => {
       const path = new PathLayer({ name: 'path', children: [], pathData: new Path('M 1 1 L 5 5') });
       const block1 = newColorBlock(path.id, '#000000', '#ffffff');
       const block2 = newNumberBlock(path.id);
@@ -280,8 +282,27 @@ describe('buildPropertyInputModel', () => {
       store.dispatch(new SetSelectedBlocks(new Set([block1.id, block2.id])));
 
       const pim = buildPropertyInputModel(getDeps(), getPropertyInputState(store.getState()));
-      const names = pim.inspectedProperties.map(ip => ip.propertyName).sort();
-      expect(names).toEqual(['endTime', 'interpolator', 'startTime']);
+      const names = pim.inspectedProperties.map(ip => ip.propertyName);
+      expect(names).toEqual(['interpolator']);
+    });
+
+    it("doesn't batch edit the blocks' start and end times", () => {
+      const path = new PathLayer({ name: 'path', children: [], pathData: new Path('M 1 1 L 5 5') });
+      // Setting both start times to 150 would end the first block before it starts.
+      const block1 = newNumberBlock(path.id, 0, 100);
+      const block2 = newNumberBlock(path.id, 100, 200);
+      const animation = new Animation();
+      animation.blocks = [block1, block2];
+      store.dispatch(
+        new ResetWorkspace(new VectorLayer({ name: 'vector', children: [path] }), animation),
+      );
+      store.dispatch(new SetSelectedBlocks(new Set([block1.id, block2.id])));
+
+      const pim = buildPropertyInputModel(getDeps(), getPropertyInputState(store.getState()));
+      const names = new Set(pim.inspectedProperties.map(ip => ip.propertyName));
+      expect(names.has('startTime')).toBe(false);
+      expect(names.has('endTime')).toBe(false);
+      expect(names.has('fromValue')).toBe(true);
     });
 
     it('applies a batch edit to every selected block as one undo step', () => {
@@ -313,12 +334,12 @@ describe('buildPropertyInputModel', () => {
         const numPastStates = store.getState().past.length;
 
         const pim = buildPropertyInputModel(getDeps(), getPropertyInputState(store.getState()));
-        const startTime = pim.inspectedProperties.find(ip => ip.propertyName === 'startTime')!;
-        startTime.value = 50;
+        const fromValue = pim.inspectedProperties.find(ip => ip.propertyName === 'fromValue')!;
+        fromValue.value = '#ff0000';
 
         expect(store.getState().past.length).toBe(numPastStates + 1);
         const blocks = services.layerTimelineService.getAnimation().blocks;
-        expect(blocks.every(b => b.startTime === 50)).toBe(true);
+        expect(blocks.every(b => b.fromValue === '#ff0000')).toBe(true);
       } finally {
         vi.useRealTimers();
       }

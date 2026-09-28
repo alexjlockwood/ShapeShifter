@@ -37,12 +37,13 @@ From the outside in: the action logger (dev only), freeze (dev and tests), undo,
 - **Undo** (`store/undoredo/metareducer.ts`) keeps 30 states. An action more than 1 second after
   the previous recorded one starts an undo step, and the actions after it within a second join
   it. Actions in `UNDO_EXCLUDED_ACTIONS` (the playback actions, `SetActionMode`,
-  `SetActionModeHover`, and `SetTheme`) update the state without recording a
-  step. Everything else is recorded, including selections, hidden and collapsed layers, and action
-  mode selections and pairings. `ResetWorkspace` always gets a step of its own, and so does a batch
-  with an `IsolateUndoStep` (`store/undoredo/actions.ts`) in it, which is how
-  `layerTimelineService.commitCanvasEdit` saves a gesture on the canvas. Undo and redo keep
-  the current theme.
+  `SetActionModeHover`, and `SetTheme`) update the state without recording a step, but undo goes
+  back to the state as of the last recorded action, so it takes them back too (e.g. entering
+  action mode), except the theme. Everything else is recorded, including selections, hidden and
+  collapsed layers, and action mode selections and pairings. `ResetWorkspace` always gets a step
+  of its own, and so does a batch with an `IsolateUndoStep` (`store/undoredo/actions.ts`) in it,
+  which is how `layerTimelineService.commitCanvasEdit` saves a gesture on the canvas. Undo and
+  redo keep the current theme.
 - **Previews:** a batch with a `SkipUndoStep` isn't recorded at all, and doesn't count as a recent
   edit. redux-undo keeps the last recorded state (`getLastRecordedState` in
   `store/undoredo/metareducer.ts`), so undo still goes back to it. `layerTimelineService`'s

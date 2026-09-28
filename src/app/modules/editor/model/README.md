@@ -145,11 +145,12 @@ An `AnimationBlock` describes a property animation for a particular `Layer`. The
 
 ## Project file versions
 
-A saved `.shapeshifter` file has a top-level `version` integer, alongside `layers` (holding
-`vectorLayer` and `hiddenLayerIds`) and `timeline` (holding `animation`). There's no migrations
-framework: every version's shape still loads directly, so version only decides whether
-`FileExportService.fromJSON` returns `newerVersion: true`, which callers use to warn that some
-things may not show and saving may drop them.
+A saved `.shapeshifter` file has a top-level `version` integer (a file without one is read as
+version 1), alongside `layers` (holding `vectorLayer` and `hiddenLayerIds`) and `timeline`
+(holding `animation`). There's no migrations framework: every version's shape still loads
+directly, so version only decides whether `FileExportService.fromJSON` returns
+`newerVersion: true`, which callers use to warn that some things may not show and saving may drop
+them.
 
 [`projectVersion.ts`](projectVersion.ts) holds `getRequiredVersion(json)`, an ordered list of
 `ProjectVersionRule`s (`{ version, test }`), and `CURRENT_PROJECT_VERSION`, derived as the highest

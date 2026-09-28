@@ -3,9 +3,11 @@
 - **Undo and redo overwrite playback and action mode state.** Playback and action mode changes
   aren't undo steps, but they're part of every snapshot, so undo restores them too: it can start
   playback, turn off repeat and slow motion, move the time cursor, or enter or leave action mode.
-  Carry the playback slice over like the theme, and keep action mode only if the restored state
-  selects the same path block (`store/undoredo/metareducer.ts`). (STORE-1, medium, confirmed by a
-  test)
+  The most common case: undoing the first edit made in action mode (e.g. Auto fix, or reversing a
+  subpath) leaves action mode with the block still selected, because redux-undo saves the state as
+  of the last recorded action, from before `SetActionMode`. Carry the playback slice over like the
+  theme, and keep action mode only if the restored state selects the same path block
+  (`store/undoredo/metareducer.ts`). (STORE-1, medium, confirmed by a test)
 - **Resuming slow motion playback jumps to a fifth of the current time.** `Animator`'s resume math
   scales the whole elapsed-time-plus-start-time sum by the playback speed instead of just the
   start time, so pausing at 500ms and resuming in slow motion starts the next frame at 100ms
@@ -22,8 +24,11 @@
 - **Cmd+Z and Cmd+G fire while typing in a property or name field.** The modifier shortcuts run
   before the shortcut service's text field check, so undoing or grouping while typing reverts or
   regroups behind the cursor, and the field keeps the stale typed text
-  (`services/shortcut.service.ts`). (STORE-6, confirmed by a test; a candidate fix exists on the
-  unmerged `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
+  (`services/shortcut.service.ts`). They don't exclude Alt either, and on Windows AltGr sends
+  Ctrl and Alt together, so typing characters like ż on a Polish keyboard (AltGr+Z) undoes, and
+  AltGr+O zooms the timeline to fit, even in a text field. Both were in the Angular build too.
+  (STORE-6, confirmed by a test, and the AltGr case by reading the code; a candidate fix exists
+  on the unmerged `alex/fix-sweep-quick-wins` branch, needs a rebase before reuse)
 - **Clipboard handlers ignore open menus and dialogs, and block native copy.** Cmd+X deletes the
   selected block behind an open menu, and paste works behind a dialog. Cmd+C with no blocks
   selected cancels the browser's copy, so page text can't be copied. Add the checks the shortcut

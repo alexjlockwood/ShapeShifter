@@ -1,9 +1,19 @@
 import { GroupLayer, PathLayer, VectorLayer } from 'app/modules/editor/model/layers';
 import { Path } from 'app/modules/editor/model/paths';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/modules/editor/model/timeline';
+import { createEditorStore } from 'app/modules/editor/store';
+import { SetVectorLayer } from 'app/modules/editor/store/layers/actions';
+import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
+import { SetCurrentTime, SetIsPlaying } from 'app/modules/editor/store/playback/actions';
+import { ResetWorkspace } from 'app/modules/editor/store/reset/actions';
 import { describe, expect, it } from 'vitest';
 
-import { areLayoutsEqual, getLayoutValues, setLayoutValue } from './layoutValues';
+import {
+  areLayoutsEqual,
+  createLayoutSelector,
+  getLayoutValues,
+  setLayoutValue,
+} from './layoutValues';
 
 function path(name: string, pathData: string) {
   return new PathLayer({ name, children: [], pathData: new Path(pathData), fillColor: '#000' });
@@ -92,6 +102,70 @@ describe('setLayoutValue', () => {
     expect(setLayoutValue(document, vl, line.id, 'x', 2)).toBeUndefined();
     expect(setLayoutValue(document, vl, line.id, 'x', NaN)).toBeUndefined();
     expect(setLayoutValue(document, vl, vl.id, 'x', 3)).toBeUndefined();
+  });
+});
+
+describe('createLayoutSelector', () => {
+  function loadMovingSquare() {
+    const square = path('square', 'M 0 0 L 4 0 L 4 4 L 0 4 Z');
+    const group = new GroupLayer({ name: 'group', children: [square] });
+    const vl = new VectorLayer({ name: 'vector', children: [group] });
+    const block = AnimationBlock.from({
+      layerId: group.id,
+      propertyName: 'translateX',
+      type: 'number',
+      startTime: 0,
+      endTime: 100,
+      fromValue: 0,
+      toValue: 100,
+      interpolator: 'LINEAR',
+    });
+    const store = createEditorStore();
+    store.dispatch(new ResetWorkspace(vl, documentOf(vl, block).animation));
+    return { store, square };
+  }
+
+  it('follows the time, and bounds the layer again only when something changes', () => {
+    const { store, square } = loadMovingSquare();
+    const selectLayout = createLayoutSelector(square.id);
+    const atStart = selectLayout(store.getState());
+    expect(atStart).toEqual({ x: 0, y: 0, w: 4, h: 4 });
+    expect(selectLayout(store.getState())).toBe(atStart);
+
+    store.dispatch(new SetCurrentTime(50));
+    expect(selectLayout(store.getState())).toEqual({ x: 50, y: 0, w: 4, h: 4 });
+  });
+
+  it('keeps the layout while playback plays, until it stops or the document changes', () => {
+    const { store, square } = loadMovingSquare();
+    const selectLayout = createLayoutSelector(square.id);
+    store.dispatch(new SetCurrentTime(20));
+    const beforePlaying = selectLayout(store.getState());
+    expect(beforePlaying).toEqual({ x: 20, y: 0, w: 4, h: 4 });
+
+    store.dispatch(new SetIsPlaying(true));
+    store.dispatch(new SetCurrentTime(60));
+    expect(selectLayout(store.getState())).toBe(beforePlaying);
+
+    // An edit during playback still shows.
+    const vl = getVectorLayer(store.getState()).clone();
+    const group = vl.children[0].clone();
+    group.children = [
+      new PathLayer({
+        id: square.id,
+        name: 'square',
+        children: [],
+        pathData: new Path('M 0 0 L 8 0 L 8 8 L 0 8 Z'),
+      }),
+    ];
+    vl.children = [group];
+    store.dispatch(new SetVectorLayer(vl));
+    expect(selectLayout(store.getState())).toEqual({ x: 60, y: 0, w: 8, h: 8 });
+    store.dispatch(new SetCurrentTime(70));
+    expect(selectLayout(store.getState())).toEqual({ x: 60, y: 0, w: 8, h: 8 });
+
+    store.dispatch(new SetIsPlaying(false));
+    expect(selectLayout(store.getState())).toEqual({ x: 70, y: 0, w: 8, h: 8 });
   });
 });
 

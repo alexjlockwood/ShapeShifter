@@ -137,6 +137,11 @@ export function getColorAlphaMultiplier(model: any, propertyName: string): numbe
 // own points are edited on the canvas, not as text shared across several layers.
 const BATCH_EXCLUDED_LAYER_PROPERTY_NAMES: ReadonlySet<string> = new Set(['name', 'pathData']);
 
+// Setting every selected block's start time to the same value (or their end times) would turn
+// the blocks that end before it inside out, and the fields save on every keystroke, so a batch
+// edit leaves their times to the timeline, which moves and stretches blocks together.
+const BATCH_EXCLUDED_BLOCK_PROPERTY_NAMES: ReadonlySet<string> = new Set(['startTime', 'endTime']);
+
 /**
  * Returns the properties every model registers under the same name and the same Property type
  * (so two paths' Fill and two color blocks' from value line up, but a path's fillColor and some
@@ -333,6 +338,7 @@ function buildInspectedBlockProperties(
         },
         clones => deps.layerTimelineService.updateBlocks(clones),
         clones => deps.layerTimelineService.previewBlocks(clones),
+        BATCH_EXCLUDED_BLOCK_PROPERTY_NAMES,
       ),
       availablePropertyNames: [],
     } as PropertyInputModel;

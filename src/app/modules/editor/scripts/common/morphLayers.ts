@@ -87,15 +87,23 @@ export function getMorphRefusal(
   return 'reason' in planned ? planned.reason : undefined;
 }
 
+/** Auto fix ran without throwing, but the paths still don't morph. */
+export class UnfixedMorphError extends Error {
+  constructor() {
+    super("Auto fix couldn't make the paths morph");
+    this.name = 'UnfixedMorphError';
+  }
+}
+
 /**
  * Morphs one path into another: it adds a block to the first path, from its path at the block's
  * start to the other path, mapped into its coordinates so that it ends up where the other one is
  * drawn. Where the fill and stroke colors, their alphas, and the stroke width differ, they get
  * blocks at the same time too. Then it deletes the other path, and auto fixes the morph. Auto fix
- * can fail on some paths, and then the morph is kept as it is, with the error, so that action mode
- * says what doesn't match. The block goes at the current time, or right after the last path
- * block, whichever has room for it. Returns the new document and the path block's id, or why it
- * can't.
+ * can throw on some paths, and then the morph is kept as it is, with the error, so that action
+ * mode says what doesn't match. If it runs but the paths still don't morph, the error is an
+ * UnfixedMorphError. The block goes at the current time, or right after the last path block,
+ * whichever has room for it. Returns the new document and the path block's id, or why it can't.
  */
 export function morphIntoLayer(
   document: LayerDocument,
@@ -148,9 +156,12 @@ export function morphIntoLayer(
   }
   const morphed = { vectorLayer, animation };
   try {
+    const fixed = autoFixPathBlocks(morphed, new Set([pathBlock.id]));
+    const fixedBlock = fixed.animation.blocks.find(b => b.id === pathBlock.id);
     return {
-      document: autoFixPathBlocks(morphed, new Set([pathBlock.id])),
+      document: fixed,
       blockId: pathBlock.id,
+      autoFixError: fixedBlock?.isAnimatable() ? undefined : new UnfixedMorphError(),
     };
   } catch (e) {
     const autoFixError = e instanceof Error ? e : new Error(String(e));

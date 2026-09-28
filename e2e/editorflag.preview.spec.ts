@@ -46,3 +46,33 @@ test('is turned on and off with ?editor', async ({ page, context }) => {
   await loadDemo(page);
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
 });
+
+test('is turned off from the menu once ?editor turned it on', async ({ page }) => {
+  const menuItem = page.getByRole('menuitem', { name: 'Turn off the canvas editor preview' });
+  await loadDemo(page);
+  await page.getByRole('button', { name: 'More options' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Dark theme' })).toBeVisible();
+  await expect(menuItem).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.MuiModal-root')).toHaveCount(0);
+
+  await loadDemo(page, '&editor=1');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  // The demo counts as unsaved work, so the page asks before it reloads.
+  page.on('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'More options' }).click();
+  await menuItem.click();
+
+  // The page reloads with ?editor=default, which it then drops, keeping the project.
+  await expect.poll(() => new URL(page.url()).searchParams.get('editor')).toBeNull();
+  expect(new URL(page.url()).searchParams.get('project')).toBe('demos/playtopause.shapeshifter');
+  await expect(page.locator('.slt-layer').first()).toHaveText('playtopause');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
+
+  // And it stays off.
+  await loadDemo(page);
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
+  await page.getByRole('button', { name: 'More options' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Dark theme' })).toBeVisible();
+  await expect(menuItem).toHaveCount(0);
+});

@@ -140,6 +140,15 @@ export function setKeyframePath(
  * Auto fixes the blocks that don't morph (AutoAwesome.autoFix), and keeps the values linked to
  * their ends (see getPathKeyframe) the same as them, so that a chain of morphs stays connected. A
  * linked block that stops morphing because of it is auto fixed too, and so on down the chain.
+ *
+ * Auto fix only works on two paths at a time, so the fixes on either side of a keyframe can undo
+ * each other, e.g. when one adds a collapsing subpath that the other removes. Then the blocks
+ * stop sharing that keyframe: each gets its own copy, fixed on its own. The copies draw the same
+ * shape, since auto fix only adds points, converts, reorders, reverses, and shifts, and adds
+ * subpaths that collapse to a point, so the path doesn't visibly jump there, but editing the
+ * keyframe no longer changes both. So a block that morphed before still does afterward, and a
+ * block to fix morphs afterward whenever auto fixing it on its own would make it morph.
+ *
  * Returns the document as it was if nothing changed.
  */
 export function autoFixPathBlocks(
@@ -159,52 +168,89 @@ export function autoFixPathBlocks(
 // Fixing a block changes its neighbors, which can change it back, so this stops after a while.
 const MAX_FIXES_PER_BLOCK = 4;
 
+/** The paths that fixChain settled on, and the blocks that had to morph and still don't. */
+interface ChainFix {
+  readonly base: Path | undefined;
+  readonly froms: ReadonlyArray<Path | undefined>;
+  readonly tos: ReadonlyArray<Path | undefined>;
+  readonly broken: ReadonlyArray<number>;
+}
+
+const morphs = (from: Path | undefined, to: Path | undefined) =>
+  !from || !to || from.isMorphableWith(to);
+
 function autoFixLayer(document: CanvasDocument, layerId: string, blockIds: ReadonlySet<string>) {
   const blocks = getPathBlocks(document, layerId);
-  // The path at each keyframe. Values that are linked share one, so fixing one end of a block
-  // changes the values linked to it too.
-  const base = { path: getTargetPath(document, layerId, { kind: 'base' }) };
-  const froms: Array<{ path: Path | undefined }> = [];
-  const tos: Array<{ path: Path | undefined }> = [];
-  let before = base;
-  for (const block of blocks) {
-    const from = isSamePath(before.path, block.fromValue) ? before : { path: block.fromValue };
-    before = { path: block.toValue };
-    froms.push(from);
-    tos.push(before);
-  }
-  const morphs = (i: number) => {
-    const from = froms[i].path;
-    const to = tos[i].path;
-    return !from || !to || from.isMorphableWith(to);
+  const base = getTargetPath(document, layerId, { kind: 'base' });
+  // Whether each block starts with the value that shows before it: the layer's own path for the
+  // first block, and the end of the previous block for the rest.
+  let links = blocks.map((block, i) =>
+    isSamePath(i ? blocks[i - 1].toValue : base, block.fromValue),
+  );
+  const wasMorphing = blocks.map(b => morphs(b.fromValue, b.toValue));
+  const mustMorph = blocks.map((b, i) => wasMorphing[i] || blockIds.has(b.id));
+  const fixableAlone = new Map<number, boolean>();
+  const isFixableAlone = (i: number) => {
+    let result = fixableAlone.get(i);
+    if (result === undefined) {
+      const { fromValue, toValue } = blocks[i];
+      result = !!fromValue && !!toValue && morphs(...AutoAwesome.autoFix(fromValue, toValue));
+      fixableAlone.set(i, result);
+    }
+    return result;
   };
-  const wasMorphing = blocks.map((_, i) => morphs(i));
-  for (let fixes = 0; fixes < MAX_FIXES_PER_BLOCK * blocks.length; fixes++) {
-    const i = blocks.findIndex((b, j) => !morphs(j) && (blockIds.has(b.id) || wasMorphing[j]));
-    const from = froms[i]?.path;
-    const to = tos[i]?.path;
-    if (!from || !to) {
+  // The links that can make fixes undo each other: those between two blocks that have to morph.
+  // The layer's own path, and a block that doesn't have to morph, are never auto fixed, so they
+  // only follow the value they're linked to.
+  const getCuttableLinks = (i: number) =>
+    [i, i + 1].filter(
+      j => j > 0 && j < blocks.length && links[j] && mustMorph[j - 1] && mustMorph[j],
+    );
+
+  let chainFix = fixChain(blocks, base, links, mustMorph);
+  for (;;) {
+    // A block that morphed before morphs on its own, and so does one that auto fix can fix on its
+    // own. Others would stay broken anyway, so their links stay.
+    const i = chainFix.broken.find(
+      j => getCuttableLinks(j).length && (wasMorphing[j] || isFixableAlone(j)),
+    );
+    if (i === undefined) {
       break;
     }
-    [froms[i].path, tos[i].path] = AutoAwesome.autoFix(from, to);
+    // Cut one of its links, whichever leaves fewer blocks broken, and start over.
+    let best: { links: boolean[]; chainFix: ChainFix } | undefined;
+    for (const cut of getCuttableLinks(i)) {
+      const tried = links.map((linked, j) => linked && j !== cut);
+      const triedFix = fixChain(blocks, base, tried, mustMorph);
+      if (!best || triedFix.broken.length < best.chainFix.broken.length) {
+        best = { links: tried, chainFix: triedFix };
+      }
+    }
+    if (!best) {
+      break;
+    }
+    ({ links, chainFix } = best);
   }
+
   let { vectorLayer, animation } = document;
   const layer = vectorLayer.findLayerById(layerId);
   if (
     (layer instanceof PathLayer || layer instanceof ClipPathLayer) &&
-    base.path &&
-    base.path !== layer.pathData
+    chainFix.base &&
+    chainFix.base !== layer.pathData
   ) {
     const clone = layer.clone();
-    clone.pathData = base.path;
+    clone.pathData = chainFix.base;
     vectorLayer = LayerUtil.replaceLayer(vectorLayer, layerId, clone);
   }
   const fixed = new Map<string, PathAnimationBlock>();
   blocks.forEach((block, i) => {
-    if (froms[i].path !== block.fromValue || tos[i].path !== block.toValue) {
+    const from = chainFix.froms[i];
+    const to = chainFix.tos[i];
+    if (from !== block.fromValue || to !== block.toValue) {
       const clone = block.clone();
-      clone.fromValue = froms[i].path;
-      clone.toValue = tos[i].path;
+      clone.fromValue = from;
+      clone.toValue = to;
       fixed.set(block.id, clone);
     }
   });
@@ -215,6 +261,49 @@ function autoFixLayer(document: CanvasDocument, layerId: string, blockIds: Reado
   return vectorLayer === document.vectorLayer && animation === document.animation
     ? document
     : { vectorLayer, animation };
+}
+
+/**
+ * Auto fixes the blocks that have to morph and don't, starting from their paths in the document,
+ * with the values that are linked (links[i] links the start of block i to the value before it)
+ * kept the same.
+ */
+function fixChain(
+  blocks: ReadonlyArray<PathAnimationBlock>,
+  base: Path | undefined,
+  links: ReadonlyArray<boolean>,
+  mustMorph: ReadonlyArray<boolean>,
+): ChainFix {
+  // The path at each keyframe. Values that are linked share one, so fixing one end of a block
+  // changes the values linked to it too.
+  const baseValue = { path: base };
+  const froms: Array<{ path: Path | undefined }> = [];
+  const tos: Array<{ path: Path | undefined }> = [];
+  let before = baseValue;
+  blocks.forEach((block, i) => {
+    froms.push(links[i] ? before : { path: block.fromValue });
+    before = { path: block.toValue };
+    tos.push(before);
+  });
+  const isBroken = (i: number) => mustMorph[i] && !morphs(froms[i].path, tos[i].path);
+  const fixes = blocks.map(() => 0);
+  for (;;) {
+    // A block that auto fix can't fix would keep being picked, so each one gets a few tries.
+    const i = blocks.findIndex((unused, j) => isBroken(j) && fixes[j] < MAX_FIXES_PER_BLOCK);
+    const from = froms[i]?.path;
+    const to = tos[i]?.path;
+    if (!from || !to) {
+      break;
+    }
+    fixes[i]++;
+    [froms[i].path, tos[i].path] = AutoAwesome.autoFix(from, to);
+  }
+  return {
+    base: baseValue.path,
+    froms: froms.map(v => v.path),
+    tos: tos.map(v => v.path),
+    broken: blocks.map((unused, i) => i).filter(isBroken),
+  };
 }
 
 function getTargetPath(document: CanvasDocument, layerId: string, target: PathTarget) {

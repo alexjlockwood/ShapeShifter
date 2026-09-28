@@ -118,8 +118,10 @@ whatever model has it (the transform properties go in Transform for groups and p
 new property needs an entry there, or it shows in an "Other" section, and its spec fails. The
 Layout section isn't made of properties: it's the layer's bounds on the canvas at the current
 time, and typing a value moves or scales the layer through `components/canvas/transformLayers.ts`
-as one undo step (`components/propertyinput/layoutValues.ts`), with the editor on or off. Rows of
-properties that can be animated end with a keyframe button, which is filled once they are.
+as one undo step (`components/propertyinput/layoutValues.ts`), with the editor on or off. Its
+selector (`createLayoutSelector`) keeps the layout while playback plays, since bounding a big group
+on every frame made playback stutter. Rows of properties that can be animated end with a keyframe
+button, which is filled once they are.
 
 While a path's points are edited, the editor reports the path it edits and its selected points
 to `services/canvaseditorbridge.service.ts`, which the inspector subscribes to with
@@ -148,7 +150,9 @@ points are edited, a right-click selects the point under the pointer, and the me
 selected points' commands (`buildPointSection`), from what the editor reports in `getMenuState`.
 Combine and Break apart (`scripts/common/combineLayers.ts`) and the rules for which layers the path
 operations apply to (`scripts/common/pathOpLayers.ts`) are outside of it, so they work with the
-editor off. MUI has
+editor off. Everywhere else, `services/shortcut.service.ts` keeps the browser's menu from opening,
+except over text fields and links (`shouldOpenBrowserContextMenu`), so the app's
+own menus must stop the browser's themselves. MUI has
 no submenus, so the host opens one in a `Popper` inside the menu's modal: hovering, ArrowRight,
 Enter, or Space opens it, and ArrowLeft or Escape goes back.
 

@@ -35,7 +35,8 @@ function loadVectorLayerFromElement(
   const usedNames = new Set<string>();
   const makeFinalNodeIdFn = (value: string | null, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
-      NameProperty.sanitize(value || prefix),
+      // Fall back to the prefix if sanitizing leaves nothing (e.g. a name in Chinese).
+      NameProperty.sanitize(value || '') || NameProperty.sanitize(prefix),
       n => doesLayerNameExistFn(n) || usedNames.has(n),
     );
     usedNames.add(finalName);
@@ -84,7 +85,9 @@ function loadVectorLayerFromElement(
       if (children && children.length) {
         return new GroupLayer({
           id: uniqueId(),
-          name: makeFinalNodeIdFn(get(node, 'name', ''), 'group'),
+          // The vector layer takes the root's children and is named after it, so the root's
+          // group is thrown away and shouldn't take its name.
+          name: node === docEl ? '' : makeFinalNodeIdFn(get(node, 'name', ''), 'group'),
           children,
           pivotX: getNumber(node, 'pivotX', '0'),
           pivotY: getNumber(node, 'pivotY', '0'),

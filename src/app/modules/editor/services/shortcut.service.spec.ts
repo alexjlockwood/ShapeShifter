@@ -9,7 +9,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ZoomCommand } from './canvasviewport.service';
 import { createEditorServices, type EditorServices } from './createEditorServices';
-import { getZoomShortcut, isSelectAllShortcut, ShortcutService } from './shortcut.service';
+import {
+  getZoomShortcut,
+  isSelectAllShortcut,
+  ShortcutService,
+  shouldOpenBrowserContextMenu,
+} from './shortcut.service';
 
 const NO_KEYS = {
   key: '',
@@ -79,6 +84,52 @@ describe('getZoomShortcut', () => {
     expect(getZoomShortcut({ ...NO_KEYS, metaKey: true, key: 'z', code: 'KeyZ' }, true)).toBe(
       undefined,
     );
+  });
+});
+
+describe('shouldOpenBrowserContextMenu', () => {
+  afterEach(() => {
+    window.getSelection()?.removeAllRanges();
+    document.body.replaceChildren();
+  });
+
+  function render(html: string) {
+    document.body.innerHTML = html;
+    return (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!element) {
+        throw new Error(`Nothing matches ${selector}`);
+      }
+      return element;
+    };
+  }
+
+  it('opens over text fields and links, including what is inside of a link', () => {
+    const find = render(
+      '<input type="text"><textarea></textarea><div contenteditable="true"><b>x</b></div>' +
+        '<a href="https://example.com"><span class="label">Help</span></a>',
+    );
+    for (const selector of ['input', 'textarea', 'b', 'a', '.label']) {
+      expect(shouldOpenBrowserContextMenu(find(selector))).toBe(true);
+    }
+    expect(shouldOpenBrowserContextMenu(find('.label').firstChild)).toBe(true);
+  });
+
+  it('stays closed elsewhere, and over checkboxes and links without an address', () => {
+    const find = render('<div class="panel">Title</div><input type="checkbox"><a>Not a link</a>');
+    for (const selector of ['.panel', 'input', 'a']) {
+      expect(shouldOpenBrowserContextMenu(find(selector))).toBe(false);
+    }
+    expect(shouldOpenBrowserContextMenu(null)).toBe(false);
+    expect(shouldOpenBrowserContextMenu(window)).toBe(false);
+  });
+
+  it('stays closed over selected text, which Safari selects on a right-click', () => {
+    const find = render('<p class="text">Some text</p>');
+    const range = document.createRange();
+    range.selectNodeContents(find('.text'));
+    window.getSelection()?.addRange(range);
+    expect(shouldOpenBrowserContextMenu(find('.text'))).toBe(false);
   });
 });
 
@@ -233,5 +284,22 @@ describe('ShortcutService', () => {
     const event = press('keydown', { metaKey: true, ctrlKey: true, key: '=', code: 'Equal' });
     expect(event.defaultPrevented).toBe(false);
     expect(commands).toEqual([]);
+  });
+
+  it("keeps the browser's context menu closed, except over links and text fields", () => {
+    setUp(false);
+    const link = document.createElement('a');
+    link.href = 'https://example.com';
+    const panel = document.createElement('div');
+    document.body.append(link, panel);
+    const rightClick = (target: Element) => {
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(rightClick(link)).toBe(false);
+    expect(rightClick(panel)).toBe(true);
+    link.remove();
+    panel.remove();
   });
 });

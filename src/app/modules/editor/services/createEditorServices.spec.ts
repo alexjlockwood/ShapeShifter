@@ -230,6 +230,26 @@ describe('createEditorServices', () => {
       expect(store.getState().present.actionmode.selections).toEqual([]);
     });
 
+    // Undoing it would otherwise also undo selecting the block.
+    it('gets an undo step of its own, right after double-clicking the block', () => {
+      vi.useFakeTimers();
+      try {
+        const getBlock = selectPathBlock('M 8 5 L 8 19 L 19 12 Z', 'M 6 5 L 10 5 L 10 19 L 6 19 Z');
+        const { actionModeService, layerTimelineService } = services;
+        const blockBefore = getBlock();
+        layerTimelineService.clearSelections();
+        vi.advanceTimersByTime(2000);
+        actionModeService.editMorph(blockBefore.id);
+        actionModeService.autoFix();
+        expect(getBlock().isAnimatable()).toBe(true);
+        store.dispatch(ActionCreators.undo());
+        expect(getBlock()).toBe(blockBefore);
+        expect(layerTimelineService.getSelectedBlocks()).toEqual([blockBefore]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     // Auto fix can reorder the subpaths, so the ones paired so far may have moved.
     it('forgets the subpaths paired so far', () => {
       selectPathBlock(
@@ -456,6 +476,15 @@ describe('createEditorServices', () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+
+    it("says so when auto fix can't make the paths morph, and edits the morph anyway", () => {
+      const { actionModeService, snackBarService } = services;
+      const { a, b } = load();
+      vi.spyOn(Path.prototype, 'isMorphableWith').mockReturnValue(false);
+      expect(actionModeService.morphInto(a.id, b.id)).toBe(true);
+      expect(actionModeService.isActionMode()).toBe(true);
+      expect(snackBarService.getSnackBar()?.message).toBe("Couldn't auto fix these paths");
     });
 
     it('says why it refuses, and changes nothing', () => {

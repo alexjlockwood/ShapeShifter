@@ -17,6 +17,7 @@ import {
   MORPH_DURATION,
   morphIntoLayer,
   morphLayerSets,
+  UnfixedMorphError,
 } from './morphLayers';
 import type { LayerDocument } from './pathOpLayers';
 
@@ -107,6 +108,39 @@ describe('morphIntoLayer', () => {
     expect(pathBlock.fromValue?.getPathString()).toBe(new Path(SQUARE).getPathString());
     expect(pathBlock.toValue?.getPathString()).toBe(new Path(TRIANGLE).getPathString());
     expect(result.vectorLayer.children.map(l => l.name)).toEqual(['a']);
+  });
+
+  it("says so when auto fix runs but the paths still don't morph", () => {
+    const a = path('a', SQUARE);
+    const b = path('b', TRIANGLE);
+    vi.spyOn(Path.prototype, 'isMorphableWith').mockReturnValue(false);
+    const { autoFixError } = morph(document([a, b]), a.id, b.id);
+    expect(autoFixError).toBeInstanceOf(UnfixedMorphError);
+  });
+
+  it('keeps the morph before it working, and makes the new one morph too', () => {
+    const PLAY = 'M 8 5 L 8 19 L 19 12 Z';
+    const MOVED_PLAY = 'M 9 5 L 9 19 L 20 12 Z';
+    const PAUSE = 'M 6 19 L 10 19 L 10 5 L 6 5 Z M 14 5 L 14 19 L 18 19 L 18 5 Z';
+    const a = path('a', PLAY);
+    const b = path('b', PAUSE);
+    const before = block(
+      a.id,
+      'pathData',
+      new Path(PLAY),
+      new Path(MOVED_PLAY),
+    ) as PathAnimationBlock;
+    // The pause's second bar needs a collapsing subpath in the play that starts the new morph,
+    // which the play it continues from can't have, since auto fixing the first morph removes it.
+    const { pathBlock, autoFixError, blocks } = morph(document([a, b], [before]), a.id, b.id);
+    expect(autoFixError).toBeUndefined();
+    expect(pathBlock.startTime).toBe(before.endTime);
+    expect(pathBlock.isAnimatable()).toBe(true);
+    expect(pathBlock.fromValue?.getSubPaths()).toHaveLength(2);
+    const first = blocks.find(b => b.id === before.id) as PathAnimationBlock;
+    expect(first.isAnimatable()).toBe(true);
+    expect(first.fromValue?.getPathString()).toBe(new Path(PLAY).getPathString());
+    expect(first.toValue?.getPathString()).toBe(new Path(MOVED_PLAY).getPathString());
   });
 
   it("maps the other path into the path's coordinates, and scales its stroke with it", () => {

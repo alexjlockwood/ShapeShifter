@@ -68,6 +68,20 @@ export function getZoomShortcut(event: ShortcutKeyEvent, isMac: boolean): ZoomCo
   return undefined;
 }
 
+/**
+ * Returns whether a right-click should open the browser's menu. It's about the page rather than
+ * the editor, so it only opens where it has something to offer: over text fields (for copying,
+ * pasting, and spelling) and links (to open or copy them). Not over selected text: Safari selects
+ * the word under the pointer before the event, so any text would count. The canvas, the layer
+ * list, and the timeline open the app's own menu instead, and stop the browser's before the
+ * window hears about it.
+ */
+export function shouldOpenBrowserContextMenu(target: EventTarget | null) {
+  const element =
+    target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+  return !!element && (!!element.closest(TEXT_FIELD_SELECTOR) || !!element.closest('a[href]'));
+}
+
 export class ShortcutService {
   private removeListeners: ReadonlyArray<() => void> | undefined;
   private readonly shortcutSubject = new Subject<Shortcut>();
@@ -101,10 +115,8 @@ export class ShortcutService {
     const canPan = this.features.canvasEditor;
     this.removeListeners = [
       on(window, 'keydown', event => this.onKeyDown(event)),
-      // The browser's menu is about the page, not the editor, so it only opens over text fields,
-      // for copying, pasting, and spelling. The canvas and the layer list open the app's own.
       on(window, 'contextmenu', event => {
-        if (!(event.target instanceof Element && event.target.closest(TEXT_FIELD_SELECTOR))) {
+        if (!shouldOpenBrowserContextMenu(event.target)) {
           event.preventDefault();
         }
       }),

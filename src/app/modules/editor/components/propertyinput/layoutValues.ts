@@ -6,6 +6,11 @@ import {
   translateLayers,
 } from 'app/modules/editor/components/canvas/transformLayers';
 import { VectorLayer } from 'app/modules/editor/model/layers';
+import type { Animation } from 'app/modules/editor/model/timeline';
+import type { State } from 'app/modules/editor/store';
+import { getVectorLayer } from 'app/modules/editor/store/layers/selectors';
+import { getAnimatedVectorLayer, getIsPlaying } from 'app/modules/editor/store/playback/selectors';
+import { getAnimation } from 'app/modules/editor/store/timeline/selectors';
 import { round } from 'lodash-es';
 
 /** A layer's bounds in the Layout section, in viewport coordinates, as the select tool shows them. */
@@ -29,6 +34,39 @@ export function getLayoutValues(rendered: VectorLayer, layerId: string): LayoutV
   }
   const bounds = getLayerBounds(rendered, layerId);
   return bounds && { x: bounds.l, y: bounds.t, w: bounds.r - bounds.l, h: bounds.b - bounds.t };
+}
+
+/**
+ * Returns a selector of the layer's layout at the current time, for the Layout section. The
+ * section's selector runs on every change to the store, so this one only bounds the layer again
+ * when the document or the time changes. Playback changes the time on every frame, and bounding
+ * a group of many paths that often would make it stutter, so while it plays, the layout stays
+ * as it was until it stops, unless the document itself changes.
+ */
+export function createLayoutSelector(layerId: string) {
+  let last:
+    | {
+        vectorLayer: VectorLayer;
+        animation: Animation;
+        // The renderer draws every time into the same vector layer, so this is keyed by the
+        // selector's result, which is new for each time.
+        animated: ReturnType<typeof getAnimatedVectorLayer>;
+        layout: LayoutValues | undefined;
+      }
+    | undefined;
+  return (state: State) => {
+    const vectorLayer = getVectorLayer(state);
+    const animation = getAnimation(state);
+    const isDocumentSame = last?.vectorLayer === vectorLayer && last.animation === animation;
+    if (last && isDocumentSame && getIsPlaying(state)) {
+      return last.layout;
+    }
+    const animated = getAnimatedVectorLayer(state);
+    if (!last || last.animated !== animated) {
+      last = { vectorLayer, animation, animated, layout: getLayoutValues(animated.vl, layerId) };
+    }
+    return last.layout;
+  };
 }
 
 /** Whether two layouts show the same, so that playback doesn't redraw fields that don't change. */

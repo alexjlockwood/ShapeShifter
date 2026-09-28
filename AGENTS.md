@@ -23,9 +23,12 @@ Use Node 24.15 or later (`.nvmrc`) with npm 11.10 or later. Older npm refuses to
 - `npm run playground` opens a page that compares auto fix at another commit with the working
   tree on a few dozen morphs (see `src/playground/autofix/README.md`). Use it to check a change
   to auto fix or the path model.
-- Never run `npm run deploy`. It publishes the live site. `.claude/settings.json` blocks it, and
-  also any command that mentions `scripts/deploy-stable.sh` or `gh-pages`, so read the deploy
-  script with a file tool instead of `cat`.
+- Never run `npm run deploy`. It publishes the live site (only from a clean checkout of
+  `origin/master`). `.claude/settings.json` blocks it, and also any command that mentions
+  `scripts/deploy-stable.sh` or `gh-pages`, so read the deploy script with a file tool instead of
+  `cat`.
+- Never remove `public/ngsw-worker.js`. It replaces the Angular app's service worker, and browsers
+  that last visited before the port keep serving the old app until they find it.
 
 ## Before you finish
 

@@ -13,17 +13,23 @@ import { useMenu } from 'app/modules/editor/hooks/useMenu';
 import { ActionMode } from 'app/modules/editor/model/actionmode';
 import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import { getThemeType } from 'app/modules/editor/store/theme/selectors';
+import {
+  getBuildFeatures,
+  getCanvasEditorResetSearch,
+  isCanvasEditorPreview,
+} from 'environments/features';
 import { type MouseEvent } from 'react';
 
 import './toolbar.scss';
 import { useToolbarData } from './useToolbarData';
 
 export function Toolbar() {
-  const { actionModeService, themeService } = useServices();
+  const { actionModeService, themeService, features } = useServices();
   const { toolbarData } = useToolbarData();
   const isDarkTheme = useAppSelector(state => getThemeType(state).themeType === 'dark');
   const overflowMenu = useMenu();
   const showActionMode = toolbarData.shouldShowActionMode();
+  const isEditorPreview = isCanvasEditorPreview(features, getBuildFeatures(import.meta.env));
 
   // Wraps a click handler so that the click isn't also handled by the workspace.
   const onClick = (fn: () => void) => (event: MouseEvent) => {
@@ -103,6 +109,22 @@ export function Toolbar() {
           />
           <span>Dark theme</span>
         </MenuItem>
+        {isEditorPreview && (
+          <MenuItem
+            onClick={() => {
+              trackEvent('turn_off_canvas_editor');
+              overflowMenu.closeMenu();
+              // The features are resolved once per page load (src/main.tsx), so this reloads.
+              // Unsaved work still gets the usual prompt before the page is left.
+              window.location.search = getCanvasEditorResetSearch(window.location.search);
+            }}
+          >
+            <ListItemIcon>
+              <Icon name="block" />
+            </ListItemIcon>
+            <ListItemText>Turn off the canvas editor preview</ListItemText>
+          </MenuItem>
+        )}
         <OverflowLink
           href="http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html"
           icon="info"

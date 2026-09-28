@@ -257,11 +257,14 @@ test('moves and resizes a layer in the Layout section, as one undo step each', a
   await expect(layout.getByLabel('Layout W')).toBeEnabled();
 });
 
-test("edits a path's text under Advanced", async ({ page }) => {
+test("edits a path's text in its row, without the canvas editor", async ({ page }) => {
   await openShapes(page, 'square');
-  const input = page.locator('.spi-property input[name="pathData"]');
-  await expect(input).toBeHidden();
-  await page.getByText('Advanced').click();
+  // The text is the only way to edit the path without the editor, so it isn't under Advanced.
+  const input = page.getByRole('textbox', { name: 'Path', exact: true });
+  await expect(input).toBeVisible();
+  await expect(input).toHaveValue('M 2 2 L 6 2 L 6 6 L 2 6 Z');
+  await expect(page.getByText('Advanced')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Edit points' })).toHaveCount(0);
   await input.fill('M 0 0 L 4 0 L 4 4 Z');
   await input.blur();
   await expect.poll(() => getPathData(page, 'square')).toBe('M 0 0 L 4 0 L 4 4 Z');
@@ -359,17 +362,21 @@ test('batch edits several selected blocks as one undo step', async ({ page, modi
   }, blockIds);
   await expect(page.locator('.spi-selection-description')).toHaveText('2 property animations');
 
-  const getStartTimes = () =>
-    getState(page, s => s.timeline.animation.blocks.map((b: { startTime: number }) => b.startTime));
-  const originalStartTimes = await getStartTimes();
+  // A shared start or end time would turn blocks that end before it inside out.
+  await expect(page.locator('.spi-property input[name="startTime"]')).toHaveCount(0);
+  await expect(page.locator('.spi-property input[name="endTime"]')).toHaveCount(0);
+
+  const getToValues = () =>
+    getState(page, s => s.timeline.animation.blocks.map((b: { toValue: number }) => b.toValue));
+  const originalToValues = await getToValues();
   // Past the app's 1 second undo-grouping window, so the edit below gets its own undo step
   // instead of joining adding the blocks and selecting them.
   await page.waitForTimeout(1100);
-  const startTimeInput = page.locator('.spi-property input[name="startTime"]');
-  await startTimeInput.fill('50');
-  await startTimeInput.press('Tab');
-  await expect.poll(getStartTimes).toEqual([50, 50]);
+  const toValueInput = page.locator('.spi-property input[name="toValue"]');
+  await toValueInput.fill('0.5');
+  await toValueInput.press('Tab');
+  await expect.poll(getToValues).toEqual([0.5, 0.5]);
 
   await page.keyboard.press(`${modifier}+z`);
-  await expect.poll(getStartTimes).toEqual(originalStartTimes);
+  await expect.poll(getToValues).toEqual(originalToValues);
 });

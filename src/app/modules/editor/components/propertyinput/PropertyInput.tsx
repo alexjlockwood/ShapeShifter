@@ -58,7 +58,12 @@ import {
   type SectionId,
 } from './inspectorSections';
 import { InterpolatorEditor } from './InterpolatorEditor';
-import { areLayoutsEqual, getLayoutValues, type LayoutKey, setLayoutValue } from './layoutValues';
+import {
+  areLayoutsEqual,
+  createLayoutSelector,
+  type LayoutKey,
+  setLayoutValue,
+} from './layoutValues';
 import { MenuSelect } from './MenuSelect';
 import { NumberField } from './NumberField';
 import { getSteppedValue } from './steppedValue';
@@ -469,7 +474,8 @@ function PropertyField({
 
 /**
  * The Path row, with a button that starts editing the points, and the path's text under
- * "Advanced", since it's rarely what's wanted and long.
+ * "Advanced", since it's rarely what's wanted and long. Without the canvas editor, the text is the
+ * only way to edit the path, so it's shown in the row, as the live site shows it.
  */
 function PathRows({
   path,
@@ -488,17 +494,24 @@ function PathRows({
   onAdvancedToggle: (isOpen: boolean) => void;
   animateButton: ReactNode;
 }) {
+  if (!canEditPoints) {
+    return (
+      <div className="spi-property spi-row">
+        <span className="spi-row-label">Path</span>
+        <div className="spi-row-fields">{textField}</div>
+        {animateButton}
+      </div>
+    );
+  }
   const count = path?.getSubPaths().length ?? 0;
   return (
     <>
       <div className="spi-row">
         <span className="spi-row-label">Path</span>
         <div className="spi-row-fields">
-          {canEditPoints && (
-            <button type="button" className="spi-button" onClick={onEditPoints}>
-              Edit points
-            </button>
-          )}
+          <button type="button" className="spi-button" onClick={onEditPoints}>
+            Edit points
+          </button>
           <span className="spi-row-note">
             {count ? `${count} ${count === 1 ? 'subpath' : 'subpaths'}` : 'Empty'}
           </span>
@@ -525,10 +538,8 @@ function PathRows({
 function LayoutSection({ layerId }: { layerId: string }) {
   const store = useEditorStore();
   const { layerTimelineService } = useServices();
-  const layout = useAppSelector(
-    state => getLayoutValues(getAnimatedVectorLayer(state).vl, layerId),
-    areLayoutsEqual,
-  );
+  const selectLayout = useMemo(() => createLayoutSelector(layerId), [layerId]);
+  const layout = useAppSelector(selectLayout, areLayoutsEqual);
   if (!layout) {
     return undefined;
   }

@@ -62,7 +62,9 @@ const plugins: PluginConfig[] = [
   // 'removeUnusedNS',
   // 'sortAttrs',
   'removeTitle',
-  'removeDesc',
+  // svgo 1.x removed every <desc>. svgo 4 keeps one with real text by default, which would
+  // import as an empty group.
+  { name: 'removeDesc', params: { removeAny: true } },
   // 'removeDimensions',
   // 'removeAttrs',
   // 'removeElementsByAttr',
