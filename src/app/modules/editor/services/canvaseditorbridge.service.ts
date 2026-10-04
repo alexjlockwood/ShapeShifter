@@ -22,7 +22,7 @@ const DETACHED: CanvasEditorBridgeState = { isAvailable: false, pointEdit: undef
  * editor while it's loaded. The editor is only downloaded with its feature on
  * (components/canvas/CanvasEditorApi.ts), and it's private to the main canvas's controller, which
  * attaches it here once it's ready and detaches it when the canvas goes away. Everything here does
- * nothing without it, as on the live site.
+ * nothing without it, e.g. with the editor turned off.
  *
  * The editor also pushes what it's editing here (reportPointEdit), which the inspector subscribes
  * to, so that it can show the points of the path being edited.

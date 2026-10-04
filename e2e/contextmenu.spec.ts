@@ -11,7 +11,7 @@ const SHAPES_SVG =
   '</svg>';
 
 async function load(page: Page, editor: boolean) {
-  await page.goto(editor ? '/?editor=1' : '/');
+  await page.goto(editor ? '/' : '/?editor=0');
   await expect(page.locator('.app-canvas')).toHaveAttribute(
     'data-canvas-editor',
     editor ? 'ready' : 'off',
@@ -80,7 +80,7 @@ for (const editor of [true, false]) {
   test(`right-click on an empty canvas imports an SVG, with the editor ${
     editor ? 'on' : 'off'
   }`, async ({ page }) => {
-    await page.goto(editor ? '/?editor=1' : '/');
+    await page.goto(editor ? '/' : '/?editor=0');
     await expect(page.locator('.app-canvas')).toHaveAttribute(
       'data-canvas-editor',
       editor ? 'ready' : 'off',

@@ -21,7 +21,7 @@ describe('CanvasEditorBridgeService', () => {
     return { editor, runCommand };
   }
 
-  it('does nothing without an editor, as on the live site', () => {
+  it('does nothing without an editor', () => {
     const bridge = new CanvasEditorBridgeService();
     expect(bridge.isAvailable()).toBe(false);
     expect(bridge.getMenuState()).toBeUndefined();

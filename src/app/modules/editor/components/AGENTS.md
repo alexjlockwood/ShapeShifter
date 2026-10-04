@@ -62,7 +62,8 @@ of it too, so hovering over it shows them. With the canvas editor on, the main c
 all the time instead, unless its settings hide them (`services/canvassettings.service.ts`).
 
 The new canvas editor is in `components/canvaseditor/`. `docs/canvas-editor.md` has its design
-and roadmap. It's only downloaded when its feature is on (`src/environments/features.ts`).
+and roadmap. It's on by default, and only downloaded when its feature is on
+(`src/environments/features.ts`), after the app renders.
 `components/canvas/CanvasController.ts` loads it through
 `components/canvas/loadCanvasEditor.ts` and talks to it through the types in
 `components/canvas/CanvasEditorApi.ts`. Nothing else may import it, or it would be bundled with the
@@ -143,7 +144,7 @@ selection, the blocks, the current time, what the canvas editor reports, and whe
 zoomed to fit, built as a list of sections. A new kind of item goes in a section builder of its own, added to
 `CONTEXT_MENU_SECTIONS`, or `BLOCK_CONTEXT_MENU_SECTIONS` for blocks. Items that can't run say
 why, rather than being left out, and those that only the canvas editor runs (Duplicate, the
-boolean operations, and Outline stroke) are left out while it isn't loaded, as on the live site.
+boolean operations, and Outline stroke) are left out while it isn't loaded or is turned off.
 They reach it through `services/canvaseditorbridge.service.ts`, which `CanvasController` attaches
 the editor to once it's loaded, since the editor's code is in the lazy chunk. While a path's
 points are edited, a right-click selects the point under the pointer, and the menu starts with the

@@ -15,8 +15,9 @@ a layer, zoom, or pan.
 
 The goal is an editor that feels like a native design tool: select, move, and transform layers,
 edit points and handles, draw with a pen, snap to the canvas, other layers, guides, and the pixel
-grid, and use the keyboard shortcuts people already know from Figma and Sketch. It's built behind
-a feature flag so it can be developed on master and deployed switched off.
+grid, and use the keyboard shortcuts people already know from Figma and Sketch. It was built behind
+a feature flag so it could be developed on master and deployed switched off. It's on by default
+since 2.0.0, and the flag stays so that anyone it breaks for can turn it off.
 
 ## The old paper.js editor
 
@@ -146,10 +147,12 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
 ## Architecture
 
 1. **A feature flag.** `canvasEditor` has a build-time default from the `VITE_CANVAS_EDITOR`
-   environment variable (on in development, off in production builds), and a runtime override:
+   environment variable (on in development and production builds), and a runtime override:
    `?editor=1` or `?editor=0` in the URL, remembered in localStorage, and `?editor=default` to
-   forget it. It's read once per page load and passed to the services. The editor itself is a
-   lazily loaded chunk, so users with the flag off never download it.
+   forget it, which the toolbar's overflow menu offers while it's overridden. It's read once per
+   page load and passed to the services. The editor itself is a lazily loaded chunk, so it doesn't
+   delay the first render, and users with the flag off never download it. The service worker
+   precaches it with the rest of the app.
 2. **A camera.** A pure class holds the zoom and pan and converts between three coordinate
    spaces: viewport units (the vector layer's), panel CSS pixels, and device pixels. It zooms
    around a point, fits the artboard in the panel, and clamps panning. Its state lives in a
@@ -323,8 +326,8 @@ Phase 6 finishes the roadmap:
   into the bottom one, and outline stroke (Cmd+Alt+O) turns strokes into filled outlines, from a
   bar at the top right of the canvas panel, or from the context menu
   (`components/canvaseditor/pathOps.ts`). They use Skia's PathOps through `pathkit-wasm`, which is
-  only downloaded the first time one of them is used, into the editor's own assets so that the
-  service worker doesn't precache it.
+  only downloaded the first time one of them is used, into assets of its own so that the service
+  worker doesn't precache it.
 - Right-clicking the canvas opens a context menu instead of the browser's
   (`components/contextmenu/`), with Duplicate, the booleans, and outline stroke while the editor is
   loaded, and the rest of the layer commands, including Combine and Break apart, which keep every

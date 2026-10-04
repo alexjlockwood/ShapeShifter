@@ -47,9 +47,9 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
   a move with the button already up, use a CDP session in Chromium (`e2e/zoom.spec.ts` and
   `pressWithStrayMove` in `e2e/editor.spec.ts`).
 - Find elements by role and name, e.g. `page.getByRole('button', { name: 'Play (Spacebar)' })`.
-- Unfinished features are off in every test, as they are for users (`playwright.config.ts` turns
-  them off on the dev server too). Turn one on with its URL parameter, e.g. `?editor=1` for the
-  canvas editor. The canvas's `data-canvas-editor` attribute says whether the editor is `off`,
+- Features are on or off in every test as they are for users (`playwright.config.ts` sets the
+  dev server's defaults to match production builds). The canvas editor is on, so test it off with
+  `?editor=0`. The canvas's `data-canvas-editor` attribute says whether the editor is `off`,
   `loading`, `ready`, or `failed`, so wait for the value you expect rather than for it to be
   missing. Once it's `ready`, drive its tools with the mouse like `e2e/editor.spec.ts` does, or
   preview and commit path edits directly with `window.shapeshifter.canvasEditor`

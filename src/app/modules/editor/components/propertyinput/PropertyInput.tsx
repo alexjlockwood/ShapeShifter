@@ -475,7 +475,7 @@ function PropertyField({
 /**
  * The Path row, with a button that starts editing the points, and the path's text under
  * "Advanced", since it's rarely what's wanted and long. Without the canvas editor, the text is the
- * only way to edit the path, so it's shown in the row, as the live site shows it.
+ * only way to edit the path, so it's shown in the row.
  */
 function PathRows({
   path,

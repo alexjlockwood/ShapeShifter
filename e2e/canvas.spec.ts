@@ -25,7 +25,7 @@ test('draws and plays a demo', async ({ page }) => {
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
 
   // The demo is only 300ms long, so without repeating it can finish before the checks below.
-  await page.getByRole('button', { name: 'Repeat (R)' }).click();
+  await page.getByRole('button', { name: 'Repeat', exact: true }).click();
   await page.getByRole('button', { name: 'Play (Spacebar)' }).click();
   await expect.poll(() => getCurrentTime(page)).toBeGreaterThan(0);
   // The play button turns into a pause button while the animation plays.
@@ -33,12 +33,13 @@ test('draws and plays a demo', async ({ page }) => {
   await page.screenshot({ path: 'test-results/canvas-playing.png' });
 });
 
-test('loads the canvas editor with ?editor=1', async ({ page }) => {
-  await page.goto('/?project=demos/playtopause.shapeshifter&editor=1');
+test('loads the canvas editor unless ?editor=0 turns it off', async ({ page }) => {
+  await page.goto('/?project=demos/playtopause.shapeshifter');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
-  // It's off by default in tests (playwright.config.ts).
-  await page.goto('/?project=demos/playtopause.shapeshifter&editor=default');
+  await page.goto('/?project=demos/playtopause.shapeshifter&editor=0');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
+  await page.goto('/?project=demos/playtopause.shapeshifter&editor=default');
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
 });
 
 // A small square in a layer that isn't animated.
@@ -47,7 +48,7 @@ const SQUARE_SVG =
 const BIG_SQUARE = 'M 0 0 L 24 0 L 24 24 L 0 24 Z';
 
 test('previews an edit, and commits it as one undo step', async ({ page, modifier }) => {
-  await page.goto('/?editor=1');
+  await page.goto('/');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
   await dispatchClipboardEvent(page, 'paste', SQUARE_SVG);
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);

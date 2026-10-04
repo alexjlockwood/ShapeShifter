@@ -18,7 +18,7 @@ const SQUARES_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
 
 /** Opens an empty project with the canvas editor on, and pastes the squares into it. */
 async function openSquares(page: Page) {
-  await page.goto('/?editor=1');
+  await page.goto('/');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
   await dispatchClipboardEvent(page, 'paste', SQUARES_SVG);
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(3);
@@ -188,7 +188,7 @@ test('selects every layer with Cmd+A with the canvas editor off, except while ty
   page,
   modifier,
 }) => {
-  await page.goto('/');
+  await page.goto('/?editor=0');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
   await dispatchClipboardEvent(page, 'paste', SQUARES_SVG);
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(3);
@@ -282,7 +282,7 @@ test('duplicates layers by dragging them with Alt held, or with Cmd+D', async ({
 });
 
 test('moves an animated layer with its animation', async ({ page }) => {
-  await page.goto('/?project=demos/playtopause.shapeshifter&editor=1');
+  await page.goto('/?project=demos/playtopause.shapeshifter');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
   // The play icon, as its path block draws it at the start.
@@ -427,7 +427,7 @@ test('moves a handle on its own, and mirrors the other one with Cmd held', async
   page,
   modifier,
 }) => {
-  await page.goto('/?editor=1');
+  await page.goto('/');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
   // The point at (8, 12) has mirrored handles, at (6, 8) and (10, 16).
   await dispatchClipboardEvent(
@@ -748,7 +748,7 @@ test('snaps moves to space layers out evenly', async ({ page }) => {
 });
 
 test('edits an animated path at the ends of its morph, and auto fixes it', async ({ page }) => {
-  await page.goto('/?editor=1&project=demos/playtopause.shapeshifter');
+  await page.goto('/?project=demos/playtopause.shapeshifter');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
   await page.evaluate(() => {

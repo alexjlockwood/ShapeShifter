@@ -4,9 +4,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// The canvas editor is only downloaded when its feature is on, which only works if nothing
-// outside it imports it statically: that would bundle it with the rest of the app. Checks that
-// only components/canvas/loadCanvasEditor.ts refers to it, with a dynamic import.
+// The canvas editor is loaded after the app renders, and only when its feature is on, which only
+// works if nothing outside it imports it statically: that would bundle it with the rest of the
+// app. Checks that only components/canvas/loadCanvasEditor.ts refers to it, with a dynamic import.
 
 const SRC = fileURLToPath(new URL('..', import.meta.url));
 const EDITOR_DIR = join(SRC, 'app/modules/editor/components/canvaseditor');

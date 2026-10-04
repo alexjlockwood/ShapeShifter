@@ -204,10 +204,13 @@ const SHAPES_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <path id="line" d="M 2 20 H 10" stroke="#000"/>
 </svg>`;
 
-/** Opens an empty project, with the canvas editor off, pastes the shapes, and selects one. */
-async function openShapes(page: Page, name: string) {
-  await page.goto('/');
-  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
+/** Opens an empty project, pastes the shapes, and selects one. */
+async function openShapes(page: Page, name: string, { editor = true } = {}) {
+  await page.goto(editor ? '/' : '/?editor=0');
+  await expect(page.locator('.app-canvas')).toHaveAttribute(
+    'data-canvas-editor',
+    editor ? 'ready' : 'off',
+  );
   await dispatchClipboardEvent(page, 'paste', SHAPES_SVG);
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(2);
   await selectLayer(page, name);
@@ -258,7 +261,7 @@ test('moves and resizes a layer in the Layout section, as one undo step each', a
 });
 
 test("edits a path's text in its row, without the canvas editor", async ({ page }) => {
-  await openShapes(page, 'square');
+  await openShapes(page, 'square', { editor: false });
   // The text is the only way to edit the path without the editor, so it isn't under Advanced.
   const input = page.getByRole('textbox', { name: 'Path', exact: true });
   await expect(input).toBeVisible();

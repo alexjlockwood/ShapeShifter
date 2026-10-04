@@ -121,7 +121,7 @@ test('edits, auto fixes, and deletes a morph from its block in the timeline', as
 });
 
 test("opens a menu for the morph on the canvas editor's keyframe badge", async ({ page }) => {
-  await page.goto('/?editor=1&project=demos/playtopause.shapeshifter');
+  await page.goto('/?project=demos/playtopause.shapeshifter');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
   await page.locator('.slt-layer').getByText('path', { exact: true }).click();

@@ -1,7 +1,7 @@
 /**
  * Features that can be turned on and off without a new build, so that unfinished ones can be
- * developed on master and tried on the live site. Each has a default for the build, which a URL
- * parameter can override for the browser.
+ * developed on master and tried on the live site, and new ones turned off by anyone they break
+ * for. Each has a default for the build, which a URL parameter can override for the browser.
  */
 export interface Features {
   /** Editing and drawing paths on the canvas (see docs/canvas-editor.md). */
@@ -51,12 +51,18 @@ export function resolveFeatures({
 }
 
 /**
- * Returns whether the canvas editor is on only because this browser turned it on, e.g. with
- * `?editor=1` on the live site. It's remembered for good and changes shortcuts like R, so the app
- * offers a way back to the build's default.
+ * Returns whether this browser turned the canvas editor on or off against the build's default,
+ * e.g. with `?editor=0` on the live site. It's remembered for good and changes shortcuts like R,
+ * so the app offers a way back to the build's default.
  */
-export function isCanvasEditorPreview(features: Features, buildDefault: Features) {
-  return features.canvasEditor && !buildDefault.canvasEditor;
+export function getCanvasEditorOverride(
+  features: Features,
+  buildDefault: Features,
+): 'on' | 'off' | undefined {
+  if (features.canvasEditor === buildDefault.canvasEditor) {
+    return undefined;
+  }
+  return features.canvasEditor ? 'on' : 'off';
 }
 
 /**

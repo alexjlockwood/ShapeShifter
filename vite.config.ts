@@ -37,8 +37,8 @@ const playgroundBaseline = (): Plugin => {
   };
 };
 
-// Where the build puts the canvas editor's code (src/app/modules/editor/components/canvaseditor/).
-const EDITOR_ASSETS_DIR = 'assets/editor';
+// Where the build puts PathKit, which the canvas editor's path operations load.
+const PATHKIT_ASSETS_DIR = 'assets/pathkit';
 
 export default defineConfig({
   plugins: [
@@ -55,17 +55,18 @@ export default defineConfig({
           // Replaces the old Angular service worker (see public/ngsw-worker.js).
           'ngsw-worker.js',
           // Cached when it's first used instead (see runtimeCaching).
-          `${EDITOR_ASSETS_DIR}/**`,
+          `${PATHKIT_ASSETS_DIR}/**`,
         ],
-        // The canvas editor is only downloaded when it's turned on (src/environments/features.ts),
-        // so it's cached the first time instead of being precached for everyone. Its files have
-        // content hashes in their names, so a cached file never goes stale. The catch is that it
-        // only works offline once it has been loaded online since the last deploy.
+        // PathKit is several times the size of the canvas editor, and only downloaded once a path
+        // operation is used, so it's cached the first time instead of being precached for
+        // everyone. Its files have content hashes in their names, so a cached file never goes
+        // stale. The catch is that path operations only work offline once they have been used
+        // online since the last deploy.
         runtimeCaching: [
           {
-            urlPattern: new RegExp(`/${EDITOR_ASSETS_DIR}/`),
+            urlPattern: new RegExp(`/${PATHKIT_ASSETS_DIR}/`),
             handler: 'CacheFirst',
-            options: { cacheName: 'canvas-editor', expiration: { maxEntries: 20 } },
+            options: { cacheName: 'pathkit', expiration: { maxEntries: 20 } },
           },
         ],
         navigateFallback: 'index.html',
@@ -88,18 +89,15 @@ export default defineConfig({
     sourcemap: true,
     rolldownOptions: {
       output: {
-        // The canvas editor's lazily loaded code goes in its own directory, so that the service
-        // worker can tell it apart. Only its entry point is routed here, so the editor mustn't
-        // import CSS, and code it loads lazily in turn needs routing here too, or it would be
-        // precached for everyone: PathKit, which its path operations load, and its WASM code.
+        // PathKit and its WASM code go in their own directory, so that the service worker can
+        // tell them apart.
         chunkFileNames: chunk =>
-          chunk.facadeModuleId?.includes('/components/canvaseditor/') ||
           chunk.facadeModuleId?.includes('/pathkit-wasm/')
-            ? `${EDITOR_ASSETS_DIR}/[name]-[hash].js`
+            ? `${PATHKIT_ASSETS_DIR}/[name]-[hash].js`
             : 'assets/[name]-[hash].js',
         assetFileNames: asset =>
           asset.names.some(name => name.endsWith('.wasm'))
-            ? `${EDITOR_ASSETS_DIR}/[name]-[hash][extname]`
+            ? `${PATHKIT_ASSETS_DIR}/[name]-[hash][extname]`
             : 'assets/[name]-[hash][extname]',
       },
     },
