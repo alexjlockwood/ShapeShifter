@@ -90,8 +90,7 @@ export function combineLayers(
 
 /**
  * Returns the selected paths that Break apart splits up, or why it can't. Returns undefined if
- * none of them has more than one subpath. A path whose other subpaths are all holes in its first
- * stays as it is, since each piece keeps its holes. A path whose path is animated can't be split up, since
+ * none of them has more than one subpath. A path whose path is animated can't be split up, since
  * its blocks would each have to be split the same way, and neither can a trimmed one, since each
  * piece would be trimmed along its own length.
  */
@@ -107,25 +106,23 @@ export function getBrokenApartLayerIds(
   if (!paths.length) {
     return undefined;
   }
-  const breakable = paths.filter(path => getPieces(path).length > 1);
-  if (!breakable.length) {
-    return { reason: `${paths[0].name}'s subpaths are one shape and its holes` };
-  }
-  const morphing = breakable.find(path => isPathAnimated(animation, path.id));
+  const morphing = paths.find(path => isPathAnimated(animation, path.id));
   if (morphing) {
     return { reason: `${morphing.name}'s path is animated` };
   }
-  const trimmed = breakable.find(path => isTrimmed(document, path));
+  const trimmed = paths.find(path => isTrimmed(document, path));
   if (trimmed) {
     return { reason: `${trimmed.name} is trimmed` };
   }
-  return { layerIds: breakable.map(path => path.id) };
+  return { layerIds: paths.map(path => path.id) };
 }
 
 /**
  * Splits each of the selected paths that has several subpaths into a path for each one, along with
- * the holes it cuts, so an outlined shape stays outlined. The pieces are in the order of their
- * subpaths, so the first is drawn at the bottom. Every piece keeps the path's style and transform,
+ * the holes it cuts, so an outlined shape stays outlined. A path that's one shape with holes, like
+ * the donut Combine makes from two circles, splits into every subpath instead, since there's
+ * nothing else to split. The pieces are in the order of their subpaths, so the first is drawn at
+ * the bottom. Every piece keeps the path's style and transform,
  * so it stays where it's drawn. If the path doesn't use its transform yet, each piece pivots at
  * its own center instead, so it rotates and scales in place. The first piece keeps the path's id,
  * name, and animations. The
@@ -222,10 +219,12 @@ function getDrawnSubPaths(layer: PathLayer) {
 
 /**
  * Returns the path strings of the pieces Break apart makes from the path: a piece for each drawn
- * subpath, with the holes it cuts.
+ * subpath, with the holes it cuts, or one for every subpath if that would leave only one.
  */
 function getPieces(layer: PathLayer) {
-  return groupHoles(layer, getDrawnSubPaths(layer)).map(group =>
+  const subPaths = getDrawnSubPaths(layer);
+  const groups = groupHoles(layer, subPaths);
+  return (groups.length > 1 ? groups : subPaths.map(subPath => [subPath])).map(group =>
     group.map(subPath => commandsToString(subPath.getCommands())).join(' '),
   );
 }

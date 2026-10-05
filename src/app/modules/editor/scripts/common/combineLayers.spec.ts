@@ -266,16 +266,15 @@ describe('breakApartLayers', () => {
     // Without a fill, there are no holes, just outlines.
     expect(pieces(ring('M 2 2 L 2 8 L 8 8 L 8 2 Z', 'nonZero', ''))).toEqual([1, 1, 1]);
 
-    // A shape with only its hole has nothing to split.
-    const outline = new PathLayer({
-      name: 'outline',
+    // One shape with a hole, like a donut made with Combine, splits into every subpath, since
+    // there's nothing else to split.
+    const donut = new PathLayer({
+      name: 'donut',
       children: [],
       pathData: new Path(`${outer} M 2 2 L 2 8 L 8 8 L 8 2 Z`),
       fillColor: '#000000',
     });
-    expect(getBrokenApartLayerIds(document([outline]), [outline.id])).toEqual({
-      reason: "outline's subpaths are one shape and its holes",
-    });
+    expect(pieces(donut)).toEqual([1, 1]);
   });
 
   it('pivots each piece at its own center, unless the path uses its transform', () => {
