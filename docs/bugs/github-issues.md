@@ -107,7 +107,8 @@ viewBox="0 -960 960 960"`) exports as a 960dp VectorDrawable. The vector layer h
   gains a hole at the start of the block. Auto fix doesn't know the fill type. It could avoid
   reversals that change the winding of a `nonZero` fill, or switch the layer to `evenOdd` when that
   renders both paths the same (`scripts/algorithms/AutoAwesome.ts`, `getAlignmentCandidates` and
-  `permuteSubPath`). (GitHub #31, confirmed by a test)
+  `permuteSubPath`). Material's outlined `lock` into `lock_open` shows it: the body's hole fills in
+  by the end of the morph. (GitHub #31, confirmed by a test)
 - **Action mode points at or past the viewport edge are cut off.** The overlay canvas that draws
   the points is exactly the size of the viewport, so a point on the edge shows as half a circle,
   and a point outside it (e.g. from an SVG whose content extends past its viewBox) isn't drawn and

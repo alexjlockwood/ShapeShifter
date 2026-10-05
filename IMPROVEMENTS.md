@@ -207,6 +207,66 @@ roadmap.
   last path block, and refuses otherwise, rather than lengthening the animation or picking a
   shorter morph. Animating the trim, and asking before lengthening, are the obvious follow-ups.
 
+## Icon animation workflow
+
+Building fourteen icon animations from Material icons through the UI on 2026-10-04 (the bugs are
+in `docs/bugs/icon-animations.md`) took 215 blocks, each typed in field by field, plus path data
+typed by hand for every part that had to be a stroke or a cut-out. Nothing needed a feature the
+app can't export; it needed time. These would save most of it, roughly in order of how many of
+the fourteen they'd have helped.
+
+- **Animate several layers at once.** With several layers selected, the inspector has no keyframe
+  buttons, so four fullscreen corners doing the same flip 40 ms apart took 20 blocks, and five
+  star bursts took 30. Adding a block to every selected layer, a command that staggers the
+  selected blocks by a step in layer order, and pasting blocks onto the selected layers with their
+  relative timing (ICON-8) would cover it. About 3 to 5 days.
+- **Keyframes rather than from/to blocks.** Each block is five fields (start, end, from, to,
+  easing): about 50 edits for menu to close and 70 for the bell's damped swing. An auto-key mode,
+  where moving the playhead and changing a value adds a block from the previous keyframe, and new
+  blocks that start where the last one ended (ICON-7), would make a two-step press a few clicks.
+  A pendulum or wiggle preset that writes damped rotation keyframes would cover the bell. About 1
+  to 2 weeks for auto-key.
+- **A linked scale and translate.** A uniform press is four blocks (scale X and Y, in and out),
+  since the keyframe button asks for one axis. One block that animates both, kept in step, would
+  halve these. About 2 days.
+- **Turn Material icons into parts.** Material ships each icon as one compound path. Break apart
+  should keep holes with their outlines (ICON-1), work on animated paths (it's refused once a
+  path has a path block, so both icons have to be broken apart before Morph into), and pivot each
+  piece at its center (ICON-2). Parts drawn as one outline, like the lock's body and shackle,
+  need a knife or a boolean split. Most trimmed parts (pages, checks, a shackle) are 2dp strokes
+  that were outlined into fills, and nothing turns them back: a "convert to centerline stroke"
+  (the reverse of Outline stroke) would save typing their path data. About 1 week.
+- **Add a slash.** Every `*_off`, `*_disabled` and `no_*` icon in Material (213 of them) uses the
+  same slash: a 1.8-wide bar from (3.6, 3.6) to (20.4, 20.4) with a gap on its upper right. Mute,
+  camera off and similar animations need a stroked slash with a trim block and a clip path whose
+  gap grows with it, and today the clip's start and end shapes have to be typed with corners
+  computed by hand. A command that builds both from the icon would make the whole family one
+  click. About 2 to 3 days.
+- **Reuse an animation in another project.** Opening a project replaces the workspace, and copy
+  only copies blocks, so the mic's slash was rebuilt by hand for the volume icon. Importing
+  another project's layers with their blocks would fix it. About 2 to 3 days.
+- **Precise point editing.** X and Y fields for several selected points, fractional nudges, and a
+  way to rotate points about a chosen point. The last is what makes a turn-and-morph work (the
+  hang-up animation morphs into `call_end` turned back by 135°, so the rotation does the turning),
+  and today it takes the canvas editor's rotate handle around the shape's own center. About 3 to 5
+  days.
+- **Show what a clip path clips.** Highlight the layers a selected clip affects, and insert new
+  clips above the selection (ICON-4). About 1 to 2 days.
+- **A repeat count,** so a searching or loading state can loop (`android:repeatCount`). The
+  Chromecast search had to be unrolled into 18 blocks. (GitHub #140, in `docs/bugs/github-issues.md`)
+- **Auto fix that knows more than point positions.** Run on the fourteen pairs of raw icons, auto
+  fix did well on the bell, star, bookmark and download arrow. It can't do what the others need,
+  and these would help most:
+  - Fit the best rotation between paired subpaths and offer a rotation block, morphing only
+    what's left over. The hang-up morph was clean once the end shape was turned back by hand.
+  - Recognize circles and rounded rectangles and morph their corner radius. Morph into turns the
+    raw circle into a pinched lemon on its way to a square; only hand-written `<rect rx>` SVGs,
+    whose structure survives import, gave a clean morph.
+  - Keep each hole's winding (GitHub #31), which fills in the lock's body.
+  - When two shapes have nothing in common (copy into check), offer to draw one off and the next
+    one on with trim paths, rather than a morph that melts.
+  - Let unpaired subpaths grow from, or shrink toward, a chosen point, and stagger them.
+
 ## Planned features
 
 Export formats the maintainer wants to add, decided while triaging the GitHub issues on
