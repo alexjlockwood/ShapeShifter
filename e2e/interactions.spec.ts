@@ -6,11 +6,13 @@ import {
   dispatchClipboardEvent,
   expect,
   getState,
+  openApp,
+  reloadApp,
   test,
 } from './fixtures';
 
 async function loadDemo(page: Page, id = 'playtopause') {
-  await page.goto(`/?project=demos/${id}.shapeshifter`);
+  await openApp(page, `/?project=demos/${id}.shapeshifter`);
   await expect
     .poll(() => getState(page, s => s.layers.vectorLayer.children.length))
     .toBeGreaterThan(0);
@@ -126,11 +128,11 @@ test('cuts and pastes animation blocks', async ({ page }) => {
 });
 
 test('remembers the theme', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await page.getByRole('button', { name: 'More options' }).click();
   await page.getByRole('menuitem', { name: 'Dark theme' }).click();
   await expect(page.locator('body')).toHaveClass(/ss-dark-theme/);
-  await page.reload();
+  await reloadApp(page);
   await expect(page.locator('body')).toHaveClass(/ss-dark-theme/);
 });
 

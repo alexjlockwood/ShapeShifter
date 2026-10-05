@@ -28,6 +28,8 @@ test('works offline once the service worker is installed', async ({
 
   await page.reload();
   await expect(page.locator('.toolbar')).toContainText('Shape Shifter');
+  // The canvas editor is loaded separately, but it's precached with the rest of the app.
+  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
   // The fonts and icons are bundled, so they're available offline too.
   expect(await page.evaluate(() => document.fonts.check('16px Roboto'))).toBe(true);
 

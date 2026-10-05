@@ -312,8 +312,9 @@ export class CanvasController extends DestroyableMixin() {
     try {
       editorModule = await loadCanvasEditor();
     } catch (error) {
-      // Loading fails offline if the editor was never cached, and after a deploy that removed the
-      // file an old page asks for, so it's expected now and then.
+      // The editor is precached with the app, so this is only expected now and then: when the
+      // first visit's connection drops or something blocks the request, or when a deploy removed
+      // the file an old page asks for.
       this.onEditorFailed(error, 'info');
       return;
     }

@@ -2,8 +2,8 @@ import {
   CANVAS_EDITOR_STORAGE_KEY,
   FeatureStorage,
   getBuildFeatures,
+  getCanvasEditorOverride,
   getCanvasEditorResetSearch,
-  isCanvasEditorPreview,
   resolveFeatures,
   withoutCanvasEditorReset,
 } from './features';
@@ -53,6 +53,14 @@ describe('resolveFeatures', () => {
     }
   });
 
+  it("forgets the remembered value when the URL asks for the build's default", () => {
+    const storage = createStorage({ [CANVAS_EDITOR_STORAGE_KEY]: '0' });
+    expect(resolveFeatures({ search: '?editor=1', storage, buildDefault: ON })).toEqual(ON);
+    expect(storage.values).toEqual({});
+    // So a browser follows the default if it changes.
+    expect(resolveFeatures({ search: '', storage, buildDefault: OFF })).toEqual(OFF);
+  });
+
   it('forgets the remembered value with ?editor=default', () => {
     const storage = createStorage({ [CANVAS_EDITOR_STORAGE_KEY]: '1' });
     expect(resolveFeatures({ search: '?editor=default', storage, buildDefault: OFF })).toEqual(OFF);
@@ -66,23 +74,23 @@ describe('resolveFeatures', () => {
   });
 });
 
-describe('isCanvasEditorPreview', () => {
-  it('is only a preview when the browser turned on what the build leaves off', () => {
-    expect(isCanvasEditorPreview(ON, OFF)).toBe(true);
-    expect(isCanvasEditorPreview(ON, ON)).toBe(false);
-    expect(isCanvasEditorPreview(OFF, OFF)).toBe(false);
-    expect(isCanvasEditorPreview(OFF, ON)).toBe(false);
+describe('getCanvasEditorOverride', () => {
+  it('is only an override when the browser changed what the build has', () => {
+    expect(getCanvasEditorOverride(ON, OFF)).toBe('on');
+    expect(getCanvasEditorOverride(OFF, ON)).toBe('off');
+    expect(getCanvasEditorOverride(ON, ON)).toBeUndefined();
+    expect(getCanvasEditorOverride(OFF, OFF)).toBeUndefined();
   });
 
-  it('is a preview for a production build that ?editor=1 turned on, until ?editor=default', () => {
+  it('is an override for a build that ?editor=0 turned off, until ?editor=default', () => {
     const storage = createStorage();
-    const turnedOn = resolveFeatures({ search: '?editor=1', storage, buildDefault: OFF });
-    expect(isCanvasEditorPreview(turnedOn, OFF)).toBe(true);
-    const later = resolveFeatures({ search: '', storage, buildDefault: OFF });
-    expect(isCanvasEditorPreview(later, OFF)).toBe(true);
-    const search = getCanvasEditorResetSearch('?editor=1');
-    const reset = resolveFeatures({ search, storage, buildDefault: OFF });
-    expect(isCanvasEditorPreview(reset, OFF)).toBe(false);
+    const turnedOff = resolveFeatures({ search: '?editor=0', storage, buildDefault: ON });
+    expect(getCanvasEditorOverride(turnedOff, ON)).toBe('off');
+    const later = resolveFeatures({ search: '', storage, buildDefault: ON });
+    expect(getCanvasEditorOverride(later, ON)).toBe('off');
+    const search = getCanvasEditorResetSearch('?editor=0');
+    const reset = resolveFeatures({ search, storage, buildDefault: ON });
+    expect(getCanvasEditorOverride(reset, ON)).toBeUndefined();
     expect(storage.values).toEqual({});
   });
 });

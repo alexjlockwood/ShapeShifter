@@ -74,7 +74,7 @@ export interface ContextMenuInput {
   readonly blockIds: ReadonlyArray<string>;
   /** The current time, where a new morph goes if there's room. */
   readonly currentTime: number;
-  /** What the canvas editor reports, or undefined if it isn't loaded, as on the live site. */
+  /** What the canvas editor reports, or undefined if it isn't loaded, e.g. when it's off. */
   readonly editor: CanvasEditorMenuState | undefined;
   /** Whether the canvas shows the whole artboard, which it always does without the editor. */
   readonly isZoomedToFit: boolean;

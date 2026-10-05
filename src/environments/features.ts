@@ -1,7 +1,7 @@
 /**
  * Features that can be turned on and off without a new build, so that unfinished ones can be
- * developed on master and tried on the live site. Each has a default for the build, which a URL
- * parameter can override for the browser.
+ * developed on master and tried on the live site, and new ones turned off by anyone they break
+ * for. Each has a default for the build, which a URL parameter can override for the browser.
  */
 export interface Features {
   /** Editing and drawing paths on the canvas (see docs/canvas-editor.md). */
@@ -25,8 +25,10 @@ export interface FeatureStorage {
 }
 
 /**
- * Returns the features for this page load. A URL parameter wins and is remembered, so that it
- * lasts across reloads and links without it, then a remembered value, then the build's default.
+ * Returns the features for this page load. A URL parameter wins, then a remembered value, then
+ * the build's default. A parameter that differs from the default is remembered, so that it lasts
+ * across reloads and links without it, and one that matches it forgets the remembered value, so
+ * that the browser follows the default if it changes.
  */
 export function resolveFeatures({
   search,
@@ -38,7 +40,7 @@ export function resolveFeatures({
   readonly buildDefault: Features;
 }): Features {
   const fromUrl = parseFlag(new URLSearchParams(search).get(CANVAS_EDITOR_PARAM));
-  if (fromUrl === 'default') {
+  if (fromUrl === 'default' || fromUrl === buildDefault.canvasEditor) {
     storage.removeItem(CANVAS_EDITOR_STORAGE_KEY);
     return buildDefault;
   }
@@ -51,12 +53,18 @@ export function resolveFeatures({
 }
 
 /**
- * Returns whether the canvas editor is on only because this browser turned it on, e.g. with
- * `?editor=1` on the live site. It's remembered for good and changes shortcuts like R, so the app
- * offers a way back to the build's default.
+ * Returns whether this browser turned the canvas editor on or off against the build's default,
+ * e.g. with `?editor=0` on the live site. It's remembered for good and changes shortcuts like R,
+ * so the app offers a way back to the build's default.
  */
-export function isCanvasEditorPreview(features: Features, buildDefault: Features) {
-  return features.canvasEditor && !buildDefault.canvasEditor;
+export function getCanvasEditorOverride(
+  features: Features,
+  buildDefault: Features,
+): 'on' | 'off' | undefined {
+  if (features.canvasEditor === buildDefault.canvasEditor) {
+    return undefined;
+  }
+  return features.canvasEditor ? 'on' : 'off';
 }
 
 /**

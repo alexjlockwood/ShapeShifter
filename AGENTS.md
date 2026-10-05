@@ -115,9 +115,10 @@ Where to start for common changes:
   fetch.
 - Bugsnag and Google Analytics only report from shapeshifter.design (`src/environments/site.ts`),
   never from local builds or forks.
-- Unfinished features are behind flags in `src/environments/features.ts`, on by default in
-  development (`.env.development`) and off in production builds (`.env.production`). `?editor=1`
-  or `?editor=0` turns the canvas editor on or off in that browser until `?editor=default`.
+- Features can be turned on and off with flags in `src/environments/features.ts`, with defaults
+  for development (`.env.development`) and production builds (`.env.production`). The canvas
+  editor is on in both. `?editor=0` turns it off in that browser until `?editor=1` or
+  `?editor=default`, and the toolbar's overflow menu offers to turn it back on.
 
 ## Bugs and improvements
 

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import type { Download, Page } from '@playwright/test';
 
-import { artboardPoint, expect, getState, test } from './fixtures';
+import { artboardPoint, expect, getState, openApp, test } from './fixtures';
 
 // The Material Design play and pause icons.
 const PLAY_SVG =
@@ -120,7 +120,7 @@ async function startActionMode(page: Page) {
 }
 
 test('creates a play-to-pause morph from scratch', async ({ page, modifier }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await importSvg(page, 'play.svg', PLAY_SVG);
   await importSvg(page, 'pause.svg', PAUSE_SVG);
 
@@ -314,7 +314,7 @@ test('creates a play-to-pause morph from scratch', async ({ page, modifier }) =>
 });
 
 test('adds and deletes points, and splits stroked subpaths', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await importSvg(page, 'line.svg', LINE_SVG);
   await addPathMorph(page, 'line', 'M 4 6 L 20 6 M 4 18 L 20 18');
   await startActionMode(page);
@@ -386,7 +386,7 @@ test('adds and deletes points, and splits stroked subpaths', async ({ page }) =>
 test('keeps dragging a point outside of the canvas, and cancels a drag with Escape', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await importSvg(page, 'line.svg', LINE_SVG);
   await addPathMorph(page, 'line', 'M 4 6 L 20 6 M 4 18 L 20 18');
   await startActionMode(page);
@@ -418,7 +418,7 @@ test('keeps dragging a point outside of the canvas, and cancels a drag with Esca
 });
 
 test('auto fixes incompatible paths', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await importSvg(page, 'play.svg', PLAY_SVG);
   await addPathMorph(page, 'play', 'M 6 19 L 10 19 L 10 5 L 6 5 Z M 14 5 L 14 19 L 18 19 L 18 5 Z');
   await expect(page.locator('.paths-incompatible-text')).toContainText('Paths are incompatible');
@@ -436,7 +436,7 @@ test('auto fixes incompatible paths', async ({ page }) => {
 test('edits a morph from the timeline, in labeled panels that say whether it morphs', async ({
   page,
 }) => {
-  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await openApp(page, '/?project=demos/playtopause.shapeshifter');
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
   await page.evaluate(() =>
     (window as any).shapeshifter.services.playbackService.setCurrentTime(150),
@@ -468,7 +468,7 @@ test('edits a morph from the timeline, in labeled panels that say whether it mor
 });
 
 test('auto fixes a morph from the status strip', async ({ page }) => {
-  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await openApp(page, '/?project=demos/playtopause.shapeshifter');
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
   // Adds a point to the start of the morph, and edits it.
   await page.evaluate(() => {

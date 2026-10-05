@@ -28,6 +28,29 @@ export const test = base.extend<{ consoleErrors: string[]; modifier: 'Control' |
 
 export { expect };
 
+/**
+ * Goes to the app's URL and waits for the canvas editor to load, or to be off with `?editor=0`.
+ * The canvas handles the pointer itself until the editor has loaded, so a test that went on
+ * without waiting would test one or the other depending on how fast the editor loaded.
+ */
+export async function openApp(page: Page, url: string) {
+  await page.goto(url);
+  await waitForCanvasEditor(page, new URL(url, 'http://localhost').searchParams.get('editor'));
+}
+
+/** Waits for the canvas editor after a reload, like openApp. */
+export async function reloadApp(page: Page) {
+  await page.reload();
+  await waitForCanvasEditor(page, new URL(page.url()).searchParams.get('editor'));
+}
+
+async function waitForCanvasEditor(page: Page, param: string | null) {
+  await expect(page.locator('.app-canvas').first()).toHaveAttribute(
+    'data-canvas-editor',
+    param === '0' ? 'off' : 'ready',
+  );
+}
+
 /** Returns the locator's bounding box, which must be visible. */
 export async function boundingBox(locator: Locator) {
   const box = await locator.boundingBox();

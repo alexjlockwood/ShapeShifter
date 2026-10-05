@@ -185,7 +185,7 @@ describe('buildContextMenu', () => {
       ['animate'],
       ['delete'],
     ]);
-    // With the editor off, as on the live site, its commands are left out.
+    // With the editor off, its commands are left out.
     expect(ids(build([a], { withEditor: false }))).toEqual([
       ['group', 'convert'],
       ['morphInto'],

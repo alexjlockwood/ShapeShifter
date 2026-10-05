@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { dispatchClipboardEvent, expect, getState, test } from './fixtures';
+import { dispatchClipboardEvent, expect, getState, openApp, test } from './fixtures';
 
 // A square and a triangle, which don't morph until auto fix adds a point to the triangle.
 const SQUARE_SVG =
@@ -38,7 +38,7 @@ test('morphs a path into another from its context menu, as one undo step', async
   page,
   modifier,
 }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await paste(page, SQUARE_SVG, ['square']);
   await paste(page, TRIANGLE_SVG, ['square', 'triangle']);
 
@@ -72,7 +72,7 @@ test('morphs a path into another from its context menu, as one undo step', async
 });
 
 test('morphs either of two selected paths into the other', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await paste(page, SQUARE_SVG, ['square']);
   await paste(page, TRIANGLE_SVG, ['square', 'triangle']);
   const layers = page.locator('.slt-layer');
@@ -88,7 +88,7 @@ test('morphs either of two selected paths into the other', async ({ page }) => {
 });
 
 test('offers to morph into a pasted SVG', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await paste(page, SQUARE_SVG, ['square']);
   await dispatchClipboardEvent(page, 'paste', TRIANGLE_SVG);
   const snackbar = page.locator('.MuiSnackbar-root');
@@ -100,7 +100,7 @@ test('offers to morph into a pasted SVG', async ({ page }) => {
 });
 
 test('edits, auto fixes, and deletes a morph from its block in the timeline', async ({ page }) => {
-  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await openApp(page, '/?project=demos/playtopause.shapeshifter');
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
   // The path's block is under the group's rotation block.
   const block = page.locator('.slt-timeline-block').last();
@@ -121,8 +121,7 @@ test('edits, auto fixes, and deletes a morph from its block in the timeline', as
 });
 
 test("opens a menu for the morph on the canvas editor's keyframe badge", async ({ page }) => {
-  await page.goto('/?editor=1&project=demos/playtopause.shapeshifter');
-  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  await openApp(page, '/?project=demos/playtopause.shapeshifter');
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(1);
   await page.locator('.slt-layer').getByText('path', { exact: true }).click();
   const badge = page.locator('.canvas-editor-keyframe');
@@ -134,7 +133,7 @@ test("opens a menu for the morph on the canvas editor's keyframe badge", async (
 });
 
 test('offers to morph one of two imported files into the other', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await page.getByRole('button', { name: 'Import' }).click();
   const fileChooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'SVG' }).click();

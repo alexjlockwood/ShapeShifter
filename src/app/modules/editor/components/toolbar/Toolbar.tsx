@@ -15,8 +15,8 @@ import { trackEvent } from 'app/modules/editor/scripts/analytics';
 import { getThemeType } from 'app/modules/editor/store/theme/selectors';
 import {
   getBuildFeatures,
+  getCanvasEditorOverride,
   getCanvasEditorResetSearch,
-  isCanvasEditorPreview,
 } from 'environments/features';
 import { type MouseEvent } from 'react';
 
@@ -29,7 +29,7 @@ export function Toolbar() {
   const isDarkTheme = useAppSelector(state => getThemeType(state).themeType === 'dark');
   const overflowMenu = useMenu();
   const showActionMode = toolbarData.shouldShowActionMode();
-  const isEditorPreview = isCanvasEditorPreview(features, getBuildFeatures(import.meta.env));
+  const editorOverride = getCanvasEditorOverride(features, getBuildFeatures(import.meta.env));
 
   // Wraps a click handler so that the click isn't also handled by the workspace.
   const onClick = (fn: () => void) => (event: MouseEvent) => {
@@ -109,10 +109,12 @@ export function Toolbar() {
           />
           <span>Dark theme</span>
         </MenuItem>
-        {isEditorPreview && (
+        {editorOverride && (
           <MenuItem
             onClick={() => {
-              trackEvent('turn_off_canvas_editor');
+              trackEvent(
+                editorOverride === 'on' ? 'turn_off_canvas_editor' : 'turn_on_canvas_editor',
+              );
               overflowMenu.closeMenu();
               // The features are resolved once per page load (src/main.tsx), so this reloads.
               // Unsaved work still gets the usual prompt before the page is left.
@@ -120,9 +122,13 @@ export function Toolbar() {
             }}
           >
             <ListItemIcon>
-              <Icon name="block" />
+              <Icon name={editorOverride === 'on' ? 'block' : 'edit'} />
             </ListItemIcon>
-            <ListItemText>Turn off the canvas editor preview</ListItemText>
+            <ListItemText>
+              {editorOverride === 'on'
+                ? 'Turn off the canvas editor preview'
+                : 'Turn the canvas editor back on'}
+            </ListItemText>
           </MenuItem>
         )}
         <OverflowLink

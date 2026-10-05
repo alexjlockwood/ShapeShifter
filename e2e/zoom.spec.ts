@@ -1,17 +1,12 @@
 import type { Page } from '@playwright/test';
 
-import { artboardPoint, boundingBox, expect, getState, test } from './fixtures';
+import { artboardPoint, boundingBox, expect, getState, openApp, test } from './fixtures';
 
-// The canvas editor is off in tests unless the URL turns it on (see playwright.config.ts).
-async function loadDemo(page: Page, editor = '1') {
-  await page.goto(`/?project=demos/playtopause.shapeshifter&editor=${editor}`);
+async function loadDemo(page: Page, { editor = true } = {}) {
+  await openApp(page, `/?project=demos/playtopause.shapeshifter${editor ? '' : '&editor=0'}`);
   await expect
     .poll(() => getState(page, s => s.layers.vectorLayer.children.length))
     .toBeGreaterThan(0);
-  await expect(page.locator('.app-canvas').first()).toHaveAttribute(
-    'data-canvas-editor',
-    editor === '1' ? 'ready' : 'off',
-  );
 }
 
 const artboard = (page: Page) => boundingBox(page.locator('.canvas-artboard').first());
@@ -144,7 +139,7 @@ test('clicks the right subpath in action mode after zooming', async ({ page, mod
 });
 
 test("doesn't zoom or pan without the canvas editor", async ({ page }) => {
-  await loadDemo(page, 'default');
+  await loadDemo(page, { editor: false });
   const before = await artboard(page);
   await page.mouse.move(before.x + 20, before.y + 20);
   await page.keyboard.down('Control');

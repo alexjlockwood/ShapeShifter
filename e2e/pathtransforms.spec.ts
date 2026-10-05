@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import type { Page } from '@playwright/test';
 
-import { artboardPoint, expect, getState, test } from './fixtures';
+import { artboardPoint, expect, getState, openApp, test } from './fixtures';
 
 // A bar along the top of the 24x24 artboard, from (2, 2) to (22, 6).
 const BAR_SVG =
@@ -60,7 +60,7 @@ async function clickArtboard(page: Page, x: number, y: number) {
 }
 
 test('rotates a path without a group, animates it, and exports it in a group', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await importSvg(page, 'bar.svg', BAR_SVG);
   await page.locator('.slt-layer', { hasText: 'bar' }).click();
   // Imported paths pivot at 0, like VectorDrawables.

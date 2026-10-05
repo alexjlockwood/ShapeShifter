@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { artboardPoint, dispatchClipboardEvent, expect, getState, test } from './fixtures';
+import { artboardPoint, dispatchClipboardEvent, expect, getState, openApp, test } from './fixtures';
 
 // Two circles, one inside of the other, and a square to their right.
 const SHAPES_SVG =
@@ -11,11 +11,7 @@ const SHAPES_SVG =
   '</svg>';
 
 async function load(page: Page, editor: boolean) {
-  await page.goto(editor ? '/?editor=1' : '/');
-  await expect(page.locator('.app-canvas')).toHaveAttribute(
-    'data-canvas-editor',
-    editor ? 'ready' : 'off',
-  );
+  await openApp(page, editor ? '/' : '/?editor=0');
   await dispatchClipboardEvent(page, 'paste', SHAPES_SVG);
   await expect(page.locator('.slt-layer')).toHaveText(['vector', 'outer', 'inner', 'square']);
   // Records whether the last context menu event was stopped, so the browser's menu didn't open.
@@ -80,11 +76,7 @@ for (const editor of [true, false]) {
   test(`right-click on an empty canvas imports an SVG, with the editor ${
     editor ? 'on' : 'off'
   }`, async ({ page }) => {
-    await page.goto(editor ? '/?editor=1' : '/');
-    await expect(page.locator('.app-canvas')).toHaveAttribute(
-      'data-canvas-editor',
-      editor ? 'ready' : 'off',
-    );
+    await openApp(page, editor ? '/' : '/?editor=0');
     await rightClickCanvas(page, 12, 12);
     // There's nothing to select.
     await expect(page.getByRole('menuitem', { name: 'Select all' })).toHaveCount(0);

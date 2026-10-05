@@ -21,7 +21,7 @@ import { ThemeService } from './theme.service';
 /**
  * Creates the services shared across the app. These should only be created once, since some of
  * them subscribe to the store for as long as they are alive. Every feature is off unless the
- * features are passed in, so tests get the app as users see it by default.
+ * features are passed in.
  */
 export function createEditorServices(
   store: Store<State>,
