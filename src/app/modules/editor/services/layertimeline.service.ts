@@ -822,8 +822,9 @@ export class LayerTimelineService {
   }
 
   /**
-   * Adds blocks in the gaps closest to their current times. With autoSelectBlocks, the added
-   * blocks become the selection. Otherwise the selection stays as it is.
+   * Adds blocks in the gaps closest to their current times, and returns the ids of the ones there
+   * was room for. With autoSelectBlocks, the added blocks become the selection. Otherwise the
+   * selection stays as it is.
    */
   addBlocks(
     blocks: Array<{
@@ -848,18 +849,20 @@ export class LayerTimelineService {
         addedBlocks.push(block);
       }
     }
+    const addedIds = addedBlocks.map(b => b.id);
     if (!autoSelectBlocks) {
       this.store.dispatch(new SetAnimation(animation));
-      return;
+      return addedIds;
     }
     this.store.dispatch(
       new BatchAction(
         new SetAnimation(animation),
         new SelectAnimation(false),
-        new SetSelectedBlocks(new Set(addedBlocks.map(b => b.id))),
+        new SetSelectedBlocks(new Set(addedIds)),
         new SetSelectedLayers(new Set()),
       ),
     );
+    return addedIds;
   }
 
   private addBlockToAnimation(

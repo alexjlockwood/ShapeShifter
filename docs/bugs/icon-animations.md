@@ -31,12 +31,6 @@ are in `IMPROVEMENTS.md`, under "Icon animation workflow". Paths are relative to
 
 ## Timeline and inspector
 
-- **Pasted blocks ignore the selected layer and their own timing.** Pasting copied blocks puts
-  them back on the layer they came from, even with another layer selected, so one layer's
-  animation can't be reused on another. Every pasted block starts at the playhead, so blocks
-  copied from 0 and 140 ms both land in the next free gap, and the ones that don't fit are dropped
-  with only a console warning ("Ignoring failed attempt to add animation block")
-  (`services/clipboard.service.ts`, the paste handler). (ICON-8, medium, seen in the app)
 - **Resizing an animated path changes every keyframe.** Changing a path's Layout fields, or
   scaling it with the canvas editor's selection box, with the playhead at the end of its path
   block, transforms its resting path and both ends of every path block. Point edits respect the

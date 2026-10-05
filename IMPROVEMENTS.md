@@ -217,9 +217,10 @@ the fourteen they'd have helped.
 
 - **Animate several layers at once.** With several layers selected, the inspector has no keyframe
   buttons, so four fullscreen corners doing the same flip 40 ms apart took 20 blocks, and five
-  star bursts took 30. Adding a block to every selected layer, a command that staggers the
-  selected blocks by a step in layer order, and pasting blocks onto the selected layers with their
-  relative timing (ICON-8) would cover it. About 3 to 5 days.
+  star bursts took 30. Pasting one layer's blocks onto the selected layers now copies a motion,
+  but a stagger still means retiming each copy by hand. Adding a block to every selected layer,
+  and a command that staggers the selected blocks by a step in layer order, would cover it. About
+  2 to 4 days.
 - **Keyframes rather than from/to blocks.** Each block is five fields (start, end, from, to,
   easing): about 50 edits for menu to close and 70 for the bell's damped swing. An auto-key mode,
   where moving the playhead and changing a value adds a block from the previous keyframe, would make

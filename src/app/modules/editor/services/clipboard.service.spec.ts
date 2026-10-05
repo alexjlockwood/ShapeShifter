@@ -212,6 +212,83 @@ describe('ClipboardService', () => {
       expect(blocks[1].layerId).toBe(layer.id);
     });
 
+    it("pastes onto the selected layers, keeping the blocks' timing", () => {
+      const { layerTimelineService, playbackService } = services;
+      const top = addLayer('top');
+      layerTimelineService.addBlocks([
+        { layerId: top.id, propertyName: 'strokeWidth', fromValue: 1, toValue: 2, currentTime: 0 },
+        {
+          layerId: top.id,
+          propertyName: 'strokeAlpha',
+          fromValue: 1,
+          toValue: 0,
+          currentTime: 100,
+        },
+      ]);
+      const copied = copy();
+      const a = addLayer('a');
+      const b = addLayer('b');
+      layerTimelineService.setSelectedLayers(new Set([a.id, b.id]));
+      playbackService.setCurrentTime(50);
+      paste(copied);
+      const pasted = getBlocks()
+        .slice(2)
+        .map(block => [block.layerId, block.propertyName, block.startTime]);
+      expect(pasted).toEqual([
+        [a.id, 'strokeWidth', 50],
+        [b.id, 'strokeWidth', 50],
+        [a.id, 'strokeAlpha', 150],
+        [b.id, 'strokeAlpha', 150],
+      ]);
+    });
+
+    it('keeps path morphs on the layer they came from, and says so', () => {
+      const { layerTimelineService } = services;
+      const path = addLayer('path');
+      layerTimelineService.addBlocks([
+        {
+          layerId: path.id,
+          propertyName: 'pathData',
+          fromValue: new Path('M 4 4 L 20 20'),
+          toValue: new Path('M 4 20 L 20 4'),
+          currentTime: 0,
+        },
+      ]);
+      const copied = copy();
+      const other = addLayer('other');
+      layerTimelineService.setSelectedLayers(new Set([other.id]));
+      const show = vi.spyOn(services.snackBarService, 'show');
+      paste(copied);
+      expect(getBlocks()).toHaveLength(1);
+      expect(show).toHaveBeenCalledWith(
+        'Pasted 0 of 1 blocks. Path morphs only paste onto the layer they came from.',
+        'Dismiss',
+        expect.anything(),
+      );
+    });
+
+    it("says when there isn't room for a block", () => {
+      const copied = copyStrokeWidthBlock('path');
+      const [layer] = services.layerTimelineService.getVectorLayer().children;
+      services.layerTimelineService.addBlocks(
+        [100, 200].map(currentTime => ({
+          layerId: layer.id,
+          propertyName: 'strokeWidth',
+          fromValue: 2,
+          toValue: 2,
+          currentTime,
+        })),
+      );
+      const show = vi.spyOn(services.snackBarService, 'show');
+      paste(copied);
+      expect(getBlocks()).toHaveLength(3);
+      expect(show).toHaveBeenCalledWith(
+        "Pasted 0 of 1 blocks. There wasn't room for the rest.",
+        'Dismiss',
+        expect.anything(),
+      );
+    });
+
     // Reported to Bugsnag as uncaught TypeErrors.
     it('ignores malformed blocks', () => {
       addLayer('path');
