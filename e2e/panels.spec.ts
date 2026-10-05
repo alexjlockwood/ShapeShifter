@@ -1,9 +1,17 @@
 import type { Page } from '@playwright/test';
 
-import { boundingBox, dispatchClipboardEvent, expect, getState, test } from './fixtures';
+import {
+  boundingBox,
+  dispatchClipboardEvent,
+  expect,
+  getState,
+  openApp,
+  reloadApp,
+  test,
+} from './fixtures';
 
 async function loadDemo(page: Page) {
-  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await openApp(page, '/?project=demos/playtopause.shapeshifter');
   await expect
     .poll(() =>
       page.evaluate(() => {
@@ -137,7 +145,7 @@ test('edits a color with the color picker, as one undo step', async ({ page, mod
 });
 
 test('switches to the dark theme from the overflow menu', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await page.getByRole('button', { name: 'More options' }).click();
   await page.getByRole('menuitem', { name: 'Dark theme' }).click();
   await expect(page.locator('body')).toHaveClass(/ss-dark-theme/);
@@ -172,7 +180,7 @@ test('enters action mode from the property inspector', async ({ page }) => {
 test('the File, Import, and Export buttons stop showing a gray background once their menu closes', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   for (const name of ['File', 'Import', 'Export']) {
     // A CSS locator, not getByRole: MUI's Menu marks the rest of the page aria-hidden while open,
     // so a role query can't find the button again once the menu is showing.
@@ -192,7 +200,7 @@ test('the File, Import, and Export buttons stop showing a gray background once t
   // the clicks above would otherwise make a later focus() not count as keyboard focus (WebKit
   // also doesn't put a plain button in the Tab order by default, so this checks focus()'s ring
   // rather than relying on a real Tab press reaching the button).
-  await page.reload();
+  await reloadApp(page);
   const fileButton = page.locator('.slt-layers-menu-group-button', { hasText: 'File' });
   await fileButton.focus();
   await expect(fileButton).toHaveCSS('box-shadow', 'rgb(41, 98, 255) 0px 0px 0px 2px inset');
@@ -206,11 +214,7 @@ const SHAPES_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 
 /** Opens an empty project, pastes the shapes, and selects one. */
 async function openShapes(page: Page, name: string, { editor = true } = {}) {
-  await page.goto(editor ? '/' : '/?editor=0');
-  await expect(page.locator('.app-canvas')).toHaveAttribute(
-    'data-canvas-editor',
-    editor ? 'ready' : 'off',
-  );
+  await openApp(page, editor ? '/' : '/?editor=0');
   await dispatchClipboardEvent(page, 'paste', SHAPES_SVG);
   await expect.poll(() => getState(page, s => s.layers.vectorLayer.children.length)).toBe(2);
   await selectLayer(page, name);

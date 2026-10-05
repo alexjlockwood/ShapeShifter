@@ -21,11 +21,11 @@ async function loadDemo(page: Page, params = '') {
   await expect(page.locator('.slt-layer').first()).toHaveText('playtopause');
 }
 
-test('is on by default, and precached, but PathKit is only downloaded when used', async ({
+test("is on by default and precached, and PathKit isn't downloaded until it's used", async ({
   page,
   context,
 }) => {
-  const requests = recordPathKitRequests(context);
+  const pathKitRequests = recordPathKitRequests(context);
   await loadDemo(page);
   // The service worker has finished precaching by the time it says so.
   await expect(page.getByText('Ready to work offline')).toBeVisible();
@@ -33,15 +33,13 @@ test('is on by default, and precached, but PathKit is only downloaded when used'
   const cachedEditorUrls = await page.evaluate(async () => {
     const urls: string[] = [];
     for (const name of await caches.keys()) {
-      const requests = await (await caches.open(name)).keys();
-      urls.push(
-        ...requests.map(request => request.url).filter(url => url.includes('CanvasEditor')),
-      );
+      const keys = await (await caches.open(name)).keys();
+      urls.push(...keys.map(key => key.url).filter(url => url.includes('CanvasEditor')));
     }
     return urls;
   });
   expect(cachedEditorUrls).not.toEqual([]);
-  expect(requests).toEqual([]);
+  expect(pathKitRequests).toEqual([]);
 });
 
 test('is turned off and on with ?editor', async ({ page }) => {
@@ -51,11 +49,11 @@ test('is turned off and on with ?editor', async ({ page }) => {
   await loadDemo(page);
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'off');
 
+  // Asking for the default forgets the override, rather than remembering one of its own, so the
+  // browser would follow the default if it changed.
   await loadDemo(page, '&editor=1');
   await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
-  // And stays on.
-  await loadDemo(page);
-  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  expect(await page.evaluate(() => localStorage.getItem('storage_key_canvas_editor'))).toBeNull();
 });
 
 test('is turned back on from the menu once ?editor=0 turned it off', async ({ page }) => {

@@ -23,7 +23,8 @@ export function startBugsnag(features: Features) {
   Bugsnag.start({
     apiKey: 'd662c2c8a7e13ac94f67e81e26bf3a4e',
     appVersion: version,
-    // Reports from browsers with unfinished features turned on can be told apart.
+    // Reports can be told apart by the features that were on, e.g. from browsers that turned the
+    // canvas editor off.
     featureFlags: features.canvasEditor ? [{ name: 'canvas-editor' }] : [],
     releaseStage: environment.production ? 'production' : 'development',
     enabledReleaseStages: ['production'],

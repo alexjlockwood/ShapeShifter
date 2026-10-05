@@ -1,9 +1,17 @@
 import type { Page } from '@playwright/test';
 
-import { boundingBox, dispatchClipboardEvent, expect, getState, test } from './fixtures';
+import {
+  boundingBox,
+  dispatchClipboardEvent,
+  expect,
+  getState,
+  openApp,
+  reloadApp,
+  test,
+} from './fixtures';
 
 async function loadDemo(page: Page, id = 'playtopause') {
-  await page.goto(`/?project=demos/${id}.shapeshifter`);
+  await openApp(page, `/?project=demos/${id}.shapeshifter`);
   await expect
     .poll(() => getState(page, s => s.layers.vectorLayer.children.length))
     .toBeGreaterThan(0);
@@ -33,7 +41,7 @@ test('selects and hides layers', async ({ page }) => {
 });
 
 test('adds layers from the add layer menu', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await expect(page.getByText('To get started, drag + drop an SVG file here')).toBeVisible();
   await page.getByRole('button', { name: 'Add layer' }).click();
   await page.getByRole('menuitem', { name: 'New group layer' }).click();
@@ -45,7 +53,7 @@ test('adds layers from the add layer menu', async ({ page }) => {
 });
 
 test('loads a demo from the file menu', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await page.getByRole('button', { name: 'File' }).click();
   await page.getByRole('menuitem', { name: 'Demo' }).click();
   await page.getByLabel('Search-to-close').check();
@@ -190,7 +198,7 @@ test('exports and imports files', async ({ page }) => {
 });
 
 test('remembers the size of the layer timeline', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   const timeline = page.locator('.studio-layer-timeline');
   const splitter = timeline.locator('> .app-splitter');
   const { height } = await boundingBox(timeline);
@@ -200,14 +208,14 @@ test('remembers the size of the layer timeline', async ({ page }) => {
   await page.mouse.move(box.x + box.width / 2, box.y - 50, { steps: 5 });
   await page.mouse.up();
   await expect.poll(async () => (await boundingBox(timeline)).height).toBe(height + 51);
-  await page.reload();
+  await reloadApp(page);
   await expect
     .poll(async () => (await boundingBox(page.locator('.studio-layer-timeline'))).height)
     .toBe(height + 51);
 });
 
 test('stops highlighting the splitter after clicking it', async ({ page }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   const splitter = page.locator('.studio-layer-timeline > .app-splitter');
   const box = await boundingBox(splitter);
   await page.mouse.move(box.x + box.width / 2, box.y + 1);
@@ -261,7 +269,7 @@ test('limits the size of the timeline canvases when zoomed in', async ({ page, m
 });
 
 test('groups, flattens, and converts layers', async ({ page, modifier }) => {
-  await page.goto('/');
+  await openApp(page, '/');
   await dispatchClipboardEvent(
     page,
     'paste',

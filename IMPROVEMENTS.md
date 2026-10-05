@@ -8,7 +8,7 @@ and editing paths on the canvas. This is a survey only; nothing here has been im
 ## Quick wins (low risk, about a day or less each)
 
 - **Single 1.57 MB (480 KB gzip) JS bundle.** `vite.config.ts` has no `manualChunks` config and
-  the only dynamic `import()` in `src/app` loads the unfinished canvas editor
+  the only dynamic `import()` in `src/app` loads the canvas editor
   (`components/canvas/loadCanvasEditor.ts`), so MUI, svgo, jszip, rxjs, and bezier-js all ship in
   one chunk that blocks first paint, even though svgo/jszip and the demo loader are only needed
   for export/import flows. Splitting those behind `import()` is a half-day to a day, low risk.
@@ -196,8 +196,8 @@ roadmap.
 
 - **Outline stroke gaps.** Outline stroke already turns a stroked path into an identical filled one
   (`outlineStrokes` in `components/canvaseditor/pathOps.ts`, Cmd+Alt+O, and in the context
-  menu). But it needs the canvas editor, so the context menu leaves it out with the editor off, refuses
-  animated layers, and turns round caps and joins into many short quadratic curves
+  menu). But it needs the canvas editor, so the context menu leaves it out with the editor off,
+  refuses animated layers, and turns round caps and joins into many short quadratic curves
   (`docs/canvas-editor.md`, phase 6). The follow-up is making it work with the editor off and on
   animated paths, and fitting the rounds as cubics.
 - **Morph into gaps.** "Morph into" (`scripts/common/morphLayers.ts`, in the context menu and the

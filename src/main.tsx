@@ -4,6 +4,7 @@ import '@fontsource/roboto/500.css';
 import './styles.scss';
 
 import Bugsnag from '@bugsnag/js';
+import { loadCanvasEditor } from 'app/modules/editor/components/canvas/loadCanvasEditor';
 import { App } from 'app/modules/editor/components/root/App';
 import { startAnalytics } from 'app/modules/editor/scripts/analytics';
 import {
@@ -31,6 +32,10 @@ const search = withoutCanvasEditorReset(window.location.search);
 if (search !== window.location.search) {
   const { pathname, hash } = window.location;
   window.history.replaceState(window.history.state, '', `${pathname}${search}${hash}`);
+}
+if (features.canvasEditor) {
+  // Starts the download now rather than once the canvas renders. The canvas reports a failure.
+  void loadCanvasEditor().catch(() => {});
 }
 
 startBugsnag(features);

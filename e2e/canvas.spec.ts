@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { artboardPoint, dispatchClipboardEvent, expect, test } from './fixtures';
+import { artboardPoint, dispatchClipboardEvent, expect, openApp, test } from './fixtures';
 
 function getCurrentTime(page: Page) {
   return page.evaluate(() => {
@@ -21,7 +21,7 @@ function countDrawnPixels(page: Page) {
 }
 
 test('draws and plays a demo', async ({ page }) => {
-  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await openApp(page, '/?project=demos/playtopause.shapeshifter');
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
 
   // The demo is only 300ms long, so without repeating it can finish before the checks below.
@@ -48,8 +48,7 @@ const SQUARE_SVG =
 const BIG_SQUARE = 'M 0 0 L 24 0 L 24 24 L 0 24 Z';
 
 test('previews an edit, and commits it as one undo step', async ({ page, modifier }) => {
-  await page.goto('/');
-  await expect(page.locator('.app-canvas')).toHaveAttribute('data-canvas-editor', 'ready');
+  await openApp(page, '/');
   await dispatchClipboardEvent(page, 'paste', SQUARE_SVG);
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
   const small = await countDrawnPixels(page);
@@ -100,7 +99,7 @@ test('previews an edit, and commits it as one undo step', async ({ page, modifie
 });
 
 test('selects a layer by clicking its fill', async ({ page }) => {
-  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await openApp(page, '/?project=demos/playtopause.shapeshifter');
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
   // Inside of the triangle's top half, away from its edges.
   const point = await artboardPoint(page.locator('.app-canvas'), 10, 10);
@@ -117,7 +116,7 @@ test('selects a layer by clicking its fill', async ({ page }) => {
 });
 
 test('plays and rewinds with keyboard shortcuts', async ({ page }) => {
-  await page.goto('/?project=demos/searchtoclose.shapeshifter');
+  await openApp(page, '/?project=demos/searchtoclose.shapeshifter');
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
   await page.keyboard.press('Space');
   await expect.poll(() => getCurrentTime(page)).toBeGreaterThan(0);
@@ -126,7 +125,7 @@ test('plays and rewinds with keyboard shortcuts', async ({ page }) => {
 });
 
 test('shows the start and end of the morph in action mode', async ({ page }) => {
-  await page.goto('/?project=demos/playtopause.shapeshifter');
+  await openApp(page, '/?project=demos/playtopause.shapeshifter');
   await expect.poll(() => countDrawnPixels(page)).toBeGreaterThan(0);
   await page.evaluate(() => {
     const { services } = (window as any).shapeshifter;

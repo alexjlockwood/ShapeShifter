@@ -1,16 +1,12 @@
 import type { Page } from '@playwright/test';
 
-import { artboardPoint, boundingBox, expect, getState, test } from './fixtures';
+import { artboardPoint, boundingBox, expect, getState, openApp, test } from './fixtures';
 
 async function loadDemo(page: Page, { editor = true } = {}) {
-  await page.goto(`/?project=demos/playtopause.shapeshifter${editor ? '' : '&editor=0'}`);
+  await openApp(page, `/?project=demos/playtopause.shapeshifter${editor ? '' : '&editor=0'}`);
   await expect
     .poll(() => getState(page, s => s.layers.vectorLayer.children.length))
     .toBeGreaterThan(0);
-  await expect(page.locator('.app-canvas').first()).toHaveAttribute(
-    'data-canvas-editor',
-    editor ? 'ready' : 'off',
-  );
 }
 
 const artboard = (page: Page) => boundingBox(page.locator('.canvas-artboard').first());

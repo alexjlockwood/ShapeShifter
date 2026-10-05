@@ -38,7 +38,11 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
   coordinates for the mouse.
 - `dispatchClipboardEvent(page, 'paste', text)` simulates cut, copy, and paste (Firefox ignores
   `clipboardData` in the event constructor).
-- To load a demo, go to `/?project=demos/playtopause.shapeshifter` and poll until
+- Open the app with `openApp(page, url)` and reload it with `reloadApp(page)`, which wait for the
+  canvas editor to load (or to be off with `?editor=0`). Until it has, the canvas handles the
+  pointer itself, so a test that clicked sooner would test either one depending on its timing.
+  `e2e/withouteditor.spec.ts` tests the app without the editor.
+- To load a demo, open `/?project=demos/playtopause.shapeshifter` and poll until
   `vectorLayer.children` isn't empty. Several specs have a `loadDemo` helper that does this. The
   demos are short (`playtopause` is 300 ms), so turn on repeat before checking anything while one
   plays, or it can finish first on a slow runner.
@@ -51,7 +55,7 @@ Playwright tests of the real app in Chromium, Firefox, and WebKit (`playwright.c
   dev server's defaults to match production builds). The canvas editor is on, so test it off with
   `?editor=0`. The canvas's `data-canvas-editor` attribute says whether the editor is `off`,
   `loading`, `ready`, or `failed`, so wait for the value you expect rather than for it to be
-  missing. Once it's `ready`, drive its tools with the mouse like `e2e/editor.spec.ts` does, or
+  missing (`openApp` does). Once it's `ready`, drive its tools with the mouse like `e2e/editor.spec.ts` does, or
   preview and commit path edits directly with `window.shapeshifter.canvasEditor`
   (`components/canvaseditor/CanvasEditor.ts`). With it on, the tool letters (V, P, R, O, and L)
   pick tools, so R no longer toggles repeating: click the "Repeat" button instead. Its rulers show

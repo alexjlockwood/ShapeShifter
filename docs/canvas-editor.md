@@ -148,11 +148,11 @@ endpoints, and a "paint bucket" only as a boolean operation that produces a new 
 
 1. **A feature flag.** `canvasEditor` has a build-time default from the `VITE_CANVAS_EDITOR`
    environment variable (on in development and production builds), and a runtime override:
-   `?editor=1` or `?editor=0` in the URL, remembered in localStorage, and `?editor=default` to
-   forget it, which the toolbar's overflow menu offers while it's overridden. It's read once per
-   page load and passed to the services. The editor itself is a lazily loaded chunk, so it doesn't
-   delay the first render, and users with the flag off never download it. The service worker
-   precaches it with the rest of the app.
+   `?editor=1` or `?editor=0` in the URL, remembered in localStorage while it differs from the
+   default, and `?editor=default` to forget it, which the toolbar's overflow menu offers while
+   it's overridden. It's read once per
+   page load and passed to the services. The editor itself is a chunk of its own, so it doesn't
+   delay the first render, and the service worker precaches it with the rest of the app.
 2. **A camera.** A pure class holds the zoom and pan and converts between three coordinate
    spaces: viewport units (the vector layer's), panel CSS pixels, and device pixels. It zooms
    around a point, fits the artboard in the panel, and clamps panning. Its state lives in a

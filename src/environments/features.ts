@@ -25,8 +25,10 @@ export interface FeatureStorage {
 }
 
 /**
- * Returns the features for this page load. A URL parameter wins and is remembered, so that it
- * lasts across reloads and links without it, then a remembered value, then the build's default.
+ * Returns the features for this page load. A URL parameter wins, then a remembered value, then
+ * the build's default. A parameter that differs from the default is remembered, so that it lasts
+ * across reloads and links without it, and one that matches it forgets the remembered value, so
+ * that the browser follows the default if it changes.
  */
 export function resolveFeatures({
   search,
@@ -38,7 +40,7 @@ export function resolveFeatures({
   readonly buildDefault: Features;
 }): Features {
   const fromUrl = parseFlag(new URLSearchParams(search).get(CANVAS_EDITOR_PARAM));
-  if (fromUrl === 'default') {
+  if (fromUrl === 'default' || fromUrl === buildDefault.canvasEditor) {
     storage.removeItem(CANVAS_EDITOR_STORAGE_KEY);
     return buildDefault;
   }

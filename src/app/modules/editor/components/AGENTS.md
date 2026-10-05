@@ -62,8 +62,8 @@ of it too, so hovering over it shows them. With the canvas editor on, the main c
 all the time instead, unless its settings hide them (`services/canvassettings.service.ts`).
 
 The new canvas editor is in `components/canvaseditor/`. `docs/canvas-editor.md` has its design
-and roadmap. It's on by default, and only downloaded when its feature is on
-(`src/environments/features.ts`), after the app renders.
+and roadmap. It's on unless its feature is turned off (`src/environments/features.ts`), and its
+code is a chunk of its own, so that it doesn't delay the first render.
 `components/canvas/CanvasController.ts` loads it through
 `components/canvas/loadCanvasEditor.ts` and talks to it through the types in
 `components/canvas/CanvasEditorApi.ts`. Nothing else may import it, or it would be bundled with the

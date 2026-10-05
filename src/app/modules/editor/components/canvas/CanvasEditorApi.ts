@@ -1,6 +1,5 @@
-// The canvas editor (docs/canvas-editor.md) is loaded lazily, and only when its feature is on, so
-// that it doesn't delay the app's first render, and browsers that turn it off never download it.
-// Code outside components/canvaseditor/ uses these types to talk to it, and loads it with
+// The canvas editor (docs/canvas-editor.md) is a chunk of its own, loaded when its feature is on,
+// so that it doesn't delay the app's first render. Code outside components/canvaseditor/ uses these types to talk to it, and loads it with
 // loadCanvasEditor(), but never imports it directly, which would bundle it with the rest of the
 // app (src/test/lazyChunks.spec.ts checks this).
 

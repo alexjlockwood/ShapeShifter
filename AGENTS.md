@@ -117,8 +117,8 @@ Where to start for common changes:
   never from local builds or forks.
 - Features can be turned on and off with flags in `src/environments/features.ts`, with defaults
   for development (`.env.development`) and production builds (`.env.production`). The canvas
-  editor is on in both. `?editor=0` or `?editor=1` turns it off or on in that browser until
-  `?editor=default`, and the toolbar's overflow menu offers to go back to the default.
+  editor is on in both. `?editor=0` turns it off in that browser until `?editor=1` or
+  `?editor=default`, and the toolbar's overflow menu offers to turn it back on.
 
 ## Bugs and improvements
 

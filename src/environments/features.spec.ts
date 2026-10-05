@@ -53,6 +53,14 @@ describe('resolveFeatures', () => {
     }
   });
 
+  it("forgets the remembered value when the URL asks for the build's default", () => {
+    const storage = createStorage({ [CANVAS_EDITOR_STORAGE_KEY]: '0' });
+    expect(resolveFeatures({ search: '?editor=1', storage, buildDefault: ON })).toEqual(ON);
+    expect(storage.values).toEqual({});
+    // So a browser follows the default if it changes.
+    expect(resolveFeatures({ search: '', storage, buildDefault: OFF })).toEqual(OFF);
+  });
+
   it('forgets the remembered value with ?editor=default', () => {
     const storage = createStorage({ [CANVAS_EDITOR_STORAGE_KEY]: '1' });
     expect(resolveFeatures({ search: '?editor=default', storage, buildDefault: OFF })).toEqual(OFF);
