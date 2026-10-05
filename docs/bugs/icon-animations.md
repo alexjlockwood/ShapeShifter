@@ -17,10 +17,6 @@ are in `IMPROVEMENTS.md`, under "Icon animation workflow". Paths are relative to
   and its hole and combine them again. Break apart should keep each hole with the subpath around
   it (`scripts/common/combineLayers.ts`, `breakApartLayers`). (ICON-1, medium, seen in the app on
   `notifications_active`)
-- **Imported and broken-apart paths pivot at (0, 0).** New paths and groups pivot at the canvas's
-  center, but a path imported from an SVG, and every piece Break apart makes, pivots at the top
-  left corner, so rotating or scaling a part swings it around the corner until its pivot is typed
-  in. (ICON-2, low, seen in the app)
 - **A new path is invisible.** Add layer > New path makes a path with no fill, no stroke color and
   a stroke width of 0, so it shows nothing even after you type its path data, until you also give
   it a stroke or fill. (ICON-3, low, seen in the app)

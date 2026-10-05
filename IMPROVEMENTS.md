@@ -231,8 +231,7 @@ the fourteen they'd have helped.
   halve these. About 2 days.
 - **Turn Material icons into parts.** Material ships each icon as one compound path. Break apart
   should keep holes with their outlines (ICON-1), work on animated paths (it's refused once a
-  path has a path block, so both icons have to be broken apart before Morph into), and pivot each
-  piece at its center (ICON-2). Parts drawn as one outline, like the lock's body and shackle,
+  path has a path block, so both icons have to be broken apart before Morph into). Parts drawn as one outline, like the lock's body and shackle,
   need a knife or a boolean split. Most trimmed parts (pages, checks, a shackle) are 2dp strokes
   that were outlined into fills, and nothing turns them back: a "convert to centerline stroke"
   (the reverse of Outline stroke) would save typing their path data. About 1 week.

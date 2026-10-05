@@ -17,6 +17,8 @@ describe('SvgLoader', () => {
     expect(pathLayer.name).toBe('path');
     expect(pathLayer.fillColor).toBe('#000000');
     expect(pathLayer.pathData!.getPathString()).toBe('M 0 0 L 10 10 L 20 20 L 30 30');
+    // Paths pivot at their center, so they rotate and scale in place.
+    expect([pathLayer.pivotX, pathLayer.pivotY]).toEqual([15, 15]);
   });
 
   it(`can import simple SVG with viewBox translation`, async () => {

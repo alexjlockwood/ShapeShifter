@@ -119,7 +119,9 @@ export function getBrokenApartLayerIds(
 /**
  * Splits each of the selected paths that has several subpaths into a path for each one, in their
  * order, so the first is drawn at the bottom. Every piece keeps the path's style and transform,
- * so it stays where it's drawn. The first piece keeps the path's id, name, and animations. The
+ * so it stays where it's drawn. If the path doesn't use its transform yet, each piece pivots at
+ * its own center instead, so it rotates and scales in place. The first piece keeps the path's id,
+ * name, and animations. The
  * others go right above it, with new ids, unique names, and copies of its animation blocks, and
  * they're hidden if it is. Returns the new document, the pieces' ids, and the hidden layer ids, or
  * why it can't.
@@ -154,9 +156,14 @@ export function breakApartLayers(
       continue;
     }
     const blocks = animation.blocks.filter(block => block.layerId === layerId);
+    // A pivot moves nothing until the path is transformed, so moving it changes no drawing.
+    const recenter = !LayerUtil.pathUsesTransform(layer, animation);
     const [first, ...others] = getPieces(layer).map((pathString, i) => {
       const piece = layer.clone();
       piece.pathData = new Path(pathString);
+      if (recenter) {
+        Object.assign(piece, LayerUtil.getPathCenterPivot(piece.pathData));
+      }
       if (i > 0) {
         piece.id = uniqueId();
         piece.name = LayerUtil.getUniqueName(layer.name, name => usedNames.has(name));

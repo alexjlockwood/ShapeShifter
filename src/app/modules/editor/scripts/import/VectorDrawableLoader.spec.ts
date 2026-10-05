@@ -1,3 +1,5 @@
+import { PathLayer } from 'app/modules/editor/model/layers';
+
 import { VectorDrawableLoader } from '.';
 
 describe('VectorDrawableLoader', () => {
@@ -18,6 +20,9 @@ describe('VectorDrawableLoader', () => {
     expect(vl.name).toBe('play');
     // The root's thrown away group doesn't take the first group's name either.
     expect(vl.children.map(l => l.name)).toEqual(['group']);
+    // Paths pivot at their center, so they rotate and scale in place.
+    const path = vl.children[0].children[0] as PathLayer;
+    expect([path.pivotX, path.pivotY]).toEqual([5, 5]);
   });
 
   it('names layers after their types if nothing is left of their names', () => {

@@ -225,6 +225,35 @@ describe('breakApartLayers', () => {
     });
   });
 
+  it('pivots each piece at its own center, unless the path uses its transform', () => {
+    const pivots = (doc: ReturnType<typeof document>, id: string) => {
+      const result = breakApartLayers(doc, [id]);
+      if (!('layerIds' in result)) {
+        throw new Error(result.reason);
+      }
+      return (result.document.vectorLayer.children as PathLayer[]).map(l => [l.pivotX, l.pivotY]);
+    };
+    const squares = twoSquares();
+    expect(pivots(document([squares]), squares.id)).toEqual([
+      [2, 2],
+      [12, 12],
+    ]);
+
+    // Moving the pivot of a rotated path, or of one with a rotation block, would move its pieces.
+    const rotated = twoSquares();
+    rotated.rotation = 90;
+    rotated.pivotX = 5;
+    expect(pivots(document([rotated]), rotated.id)).toEqual([
+      [5, 0],
+      [5, 0],
+    ]);
+    const spun = twoSquares();
+    expect(pivots(document([spun], [block(spun.id, 'rotation', 0, 90)]), spun.id)).toEqual([
+      [0, 0],
+      [0, 0],
+    ]);
+  });
+
   it('splits a path inside of a group', () => {
     const squares = twoSquares();
     const group = new GroupLayer({ name: 'g', children: [squares] });
