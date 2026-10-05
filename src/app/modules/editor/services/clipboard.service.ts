@@ -101,43 +101,7 @@ export class ClipboardService {
           return false;
         }
         if (Array.isArray(parsed.blocks)) {
-          const isSamePage = parsed.pageId === PAGE_ID;
-          const blocks = parsed.blocks.flatMap((b: any) => {
-            let block: AnimationBlock;
-            try {
-              block = AnimationBlock.from(b);
-            } catch {
-              // Pasted text isn't validated, so skip blocks that can't be read.
-              return [];
-            }
-            const layerId = getPastedLayerId(existingVl, block, b.layerName, isSamePage);
-            if (layerId === undefined) {
-              return [];
-            }
-            const { propertyName, fromValue, toValue, interpolator, startTime, endTime } = block;
-            const duration = endTime - startTime;
-            return [
-              {
-                layerId,
-                propertyName,
-                fromValue,
-                toValue,
-                currentTime: this.playbackService.getCurrentTime(),
-                duration,
-                interpolator,
-              },
-            ];
-          });
-          if (!blocks.length) {
-            this.snackBarService.show(
-              "Couldn't find the layers to paste onto",
-              'Dismiss',
-              Duration.Long,
-            );
-            return false;
-          }
-          trackEvent('paste_blocks');
-          this.layerTimelineService.addBlocks(blocks);
+          this.pasteBlocks(existingVl, parsed.blocks, parsed.pageId === PAGE_ID);
         } else {
           trackEvent('paste_unknown_json');
         }
@@ -152,6 +116,79 @@ export class ClipboardService {
       on(window, 'copy', event => cutCopyHandlerFn(event, false)),
       on(window, 'paste', pasteHandlerFn),
     ];
+  }
+
+  /**
+   * Pastes copied blocks with the first one at the current time, keeping their timing relative to
+   * each other. Blocks copied from one layer go onto the selected layers instead, if any are
+   * selected, except path morphs, since their paths are their own layer's shape. Says what it
+   * couldn't paste.
+   */
+  private pasteBlocks(
+    existingVl: VectorLayer,
+    rawBlocks: ReadonlyArray<unknown>,
+    isSamePage: boolean,
+  ) {
+    const copied = rawBlocks.flatMap((b: any) => {
+      try {
+        return [{ block: AnimationBlock.from(b), layerName: b?.layerName as unknown }];
+      } catch {
+        // Pasted text isn't validated, so skip blocks that can't be read.
+        return [];
+      }
+    });
+    const selectedIds = [...this.layerTimelineService.getSelectedLayerIds()];
+    const isRetargeted =
+      new Set(copied.map(({ block }) => block.layerId)).size === 1 && !!selectedIds.length;
+    const firstStartTime = Math.min(...copied.map(({ block }) => block.startTime));
+    const currentTime = this.playbackService.getCurrentTime();
+    let numPathBlocks = 0;
+    let numMissingProperties = 0;
+    const blocks = copied.flatMap(({ block, layerName }) => {
+      const sourceId = getPastedLayerId(existingVl, block, layerName, isSamePage);
+      const layerIds = isRetargeted ? selectedIds : sourceId === undefined ? [] : [sourceId];
+      return layerIds.flatMap(layerId => {
+        const { propertyName, fromValue, toValue, interpolator, startTime, endTime } = block;
+        if (layerId !== sourceId && propertyName === 'pathData') {
+          numPathBlocks++;
+          return [];
+        }
+        if (!existingVl.findLayerById(layerId)?.animatableProperties.has(propertyName)) {
+          numMissingProperties++;
+          return [];
+        }
+        return [
+          {
+            layerId,
+            propertyName,
+            fromValue,
+            toValue,
+            currentTime: currentTime + startTime - firstStartTime,
+            duration: endTime - startTime,
+            interpolator,
+          },
+        ];
+      });
+    });
+    if (!blocks.length && !numPathBlocks && !numMissingProperties) {
+      this.snackBarService.show("Couldn't find the layers to paste onto", 'Dismiss', Duration.Long);
+      return;
+    }
+    trackEvent('paste_blocks');
+    const numAdded = blocks.length ? this.layerTimelineService.addBlocks(blocks).length : 0;
+    const reasons = [
+      numPathBlocks ? 'Path morphs only paste onto the layer they came from.' : '',
+      numMissingProperties ? "The selected layers don't have some of the properties." : '',
+      numAdded < blocks.length ? "There wasn't room for the rest." : '',
+    ].filter(Boolean);
+    if (reasons.length) {
+      const total = blocks.length + numPathBlocks + numMissingProperties;
+      this.snackBarService.show(
+        `Pasted ${numAdded} of ${total} ${total === 1 ? 'block' : 'blocks'}. ${reasons.join(' ')}`,
+        'Dismiss',
+        Duration.Long,
+      );
+    }
   }
 
   /** Imports the pasted layers, and offers to morph into them if that would work. */

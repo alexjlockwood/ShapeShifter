@@ -798,8 +798,9 @@ export class LayerTimelineService {
   }
 
   /**
-   * Adds a block for the property that starts and ends at the layer's current value, in the gap
-   * closest to the current time, and selects it.
+   * Adds a block for the property in the gap closest to the current time, and selects it. It holds
+   * the value the property's previous block ends at, so the animation doesn't jump where they
+   * meet, or the layer's own value if there's no block before it.
    */
   addBlockForProperty(layerId: string, propertyName: string) {
     const layer = this.getVectorLayer().findLayerById(layerId);
@@ -815,13 +816,15 @@ export class LayerTimelineService {
         fromValue: value,
         toValue: value,
         currentTime: this.queryStore(getCurrentTime),
+        holdPreviousValue: true,
       },
     ]);
   }
 
   /**
-   * Adds blocks in the gaps closest to their current times. With autoSelectBlocks, the added
-   * blocks become the selection. Otherwise the selection stays as it is.
+   * Adds blocks in the gaps closest to their current times, and returns the ids of the ones there
+   * was room for. With autoSelectBlocks, the added blocks become the selection. Otherwise the
+   * selection stays as it is.
    */
   addBlocks(
     blocks: Array<{
@@ -833,6 +836,7 @@ export class LayerTimelineService {
       currentTime: number;
       duration?: number;
       interpolator?: string;
+      holdPreviousValue?: boolean;
     }>,
     autoSelectBlocks = true,
   ) {
@@ -845,18 +849,20 @@ export class LayerTimelineService {
         addedBlocks.push(block);
       }
     }
+    const addedIds = addedBlocks.map(b => b.id);
     if (!autoSelectBlocks) {
       this.store.dispatch(new SetAnimation(animation));
-      return;
+      return addedIds;
     }
     this.store.dispatch(
       new BatchAction(
         new SetAnimation(animation),
         new SelectAnimation(false),
-        new SetSelectedBlocks(new Set(addedBlocks.map(b => b.id))),
+        new SetSelectedBlocks(new Set(addedIds)),
         new SetSelectedLayers(new Set()),
       ),
     );
+    return addedIds;
   }
 
   private addBlockToAnimation(
@@ -870,6 +876,7 @@ export class LayerTimelineService {
       currentTime: number;
       duration?: number;
       interpolator?: string;
+      holdPreviousValue?: boolean;
     },
   ) {
     const layer = this.getVectorLayer().findLayerById(block.layerId);
@@ -928,10 +935,12 @@ export class LayerTimelineService {
       type = 'number';
     }
 
-    // TODO: clone the current rendered property value and set the from/to values appropriately
-    // const valueAtCurrentTime =
-    //   this.studioState_.animationRenderer
-    //     .getLayerPropertyValue(layer.id, propertyName);
+    let { fromValue, toValue } = block;
+    const previous = blockNeighbors.filter(b => b.endTime <= startTime).pop();
+    if (block.holdPreviousValue && previous) {
+      fromValue = property.cloneValue(previous.toValue);
+      toValue = property.cloneValue(previous.toValue);
+    }
 
     const newBlock = AnimationBlock.from({
       id: block.id ? block.id : undefined,
@@ -939,8 +948,8 @@ export class LayerTimelineService {
       propertyName,
       startTime,
       endTime,
-      fromValue: block.fromValue,
-      toValue: block.toValue,
+      fromValue,
+      toValue,
       interpolator,
       type,
     });

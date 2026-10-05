@@ -216,6 +216,7 @@ export function loadVectorLayerFromSvgStringInternal(
           strokeLinejoin,
           strokeMiterLimit,
           fillType,
+          ...LayerUtil.getPathCenterPivot(pathData),
         }),
       );
     }

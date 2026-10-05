@@ -79,6 +79,13 @@ A subset of these (marked with a candidate fix in their entry) were fixed on a b
 `alex/fix-sweep-quick-wins`, whose PR (#370) was closed without merging; the branch predates the
 Prettier reformat in PR #366, so it would need a rebase before its commits could be reused.
 
+## Found building icon animations
+
+On 2026-10-04, fourteen icon animations were designed from Material icons and then built through
+the app's UI, the way a designer would. All of them could be built, but bugs got in the way:
+`docs/bugs/icon-animations.md`. The missing features they ran into are in `IMPROVEMENTS.md`,
+under "Icon animation workflow".
+
 ## Found in the Bugsnag reports
 
 Eight years of Bugsnag emails (2018 to 2026) were traced to the Angular source and checked

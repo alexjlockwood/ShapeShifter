@@ -63,8 +63,9 @@ test('rotates a path without a group, animates it, and exports it in a group', a
   await openApp(page, '/');
   await importSvg(page, 'bar.svg', BAR_SVG);
   await page.locator('.slt-layer', { hasText: 'bar' }).click();
-  // Imported paths pivot at 0, like VectorDrawables.
-  await expect(page.locator('.spi-property input[name="pivotX"]')).toHaveValue('0');
+  // Imported paths pivot at their center.
+  await expect(page.locator('.spi-property input[name="pivotX"]')).toHaveValue('12');
+  await expect(page.locator('.spi-property input[name="pivotY"]')).toHaveValue('4');
 
   // A quarter turn clockwise around the center puts the bar down the right side.
   await setProperty(page, 'pivotX', '12');
