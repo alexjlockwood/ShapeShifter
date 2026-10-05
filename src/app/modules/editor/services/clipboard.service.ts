@@ -184,7 +184,7 @@ export class ClipboardService {
     if (reasons.length) {
       const total = blocks.length + numPathBlocks + numMissingProperties;
       this.snackBarService.show(
-        `Pasted ${numAdded} of ${total} blocks. ${reasons.join(' ')}`,
+        `Pasted ${numAdded} of ${total} ${total === 1 ? 'block' : 'blocks'}. ${reasons.join(' ')}`,
         'Dismiss',
         Duration.Long,
       );

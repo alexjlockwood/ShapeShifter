@@ -261,7 +261,7 @@ describe('ClipboardService', () => {
       paste(copied);
       expect(getBlocks()).toHaveLength(1);
       expect(show).toHaveBeenCalledWith(
-        'Pasted 0 of 1 blocks. Path morphs only paste onto the layer they came from.',
+        'Pasted 0 of 1 block. Path morphs only paste onto the layer they came from.',
         'Dismiss',
         expect.anything(),
       );
@@ -283,7 +283,7 @@ describe('ClipboardService', () => {
       paste(copied);
       expect(getBlocks()).toHaveLength(3);
       expect(show).toHaveBeenCalledWith(
-        "Pasted 0 of 1 blocks. There wasn't room for the rest.",
+        "Pasted 0 of 1 block. There wasn't room for the rest.",
         'Dismiss',
         expect.anything(),
       );

@@ -122,10 +122,9 @@ export function getBrokenApartLayerIds(
  * the holes it cuts, so an outlined shape stays outlined. A path that's one shape with holes, like
  * the donut Combine makes from two circles, splits into every subpath instead, since there's
  * nothing else to split. The pieces are in the order of their subpaths, so the first is drawn at
- * the bottom. Every piece keeps the path's style and transform,
- * so it stays where it's drawn. If the path doesn't use its transform yet, each piece pivots at
- * its own center instead, so it rotates and scales in place. The first piece keeps the path's id,
- * name, and animations. The
+ * the bottom. Every piece keeps the path's style and transform, so it stays where it's drawn. If
+ * the path doesn't use its transform yet, each piece pivots at its own center instead, so it
+ * rotates and scales in place. The first piece keeps the path's id, name, and animations. The
  * others go right above it, with new ids, unique names, and copies of its animation blocks, and
  * they're hidden if it is. Returns the new document, the pieces' ids, and the hidden layer ids, or
  * why it can't.
