@@ -222,16 +222,15 @@ the fourteen they'd have helped.
   relative timing (ICON-8) would cover it. About 3 to 5 days.
 - **Keyframes rather than from/to blocks.** Each block is five fields (start, end, from, to,
   easing): about 50 edits for menu to close and 70 for the bell's damped swing. An auto-key mode,
-  where moving the playhead and changing a value adds a block from the previous keyframe, would
-  make a two-step press a few clicks.
-  A pendulum or wiggle preset that writes damped rotation keyframes would cover the bell. About 1
-  to 2 weeks for auto-key.
+  where moving the playhead and changing a value adds a block from the previous keyframe, would make
+  a two-step press a few clicks. A pendulum or wiggle preset that writes damped rotation keyframes
+  would cover the bell. About 1 to 2 weeks for auto-key.
 - **A linked scale and translate.** A uniform press is four blocks (scale X and Y, in and out),
   since the keyframe button asks for one axis. One block that animates both, kept in step, would
   halve these. About 2 days.
 - **Turn Material icons into parts.** Material ships each icon as one compound path. Break apart
-  should keep holes with their outlines (ICON-1), work on animated paths (it's refused once a
-  path has a path block, so both icons have to be broken apart before Morph into). Parts drawn as one outline, like the lock's body and shackle,
+  should work on animated paths: it's refused once a path has a path block, so both icons have to
+  be broken apart before Morph into. Parts drawn as one outline, like the lock's body and shackle,
   need a knife or a boolean split. Most trimmed parts (pages, checks, a shackle) are 2dp strokes
   that were outlined into fills, and nothing turns them back: a "convert to centerline stroke"
   (the reverse of Outline stroke) would save typing their path data. About 1 week.

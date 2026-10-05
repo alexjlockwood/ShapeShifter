@@ -1,10 +1,11 @@
 import { getTopmostLayerIds } from 'app/modules/editor/components/canvas/transformLayers';
 import { LayerUtil, PathLayer } from 'app/modules/editor/model/layers';
-import { Path } from 'app/modules/editor/model/paths';
+import { Path, type SubPath } from 'app/modules/editor/model/paths';
 import { commandsToString } from 'app/modules/editor/model/paths/PathParser';
 import { uniqueId } from 'lodash-es';
 
 import { Matrix } from './Matrix';
+import type { Point } from './Point';
 import {
   getMergedLayerIds,
   isPathAnimated,
@@ -89,7 +90,8 @@ export function combineLayers(
 
 /**
  * Returns the selected paths that Break apart splits up, or why it can't. Returns undefined if
- * none of them has more than one subpath. A path whose path is animated can't be split up, since
+ * none of them has more than one subpath. A path whose other subpaths are all holes in its first
+ * stays as it is, since each piece keeps its holes. A path whose path is animated can't be split up, since
  * its blocks would each have to be split the same way, and neither can a trimmed one, since each
  * piece would be trimmed along its own length.
  */
@@ -101,24 +103,29 @@ export function getBrokenApartLayerIds(
   const paths = getTopmostLayerIds(vectorLayer, selectedLayerIds)
     .map(id => vectorLayer.findLayerById(id))
     .filter(layer => layer instanceof PathLayer)
-    .filter(layer => getPieces(layer).length > 1);
+    .filter(layer => getDrawnSubPaths(layer).length > 1);
   if (!paths.length) {
     return undefined;
   }
-  const morphing = paths.find(path => isPathAnimated(animation, path.id));
+  const breakable = paths.filter(path => getPieces(path).length > 1);
+  if (!breakable.length) {
+    return { reason: `${paths[0].name}'s subpaths are one shape and its holes` };
+  }
+  const morphing = breakable.find(path => isPathAnimated(animation, path.id));
   if (morphing) {
     return { reason: `${morphing.name}'s path is animated` };
   }
-  const trimmed = paths.find(path => isTrimmed(document, path));
+  const trimmed = breakable.find(path => isTrimmed(document, path));
   if (trimmed) {
     return { reason: `${trimmed.name} is trimmed` };
   }
-  return { layerIds: paths.map(path => path.id) };
+  return { layerIds: breakable.map(path => path.id) };
 }
 
 /**
- * Splits each of the selected paths that has several subpaths into a path for each one, in their
- * order, so the first is drawn at the bottom. Every piece keeps the path's style and transform,
+ * Splits each of the selected paths that has several subpaths into a path for each one, along with
+ * the holes it cuts, so an outlined shape stays outlined. The pieces are in the order of their
+ * subpaths, so the first is drawn at the bottom. Every piece keeps the path's style and transform,
  * so it stays where it's drawn. If the path doesn't use its transform yet, each piece pivots at
  * its own center instead, so it rotates and scales in place. The first piece keeps the path's id,
  * name, and animations. The
@@ -204,13 +211,133 @@ export function breakApartLayers(
 }
 
 /**
- * Returns the path strings of the path's subpaths that draw something. The ones that collapse to a
- * point, which action mode adds for morphing, and lone moves are left out.
+ * Returns the path's subpaths that draw something. The ones that collapse to a point, which action
+ * mode adds for morphing, and lone moves are left out.
+ */
+function getDrawnSubPaths(layer: PathLayer) {
+  return (layer.pathData?.getSubPaths() ?? []).filter(
+    subPath => !subPath.isCollapsing() && subPath.getCommands().length > 1,
+  );
+}
+
+/**
+ * Returns the path strings of the pieces Break apart makes from the path: a piece for each drawn
+ * subpath, with the holes it cuts.
  */
 function getPieces(layer: PathLayer) {
-  return (layer.pathData?.getSubPaths() ?? [])
-    .filter(subPath => !subPath.isCollapsing() && subPath.getCommands().length > 1)
-    .map(subPath => commandsToString(subPath.getCommands()));
+  return groupHoles(layer, getDrawnSubPaths(layer)).map(group =>
+    group.map(subPath => commandsToString(subPath.getCommands())).join(' '),
+  );
+}
+
+/**
+ * Groups each subpath that cuts a hole with the smallest filled subpath around it. A subpath cuts a
+ * hole when the area just inside its edge isn't filled, under the path's fill type, so a shape
+ * inside a hole, like a lock's keyhole, stays a piece of its own. Without a fill there are no
+ * holes, and each subpath is its own piece.
+ */
+function groupHoles(layer: PathLayer, subPaths: ReadonlyArray<SubPath>) {
+  if (!layer.isFilled() || subPaths.length < 2) {
+    return subPaths.map(subPath => [subPath]);
+  }
+  const polygons = subPaths.map(flattenSubPath);
+  const isFilledAt = (point: Point) => {
+    const winding = polygons.reduce((sum, polygon) => sum + getWinding(polygon, point), 0);
+    return layer.fillType === 'evenOdd' ? winding % 2 !== 0 : winding !== 0;
+  };
+  const insidePoints = polygons.map(getPointJustInside);
+  const isHole = insidePoints.map(point => !!point && !isFilledAt(point));
+  const groups = new Map<number, SubPath[]>();
+  subPaths.forEach((subPath, i) => {
+    let owner = i;
+    const point = insidePoints[i];
+    if (isHole[i] && point) {
+      let ownerArea = Infinity;
+      polygons.forEach((polygon, j) => {
+        const area = Math.abs(getArea(polygon));
+        if (!isHole[j] && getWinding(polygon, point) !== 0 && area < ownerArea) {
+          owner = j;
+          ownerArea = area;
+        }
+      });
+    }
+    groups.set(owner, [...(groups.get(owner) ?? []), subPath]);
+  });
+  return [...groups.entries()].sort(([a], [b]) => a - b).map(([, group]) => group);
+}
+
+/** Returns points along the subpath's outline, with each curve split into straight lines. */
+function flattenSubPath(subPath: SubPath) {
+  const points: Point[] = [];
+  for (const cmd of subPath.getCommands()) {
+    const controlPoints = cmd.points.filter((p): p is Point => !!p);
+    if ((cmd.type === 'C' || cmd.type === 'Q') && controlPoints.length === cmd.points.length) {
+      for (let i = 1; i <= 8; i++) {
+        points.push(getBezierPoint(controlPoints, i / 8));
+      }
+    } else {
+      points.push(cmd.end);
+    }
+  }
+  return points;
+}
+
+function getBezierPoint(points: ReadonlyArray<Point>, t: number): Point {
+  if (points.length === 1) {
+    return points[0];
+  }
+  const next = points.slice(1).map((p, i) => ({
+    x: points[i].x + (p.x - points[i].x) * t,
+    y: points[i].y + (p.y - points[i].y) * t,
+  }));
+  return getBezierPoint(next, t);
+}
+
+/** Returns how many times the closed polygon winds around the point, with its direction's sign. */
+function getWinding(polygon: ReadonlyArray<Point>, point: Point) {
+  let winding = 0;
+  polygon.forEach((a, i) => {
+    const b = polygon[(i + 1) % polygon.length];
+    const cross = (b.x - a.x) * (point.y - a.y) - (point.x - a.x) * (b.y - a.y);
+    if (a.y <= point.y && b.y > point.y && cross > 0) {
+      winding++;
+    } else if (a.y > point.y && b.y <= point.y && cross < 0) {
+      winding--;
+    }
+  });
+  return winding;
+}
+
+function getArea(polygon: ReadonlyArray<Point>) {
+  return polygon.reduce((sum, a, i) => {
+    const b = polygon[(i + 1) % polygon.length];
+    return sum + (a.x * b.y - b.x * a.y) / 2;
+  }, 0);
+}
+
+/**
+ * Returns a point a hair inside the polygon, next to the middle of its longest edge, or undefined
+ * if it has no area there.
+ */
+function getPointJustInside(polygon: ReadonlyArray<Point>) {
+  let longest = { a: polygon[0], b: polygon[0], length: 0 };
+  polygon.forEach((a, i) => {
+    const b = polygon[(i + 1) % polygon.length];
+    const length = Math.hypot(b.x - a.x, b.y - a.y);
+    if (length > longest.length) {
+      longest = { a, b, length };
+    }
+  });
+  const { a, b, length } = longest;
+  if (!length) {
+    return undefined;
+  }
+  const step = length / 1000;
+  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const normal = { x: (a.y - b.y) / length, y: (b.x - a.x) / length };
+  return [1, -1]
+    .map(side => ({ x: mid.x + normal.x * step * side, y: mid.y + normal.y * step * side }))
+    .find(point => getWinding(polygon, point) !== 0);
 }
 
 /** Whether the path is trimmed, or its trim is animated. */

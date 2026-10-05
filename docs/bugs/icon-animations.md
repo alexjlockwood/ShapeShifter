@@ -11,12 +11,6 @@ are in `IMPROVEMENTS.md`, under "Icon animation workflow". Paths are relative to
 
 ## Layers and parts
 
-- **Break apart pulls holes out as filled layers.** It makes a layer for every subpath, so the
-  hole in an outlined icon becomes its own black shape on top of the outline, and the icon turns
-  solid. Every icon in Material's Outlined set has holes. The workaround is to select the outline
-  and its hole and combine them again. Break apart should keep each hole with the subpath around
-  it (`scripts/common/combineLayers.ts`, `breakApartLayers`). (ICON-1, medium, seen in the app on
-  `notifications_active`)
 - **A new path is invisible.** Add layer > New path makes a path with no fill, no stroke color and
   a stroke width of 0, so it shows nothing even after you type its path data, until you also give
   it a stroke or fill. (ICON-3, low, seen in the app)

@@ -225,6 +225,59 @@ describe('breakApartLayers', () => {
     });
   });
 
+  it('keeps each hole with the shape it cuts', () => {
+    const pieces = (layer: PathLayer) => {
+      const result = breakApartLayers(document([layer]), [layer.id]);
+      if (!('layerIds' in result)) {
+        throw new Error(result.reason);
+      }
+      return (result.document.vectorLayer.children as PathLayer[]).map(
+        l => l.pathData?.getSubPaths().length,
+      );
+    };
+    // Material's outlined bell: the clapper, and the bell with the hole that outlines it.
+    const bell = new PathLayer({
+      name: 'bell',
+      children: [],
+      pathData: new Path(
+        'M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z',
+      ),
+      fillColor: '#000000',
+    });
+    expect(pieces(bell)).toEqual([1, 2]);
+
+    // A square with a square hole, and a dot inside the hole, which is a shape of its own.
+    const outer = 'M 0 0 L 10 0 L 10 10 L 0 10 Z';
+    const dot = 'M 4 4 L 6 4 L 6 6 L 4 6 Z';
+    const ring = (hole: string, fillType: 'nonZero' | 'evenOdd', fillColor = '#000000') =>
+      new PathLayer({
+        name: 'ring',
+        children: [],
+        pathData: new Path(`${outer} ${hole} ${dot}`),
+        fillColor,
+        strokeColor: '#000000',
+        fillType,
+      });
+    expect(pieces(ring('M 2 2 L 2 8 L 8 8 L 8 2 Z', 'nonZero'))).toEqual([2, 1]);
+    // With even-odd, a hole can run either way.
+    expect(pieces(ring('M 2 2 L 8 2 L 8 8 L 2 8 Z', 'evenOdd'))).toEqual([2, 1]);
+    // With nonzero, a square running the same way as the outer one fills, so it's no hole.
+    expect(pieces(ring('M 2 2 L 8 2 L 8 8 L 2 8 Z', 'nonZero'))).toEqual([1, 1, 1]);
+    // Without a fill, there are no holes, just outlines.
+    expect(pieces(ring('M 2 2 L 2 8 L 8 8 L 8 2 Z', 'nonZero', ''))).toEqual([1, 1, 1]);
+
+    // A shape with only its hole has nothing to split.
+    const outline = new PathLayer({
+      name: 'outline',
+      children: [],
+      pathData: new Path(`${outer} M 2 2 L 2 8 L 8 8 L 8 2 Z`),
+      fillColor: '#000000',
+    });
+    expect(getBrokenApartLayerIds(document([outline]), [outline.id])).toEqual({
+      reason: "outline's subpaths are one shape and its holes",
+    });
+  });
+
   it('pivots each piece at its own center, unless the path uses its transform', () => {
     const pivots = (doc: ReturnType<typeof document>, id: string) => {
       const result = breakApartLayers(doc, [id]);
