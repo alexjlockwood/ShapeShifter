@@ -222,8 +222,8 @@ the fourteen they'd have helped.
   relative timing (ICON-8) would cover it. About 3 to 5 days.
 - **Keyframes rather than from/to blocks.** Each block is five fields (start, end, from, to,
   easing): about 50 edits for menu to close and 70 for the bell's damped swing. An auto-key mode,
-  where moving the playhead and changing a value adds a block from the previous keyframe, and new
-  blocks that start where the last one ended (ICON-7), would make a two-step press a few clicks.
+  where moving the playhead and changing a value adds a block from the previous keyframe, would
+  make a two-step press a few clicks.
   A pendulum or wiggle preset that writes damped rotation keyframes would cover the bell. About 1
   to 2 weeks for auto-key.
 - **A linked scale and translate.** A uniform press is four blocks (scale X and Y, in and out),

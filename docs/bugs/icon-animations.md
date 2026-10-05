@@ -37,11 +37,6 @@ are in `IMPROVEMENTS.md`, under "Icon animation workflow". Paths are relative to
 
 ## Timeline and inspector
 
-- **A second block starts from the layer's resting value.** A new block for a property that's
-  already animated (the inspector's "Add another keyframe", or the layer list's +) starts and ends
-  at the layer's static value instead of where the previous block ends, so a two-step move, like
-  a press and release, jumps at the join until its start is retyped
-  (`services/layertimeline.service.ts`, `addBlockForProperty`). (ICON-7, medium, seen in the app)
 - **Pasted blocks ignore the selected layer and their own timing.** Pasting copied blocks puts
   them back on the layer they came from, even with another layer selected, so one layer's
   animation can't be reused on another. Every pasted block starts at the playhead, so blocks
