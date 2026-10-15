@@ -91,9 +91,8 @@ throwing on a subpath that's only a move (PATH-9, 13,000 events).
 
 All 184 open GitHub issues were triaged against the current code on 2026-09-26:
 `docs/bugs/github-issues.md`. It lists the 19 that are still bugs and aren't covered elsewhere,
-which issues the entries here and in `docs/bugs/` already cover, which are fixed (almost all only
-on `master`, since the site was last deployed in 2018, so close them after the next deploy), and
-the feature requests.
+which issues the entries here and in `docs/bugs/` already cover, and the feature requests. The
+ones that were fixed were closed after the 2.0.0 deploy.
 
 ## Fixed during the migration
 

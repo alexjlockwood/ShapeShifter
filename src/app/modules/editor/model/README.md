@@ -178,10 +178,9 @@ lose something, following these guidelines:
   keep working without a version bump.
 - Raise the required version (add a rule) only for a change an older React build would otherwise
   silently drop or misinterpret, not for every new optional field.
-- The live site (shapeshifter.design) is still the Angular 1.0.15 build, which ignores the
-  `version` field entirely and crashes on formats it doesn't understand (e.g. an unknown
-  interpolator string or a transform block on a path). Only the next deploy replaces it, so a rule
-  documents the risk rather than working around 1.0.15.
+- Rules don't cover the Angular 1.0.15 build, which the live site served until 2.0.0. It ignores
+  the `version` field entirely and crashes on formats it doesn't understand (e.g. an unknown
+  interpolator string or a transform block on a path).
 
 ## Useful links
 
