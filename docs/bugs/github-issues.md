@@ -8,9 +8,8 @@ often side by side with the browser's own rendering. The rest were checked by re
 running the app, or for Android behavior, by reading the framework source. Paths are relative to
 `src/app/modules/editor/`.
 
-shapeshifter.design was last deployed on 2018-10-22 (1.0.15, commit `56ee03da`), so nearly every
-issue listed as fixed below is only fixed on `master`. Close those after the next deploy, not
-before. When a bug below is fixed, its issue can be closed the same way.
+When a bug below is fixed, close its issue once the fix is deployed, since shapeshifter.design lags
+`master`. The issues fixed by the 2.0.0 deploy on 2026-10-14 have been closed.
 
 ## Still bugs
 
@@ -200,48 +199,6 @@ These are still bugs, and the entry named here covers them.
 | #308  | `BUGS.md` stroke width entry and CANVAS-4 (trim length in scaled groups)                    |
 | #316  | MODEL-4, which the AVD hold animator entry above fixes                                      |
 
-## Fixed, close after the next deploy
-
-| Issue      | What fixed it                                                                               |
-| ---------- | ------------------------------------------------------------------------------------------- |
-| #24        | svgo's `removeXMLProcInst` strips the XML declaration                                       |
-| #39        | A width and height without a viewBox import at that size                                    |
-| #40        | Viewports only need to be 1 unit wide now, and a `0 0 1 1` viewBox imports as 1x1           |
-| #41        | `VectorLayer` defaults to 24x24                                                             |
-| #125       | `Point` is a plain interface, and `MathUtil.arePointsEqual` handles missing points          |
-| #127       | Clicking empty canvas in a split or add points mode returns to selection mode               |
-| #129       | Auto fix has unit tests and a playground (`src/playground/autofix/`)                        |
-| #147       | Blocks can have custom easing curves, exported as a `pathInterpolator`                      |
-| #185       | Group bounds transform all four corners (MODEL-9)                                           |
-| #188       | Flattening transforms both the from and to values of path blocks                            |
-| #249       | The rulers are laid out from the canvas's camera, in viewport units (CANVAS-5)              |
-| #264       | `629387af`                                                                                  |
-| #265       | `5af30cf7` and `03d1a813`                                                                   |
-| #266, #284 | `7d0b789a`. Dropping a file in action mode (#284) now shows a message instead.              |
-| #269, #282 | `7ae9d739` and `1f78c126`                                                                   |
-| #270, #281 | `fc991051`                                                                                  |
-| #275       | `352a0aaa`                                                                                  |
-| #276       | `d8eabc32`                                                                                  |
-| #277       | `b4c5fd9a`                                                                                  |
-| #278       | Groups' `fill="none"` is inherited (`BUGS.md`, "Imported paths lost paint set on groups")   |
-| #280       | `e4a994cd` and `7e5b2480`. The maintainer's repro in the thread passes.                     |
-| #283       | `7ae9d739` and `707764f0`                                                                   |
-| #291       | The theme switch is an MUI `Switch` now, and clicking it works in Chrome                    |
-| #293       | Rewritten auto fix. The attached paths weren't identical, and the result keeps both shapes. |
-| #301       | The preview draws the animated layer at t=0 (`BUGS.md`, "Fixed during the migration")       |
-| #304       | Paths have their own rotation, scale, pivot, and translation, and the exports wrap them     |
-| #320       | Ids are kept, so paths with ids stay separate layers. Paths without ids still merge.        |
-| #332       | "Convert to clip path" only checks the layer's own blocks (`buildContextMenu.ts`)           |
-| #339       | `fc991051`. The reporter's file exports in all four formats.                                |
-| #357       | Renders the same as the browser now. The fixing commit wasn't pinned down.                  |
-
-## Fixed or implemented before the 2018 deploy, close any time
-
-- #54: SVG spritesheet export exists (Export > SVG spritesheet).
-- #163: the empty layer list says to drop an SVG (`06f9dd29`, 2017).
-- #170: SVG export skips paths without path data (`60f0104c`, 2018).
-- #231: Cmd+C then Cmd+V duplicates the selected blocks (2017). It's hard to discover (#148).
-
 ## Not bugs
 
 | Issue | Verdict             | Reason                                                                         |
@@ -259,7 +216,6 @@ These are still bugs, and the entry named here covers them.
 | #328  | Not enough info     | Title only. 1,000 groups import in about 3 s in a dev build without hanging.   |
 | #330  | Obsolete            | Legacy Edge only                                                               |
 | #336  | Beta only           | No file attached                                                               |
-| #342  | Beta only           | The current importer handles it, apart from the `android:tint` entry above     |
 | #343  | Beta only           | The beta couldn't draw paths with several subpaths                             |
 | #346  | Obsolete            | The reporter's spritesheets play in current Firefox                            |
 | #349  | Not enough info     | The exported timing is right. Probably CANVAS-7.                               |
@@ -270,7 +226,7 @@ These are still bugs, and the entry named here covers them.
 #314 is worth a reply explaining the zero-length segment, since the reporter has asked about it
 since 2018. "Beta only" means the paper.js beta, which has been removed (`docs/canvas-editor.md`).
 
-Duplicates: #190 of #187, #242 of #115, #274 of #57, #282 of #269, #284 of #266, #309 of #149,
+Duplicates: #190 of #187, #242 of #115, #274 of #57, #309 of #149,
 #310 of #245, #324 of #220, #335 and #361 of #333, and #352 of #8.
 
 Questions and other issues with nothing to fix: #131, #187, #190, #312, and #325 (answered in their
@@ -284,10 +240,8 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 
 | Issue | Request                                  | Status                                                                    |
 | ----- | ---------------------------------------- | ------------------------------------------------------------------------- |
-| #1    | Snap to grid when dragging points        | Planned                                                                   |
 | #8    | Import AVDs (also #347)                  | In `IMPROVEMENTS.md`. AVDs import as groups, without animation (IMP-13).  |
 | #9    | Run auto fix in a web worker             | Auto fix was sped up (`c9b356ce`), but there's no worker                  |
-| #17   | Keyboard navigation of points            | In `IMPROVEMENTS.md`. Tab between points is planned.                      |
 | #19   | Lottie export                            | Not implemented, 1 to 2 weeks. The likely iOS export (`IMPROVEMENTS.md`). |
 | #36   | Revert all splits and conversions        | `PathMutator.revert()` exists, but nothing in the UI calls it             |
 | #63   | Morph a stroke into a fill               | Not implemented                                                           |
@@ -295,7 +249,6 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #89   | Import `<glyph>`s                        | Not implemented. The scaling bug from the thread is fixed.                |
 | #95   | Reject invalid split subpaths            | Not implemented                                                           |
 | #98   | Shift to constrain the split line        | Not implemented                                                           |
-| #102  | Marquee selection on the canvas          | Planned                                                                   |
 | #105  | Usage instructions in the README         | Not done                                                                  |
 | #106  | Open in CodePen                          | Not implemented, better after a CSS keyframes export                      |
 | #108  | Highlight the halves of a stroke split   | Not implemented                                                           |
@@ -303,11 +256,9 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #116  | Export options dialog                    | Not implemented (fixed 30 and 60 fps, viewport size)                      |
 | #120  | Choose where collapsing subpaths go      | Not implemented (TODO in `AutoAwesome.ts`)                                |
 | #126  | Enter split subpaths mode from a point   | Not implemented                                                           |
-| #130  | Snap dragged points to other points      | Planned                                                                   |
 | #133  | Arrow keys in the layer list             | Not implemented                                                           |
 | #134  | Golden render tests                      | Pixel probes only                                                         |
 | #135  | Color picker                             | Not implemented                                                           |
-| #136  | Draw paths with the mouse                | Planned                                                                   |
 | #137  | Accounts, saving, and sharing            | `?project=<url>` opens a shared file. No accounts.                        |
 | #138  | Theme attributes as colors               | Not implemented                                                           |
 | #139  | `android:tint` on the vector             | Not implemented (see the import entry above)                              |
@@ -319,7 +270,6 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #146  | Motion along a path                      | Not implemented                                                           |
 | #148  | Keyboard shortcuts list                  | In `IMPROVEMENTS.md` (quick wins)                                         |
 | #149  | Marquee select in the timeline (#309)    | Not implemented                                                           |
-| #150  | Zoom and pan the canvas                  | Planned                                                                   |
 | #151  | AVD XML cleanups                         | 2 of 5 done                                                               |
 | #158  | SVG `<mask>`                             | Not implemented. Masks are ignored silently.                              |
 | #159  | Open `.iconanim` files                   | Not implemented. The sample links are dead.                               |
@@ -337,7 +287,6 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #226  | Copy and paste across tabs               | Blocks work. Layers are #245.                                             |
 | #228  | Command line conversion                  | Not implemented                                                           |
 | #229  | Showcase of projects                     | Demos and `?project=` exist. No gallery.                                  |
-| #232  | Move paths on the canvas                 | Planned                                                                   |
 | #245  | Copy and paste layers (also #310)        | Not implemented                                                           |
 | #246  | Hide animation blocks                    | Not implemented                                                           |
 | #254  | More than one animation                  | Not implemented, 1 to 2 weeks                                             |
@@ -353,7 +302,6 @@ an SVG, which the reporter worked out; it led to the character reference entry a
 | #322  | CSS keyframes export                     | Not implemented, but wanted (`IMPROVEMENTS.md`)                           |
 | #326  | Show the pivot on the canvas             | Not implemented                                                           |
 | #329  | Auto fix as a package                    | Not implemented                                                           |
-| #331  | Duplicate layers and snap to a grid      | Planned                                                                   |
 | #333  | iOS export                               | Not implemented, but wanted (`IMPROVEMENTS.md`)                           |
 | #338  | Keyframes between from and to            | Back-to-back blocks do most of it                                         |
 | #348  | Jetpack Compose `ImageVector` code       | Not implemented                                                           |
