@@ -158,6 +158,21 @@ export function getCenterPivot(vl: VectorLayer, parentId: string) {
 }
 
 /**
+ * Returns a pivot at the center of the path's bounds, so that the path rotates and scales in
+ * place, or undefined if the path draws nothing. Imported paths and Break apart's pieces use it.
+ */
+export function getPathCenterPivot(pathData: Path | undefined) {
+  const bounds = pathData?.getBoundingBox();
+  if (!bounds || ![bounds.l, bounds.t, bounds.r, bounds.b].every(Number.isFinite)) {
+    return undefined;
+  }
+  return {
+    pivotX: round((bounds.l + bounds.r) / 2, 3),
+    pivotY: round((bounds.t + bounds.b) / 2, 3),
+  };
+}
+
+/**
  * Makes two vector layers with possibly different viewports compatible with each other.
  */
 export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {

@@ -49,11 +49,12 @@ function loadVectorLayerFromElement(
     }
 
     if (node.tagName === 'path') {
+      const pathData = getPath(node);
       return new PathLayer({
         id: uniqueId(),
         name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'path'),
         children: [],
-        pathData: getPath(node),
+        pathData,
         fillColor: getColor(node, 'fillColor', ''),
         fillAlpha: getNumber(node, 'fillAlpha', '1'),
         strokeColor: getColor(node, 'strokeColor', ''),
@@ -66,6 +67,7 @@ function loadVectorLayerFromElement(
         trimPathEnd: getNumber(node, 'trimPathEnd', '1'),
         trimPathOffset: getNumber(node, 'trimPathOffset', '0'),
         fillType: get(node, 'fillType', 'nonZero') as FillType,
+        ...LayerUtil.getPathCenterPivot(pathData),
       });
     }
 

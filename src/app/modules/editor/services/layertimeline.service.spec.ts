@@ -575,6 +575,47 @@ describe('LayerTimelineService', () => {
       services.layerTimelineService.addBlockForProperty(path.id, 'canvasColor');
       expect(getBlocks()).toHaveLength(1);
     });
+
+    it("holds the value the previous block ends at, so the animation doesn't jump", () => {
+      const path = newPath('path', undefined, 3);
+      const widen = AnimationBlock.from({
+        type: 'number',
+        layerId: path.id,
+        propertyName: 'strokeWidth',
+        startTime: 100,
+        endTime: 200,
+        fromValue: 3,
+        toValue: 8,
+      });
+      load([path], [widen]);
+      services.playbackService.setCurrentTime(0);
+      services.layerTimelineService.addBlockForProperty(path.id, 'strokeWidth');
+      // Before the first block, there's nothing to hold but the layer's own value.
+      expect(getBlocks()[1]).toMatchObject({ startTime: 0, fromValue: 3, toValue: 3 });
+      services.playbackService.setCurrentTime(200);
+      services.layerTimelineService.addBlockForProperty(path.id, 'strokeWidth');
+      expect(getBlocks()[2]).toMatchObject({ startTime: 200, fromValue: 8, toValue: 8 });
+    });
+
+    it('holds the path the previous morph ends at, so the new block morphs', () => {
+      const path = newPath('path', 'M 0 0 L 10 0 L 10 10 Z');
+      const morph = AnimationBlock.from({
+        type: 'path',
+        layerId: path.id,
+        propertyName: 'pathData',
+        startTime: 0,
+        endTime: 100,
+        fromValue: new Path('M 0 0 L 10 0 L 10 10 L 10 10 Z'),
+        toValue: new Path('M 0 0 L 10 0 L 10 10 L 0 10 Z'),
+      });
+      load([path], [morph]);
+      services.playbackService.setCurrentTime(100);
+      services.layerTimelineService.addBlockForProperty(path.id, 'pathData');
+      const added = getBlocks()[1] as PathAnimationBlock;
+      expect(added.fromValue?.getPathString()).toBe('M 0 0 L 10 0 L 10 10 L 0 10 Z');
+      expect(added.toValue?.getPathString()).toBe('M 0 0 L 10 0 L 10 10 L 0 10 Z');
+      expect(added.isAnimatable()).toBe(true);
+    });
   });
 
   describe('updateLayers', () => {

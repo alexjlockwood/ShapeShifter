@@ -21,8 +21,9 @@
   trimmed path's dashes are off by the square of the scale, so trims show repeating dashes (above a
   scale of 1) or don't trim (below it). Like the stroke width bug under "Open", the length is
   measured with `canvasToLayerMatrix` instead of `layerToCanvasMatrix`
-  (`components/canvas/CanvasLayers.ts`). (CANVAS-4, GitHub #292 and #308, medium, confirmed by a
-  test)
+  (`components/canvas/CanvasLayers.ts`). The same happens to a path scaled by its own transform:
+  a check drawn on with a trim while it pops to 1.1x shows dashes in the preview, though the AVD
+  export is right. (CANVAS-4, GitHub #292 and #308, medium, confirmed by a test)
 - **The trim path preview doesn't follow Android's rules for fills and later subpaths.** The
   preview only dashes the stroke, so trims never affect the fill, and every subpath is dashed.
   Android trims the path itself, uses it for the fill too, and only draws the first subpath. Build
