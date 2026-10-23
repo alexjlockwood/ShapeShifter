@@ -15,15 +15,9 @@ These existed before the migration and are still there.
   closed without merging); it fixes this case and many related ones, but deleting a split segment
   in a shifted or reversed subpath is still wrong in a lot of cases, per that branch's fuzz
   testing.
-- **Split subpaths can't be deleted, but the toolbar offers to.** It's not clear whether
-  deleting them is meant to work. After you split a subpath in action mode, selecting either half
-  shows a "Delete subpath" button, but neither it nor Backspace does anything, on this branch or
-  on the live site. The toolbar shows the button for subpaths that `isUnsplittable()`, while
-  `ActionModeService.deleteSelectedActionModeModels` only deletes subpaths that `isSplit()`,
-  which is always false: `PathState` looks up the split state on leaf subpath states
-  (`flattenSubPathStates` only returns leaves), and leaves are never split. Either the button
-  should go, or the service should check `isUnsplittable()`. The pair and selection helpers also
-  prefer "split" subpaths when hits overlap, so that preference never applies either
+- **Split subpaths aren't preferred when selection or pairing hits overlap.** The pair and
+  selection helpers check `isSubPathSplit`, but `PathState` looks up split state on leaf subpath
+  states (`flattenSubPathStates` only returns leaves), and leaves are never split
   (`model/paths/PathState.ts`, `isSubPathSplit`).
 - **The editor draws strokes in scaled groups and paths at the wrong width.** `CanvasLayers`
   multiplies the stroke width by the scale of the canvas-to-layer matrix instead of the

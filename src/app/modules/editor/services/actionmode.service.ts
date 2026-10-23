@@ -609,7 +609,7 @@ export class ActionModeService {
     if (subPathSelections.length) {
       const { source, subIdx } = subPathSelections[0];
       const path = this.getActivePathBlockValue(source);
-      if (path?.getSubPath(subIdx).isSplit()) {
+      if (path?.getSubPath(subIdx).isUnsplittable()) {
         const pm = path.mutate();
         const layer = this.getActivePathBlockLayer();
         if (layer.isFilled()) {
